@@ -234,6 +234,11 @@ public final class FileUtils {
 		return null;
 	}
 
+	public static void copyResource(String res, String dest, Class c) throws IOException {
+		InputStream src = c.getResourceAsStream(res);
+		Files.copy(src, Paths.get(dest), StandardCopyOption.REPLACE_EXISTING);
+	}
+
 	public static void openZipFileSystem(@Nonnull Path path, @Nonnull ExceptionallyConsumer<? super FileSystem> consumer) {
 		try (FileSystem fileSystem = FileSystems
 			.newFileSystem(URI.create("jar:" + path.toUri()), ZIP_FILE_SYSTEM_PROPERTIES)) {
@@ -367,6 +372,7 @@ public final class FileUtils {
 		writer.flush();
 		writer.close();
 	}
+
 	@Nonnull
 	public static Path createTempFile() {
 		if (tempDirectory != null)

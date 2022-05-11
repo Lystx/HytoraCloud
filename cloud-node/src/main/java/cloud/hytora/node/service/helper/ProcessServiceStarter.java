@@ -25,7 +25,9 @@ import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -51,13 +53,15 @@ public class ProcessServiceStarter {
         this.service.getConfiguration().getVersion().download();
 
         // create tmp file
-        File tmpFolder = new File("tmp/" + service.getName());
+        File parent = (service.getConfiguration().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
+        File tmpFolder = new File(parent, service.getName() + "/");
+
         FileUtils.forceMkdir(tmpFolder);
 
         // load all current group templates
         NodeDriver.getInstance().getNodeTemplateService().copyTemplates(service);
 
-        final String jar = service.getConfiguration().getVersion().getJar();
+        String jar = service.getConfiguration().getVersion().getJar();
         FileUtils.copyFile(new File("storage/jars/" + jar), new File(tmpFolder, jar));
 
         // copy plugin
@@ -92,9 +96,12 @@ public class ProcessServiceStarter {
     public Wrapper<CloudServer> start() {
         Wrapper<CloudServer> wrapper = Wrapper.empty(CloudServer.class).denyNull();
 
+        File parent = (service.getConfiguration().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
+        File folder = new File(parent, service.getName() + "/");
+
         StartedProcess result = new ProcessExecutor()
                 .command(this.args(this.service))
-                .directory(new File("tmp/" + this.service.getName() + "/"))
+                .directory(folder)
                 .redirectOutput(new LogOutputStream() {
                     @Override
                     protected void processLine(String line) {
@@ -159,8 +166,10 @@ public class ProcessServiceStarter {
                 "-Xmx" + service.getConfiguration().getMemory() + "M"));
 
         Path remoteFile = Paths.get("storage", "jars", "remote.jar");
-        File applicationFile = new File("tmp/" + service.getName() + "/"
-                + service.getConfiguration().getVersion().getJar());
+
+        File parent = (service.getConfiguration().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
+        File applicationFile = new File(parent, service.getName() + "/" + service.getConfiguration().getVersion().getJar());
+
 
         arguments.addAll(Arrays.asList(
                 "-cp", remoteFile.toAbsolutePath() + File.pathSeparator + applicationFile.toPath().toAbsolutePath()));
@@ -180,7 +189,6 @@ public class ProcessServiceStarter {
         if (service.getConfiguration().getVersion().getServiceTypes() == ServiceTypes.SERVER) {
             arguments.add("nogui");
         }
-
 
         return arguments.toArray(new String[]{});
     }

@@ -6,7 +6,9 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.defaults.server.CloudServerCacheUnregisterEvent;
 import cloud.hytora.driver.networking.packets.services.*;
 import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.impl.DefaultServiceManager;
+import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
@@ -65,11 +67,15 @@ public class NodeServiceManager extends DefaultServiceManager {
         super.unregisterService(service);
         this.cachedServiceOutputs.remove(service.getName());
 
-        File file = new File("tmp/" + service);
+        ServerConfiguration con = service.getConfiguration();
 
-        if (file.exists()) {
+        File parent = (service.getConfiguration().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
+        File folder = new File(parent, service.getName() + "/");
+
+
+        if (folder.exists()) {
             try {
-                FileUtils.deleteDirectory(file);
+                FileUtils.deleteDirectory(folder);
             } catch (IOException e) {
                 e.printStackTrace();
             }

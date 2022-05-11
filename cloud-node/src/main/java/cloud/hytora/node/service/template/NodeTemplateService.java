@@ -23,7 +23,10 @@ public class NodeTemplateService {
     }
 
     public void copyTemplates(CloudServer service) throws IOException {
-        File serviceFolder = new File("tmp/" + service.getName() + "/");
+
+        File parent = (service.getConfiguration().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
+        File serviceFolder = new File(parent, service.getName() + "/");
+
         FileUtils.copyDirectory(new File(EVERY_FOLDER), serviceFolder);
         FileUtils.copyDirectory(new File(service.getConfiguration().getVersion().isProxy() ? EVERY_PROXY_FOLDER : EVERY_SERVICE_FOLDER), serviceFolder);
 

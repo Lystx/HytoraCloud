@@ -58,6 +58,7 @@ cloud\hytora\node\impl\command\NodeCommandManager.class
 cloud\hytora\node\impl\handler\NodeRemoteShutdownHandler.class
 cloud\hytora\node\impl\player\NodePlayerManager.class
 cloud\hytora\node\impl\command\impl\ShutdownCommand.class
+cloud\hytora\node\NodeDriver$2.class
 cloud\hytora\node\service\template\NodeTemplateService.class
 cloud\hytora\node\impl\handler\NodeLoggingPacketHandler.class
 cloud\hytora\node\impl\database\impl\DatabaseManager.class

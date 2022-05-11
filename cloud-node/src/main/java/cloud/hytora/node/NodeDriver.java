@@ -1,5 +1,6 @@
 package cloud.hytora.node;
 
+import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.wrapper.Wrapper;
 import cloud.hytora.common.logging.Logger;
@@ -64,14 +65,17 @@ import cloud.hytora.node.service.helper.NodeServiceQueue;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -100,6 +104,20 @@ public class NodeDriver extends CloudDriver implements Node {
     private HytoraNode executor;
     private NodeServiceQueue serviceQueue;
     private NodeTemplateService nodeTemplateService;
+
+
+    public static final File NODE_FOLDER = new File("local/");
+    public static final File CONFIG_FILE = new File(NODE_FOLDER, "config.json");
+    public static final File LOG_FOLDER = new File(NODE_FOLDER, "logs/");
+
+    public static final File STORAGE_FOLDER = new File(NODE_FOLDER, "storage/");
+    public static final File STORAGE_VERSIONS_FOLDER = new File(STORAGE_FOLDER , "versions/");
+    public static final File STORAGE_TEMP_FOLDER = new File(STORAGE_FOLDER, "tmp-" + UUID.randomUUID().toString().substring(0, 5) + "/");
+    public static final File TEMPLATES_DIR = new File(STORAGE_FOLDER, "templates/");
+
+    public static final File SERVICE_DIR = new File(NODE_FOLDER, "services/");
+    public static final File SERVICE_DIR_STATIC = new File(SERVICE_DIR, "permanent/");
+    public static final File SERVICE_DIR_DYNAMIC = new File(SERVICE_DIR, "temporary/");
 
     /**
      * If the node is still running
@@ -186,7 +204,11 @@ public class NodeDriver extends CloudDriver implements Node {
         this.nodeManager = new NodeNodeManager();
         this.logger.info("§8");
 
-        // registered commands
+        //copying files
+        this.logger.info("§7Copying files§8...");
+        FileUtils.copyResource("/impl/plugin.jar", "storage/jars/plugin.jar", getClass());
+        FileUtils.copyResource("/impl/remote.jar", "storage/jars/remote.jar", getClass());
+
         this.logger.info("§7Registering §bCommands §8& §bArgumentParsers§8...");
         this.commandManager.registerCommand(new ShutdownCommand());
         this.commandManager.registerCommand(new HelpCommand());
@@ -265,16 +287,17 @@ public class NodeDriver extends CloudDriver implements Node {
         for (CloudServer service : this.serviceManager.getAllCachedServices()) {
             NodeCloudServer cloudServer = service.asCloudServer();
             Process process = cloudServer.getProcess();
+            if (process == null) {
+                continue;
+            }
             process.destroyForcibly();
         }
         //Shutting down networking and database
         Wrapper.multiTasking(this.executor.shutdown(), this.databaseManager.shutdown()).addUpdateListener(wrapper -> {
 
-            try {
-                FileUtils.deleteDirectory(new File("tmp"));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+
+            FileUtils.delete(NodeDriver.SERVICE_DIR_DYNAMIC.toPath());
+            FileUtils.delete(NodeDriver.STORAGE_TEMP_FOLDER.toPath());
 
             logger.info("§aSuccessfully exited the CloudSystem§8!");
             System.exit(0);

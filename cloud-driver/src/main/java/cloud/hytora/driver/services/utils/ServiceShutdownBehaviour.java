@@ -4,5 +4,14 @@ public enum ServiceShutdownBehaviour {
 
     KEEP,
 
-    DELETE
+    DELETE;
+
+
+    public boolean isStatic() {
+        return this == KEEP;
+    }
+
+    public boolean isDynamic() {
+        return this == DELETE;
+    }
 }

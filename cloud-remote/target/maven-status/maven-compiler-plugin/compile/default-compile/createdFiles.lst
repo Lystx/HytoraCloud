@@ -1,6 +1,6 @@
-cloud\hytora\remote\impl\RemoteNodeHandler.class
 cloud\hytora\remote\impl\handler\RemoteCommandHandler.class
 cloud\hytora\remote\impl\RemoteChannelMessenger.class
+cloud\hytora\remote\impl\RemoteNodeManager.class
 cloud\hytora\remote\impl\RemoteNetworkClient.class
 cloud\hytora\remote\Remote.class
 cloud\hytora\remote\impl\RemotePlayerManager.class

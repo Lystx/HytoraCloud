@@ -18,7 +18,7 @@ public class RemoteNodeManager extends DefaultNodeManager {
 
     @Override
     public Node getHeadNode() {
-        return allConnectedNodes.stream().filter(node -> !node.getConfig().isRemote()).findFirst().orElse(null);
+        return getAllConnectedNodes().stream().filter(node -> !node.getConfig().isRemote()).findFirst().orElse(null);
     }
 
 

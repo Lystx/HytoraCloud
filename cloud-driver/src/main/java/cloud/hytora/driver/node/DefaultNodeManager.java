@@ -23,12 +23,12 @@ public abstract class DefaultNodeManager implements NodeManager {
 
     @Override
     public @NotNull Wrapper<Node> getNode(@NotNull String username) {
-        return Wrapper.build(allConnectedNodes.stream().filter(n -> n.getName().equalsIgnoreCase(username)).findFirst().orElse(null));
+        return Wrapper.build(getAllConnectedNodes().stream().filter(n -> n.getName().equalsIgnoreCase(username)).findFirst().orElse(null));
     }
 
     @Override
     public @Nullable Node getNodeByNameOrNull(@NotNull String username) {
-        return allConnectedNodes.stream().filter(n -> n.getName().equalsIgnoreCase(username)).findFirst().orElse(null);
+        return getAllConnectedNodes().stream().filter(n -> n.getName().equalsIgnoreCase(username)).findFirst().orElse(null);
     }
 
     @Override

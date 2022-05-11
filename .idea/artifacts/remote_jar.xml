@@ -1,6 +1,6 @@
 <component name="ArtifactManager">
   <artifact type="jar" name="remote:jar">
-    <output-path>E:/Localhost/HytoraCloud/storage/jars/</output-path>
+    <output-path>$PROJECT_DIR$/cloud-node/src/main/resources/impl</output-path>
     <root id="archive" name="remote.jar">
       <element id="module-output" name="cloud-remote" />
       <element id="module-output" name="cloud-driver" />
