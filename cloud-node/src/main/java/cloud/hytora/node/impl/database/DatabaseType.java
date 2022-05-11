@@ -6,6 +6,5 @@ public enum DatabaseType {
 
     MYSQL,
 
-    @Deprecated
     MONGODB
 }
