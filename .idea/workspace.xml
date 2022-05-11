@@ -11,64 +11,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="765e6dac-3c2c-4ece-b357-ce32c4f8b80e" name="Changes" comment="Fix push">
-      <change afterPath="$PROJECT_DIR$/cloud-node/src/main/resources/impl/plugin.jar" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cloud-node/src/main/resources/impl/remote.jar" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/artifacts/plugin_jar.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/artifacts/plugin_jar.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/artifacts/remote_jar.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/artifacts/remote_jar.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-bridge/target/cloud-bridge-1.0-SNAPSHOT.jar" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-bridge/target/cloud-bridge-1.0-SNAPSHOT.jar" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-bridge/target/maven-archiver/pom.properties" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-bridge/target/maven-archiver/pom.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-commons/src/main/java/cloud/hytora/common/misc/FileUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-commons/src/main/java/cloud/hytora/common/misc/FileUtils.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-commons/target/cloud-commons-1.0-SNAPSHOT.jar" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-commons/target/cloud-commons-1.0-SNAPSHOT.jar" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-commons/target/maven-archiver/pom.properties" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-commons/target/maven-archiver/pom.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-driver/src/main/java/cloud/hytora/driver/node/DefaultNodeManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-driver/src/main/java/cloud/hytora/driver/node/DefaultNodeManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-driver/src/main/java/cloud/hytora/driver/services/NodeCloudServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-driver/src/main/java/cloud/hytora/driver/services/NodeCloudServer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-driver/src/main/java/cloud/hytora/driver/services/utils/ServiceShutdownBehaviour.java" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-driver/src/main/java/cloud/hytora/driver/services/utils/ServiceShutdownBehaviour.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/command/DefaultCommandSender.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/command/DefaultCommandSender.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/command/completer/CloudServerCompleter.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/command/completer/CloudServerCompleter.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/command/completer/ConfigurationCompleter.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/command/completer/ConfigurationCompleter.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/command/completer/NodeCompleter.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/command/completer/NodeCompleter.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/networking/protocol/ProtocolAddress.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/networking/protocol/ProtocolAddress.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/node/NodeCycleData.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/node/NodeCycleData.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/player/CloudPlayer.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/player/CloudPlayer.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/services/ServiceManager.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/services/ServiceManager.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/services/configuration/ConfigurationManager.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/services/configuration/ConfigurationManager.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/services/fallback/FallbackEntry.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/services/fallback/FallbackEntry.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/services/utils/ServiceVersion.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/services/utils/ServiceVersion.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-driver/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-driver/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/src/main/java/cloud/hytora/node/NodeDriver.java" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/src/main/java/cloud/hytora/node/NodeDriver.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/src/main/java/cloud/hytora/node/impl/node/NodeNodeManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/src/main/java/cloud/hytora/node/impl/node/NodeNodeManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/src/main/java/cloud/hytora/node/service/NodeServiceManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/src/main/java/cloud/hytora/node/service/NodeServiceManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/src/main/java/cloud/hytora/node/service/helper/ProcessServiceStarter.java" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/src/main/java/cloud/hytora/node/service/helper/ProcessServiceStarter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/src/main/java/cloud/hytora/node/service/template/NodeTemplateService.java" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/src/main/java/cloud/hytora/node/service/template/NodeTemplateService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/NodeDriver$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/NodeDriver$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/NodeDriver.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/NodeDriver.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/command/NodeCommandManager.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/command/NodeCommandManager.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/config/NodeDriverStorage.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/config/NodeDriverStorage.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/handler/NodeLoggingPacketHandler.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/handler/NodeLoggingPacketHandler.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/handler/NodeRedirectPacketHandler.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/handler/NodeRedirectPacketHandler.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/message/NodeChannelMessenger.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/message/NodeChannelMessenger.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/node/HytoraNode$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/node/HytoraNode$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/node/HytoraNode$2.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/node/HytoraNode$2.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/node/HytoraNode$3.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/node/HytoraNode$3.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/node/HytoraNode.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/node/HytoraNode.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/player/NodePlayerManager.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/player/NodePlayerManager.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/service/NodeConfigurationManager.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/service/NodeConfigurationManager.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/service/NodeServiceManager.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/service/NodeServiceManager.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/target/cloud-node-2.0.0.jar" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/cloud-node-2.0.0.jar" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/target/maven-archiver/pom.properties" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/maven-archiver/pom.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-node/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-remote/src/main/java/cloud/hytora/remote/impl/RemoteNodeManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-remote/src/main/java/cloud/hytora/remote/impl/RemoteNodeManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-remote/target/classes/cloud/hytora/remote/Remote.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-remote/target/classes/cloud/hytora/remote/Remote.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-remote/target/classes/cloud/hytora/remote/impl/RemoteCommandManager.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-remote/target/classes/cloud/hytora/remote/impl/RemoteCommandManager.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-remote/target/classes/cloud/hytora/remote/impl/RemoteConfigurationManager.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-remote/target/classes/cloud/hytora/remote/impl/RemoteConfigurationManager.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-remote/target/classes/cloud/hytora/remote/impl/RemotePlayerManager.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-remote/target/classes/cloud/hytora/remote/impl/RemotePlayerManager.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-remote/target/classes/cloud/hytora/remote/impl/RemoteServiceManager.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-remote/target/classes/cloud/hytora/remote/impl/RemoteServiceManager.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-remote/target/cloud-remote-1.0-SNAPSHOT.jar" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-remote/target/cloud-remote-1.0-SNAPSHOT.jar" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-remote/target/maven-archiver/pom.properties" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-remote/target/maven-archiver/pom.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-remote/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-remote/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud-remote/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-remote/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
+    <list default="true" id="765e6dac-3c2c-4ece-b357-ce32c4f8b80e" name="Changes" comment="divided service directory into dynamic and static (still need to start static services from old directory)">
+      <change beforePath="$PROJECT_DIR$/cloud-commons/target/classes/cloud/hytora/common/misc/FileUtils$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-commons/target/classes/cloud/hytora/common/misc/FileUtils$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cloud-commons/target/classes/cloud/hytora/common/misc/FileUtils.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-commons/target/classes/cloud/hytora/common/misc/FileUtils.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/services/utils/ServiceShutdownBehaviour.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-driver/target/classes/cloud/hytora/driver/services/utils/ServiceShutdownBehaviour.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/node/NodeNodeManager.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/impl/node/NodeNodeManager.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/service/helper/ProcessServiceStarter$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/service/helper/ProcessServiceStarter$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/service/helper/ProcessServiceStarter.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/service/helper/ProcessServiceStarter.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/service/template/NodeTemplateService.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-node/target/classes/cloud/hytora/node/service/template/NodeTemplateService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cloud-remote/target/classes/cloud/hytora/remote/impl/RemoteNodeManager.class" beforeDir="false" afterPath="$PROJECT_DIR$/cloud-remote/target/classes/cloud/hytora/remote/impl/RemoteNodeManager.class" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -286,7 +237,21 @@
       <option name="project" value="LOCAL" />
       <updated>1652291643390</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="divided service directory into dynamic and static (still need to start static services from old directory)">
+      <created>1652300704492</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1652300704492</updated>
+    </task>
+    <task id="LOCAL-00023" summary="divided service directory into dynamic and static (still need to start static services from old directory)">
+      <created>1652301243869</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1652301243869</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -324,6 +289,7 @@
     <MESSAGE value="Added Node authentication and responses&#10;Worked on starting services on different nodes" />
     <MESSAGE value="Re worked Packet system" />
     <MESSAGE value="Fix push" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fix push" />
+    <MESSAGE value="divided service directory into dynamic and static (still need to start static services from old directory)" />
+    <option name="LAST_COMMIT_MESSAGE" value="divided service directory into dynamic and static (still need to start static services from old directory)" />
   </component>
 </project>
