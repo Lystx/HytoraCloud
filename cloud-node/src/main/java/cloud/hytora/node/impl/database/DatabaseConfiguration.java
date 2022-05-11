@@ -12,6 +12,7 @@ public class DatabaseConfiguration {
     private String host;
     private int port;
     private String database;
+    private String authDatabase;
     private String user;
     private String password;
 
