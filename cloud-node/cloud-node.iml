@@ -32,14 +32,15 @@
     <orderEntry type="library" name="Maven: io.netty:netty-codec:4.1.72.Final" level="project" />
     <orderEntry type="module" module-name="cloud-commons" />
     <orderEntry type="library" name="Maven: org.mongodb:mongodb-driver:3.12.10" level="project" />
-    <orderEntry type="library" name="Maven: org.mongodb:bson:3.12.10" level="project" />
-    <orderEntry type="library" name="Maven: org.mongodb:mongodb-driver-core:3.12.10" level="project" />
     <orderEntry type="library" name="Maven: jline:jline:2.14.6" level="project" />
     <orderEntry type="library" name="Maven: org.reflections:reflections:0.10.2" level="project" />
     <orderEntry type="library" name="Maven: org.javassist:javassist:3.28.0-GA" level="project" />
     <orderEntry type="library" name="Maven: org.jline:jline:3.20.0" level="project" />
     <orderEntry type="library" name="Maven: mysql:mysql-connector-java:8.0.27" level="project" />
     <orderEntry type="library" name="Maven: com.google.protobuf:protobuf-java:3.11.4" level="project" />
+    <orderEntry type="library" name="Maven: org.mongodb:mongodb-driver-core:4.2.0-beta1" level="project" />
+    <orderEntry type="library" name="Maven: org.mongodb:bson:4.2.0-beta1" level="project" />
+    <orderEntry type="library" name="Maven: org.mongodb:mongodb-driver-sync:4.2.0-beta1" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.projectlombok:lombok:1.18.22" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.jetbrains:annotations:23.0.0" level="project" />
   </component>
