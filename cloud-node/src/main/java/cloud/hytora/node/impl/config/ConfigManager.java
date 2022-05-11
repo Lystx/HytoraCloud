@@ -1,0 +1,59 @@
+package cloud.hytora.node.impl.config;
+
+import cloud.hytora.document.DocumentFactory;
+import cloud.hytora.driver.networking.protocol.ProtocolAddress;
+import cloud.hytora.driver.node.config.DefaultNodeConfig;
+import cloud.hytora.driver.node.config.JavaVersion;
+import cloud.hytora.driver.node.config.SimpleJavaVersion;
+import cloud.hytora.node.impl.database.DatabaseConfiguration;
+import cloud.hytora.node.impl.database.DatabaseType;
+import lombok.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.UUID;
+
+@Getter @Setter
+public class ConfigManager {
+
+    private boolean didExist;
+    private MainConfiguration config;
+    private final File file = new File("config.json");
+
+
+    public void read() throws IOException {
+        if (file.exists()) {
+            this.didExist = true;
+            this.config = DocumentFactory.newJsonDocument(file).toInstance(MainConfiguration.class);
+        } else {
+            this.didExist = false;
+            this.config = new MainConfiguration(
+                    new DatabaseConfiguration(
+                            DatabaseType.FILE,
+                            "127.0.0.1",
+                            3306,
+                            "cloud",
+                            "cloud",
+                            "password123"
+                    ),
+                    new DefaultNodeConfig(
+                            "Node-1",
+                            UUID.randomUUID().toString(),
+                            "127.0.0.1",
+                            new ProtocolAddress[0],
+                            8876,
+                            false,
+                            new SimpleJavaVersion[]{new SimpleJavaVersion("11", "yourPath"), new SimpleJavaVersion("16", "yourPath")}
+                    ),25565, 30000, new ArrayList<>());
+        }
+
+        if (this.config.getNodeConfig().getClusterAddresses().length > 0) {
+            this.config.getNodeConfig().markAsRemote();
+        }
+    }
+
+    public void save() throws IOException {
+        DocumentFactory.newJsonDocument(this.config).saveToFile(file);
+    }
+}

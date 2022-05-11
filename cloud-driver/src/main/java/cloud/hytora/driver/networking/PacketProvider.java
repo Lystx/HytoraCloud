@@ -1,0 +1,103 @@
+package cloud.hytora.driver.networking;
+
+import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
+import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
+import cloud.hytora.driver.networking.packets.RedirectPacket;
+import cloud.hytora.driver.networking.packets.StorageUpdatePacket;
+import cloud.hytora.driver.networking.packets.group.ServiceGroupExecutePacket;
+import cloud.hytora.driver.networking.packets.group.ServerConfigurationCacheUpdatePacket;
+import cloud.hytora.driver.networking.packets.node.*;
+import cloud.hytora.driver.networking.packets.player.*;
+import cloud.hytora.driver.networking.packets.services.*;
+import cloud.hytora.driver.networking.protocol.packets.IPacket;
+import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.defaults.HandshakePacket;
+import cloud.hytora.driver.networking.protocol.packets.defaults.ResponsePacket;
+import cloud.hytora.driver.networking.protocol.packets.defaults.SimplePacket;
+import com.google.common.collect.Maps;
+
+import lombok.Getter;
+
+import java.util.Map;
+
+public class PacketProvider {
+
+    @Getter
+    private static final Map<Integer, Class<? extends IPacket>> registeredPackets = Maps.newConcurrentMap();
+
+    public static int getPacketId(Class<? extends IPacket> clazz) {
+        return registeredPackets.keySet().stream().filter(id -> registeredPackets.get(id).equals(clazz)).findAny().orElse(-1);
+
+    }
+
+    private static boolean REGISTERED_INTERNALLY = false;
+
+    public static void registerPackets() {
+        if (REGISTERED_INTERNALLY) {
+            return;
+        }
+        REGISTERED_INTERNALLY = true;
+
+        //registering packets...
+        PacketProvider.autoRegister(HandshakePacket.class);
+        PacketProvider.autoRegister(NodeConnectionDataRequestPacket.class);
+        PacketProvider.autoRegister(NodeConnectionDataResponsePacket.class);
+        PacketProvider.autoRegister(NodeCycleDataPacket.class);
+        PacketProvider.autoRegister(NodeRequestShutdownPacket.class);
+        PacketProvider.autoRegister(NodeRequestServerStopPacket.class);
+        PacketProvider.autoRegister(NodeRequestServerStartPacket.class);
+
+        //Service packets
+        PacketProvider.autoRegister(ServiceShutdownPacket.class);
+        PacketProvider.autoRegister(CloudServerCacheRegisterPacket.class);
+        PacketProvider.autoRegister(CloudServerCacheUnregisterPacket.class);
+        PacketProvider.autoRegister(CloudServerCacheUpdatePacket.class);
+        PacketProvider.autoRegister(ServiceRequestShutdownPacket.class);
+        PacketProvider.autoRegister(CloudServerCommandPacket.class);
+
+        //updating packet
+        PacketProvider.autoRegister(DriverUpdatePacket.class);
+        PacketProvider.autoRegister(StorageUpdatePacket.class);
+
+        //service group packets
+        PacketProvider.autoRegister(ServiceGroupExecutePacket.class);
+        PacketProvider.autoRegister(ServerConfigurationCacheUpdatePacket.class);
+
+        //cloud player packets
+        PacketProvider.autoRegister(CloudPlayerLoginPacket.class);
+        PacketProvider.autoRegister(CloudPlayerDisconnectPacket.class);
+        PacketProvider.autoRegister(CloudPlayerUpdatePacket.class);
+        PacketProvider.autoRegister(CloudPlayerKickPacket.class);
+        PacketProvider.autoRegister(CloudPlayerSendServicePacket.class);
+
+        //util packets
+        PacketProvider.autoRegister(RedirectPacket.class);
+        PacketProvider.autoRegister(ResponsePacket.class);
+        PacketProvider.autoRegister(SimplePacket.class);
+        PacketProvider.autoRegister(DriverLoggingPacket.class);
+    }
+
+    public static void autoRegister(Class<? extends Packet> packetClass) {
+        registerPacket(packetClass, generatePacketId());
+    }
+
+    public static void registerPacket(Class<? extends Packet> packetClass, int id) {
+        if (registeredPackets.containsKey(id)) {
+            registerPacket(packetClass, (id + 1));
+            return;
+        }
+        registeredPackets.put(id, packetClass);
+    }
+
+    public static int generatePacketId() {
+        return registeredPackets.keySet().size() + 1;
+    }
+
+    public static Class<? extends IPacket> getPacketClass(int id) {
+        if (!registeredPackets.containsKey(id)) {
+            return null;
+        }
+        return registeredPackets.get(id);
+    }
+
+}

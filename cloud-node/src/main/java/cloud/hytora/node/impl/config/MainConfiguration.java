@@ -1,0 +1,29 @@
+package cloud.hytora.node.impl.config;
+
+import cloud.hytora.driver.node.config.DefaultNodeConfig;
+import cloud.hytora.driver.node.config.INodeConfig;
+import cloud.hytora.node.NodeDriver;
+import cloud.hytora.node.impl.database.DatabaseConfiguration;
+import lombok.AllArgsConstructor;
+
+import lombok.Getter;
+import lombok.Setter;
+
+
+@Getter
+@AllArgsConstructor
+@Setter
+public class MainConfiguration {
+
+    private DatabaseConfiguration databaseConfiguration;
+    private DefaultNodeConfig nodeConfig;
+
+    private int proxyStartPort;
+    private int spigotStartPort;
+    private java.util.List<String> whitelistedPlayers;
+
+    public static MainConfiguration getInstance() {
+        return NodeDriver.getInstance().getConfigManager().getConfig();
+    }
+
+}

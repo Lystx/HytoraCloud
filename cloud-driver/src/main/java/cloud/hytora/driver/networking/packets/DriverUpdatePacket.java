@@ -1,0 +1,57 @@
+package cloud.hytora.driver.networking.packets;
+
+import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
+import cloud.hytora.driver.networking.protocol.packets.BufferState;
+import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.player.impl.SimpleCloudPlayer;
+import cloud.hytora.driver.CloudDriver;
+
+import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.configuration.SimpleServerConfiguration;
+import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.impl.SimpleCloudServer;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+
+@NoArgsConstructor
+@Getter
+@AllArgsConstructor
+public class DriverUpdatePacket extends Packet {
+
+    private Collection<ServerConfiguration> groups;
+    private Collection<CloudServer> allCachedServices;
+    private Collection<CloudPlayer> cloudPlayers;
+
+    @Override
+    public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
+
+        //do not modify order of reading / writing
+
+        switch (state) {
+
+            case READ:
+                groups = buf.readWrapperObjectCollection(SimpleServerConfiguration.class);
+                CloudDriver.getInstance().getConfigurationManager().setAllCachedConfigurations((List<ServerConfiguration>) groups);
+
+                allCachedServices = buf.readWrapperObjectCollection(SimpleCloudServer.class);
+                CloudDriver.getInstance().getServiceManager().setAllCachedServices((List<CloudServer>) allCachedServices);
+
+                cloudPlayers = buf.readWrapperObjectCollection(SimpleCloudPlayer.class);
+                CloudDriver.getInstance().getPlayerManager().setAllCachedCloudPlayers((List<CloudPlayer>) cloudPlayers);
+                break;
+
+            case WRITE:
+                buf.writeObjectCollection(groups);
+                buf.writeObjectCollection(allCachedServices);
+                buf.writeObjectCollection(cloudPlayers);
+                break;
+        }
+    }
+}

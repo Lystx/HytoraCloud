@@ -1,0 +1,12 @@
+cloud\hytora\remote\impl\RemoteNodeHandler.class
+cloud\hytora\remote\impl\handler\RemoteCommandHandler.class
+cloud\hytora\remote\impl\RemoteChannelMessenger.class
+cloud\hytora\remote\impl\RemoteNetworkClient.class
+cloud\hytora\remote\Remote.class
+cloud\hytora\remote\impl\RemotePlayerManager.class
+cloud\hytora\remote\impl\handler\RemoteLoggingHandler.class
+cloud\hytora\remote\RemoteAdapter.class
+cloud\hytora\remote\impl\log\DefaultLogHandler.class
+cloud\hytora\remote\impl\RemoteCommandManager.class
+cloud\hytora\remote\impl\RemoteConfigurationManager.class
+cloud\hytora\remote\impl\RemoteServiceManager.class

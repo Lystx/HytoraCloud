@@ -1,0 +1,4 @@
+name: HytoraCloud-Bridge
+main: cloud.hytora.bridge.proxy.bungee.BungeeBootstrap
+description: Establishes the comunication between cloud and server
+version: SNAPSHOT-1.0
