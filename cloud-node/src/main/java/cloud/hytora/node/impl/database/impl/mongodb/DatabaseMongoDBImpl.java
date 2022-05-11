@@ -9,7 +9,9 @@ import com.mongodb.ConnectionString;
 import com.mongodb.client.MongoClient;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
 import org.checkerframework.checker.units.qual.C;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,6 +21,9 @@ public class DatabaseMongoDBImpl implements IDatabase {
 
     private MongoClient client;
     private MongoDatabase database;
+
+    private String groupsCollectionName = "cloudsystem_groups";
+    private MongoCollection groupsCollection;
 
     @Override
     public void connect() {
@@ -35,6 +40,7 @@ public class DatabaseMongoDBImpl implements IDatabase {
                 .build();
         this.client = MongoClients.create(settings);
         this.database = this.client.getDatabase(configuration.getDatabase());
+        this.groupsCollection = this.database.getCollection(this.groupsCollectionName);
     }
 
     @Override
