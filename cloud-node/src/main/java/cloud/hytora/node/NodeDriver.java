@@ -46,6 +46,8 @@ import cloud.hytora.node.impl.database.DatabaseType;
 import cloud.hytora.node.impl.handler.*;
 import cloud.hytora.node.impl.message.NodeChannelMessenger;
 import cloud.hytora.node.impl.node.NodeNodeManager;
+import cloud.hytora.node.impl.setup.database.MongoDBSetup;
+import cloud.hytora.node.impl.setup.database.MySqlSetup;
 import cloud.hytora.node.service.NodeServiceManager;
 import cloud.hytora.node.service.template.NodeTemplateService;
 import cloud.hytora.node.impl.setup.NodeSetup;
@@ -284,51 +286,88 @@ public class NodeDriver extends CloudDriver implements Node {
     private void startSetup() {
         new NodeSetup().start((setup, setupControlState) -> {
 
-            MainConfiguration config = configManager.getConfig();
-            DatabaseConfiguration databaseConfiguration = config.getDatabaseConfiguration();
-            DefaultNodeConfig nodeConfig = config.getNodeConfig();
+            if (setupControlState != SetupControlState.FINISHED) return;
 
-            if (setupControlState == SetupControlState.FINISHED) {
-                String nodeName = setup.getName();
-                String host = setup.getHost();
-                int port = setup.getPort();
-                int serviceStartPort = setup.getServiceStartPort();
-
-                nodeConfig.setNodeName(nodeName);
-                nodeConfig.setBindAddress(host);
-                nodeConfig.setBindPort(port);
-                nodeConfig.setRemote(false);
-
-                config.setSpigotStartPort(serviceStartPort);
-                config.setNodeConfig(nodeConfig);
-
-                DatabaseType databaseType = setup.getDatabaseType();
-                if (databaseType != DatabaseType.FILE) {
-                    String databaseHost = setup.getDatabaseHost();
-                    int databasePort = setup.getDatabasePort();
-                    String databaseUser = setup.getDatabaseUser();
-                    String databasePassword = setup.getDatabasePassword();
-                    String databaseName = setup.getDatabaseName();
-
-                    databaseConfiguration.setHost(databaseHost);
-                    databaseConfiguration.setPort(databasePort);
-                    databaseConfiguration.setUser(databaseUser);
-                    databaseConfiguration.setPassword(databasePassword);
-                    databaseConfiguration.setDatabase(databaseName);
-                }
-
-                databaseConfiguration.setType(databaseType);
-                config.setDatabaseConfiguration(databaseConfiguration);
-
-                configManager.setConfig(config);
-                configManager.save();
-
-                this.logger.info("§7You §acompleted §7the NodeSetup§8!");
-                this.logger.info("Please reboot the Node now to apply all changes!");
-                System.exit(0);
+            switch (setup.getDatabaseType()){
+                case FILE:
+                    initConfigs(setup, null, null);
+                    break;
+                case MYSQL:
+                    new MySqlSetup().start((mySqlSetup, setupControlState1) -> {
+                        if(setupControlState1 != SetupControlState.FINISHED) return;
+                        initConfigs(setup, mySqlSetup, null);
+                    });
+                    break;
+                case MONGODB:
+                    new MongoDBSetup().start((mongoDBSetup, setupControlState1) -> {
+                        if(setupControlState1 != SetupControlState.FINISHED) return;
+                        initConfigs(setup, null, mongoDBSetup);
+                    });
+                    break;
             }
 
         });
+    }
+
+    private void initConfigs(NodeSetup setup, MySqlSetup mySqlSetup, MongoDBSetup mongoDBSetup) throws IOException {
+        MainConfiguration config = configManager.getConfig();
+        DatabaseConfiguration databaseConfiguration = config.getDatabaseConfiguration();
+        DefaultNodeConfig nodeConfig = config.getNodeConfig();
+
+        String nodeName = setup.getName();
+        String host = setup.getHost();
+        int port = setup.getPort();
+        int serviceStartPort = setup.getServiceStartPort();
+
+        nodeConfig.setNodeName(nodeName);
+        nodeConfig.setBindAddress(host);
+        nodeConfig.setBindPort(port);
+        nodeConfig.setRemote(false);
+
+        config.setSpigotStartPort(serviceStartPort);
+        config.setNodeConfig(nodeConfig);
+
+        DatabaseType databaseType = setup.getDatabaseType();
+        String databaseHost = null;
+        int databasePort = -1;
+        String databaseUser = null;
+        String databasePassword = null;
+        String databaseName = null;
+        String authDatabase = null;
+        switch (databaseType){
+            case MYSQL:
+                databaseHost = mySqlSetup.getDatabaseHost();
+                databasePort = mySqlSetup.getDatabasePort();
+                databaseUser = mySqlSetup.getDatabaseUser();
+                databasePassword = mySqlSetup.getDatabasePassword();
+                databaseName = mySqlSetup.getDatabaseName();
+                authDatabase = "";
+                break;
+            case MONGODB:
+                databaseHost = mongoDBSetup.getDatabaseHost();
+                databasePort = mongoDBSetup.getDatabasePort();
+                databaseUser = mongoDBSetup.getDatabaseUser();
+                databasePassword = mongoDBSetup.getDatabasePassword();
+                databaseName = mongoDBSetup.getDatabaseName();
+                authDatabase = mongoDBSetup.getAuthDatabase();
+                break;
+        }
+
+        databaseConfiguration.setHost(databaseHost);
+        databaseConfiguration.setPort(databasePort);
+        databaseConfiguration.setUser(databaseUser);
+        databaseConfiguration.setPassword(databasePassword);
+        databaseConfiguration.setDatabase(databaseName);
+        databaseConfiguration.setAuthDatabase(authDatabase);
+        databaseConfiguration.setType(databaseType);
+        config.setDatabaseConfiguration(databaseConfiguration);
+
+        configManager.setConfig(config);
+        configManager.save();
+
+        this.logger.info("§7You §acompleted §7the NodeSetup§8!");
+        this.logger.info("Please reboot the Node now to apply all changes!");
+        System.exit(0);
     }
 
     @Override

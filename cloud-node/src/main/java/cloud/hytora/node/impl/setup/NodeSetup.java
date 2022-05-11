@@ -32,21 +32,6 @@ public class NodeSetup extends Setup<NodeSetup> {
     @ExitAfterInput("FILE")
     private DatabaseType databaseType;
 
-    @Question(id = 6, question = "What's the host of your database?")
-    private String databaseHost;
-
-    @Question(id = 7, question = "What's the port of your database?")
-    private int databasePort;
-
-    @Question(id = 7, question = "What's the username of your database?")
-    private String databaseUser;
-
-    @Question(id = 8, question = "What's the password of your database?")
-    private String databasePassword;
-
-    @Question(id = 9, question = "What's the name of your database?")
-    private String databaseName;
-
     @Override
     public boolean isCancellable() {
         return false;
