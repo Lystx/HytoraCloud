@@ -1,30 +1,48 @@
 package cloud.hytora.document.bson;
 
 import cloud.hytora.common.misc.CollectionUtils;
+import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.document.Bundle;
 import cloud.hytora.document.Document;
+import cloud.hytora.document.DocumentWrapper;
 import cloud.hytora.document.IEntry;
 import cloud.hytora.document.abstraction.AbstractDocument;
 import org.bson.BsonArray;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.BufferedReader;
-import java.io.Reader;
-import java.io.Writer;
+import java.io.*;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 
-public class BsonDocument extends AbstractDocument {
+public class BsonDocument extends AbstractDocument implements DocumentWrapper<org.bson.Document> {
 
 	protected org.bson.Document bsonDocument;
 
-//	public BsonDocument(@Nonnull File file) throws IOException {
-//		this(FileUtils.newBufferedReader(file));
-//	}
+	public BsonDocument() {
+		this(new org.bson.Document(), new AtomicBoolean(true));
+	}
+
+	public BsonDocument(String json) {
+		this(org.bson.Document.parse(json), new AtomicBoolean(true));
+	}
+
+	public BsonDocument(org.bson.Document bsonDocument) {
+		this(bsonDocument, new AtomicBoolean(true));
+	}
+
+
+	public BsonDocument(@Nonnull org.bson.Document bsonDocument, @Nonnull AtomicBoolean editable) {
+		super(editable);
+		this.bsonDocument = bsonDocument;
+	}
+
+	public BsonDocument(@Nonnull File file) throws IOException {
+		this(FileUtils.newBufferedReader(file));
+	}
 
 	public BsonDocument(@Nonnull Reader reader) {
 		super(true);
@@ -32,11 +50,6 @@ public class BsonDocument extends AbstractDocument {
 		StringBuilder content = new StringBuilder();
 		buffered.lines().forEach(content::append);
 		bsonDocument = org.bson.Document.parse(content.toString());
-	}
-
-	public BsonDocument(@Nonnull org.bson.Document bsonDocument, @Nonnull AtomicBoolean editable) {
-		super(editable);
-		this.bsonDocument = bsonDocument;
 	}
 
 	@Nonnull
@@ -132,5 +145,10 @@ public class BsonDocument extends AbstractDocument {
 	@Override
 	public String toString() {
 		return this.asRawJsonString();
+	}
+
+	@Override
+	public org.bson.Document getWrapper() {
+		return this.bsonDocument;
 	}
 }

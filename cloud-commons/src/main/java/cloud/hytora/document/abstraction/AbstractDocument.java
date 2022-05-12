@@ -2,8 +2,11 @@ package cloud.hytora.document.abstraction;
 
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
+import cloud.hytora.document.DocumentWrapper;
+import cloud.hytora.document.bson.BsonDocument;
 import cloud.hytora.document.gson.GsonDocument;
 import cloud.hytora.document.IEntry;
+import com.google.gson.Gson;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -96,6 +99,22 @@ public abstract class AbstractDocument implements Document {
 	}
 
 	protected abstract void clear0();
+
+	@Override
+	public DocumentWrapper<org.bson.Document> asBsonDocument() {
+		if (this instanceof BsonDocument) {
+			return (DocumentWrapper<org.bson.Document>) this;
+		}
+		return null;
+	}
+
+	@Override
+	public DocumentWrapper<Gson> asGsonDocument() {
+		if (this instanceof GsonDocument) {
+			return (DocumentWrapper<Gson>) this;
+		}
+		return null;
+	}
 
 	@Nonnull
 	@Override

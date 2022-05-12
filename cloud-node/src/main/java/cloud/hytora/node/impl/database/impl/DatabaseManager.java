@@ -3,6 +3,7 @@ package cloud.hytora.node.impl.database.impl;
 import cloud.hytora.common.wrapper.Wrapper;
 import cloud.hytora.node.impl.database.DatabaseType;
 import cloud.hytora.node.impl.database.impl.file.DatabaseFile;
+import cloud.hytora.node.impl.database.impl.mongodb.DatabaseMongoDBImpl;
 import cloud.hytora.node.impl.database.impl.sql.DatabaseSqlImpl;
 import cloud.hytora.node.impl.database.IDatabase;
 import cloud.hytora.node.impl.database.IDatabaseManager;
@@ -20,11 +21,14 @@ public class DatabaseManager implements IDatabaseManager {
 
         if (type == DatabaseType.MYSQL) {
             this.database = new DatabaseSqlImpl();
-        } else if (type == DatabaseType.FILE) {
+        } else if (type == DatabaseType.MONGODB) {
+            this.database = new DatabaseMongoDBImpl();
+        }else if (type == DatabaseType.FILE) {
             this.database = new DatabaseFile();
         } else {
             this.database = null;
         }
+        //database cannot be null
         this.database.connect();
     }
 

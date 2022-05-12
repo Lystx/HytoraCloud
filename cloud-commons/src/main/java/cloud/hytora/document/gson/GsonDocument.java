@@ -1,5 +1,7 @@
 package cloud.hytora.document.gson;
 
+import cloud.hytora.document.DocumentWrapper;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -18,7 +20,7 @@ import java.util.*;
 import java.util.function.Function;
 
 
-public class GsonDocument extends AbstractDocument {
+public class GsonDocument extends AbstractDocument implements DocumentWrapper<Gson> {
 
 	protected JsonObject object;
 
@@ -239,5 +241,10 @@ public class GsonDocument extends AbstractDocument {
 	@Override
 	public int hashCode() {
 		return Objects.hash(object);
+	}
+
+	@Override
+	public Gson getWrapper() {
+		return GsonHelper.PRETTY_GSON;
 	}
 }
