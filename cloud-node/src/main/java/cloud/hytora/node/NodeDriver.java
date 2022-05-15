@@ -113,6 +113,7 @@ public class NodeDriver extends CloudDriver implements Node {
     public static final File LOG_FOLDER = new File(NODE_FOLDER, "logs/");
 
     public static final File STORAGE_FOLDER = new File(NODE_FOLDER, "storage/");
+    public static final File CONFIGURATIONS_FOLDER = new File(STORAGE_FOLDER, "configurations/");
     public static final File STORAGE_VERSIONS_FOLDER = new File(STORAGE_FOLDER , "versions/");
     public static final File STORAGE_TEMP_FOLDER = new File(STORAGE_FOLDER, "tmp-" + UUID.randomUUID().toString().substring(0, 5) + "/");
     public static final File TEMPLATES_DIR = new File(STORAGE_FOLDER, "templates/");
@@ -176,7 +177,6 @@ public class NodeDriver extends CloudDriver implements Node {
 
         this.executor = new HytoraNode(this.configManager.getConfig());
 
-
         if (this.config.getClusterAddresses() != null && this.config.getClusterAddresses().length > 0) {
             this.config.markAsRemote();
         }
@@ -195,12 +195,24 @@ public class NodeDriver extends CloudDriver implements Node {
             this.logger.info("§7This Node is a §aHeadNode §7and boots up the Cluster...");
         }
 
+
+        //creating needed files
+        NodeDriver.NODE_FOLDER.mkdirs();
+        NodeDriver.CONFIGURATIONS_FOLDER.mkdirs();
+
+        NodeDriver.STORAGE_FOLDER.mkdirs();
+        NodeDriver.STORAGE_VERSIONS_FOLDER.mkdirs();
+
+        NodeDriver.SERVICE_DIR.mkdirs();
+        NodeDriver.SERVICE_DIR_STATIC.mkdirs();
+        NodeDriver.SERVICE_DIR_DYNAMIC.mkdirs();
+
         //initializing managers
         new InternalDriverEventAdapter(this.eventManager, executor);
         this.databaseManager = new DatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType());
-        this.configurationManager = new NodeConfigurationManager();
-        this.serviceManager = new NodeServiceManager();
         this.nodeTemplateService = new NodeTemplateService();
+        this.configurationManager = new NodeConfigurationManager(this.nodeTemplateService);
+        this.serviceManager = new NodeServiceManager();
         this.playerManager = new NodePlayerManager(this.eventManager);
         this.channelMessenger = new NodeChannelMessenger(executor);
         this.nodeManager = new NodeNodeManager();
@@ -208,8 +220,8 @@ public class NodeDriver extends CloudDriver implements Node {
 
         //copying files
         this.logger.info("§7Copying files§8...");
-        FileUtils.copyResource("/impl/plugin.jar", "storage/jars/plugin.jar", getClass());
-        FileUtils.copyResource("/impl/remote.jar", "storage/jars/remote.jar", getClass());
+        FileUtils.copyResource("/impl/plugin.jar", STORAGE_VERSIONS_FOLDER + "/plugin.jar", getClass());
+        FileUtils.copyResource("/impl/remote.jar", STORAGE_VERSIONS_FOLDER + "/remote.jar", getClass());
 
         this.logger.info("§7Registering §bCommands §8& §bArgumentParsers§8...");
         this.commandManager.registerCommand(new ShutdownCommand());

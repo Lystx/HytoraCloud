@@ -7,10 +7,12 @@ import cloud.hytora.driver.common.ConfigurationFileEditor;
 import cloud.hytora.driver.event.DestructiveListener;
 import cloud.hytora.driver.event.defaults.server.CloudServerCacheUnregisterEvent;
 import cloud.hytora.driver.event.defaults.server.CloudServerRequestScreenLeaveEvent;
+import cloud.hytora.driver.services.configuration.ConfigurationDownloadEntry;
 import cloud.hytora.driver.services.utils.ServiceTypes;
 import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.utils.ServiceIdentity;
 import cloud.hytora.driver.services.utils.ServiceState;
+import cloud.hytora.driver.services.utils.ServiceVersion;
 import cloud.hytora.node.impl.event.ServiceOutputLineAddEvent;
 import cloud.hytora.node.service.NodeServiceManager;
 import cloud.hytora.node.service.properties.BungeeProperties;
@@ -24,10 +26,8 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -50,7 +50,7 @@ public class ProcessServiceStarter {
         // add statistic to service
         NodeDriver.getInstance().getExecutor().registerStats(this.service);
 
-        this.service.getConfiguration().getVersion().download();
+        this.downloadServiceVersion(this.service.getConfiguration().getVersion());
 
         // create tmp file
         File parent = (service.getConfiguration().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
@@ -62,17 +62,23 @@ public class ProcessServiceStarter {
         NodeDriver.getInstance().getNodeTemplateService().copyTemplates(service);
 
         String jar = service.getConfiguration().getVersion().getJar();
-        FileUtils.copyFile(new File("storage/jars/" + jar), new File(tmpFolder, jar));
+        FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, jar), new File(tmpFolder, jar));
 
         // copy plugin
-        FileUtils.copyFile(new File("storage/jars/plugin.jar"), new File(tmpFolder, "plugins/plugin.jar"));
-
+        FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "plugin.jar"), new File(tmpFolder, "plugins/plugin.jar"));
 
         // TODO: 11.04.2022 change address if other node
         ServiceIdentity identity = new ServiceIdentity(service.getConfiguration().getNode(), NodeDriver.getInstance().getExecutor().getHostName(), service.getName(), NodeDriver.getInstance().getExecutor().getPort());
 
         // write property for identify service
         identity.save(new File(tmpFolder, "property.json"));
+
+        //copy extra downloads
+        for (ConfigurationDownloadEntry entry : service.getConfiguration().getStartupDownloadEntries()) {
+
+            String url = entry.getUrl();
+            FileUtils.copyURLToFile(new URL(url), new File(tmpFolder, entry.getDestination()));
+        }
 
         // check properties and modify
         if (service.getConfiguration().getVersion().isProxy()) {
@@ -165,7 +171,7 @@ public class ProcessServiceStarter {
                 "-Xms" + service.getConfiguration().getMemory() + "M",
                 "-Xmx" + service.getConfiguration().getMemory() + "M"));
 
-        Path remoteFile = Paths.get("storage", "jars", "remote.jar");
+        Path remoteFile = new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "remote.jar").toPath();
 
         File parent = (service.getConfiguration().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
         File applicationFile = new File(parent, service.getName() + "/" + service.getConfiguration().getVersion().getJar());
@@ -192,4 +198,44 @@ public class ProcessServiceStarter {
 
         return arguments.toArray(new String[]{});
     }
+
+
+
+    private void downloadServiceVersion(ServiceVersion version) {
+        File file = new File(NodeDriver.STORAGE_VERSIONS_FOLDER, version.getJar());
+
+        if (file.exists()) {
+            return;
+        }
+
+        CloudDriver.getInstance().getLogger().info("§7Downloading §bVersion§7... (§3" + version.getTitle() + "§7)");
+
+        file.getParentFile().mkdirs();
+
+        try {
+            String url = version.getUrl();
+            FileUtils.copyURLToFile(new URL(url), file);
+
+            if (version.getTitle().equals("paper")) {
+                Process process = new ProcessBuilder("java", "-jar", version.getJar()).directory(file.getParentFile()).start();
+                InputStreamReader inputStreamReader = new InputStreamReader(process.getInputStream());
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                bufferedReader.readLine();
+                bufferedReader.readLine();
+                bufferedReader.readLine();
+                process.destroyForcibly();
+                bufferedReader.close();
+                inputStreamReader.close();
+                FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "cache/patched_" + version.getVersion() + ".jar"), file);
+                FileUtils.deleteDirectory(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "cache/"));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            CloudDriver.getInstance().getLogger().error("§cFailed to download version§7... (§3" + version.getTitle() + "§7)");
+            return;
+        }
+        CloudDriver.getInstance().getLogger().info("Downloading of (§3" + version.getTitle() + "§7)§a successfully §7completed.");
+    }
+
+
 }

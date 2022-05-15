@@ -5,7 +5,6 @@ import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.common.logging.handler.HandledLogger;
 import cloud.hytora.driver.command.Console;
-import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.console.handler.ConsoleLogHandler;
 import cloud.hytora.node.console.handler.FileLogHandler;
 import cloud.hytora.node.console.jline3.JLine3Console;

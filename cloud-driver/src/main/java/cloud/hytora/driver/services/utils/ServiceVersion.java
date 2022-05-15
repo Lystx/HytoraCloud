@@ -76,58 +76,12 @@ public enum ServiceVersion {
         this.serviceTypes = serviceTypes;
     }
 
-    public static ServiceVersion getVersionByTitle(String value) {
-        try {
-            return valueOf(value);
-        } catch (IllegalArgumentException e) {
-            return Arrays.stream(values()).filter(it -> (it.getTitle() + (!Objects.equals(it.getVersion(), "latest") ? "-" + it.getVersion() : "")).equalsIgnoreCase(value)).findAny().orElse(null);
-        }
-
-    }
-
     public boolean isProxy() {
         return this.serviceTypes == ServiceTypes.PROXY;
     }
 
     public String getJar() {
         return this.title + (!this.version.equalsIgnoreCase("latest") ? "-" + this.version : "") + ".jar";
-    }
-
-    public void download() {
-        File file = new File("storage/jars", this.getJar());
-
-        if (file.exists()) {
-            return;
-        }
-
-        CloudDriver.getInstance().getLogger().info("§7Downloading §bVersion§7... (§3" + this.getTitle() + "§7)");
-
-        file.getParentFile().mkdirs();
-
-        try {
-            String url = this.getUrl();
-            CloudDriver.getInstance().getLogger().debug(url); // debug
-            FileUtils.copyURLToFile(new URL(url), file);
-
-            if (this.title.equals("paper")) {
-                Process process = new ProcessBuilder("java", "-jar", this.getJar()).directory(file.getParentFile()).start();
-                InputStreamReader inputStreamReader = new InputStreamReader(process.getInputStream());
-                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-                bufferedReader.readLine();
-                bufferedReader.readLine();
-                bufferedReader.readLine();
-                process.destroyForcibly();
-                bufferedReader.close();
-                inputStreamReader.close();
-                FileUtils.copyFile(new File("storage/jars/cache/patched_" + this.version + ".jar"), file);
-                FileUtils.deleteDirectory(new File("storage/jars/cache"));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            CloudDriver.getInstance().getLogger().error("§cFailed to download version§7... (§3" + this.getTitle() + "§7)");
-            return;
-        }
-        CloudDriver.getInstance().getLogger().info("Downloading of (§3" + this.getTitle() + "§7)§a successfully §7completed.");
     }
 
     private int getBuildNumber(@NotNull String title, final @NotNull String version) {

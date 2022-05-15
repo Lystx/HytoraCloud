@@ -12,6 +12,7 @@ import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.database.IDatabase;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
+import cloud.hytora.node.service.template.NodeTemplateService;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.stream.Collectors;
@@ -21,7 +22,7 @@ public class NodeConfigurationManager extends DefaultConfigurationManager {
 
     private final IDatabase database;
 
-    public NodeConfigurationManager() {
+    public NodeConfigurationManager(NodeTemplateService templateService) {
         this.database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
 
         // loading all database groups
@@ -45,6 +46,11 @@ public class NodeConfigurationManager extends DefaultConfigurationManager {
             CloudDriver.getInstance().getLogger().warn("Maybe you want to create some?");
         } else {
             CloudDriver.getInstance().getLogger().info("§7Cached following groups: §b" + this.getAllCachedConfigurations().stream().map(ServerConfiguration::getName).collect(Collectors.joining("§8, §b")));
+        }
+
+        //checking if directories got deleted meanwhile
+        for (ServerConfiguration allCachedConfiguration : this.getAllCachedConfigurations()) {
+            templateService.createTemplateFolder(allCachedConfiguration);
         }
     }
 

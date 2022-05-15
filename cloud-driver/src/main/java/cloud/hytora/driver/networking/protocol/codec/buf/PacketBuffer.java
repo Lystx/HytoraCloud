@@ -1,6 +1,7 @@
 package cloud.hytora.driver.networking.protocol.codec.buf;
 
 import cloud.hytora.document.Document;
+import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.CloudDriver;
@@ -74,6 +75,10 @@ public interface PacketBuffer {
 
 	@Nonnull
 	PacketBuffer write(@Nonnull byte[] bytes);
+
+	ProtocolAddress readAddress();
+
+	PacketBuffer writeAddress(@Nonnull ProtocolAddress address);
 
 	@Nonnull
 	PacketBuffer write(@Nonnull byte[] bytes, int index, int length);

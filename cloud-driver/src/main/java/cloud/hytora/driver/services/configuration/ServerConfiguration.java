@@ -16,6 +16,23 @@ public interface ServerConfiguration extends Bufferable, SelfCloneable<ServerCon
     @NotNull String getName();
 
     /**
+     * The permission to access a service of this configuration
+     */
+    String getPermission();
+
+    /**
+     * Startup download entries
+     */
+    ConfigurationDownloadEntry[] getStartupDownloadEntries();
+
+    /**
+     * Sets the permission of this group
+     *
+     * @param permission the permission to set
+     */
+    void setPermission(@NotNull String permission);
+
+    /**
      * @return the template of the group
      */
     @NotNull String getTemplate();

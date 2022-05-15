@@ -24,10 +24,12 @@ import java.util.List;
 @AllArgsConstructor
 public class SimpleServerConfiguration implements ServerConfiguration, Bufferable {
 
+    private String permission;
     private String name, template, node, motd;
     private int memory, defaultMaxPlayers, minOnlineService, maxOnlineService, startOrder, javaVersion;
     private boolean maintenance;
     private SimpleFallback fallback = new SimpleFallback();
+    private ConfigurationDownloadEntry[] startupDownloadEntries = new ConfigurationDownloadEntry[0];
 
     private ServiceVersion version;
     private ServiceShutdownBehaviour shutdownBehaviour;
@@ -49,6 +51,7 @@ public class SimpleServerConfiguration implements ServerConfiguration, Bufferabl
 
             case READ:
                 this.name = buf.readString();
+                this.permission = buf.readString();
                 this.template = buf.readString();
                 this.node = buf.readString();
                 this.motd = buf.readString();
@@ -61,6 +64,7 @@ public class SimpleServerConfiguration implements ServerConfiguration, Bufferabl
                 this.javaVersion = buf.readInt();
 
                 this.fallback = buf.readObject(SimpleFallback.class);
+                this.startupDownloadEntries = buf.readObjectArray(ConfigurationDownloadEntry.class);
                 this.maintenance = buf.readBoolean();
 
                 this.version = buf.readEnum(ServiceVersion.class);
@@ -69,6 +73,7 @@ public class SimpleServerConfiguration implements ServerConfiguration, Bufferabl
 
             case WRITE:
                 buf.writeString(this.getName());
+                buf.writeString(this.getPermission());
                 buf.writeString(this.getTemplate());
                 buf.writeString(this.getNode());
                 buf.writeString(this.getMotd());
@@ -81,6 +86,7 @@ public class SimpleServerConfiguration implements ServerConfiguration, Bufferabl
                 buf.writeInt(this.getJavaVersion());
 
                 buf.writeObject(this.getFallback());
+                buf.writeObjectArray(this.getStartupDownloadEntries());
                 buf.writeBoolean(this.isMaintenance());
 
                 buf.writeEnum(this.getVersion());
@@ -93,6 +99,7 @@ public class SimpleServerConfiguration implements ServerConfiguration, Bufferabl
         SimpleServerConfiguration to = (SimpleServerConfiguration) t;
 
         to.setName(from.getName());
+        to.setPermission(from.getPermission());
         to.setTemplate(from.getTemplate());
         to.setNode(from.getNode());
         to.setMotd(from.getMotd());
@@ -104,6 +111,7 @@ public class SimpleServerConfiguration implements ServerConfiguration, Bufferabl
         to.setStartOrder(from.getStartOrder());
 
         to.setFallback((SimpleFallback) from.getFallback());
+        to.setStartupDownloadEntries(from.getStartupDownloadEntries());
         to.setMaintenance(from.isMaintenance());
 
         to.setVersion(from.getVersion());

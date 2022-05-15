@@ -55,9 +55,22 @@ public class ProxyEvents implements Listener {
         playerManager.registerCloudPlayer(event.getConnection().getUniqueId(), event.getConnection().getName());
     }
 
+    
+    
     @EventHandler
     public void handle(ServerConnectEvent event) {
+        ServerInfo target = event.getTarget();
+        ProxiedPlayer player = event.getPlayer();
+        
         ServiceManager serviceManager = CloudDriver.getInstance().getServiceManager();
+        CloudServer server = serviceManager.getServiceByNameOrNull(target.getName());
+        
+        if (server != null && !player.hasPermission(server.getConfiguration().getPermission())) {
+            //kick player
+            event.setCancelled(true);
+            player.sendMessage("§cThis server has a specific permission to join it"); // TODO: 15.05.2022 customizable 
+        }
+
         this.playerManager.getCloudPlayer(event.getPlayer().getUniqueId()).ifPresent(cloudPlayer -> {
             if (event.getTarget().getName().equalsIgnoreCase("fallback")) {
                 Wrapper<CloudServer> optional = serviceManager.getFallbackOrNullAsService();
@@ -95,14 +108,13 @@ public class ProxyEvents implements Listener {
     }
 
     @EventHandler
-    public void handle(final ServerKickEvent event) {
+    public void handle(ServerKickEvent event) {
         this.getFallback(event.getPlayer()).ifPresent(serverInfo -> {
             event.setCancelled(true);
             event.setCancelServer(serverInfo);
         });
     }
 
-    //TODO CHECK FALLBACKHANDLER DUPLICATED?
     private Optional<ServerInfo> getFallback(final ProxiedPlayer player) {
         return CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream()
                 .filter(service -> service.getServiceState() == ServiceState.ONLINE)

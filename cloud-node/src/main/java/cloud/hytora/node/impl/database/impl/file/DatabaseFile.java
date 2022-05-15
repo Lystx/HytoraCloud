@@ -7,6 +7,7 @@ import cloud.hytora.driver.CloudDriver;
 
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.configuration.SimpleServerConfiguration;
+import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.database.IDatabase;
 
 
@@ -19,10 +20,9 @@ import java.util.List;
 
 public class DatabaseFile implements IDatabase {
 
-    private final File groupsDirectory = new File("storage/groups/");
 
     public DatabaseFile() {
-        groupsDirectory.mkdirs();
+        NodeDriver.CONFIGURATIONS_FOLDER.mkdirs();
     }
 
     @Override
@@ -40,7 +40,7 @@ public class DatabaseFile implements IDatabase {
     @Override
     public List<ServerConfiguration> getAllServiceGroups() {
         List<ServerConfiguration> serviceGroups = new ArrayList<>();
-        for (File file : groupsDirectory.listFiles()) {
+        for (File file : NodeDriver.CONFIGURATIONS_FOLDER.listFiles()) {
             try {
                 cloud.hytora.document.Document document = DocumentFactory.newJsonDocument(file);
                 serviceGroups.add(document.toInstance(SimpleServerConfiguration.class));
@@ -53,7 +53,7 @@ public class DatabaseFile implements IDatabase {
 
     @Override
     public void addGroup(@NotNull ServerConfiguration serviceGroup) {
-        File file = new File(groupsDirectory, serviceGroup.getName() + ".json");
+        File file = new File(NodeDriver.CONFIGURATIONS_FOLDER, serviceGroup.getName() + ".json");
         Document document = DocumentFactory.newJsonDocument(serviceGroup);
         try {
             document.saveToFile(file);
@@ -64,7 +64,7 @@ public class DatabaseFile implements IDatabase {
 
     @Override
     public void removeGroup(@NotNull ServerConfiguration serviceGroup) {
-        File file = new File(groupsDirectory, serviceGroup.getName() + ".json");
+        File file = new File(NodeDriver.CONFIGURATIONS_FOLDER, serviceGroup.getName() + ".json");
         file.delete();
     }
 }
