@@ -1,4 +1,4 @@
-package cloud.hytora.node.impl.database.impl;
+package cloud.hytora.node.impl.database;
 
 import cloud.hytora.document.Document;
 

@@ -1,11 +1,11 @@
-package cloud.hytora.node.impl.database.impl.sql;
+package cloud.hytora.node.impl.database.impl;
 
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.node.impl.config.MainConfiguration;
-import cloud.hytora.node.impl.database.DatabaseConfiguration;
-import cloud.hytora.node.impl.database.impl.IDatabase;
+import cloud.hytora.node.impl.database.config.DatabaseConfiguration;
+import cloud.hytora.node.impl.database.IDatabase;
 import lombok.SneakyThrows;
 
 import java.sql.*;

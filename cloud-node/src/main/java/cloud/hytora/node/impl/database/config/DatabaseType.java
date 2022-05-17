@@ -1,4 +1,4 @@
-package cloud.hytora.node.impl.database;
+package cloud.hytora.node.impl.database.config;
 
 public enum DatabaseType {
 

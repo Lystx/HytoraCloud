@@ -1,26 +1,19 @@
-package cloud.hytora.node.impl.database.impl.file;
+package cloud.hytora.node.impl.database.impl;
 
-import cloud.hytora.common.wrapper.Wrapper;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
-import cloud.hytora.driver.CloudDriver;
 
-import cloud.hytora.driver.services.configuration.ServerConfiguration;
-import cloud.hytora.driver.services.configuration.SimpleServerConfiguration;
 import cloud.hytora.node.NodeDriver;
-import cloud.hytora.node.impl.database.CloudDatabase;
 
 
-import cloud.hytora.node.impl.database.impl.IDatabase;
+import cloud.hytora.node.impl.database.IDatabase;
 import org.apache.commons.io.FileUtils;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class DatabaseFile implements IDatabase {

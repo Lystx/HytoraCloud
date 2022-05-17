@@ -2,7 +2,7 @@ package cloud.hytora.node.impl.setup;
 
 import cloud.hytora.driver.setup.Setup;
 import cloud.hytora.driver.setup.annotations.*;
-import cloud.hytora.node.impl.database.DatabaseType;
+import cloud.hytora.node.impl.database.config.DatabaseType;
 import lombok.Getter;
 
 @Getter

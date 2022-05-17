@@ -1,18 +1,17 @@
-package cloud.hytora.node.impl.database.impl;
+package cloud.hytora.node.impl.database.def;
 
 import cloud.hytora.common.wrapper.Wrapper;
-import cloud.hytora.node.impl.database.CloudDatabase;
-import cloud.hytora.node.impl.database.DatabaseType;
+
+
+import cloud.hytora.node.impl.database.impl.CloudDatabase;
+import cloud.hytora.node.impl.database.config.DatabaseType;
+import cloud.hytora.node.impl.database.IDatabase;
 import cloud.hytora.node.impl.database.IDatabaseManager;
-
-
-import cloud.hytora.node.impl.database.impl.file.DatabaseFile;
-import cloud.hytora.node.impl.database.impl.mongodb.DatabaseMongoDB;
-import cloud.hytora.node.impl.database.impl.sql.DatabaseMySQL;
+import cloud.hytora.node.impl.database.impl.DatabaseFile;
+import cloud.hytora.node.impl.database.impl.DatabaseMongoDB;
+import cloud.hytora.node.impl.database.impl.DatabaseMySQL;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.concurrent.Callable;
 
 @Getter
 public class DefaultDatabaseManager implements IDatabaseManager {

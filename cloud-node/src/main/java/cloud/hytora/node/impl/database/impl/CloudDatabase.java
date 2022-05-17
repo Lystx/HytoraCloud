@@ -1,21 +1,15 @@
-package cloud.hytora.node.impl.database;
+package cloud.hytora.node.impl.database.impl;
 
 
-import cloud.hytora.common.wrapper.Wrapper;
-
-import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.configuration.SimpleServerConfiguration;
 import cloud.hytora.driver.services.configuration.bundle.ConfigurationParent;
 import cloud.hytora.driver.services.configuration.bundle.SimpleParent;
-import cloud.hytora.node.impl.database.impl.IDatabase;
+import cloud.hytora.node.impl.database.IDatabase;
 import lombok.AllArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor

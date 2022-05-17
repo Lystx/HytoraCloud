@@ -1,7 +1,7 @@
 package cloud.hytora.node.impl.database;
 
 import cloud.hytora.common.wrapper.Wrapper;
-import cloud.hytora.node.impl.database.impl.IDatabase;
+import cloud.hytora.node.impl.database.impl.CloudDatabase;
 import org.jetbrains.annotations.NotNull;
 
 public interface IDatabaseManager {

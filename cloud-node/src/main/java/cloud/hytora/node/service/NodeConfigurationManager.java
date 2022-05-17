@@ -12,7 +12,7 @@ import cloud.hytora.driver.services.configuration.bundle.ConfigurationParent;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.node.NodeDriver;
-import cloud.hytora.node.impl.database.CloudDatabase;
+import cloud.hytora.node.impl.database.impl.CloudDatabase;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import org.jetbrains.annotations.NotNull;

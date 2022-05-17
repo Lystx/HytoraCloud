@@ -3,14 +3,12 @@ package cloud.hytora.node.impl.config;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
-import cloud.hytora.driver.node.config.JavaVersion;
 import cloud.hytora.driver.node.config.SimpleJavaVersion;
 import cloud.hytora.node.NodeDriver;
-import cloud.hytora.node.impl.database.DatabaseConfiguration;
-import cloud.hytora.node.impl.database.DatabaseType;
+import cloud.hytora.node.impl.database.config.DatabaseConfiguration;
+import cloud.hytora.node.impl.database.config.DatabaseType;
 import lombok.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
