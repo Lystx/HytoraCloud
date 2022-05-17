@@ -37,6 +37,9 @@ import cloud.hytora.driver.services.NodeCloudServer;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.configuration.ConfigurationManager;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.configuration.bundle.ConfigurationParent;
+import cloud.hytora.driver.services.template.ServiceTemplate;
+import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.node.service.template.LocalTemplateStorage;
 import cloud.hytora.driver.setup.SetupControlState;
 import cloud.hytora.driver.storage.DriverStorage;
@@ -211,6 +214,20 @@ public class NodeDriver extends CloudDriver implements Node {
         this.channelMessenger = new NodeChannelMessenger(executor);
         this.nodeManager = new NodeNodeManager();
         this.logger.info("§8");
+
+
+
+        //checking if directories got deleted meanwhile
+        for (ConfigurationParent parent : this.configurationManager.getAllParentConfigurations()) {
+
+            //creating templates
+            for (ServiceTemplate template : parent.getTemplates()) {
+                TemplateStorage storage = template.getStorage();
+                if (storage != null) {
+                    storage.createTemplate(template);
+                }
+            }
+        }
 
         //registering template storage
         this.templateManager.registerStorage(new LocalTemplateStorage());

@@ -37,7 +37,11 @@ public class SimpleServerConfiguration extends ProtocolPropertyHolder implements
     private ServiceVersion version;
 
     public ConfigurationParent getParent() {
-        return CloudDriver.getInstance().getConfigurationManager().getParentByNameOrNull(this.parent);
+        return CloudDriver
+                .getInstance()
+                .getConfigurationManager()
+                .getParentByNameOrNull(
+                        this.parent);
     }
 
     @Override

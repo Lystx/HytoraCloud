@@ -27,7 +27,8 @@ public class NodeConfigurationManager extends DefaultConfigurationManager {
     public NodeConfigurationManager() {
         this.database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
 
-        // loading all database groups
+        // loading all database groups and configurations
+        this.getAllParentConfigurations().addAll(this.database.getAllParentConfigurations());
         this.getAllCachedConfigurations().addAll(this.database.getAllConfigurations());
 
         CloudDriver.getInstance().getExecutor().registerPacketHandler((PacketHandler<ServiceConfigurationExecutePacket>) (ctx, packet) -> {
@@ -55,20 +56,10 @@ public class NodeConfigurationManager extends DefaultConfigurationManager {
             CloudDriver.getInstance().getLogger().warn("There are no ServiceConfigurations loaded!");
             CloudDriver.getInstance().getLogger().warn("Maybe you want to create some?");
         } else {
-            CloudDriver.getInstance().getLogger().info("§7Cached following groups: §b" + this.getAllCachedConfigurations().stream().map(ServerConfiguration::getName).collect(Collectors.joining("§8, §b")));
+            CloudDriver.getInstance().getLogger().info("§7Cached following groups: §b" + this.getAllParentConfigurations().stream().map(ConfigurationParent::getName).collect(Collectors.joining("§8, §b")));
+            CloudDriver.getInstance().getLogger().info("§7Cached following configurations: §b" + this.getAllCachedConfigurations().stream().map(ServerConfiguration::getName).collect(Collectors.joining("§8, §b")));
         }
 
-        //checking if directories got deleted meanwhile
-        for (ServerConfiguration allCachedConfiguration : this.getAllCachedConfigurations()) {
-
-            //creating templates
-            for (ServiceTemplate template : allCachedConfiguration.getParent().getTemplates()) {
-                TemplateStorage storage = template.getStorage();
-                if (storage != null) {
-                    storage.createTemplate(template);
-                }
-            }
-        }
     }
 
     @CloudEventHandler
