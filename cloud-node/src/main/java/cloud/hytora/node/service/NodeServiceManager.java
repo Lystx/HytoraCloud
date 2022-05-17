@@ -69,10 +69,10 @@ public class NodeServiceManager extends DefaultServiceManager {
 
         ServerConfiguration con = service.getConfiguration();
 
-        File parent = (con.getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
+        File parent = (con.getParent().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
         File folder = new File(parent, service.getName() + "/");
 
-        if (con.getShutdownBehaviour().isStatic()) {
+        if (con.getParent().getShutdownBehaviour().isStatic()) {
             //only delete cloud files
             File property = new File(folder, "property.json");
             property.delete();

@@ -14,7 +14,7 @@ import cloud.hytora.driver.services.configuration.ConfigurationDownloadEntry;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
-import cloud.hytora.driver.services.utils.ServiceTypes;
+import cloud.hytora.driver.services.utils.WrapperEnvironment;
 import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.utils.ServiceIdentity;
 import cloud.hytora.driver.services.utils.ServiceState;
@@ -36,7 +36,6 @@ import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.jar.JarInputStream;
 
@@ -59,14 +58,14 @@ public class ProcessServiceStarter {
         this.downloadServiceVersion(this.service.getConfiguration().getVersion());
 
         // create server dir
-        File parent = (service.getConfiguration().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
+        File parent = (service.getConfiguration().getParent().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
         File serverDir = new File(parent, service.getName() + "/");
 
         FileUtils.forceMkdir(serverDir);
 
         // load all current configuration templates
         ServerConfiguration configuration = service.getConfiguration();
-        for (ServiceTemplate template : configuration.getTemplates()) {
+        for (ServiceTemplate template : configuration.getParent().getTemplates()) {
             TemplateStorage storage = template.getStorage();
             if (storage != null) {
                 storage.copyTemplate(service, template, serverDir);
@@ -86,7 +85,7 @@ public class ProcessServiceStarter {
         identity.save(new File(serverDir, "property.json"));
 
         //copy extra downloads
-        for (ConfigurationDownloadEntry entry : service.getConfiguration().getStartupDownloadEntries()) {
+        for (ConfigurationDownloadEntry entry : service.getConfiguration().getParent().getDownloadEntries()) {
             CloudDriver.getInstance().getLogger().log(LogLevel.INFO, "Downloading entry for '{}' [url={}, dest={}]", service.getName(), entry.getUrl(), entry.getDestination());
             String url = entry.getUrl();
             FileUtils.copyURLToFile(new URL(url), new File(serverDir, entry.getDestination()));
@@ -114,7 +113,7 @@ public class ProcessServiceStarter {
     public Wrapper<CloudServer> start() {
         Wrapper<CloudServer> wrapper = Wrapper.empty(CloudServer.class).denyNull();
 
-        File parent = (service.getConfiguration().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
+        File parent = (service.getConfiguration().getParent().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
         File folder = new File(parent, service.getName() + "/");
 
         StartedProcess result = new ProcessExecutor()
@@ -176,13 +175,13 @@ public class ProcessServiceStarter {
         );
 
         //adding custom configuration arguments
-        if (configuration.getJavaArguments() != null && configuration.getJavaArguments().length > 0) {
-            arguments.addAll(Arrays.asList(configuration.getJavaArguments()));
+        if (configuration.getParent().getJavaArguments() != null && configuration.getParent().getJavaArguments().length > 0) {
+            arguments.addAll(Arrays.asList(configuration.getParent().getJavaArguments()));
         }
 
         Path remoteFile = new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "remote.jar").toPath();
 
-        File parent = (service.getConfiguration().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
+        File parent = (service.getConfiguration().getParent().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
         File applicationFile = new File(parent, service.getName() + "/" + service.getConfiguration().getVersion().getJar());
 
 
@@ -201,7 +200,7 @@ public class ProcessServiceStarter {
             ex.printStackTrace();
         }
 
-        if (service.getConfiguration().getVersion().getServiceTypes() == ServiceTypes.SERVER) {
+        if (service.getConfiguration().getVersion().getWrapperEnvironment() == WrapperEnvironment.MINECRAFT_SERVER) {
             arguments.add("nogui");
         }
 

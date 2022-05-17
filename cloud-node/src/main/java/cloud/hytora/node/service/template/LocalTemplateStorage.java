@@ -55,7 +55,7 @@ public class LocalTemplateStorage implements TemplateStorage {
 
     private void checkIfTemplateFoldersNeeded() {
         for (ServerConfiguration con : CloudDriver.getInstance().getConfigurationManager().getAllCachedConfigurations()) {
-            for (ServiceTemplate template : con.getTemplates()) {
+            for (ServiceTemplate template : con.getParent().getTemplates()) {
                 this.createTemplate(template);
             }
         }
@@ -90,7 +90,7 @@ public class LocalTemplateStorage implements TemplateStorage {
         FileUtils.copyDirectory(configuration.getVersion().isProxy() ? GLOBAL_PROXY_FOLDER : GLOBAL_SERVICE_FOLDER, directory);
 
         File templateDir = new File(NodeDriver.TEMPLATES_DIR, template.buildTemplatePath());
-        if (configuration.getShutdownBehaviour() == ServiceShutdownBehaviour.KEEP && !template.shouldCopyToStatic()) {
+        if (configuration.getParent().getShutdownBehaviour() == ServiceShutdownBehaviour.KEEP && !template.shouldCopyToStatic()) {
             //static but template does not allow copying to static
             return;
         }
@@ -119,12 +119,16 @@ public class LocalTemplateStorage implements TemplateStorage {
             if (files != null) {
                 for (File file : files) {
                     String fileName = file.getName();
-                    if (deployment.getExclusionFiles().contains(fileName) || fileName.equalsIgnoreCase("remote.jar")) {
+                    if (deployment.getExclusionFiles().contains(fileName) || fileName.equalsIgnoreCase("remote.jar") || fileName.equalsIgnoreCase("plugin.jar")) {
                         continue;
                     }
 
                     try {
-                        FileUtils.copyFile(file, new File(templateDirectory, file.getName()));
+                        if (file.isDirectory()) {
+                            FileUtils.copyDirectory(file, new File(templateDirectory, file.getName()));
+                        } else {
+                            FileUtils.copyFile(file, new File(templateDirectory, file.getName()));
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

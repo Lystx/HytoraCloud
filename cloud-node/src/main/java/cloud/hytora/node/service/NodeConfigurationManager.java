@@ -8,10 +8,11 @@ import cloud.hytora.driver.services.configuration.DefaultConfigurationManager;
 import cloud.hytora.driver.networking.packets.group.ServiceConfigurationExecutePacket;
 import cloud.hytora.driver.networking.packets.group.ServerConfigurationCacheUpdatePacket;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.configuration.bundle.ConfigurationParent;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.node.NodeDriver;
-import cloud.hytora.node.impl.database.IDatabase;
+import cloud.hytora.node.impl.database.CloudDatabase;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import org.jetbrains.annotations.NotNull;
@@ -21,20 +22,20 @@ import java.util.stream.Collectors;
 
 public class NodeConfigurationManager extends DefaultConfigurationManager {
 
-    private final IDatabase database;
+    private final CloudDatabase database;
 
     public NodeConfigurationManager() {
         this.database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
 
         // loading all database groups
-        this.getAllCachedConfigurations().addAll(this.database.getAllServiceGroups());
+        this.getAllCachedConfigurations().addAll(this.database.getAllConfigurations());
 
         CloudDriver.getInstance().getExecutor().registerPacketHandler((PacketHandler<ServiceConfigurationExecutePacket>) (ctx, packet) -> {
             if (packet.getPayLoad().equals(ServiceConfigurationExecutePacket.ExecutionPayLoad.CREATE)) {
                 getAllCachedConfigurations().add(packet.getConfiguration());
 
                 //creating templates
-                for (ServiceTemplate template : packet.getConfiguration().getTemplates()) {
+                for (ServiceTemplate template : packet.getConfiguration().getParent().getTemplates()) {
                     TemplateStorage storage = template.getStorage();
                     if (storage != null) {
                         storage.createTemplate(template);
@@ -61,7 +62,7 @@ public class NodeConfigurationManager extends DefaultConfigurationManager {
         for (ServerConfiguration allCachedConfiguration : this.getAllCachedConfigurations()) {
 
             //creating templates
-            for (ServiceTemplate template : allCachedConfiguration.getTemplates()) {
+            for (ServiceTemplate template : allCachedConfiguration.getParent().getTemplates()) {
                 TemplateStorage storage = template.getStorage();
                 if (storage != null) {
                     storage.createTemplate(template);
@@ -77,15 +78,26 @@ public class NodeConfigurationManager extends DefaultConfigurationManager {
 
     @Override
     public void addConfiguration(@NotNull ServerConfiguration serviceGroup) {
-        this.database.addGroup(serviceGroup);
+        this.database.saveConfiguration(serviceGroup);
         NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceConfigurationExecutePacket(serviceGroup, ServiceConfigurationExecutePacket.ExecutionPayLoad.CREATE));
         super.addConfiguration(serviceGroup);
     }
 
+    @Override
+    public void addParentConfiguration(@NotNull ConfigurationParent serviceGroup) {
+        this.database.saveParentConfiguration(serviceGroup);
+        super.addParentConfiguration(serviceGroup);
+    }
+
+    @Override
+    public void removeParentConfiguration(@NotNull ConfigurationParent serviceGroup) {
+        this.database.deleteParent(serviceGroup);
+        super.removeParentConfiguration(serviceGroup);
+    }
 
     @Override
     public void removeConfiguration(@NotNull ServerConfiguration serviceGroup) {
-        this.database.removeGroup(serviceGroup);
+        this.database.deleteConfiguration(serviceGroup);
         NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceConfigurationExecutePacket(serviceGroup, ServiceConfigurationExecutePacket.ExecutionPayLoad.REMOVE));
         super.removeConfiguration(serviceGroup);
     }

@@ -6,10 +6,8 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.property.ProtocolPropertyHolder;
 import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.configuration.bundle.ConfigurationParent;
 import cloud.hytora.driver.services.fallback.SimpleFallback;
-import cloud.hytora.driver.services.template.ServiceTemplate;
-import cloud.hytora.driver.services.template.def.CloudTemplate;
-import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
 import cloud.hytora.driver.services.utils.ServiceVersion;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -29,26 +27,17 @@ import java.util.List;
 @AllArgsConstructor
 public class SimpleServerConfiguration extends ProtocolPropertyHolder implements ServerConfiguration, Bufferable {
 
-    private String name, node, motd, permission;
+    private String name, parent, node, motd, permission;
     private int memory, defaultMaxPlayers, minOnlineService, maxOnlineService, startOrder;
     private boolean maintenance;
 
     private int javaVersion;
-    private String[] javaArguments;
 
     private SimpleFallback fallback = new SimpleFallback();
     private ServiceVersion version;
-    private ServiceShutdownBehaviour shutdownBehaviour;
 
-    private Collection<ConfigurationDownloadEntry> startupDownloadEntries = new ArrayList<>();
-    private Collection<CloudTemplate> templates = new ArrayList<>();
-
-    public void setTemplates(Collection templates) {
-        this.templates = templates;
-    }
-
-    public Collection<ServiceTemplate> getTemplates() {
-        return new ArrayList<>(templates);
+    public ConfigurationParent getParent() {
+        return CloudDriver.getInstance().getConfigurationManager().getParentByNameOrNull(this.parent);
     }
 
     @Override
@@ -69,6 +58,7 @@ public class SimpleServerConfiguration extends ProtocolPropertyHolder implements
 
             case READ:
                 this.name = buf.readString();
+                this.parent = buf.readString();
                 this.permission = buf.readOptionalString();
                 this.node = buf.readString();
                 this.motd = buf.readString();
@@ -79,20 +69,16 @@ public class SimpleServerConfiguration extends ProtocolPropertyHolder implements
                 this.maxOnlineService = buf.readInt();
                 this.startOrder = buf.readInt();
                 this.javaVersion = buf.readInt();
-                this.javaArguments = buf.readOptionalStringArray();
 
                 this.fallback = buf.readObject(SimpleFallback.class);
                 this.maintenance = buf.readBoolean();
 
-                this.startupDownloadEntries = buf.readObjectCollection(ConfigurationDownloadEntry.class);
-                this.templates = buf.readWrapperObjectCollection(CloudTemplate.class);
-
                 this.version = buf.readEnum(ServiceVersion.class);
-                this.shutdownBehaviour = buf.readEnum(ServiceShutdownBehaviour.class);
                 break;
 
             case WRITE:
                 buf.writeString(this.getName());
+                buf.writeString(this.parent);
                 buf.writeOptionalString(this.getPermission());
                 buf.writeString(this.getNode());
                 buf.writeString(this.getMotd());
@@ -103,16 +89,11 @@ public class SimpleServerConfiguration extends ProtocolPropertyHolder implements
                 buf.writeInt(this.getMaxOnlineService());
                 buf.writeInt(this.getStartOrder());
                 buf.writeInt(this.getJavaVersion());
-                buf.writeOptionalStringArray(this.getJavaArguments());
 
                 buf.writeObject(this.getFallback());
                 buf.writeBoolean(this.isMaintenance());
 
-                buf.writeObjectCollection(this.getStartupDownloadEntries());
-                buf.writeObjectCollection(this.getTemplates());
-
                 buf.writeEnum(this.getVersion());
-                buf.writeEnum(this.getShutdownBehaviour());
                 break;
         }
     }
@@ -122,6 +103,7 @@ public class SimpleServerConfiguration extends ProtocolPropertyHolder implements
 
         to.setName(from.getName());
         to.setPermission(from.getPermission());
+        to.setParent(from.getParent().getName());
         to.setNode(from.getNode());
         to.setMotd(from.getMotd());
 
@@ -134,11 +116,7 @@ public class SimpleServerConfiguration extends ProtocolPropertyHolder implements
         to.setFallback((SimpleFallback) from.getFallback());
         to.setMaintenance(from.isMaintenance());
 
-        to.setStartupDownloadEntries(from.getStartupDownloadEntries());
-        to.setTemplates(new ArrayList<>(from.getTemplates()));
-
         to.setVersion(from.getVersion());
-        to.setShutdownBehaviour(from.getShutdownBehaviour());
 
     }
 

@@ -57,7 +57,7 @@ import cloud.hytora.driver.command.Console;
 import cloud.hytora.node.impl.config.NodeDriverStorage;
 import cloud.hytora.node.impl.database.DatabaseConfiguration;
 import cloud.hytora.node.impl.database.IDatabaseManager;
-import cloud.hytora.node.impl.database.impl.DatabaseManager;
+import cloud.hytora.node.impl.database.impl.DefaultDatabaseManager;
 import cloud.hytora.node.service.NodeConfigurationManager;
 import cloud.hytora.node.impl.node.HytoraNode;
 import cloud.hytora.node.impl.player.NodePlayerManager;
@@ -108,6 +108,7 @@ public class NodeDriver extends CloudDriver implements Node {
 
     public static final File STORAGE_FOLDER = new File(NODE_FOLDER, "storage/");
     public static final File CONFIGURATIONS_FOLDER = new File(STORAGE_FOLDER, "configurations/");
+    public static final File CONFIGURATIONS_PARENTS_FOLDER = new File(STORAGE_FOLDER, "groups/");
     public static final File STORAGE_VERSIONS_FOLDER = new File(STORAGE_FOLDER , "versions/");
     public static final File STORAGE_TEMP_FOLDER = new File(STORAGE_FOLDER, "tmp-" + UUID.randomUUID().toString().substring(0, 5) + "/");
     public static final File TEMPLATES_DIR = new File(STORAGE_FOLDER, "templates/");
@@ -203,7 +204,7 @@ public class NodeDriver extends CloudDriver implements Node {
 
         //initializing managers
         new InternalDriverEventAdapter(this.eventManager, executor);
-        this.databaseManager = new DatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType());
+        this.databaseManager = new DefaultDatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType());
         this.configurationManager = new NodeConfigurationManager();
         this.serviceManager = new NodeServiceManager();
         this.playerManager = new NodePlayerManager(this.eventManager);

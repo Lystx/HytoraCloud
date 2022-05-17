@@ -4,6 +4,7 @@ import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
 import cloud.hytora.driver.common.SelfCloneable;
 import cloud.hytora.driver.property.PropertyHolder;
 import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.configuration.bundle.ConfigurationParent;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
@@ -19,16 +20,12 @@ public interface ServerConfiguration extends Bufferable, PropertyHolder, SelfClo
      */
     @NotNull String getName();
 
+    ConfigurationParent getParent();
+
     /**
      * The permission to access a service of this configuration
      */
     String getPermission();
-
-    String[] getJavaArguments();
-
-    Collection<ConfigurationDownloadEntry> getStartupDownloadEntries();
-
-    Collection<ServiceTemplate> getTemplates();
 
     /**
      * Sets the permission of this group
@@ -96,10 +93,6 @@ public interface ServerConfiguration extends Bufferable, PropertyHolder, SelfClo
      * @param maxOnlineService the amount to set
      */
     void setMaxOnlineService(int maxOnlineService);
-
-    ServiceShutdownBehaviour getShutdownBehaviour();
-
-    void setShutdownBehaviour(ServiceShutdownBehaviour behaviour);
 
     boolean isMaintenance();
 

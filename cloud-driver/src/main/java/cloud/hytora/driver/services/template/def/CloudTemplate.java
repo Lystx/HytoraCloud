@@ -43,7 +43,7 @@ public class CloudTemplate implements ServiceTemplate {
 
     @Override
     public String buildTemplatePath() {
-        return this.prefix + "/" + this.name;
+        return this.name + "/" + this.prefix;
     }
 
     @Override
