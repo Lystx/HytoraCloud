@@ -17,9 +17,9 @@ import java.io.IOException;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ServiceGroupExecutePacket extends Packet {
+public class ServiceConfigurationExecutePacket extends Packet {
 
-    private ServerConfiguration group;
+    private ServerConfiguration configuration;
     private ExecutionPayLoad payLoad;
 
     @Override
@@ -28,12 +28,12 @@ public class ServiceGroupExecutePacket extends Packet {
         switch (state) {
 
             case READ:
-                this.group = buf.readObject(SimpleServerConfiguration.class);
+                this.configuration = buf.readObject(SimpleServerConfiguration.class);
                 this.payLoad = buf.readEnum(ExecutionPayLoad.class);
                 break;
 
             case WRITE:
-                buf.writeObject(group);
+                buf.writeObject(configuration);
                 buf.writeEnum(payLoad);
                 break;
         }

@@ -13,6 +13,7 @@ import lombok.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.UUID;
 
 @Getter @Setter
@@ -44,7 +45,7 @@ public class ConfigManager {
                             new ProtocolAddress[0],
                             8876,
                             false,
-                            new SimpleJavaVersion[]{new SimpleJavaVersion("11", "yourPath"), new SimpleJavaVersion("16", "yourPath")}
+                            Collections.singleton(new SimpleJavaVersion("JAVA_16", "your/path/to/java/version/", 16))
                     ),25565, 30000, new ArrayList<>());
         }
 

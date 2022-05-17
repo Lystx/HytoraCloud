@@ -65,7 +65,7 @@ public class ProxyEvents implements Listener {
         ServiceManager serviceManager = CloudDriver.getInstance().getServiceManager();
         CloudServer server = serviceManager.getServiceByNameOrNull(target.getName());
         
-        if (server != null && !player.hasPermission(server.getConfiguration().getPermission())) {
+        if (server != null && !(server.getConfiguration().getPermission() == null || player.hasPermission(server.getConfiguration().getPermission()))) {
             //kick player
             event.setCancelled(true);
             player.sendMessage("§cThis server has a specific permission to join it"); // TODO: 15.05.2022 customizable 

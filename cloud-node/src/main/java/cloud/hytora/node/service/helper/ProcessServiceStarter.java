@@ -1,5 +1,6 @@
 package cloud.hytora.node.service.helper;
 
+import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.wrapper.Wrapper;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.common.ConfigSplitSpacer;
@@ -7,7 +8,12 @@ import cloud.hytora.driver.common.ConfigurationFileEditor;
 import cloud.hytora.driver.event.DestructiveListener;
 import cloud.hytora.driver.event.defaults.server.CloudServerCacheUnregisterEvent;
 import cloud.hytora.driver.event.defaults.server.CloudServerRequestScreenLeaveEvent;
+import cloud.hytora.driver.node.config.INodeConfig;
+import cloud.hytora.driver.node.config.JavaVersion;
 import cloud.hytora.driver.services.configuration.ConfigurationDownloadEntry;
+import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.template.ServiceTemplate;
+import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.driver.services.utils.ServiceTypes;
 import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.utils.ServiceIdentity;
@@ -52,49 +58,55 @@ public class ProcessServiceStarter {
 
         this.downloadServiceVersion(this.service.getConfiguration().getVersion());
 
-        // create tmp file
+        // create server dir
         File parent = (service.getConfiguration().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
-        File tmpFolder = new File(parent, service.getName() + "/");
+        File serverDir = new File(parent, service.getName() + "/");
 
-        FileUtils.forceMkdir(tmpFolder);
+        FileUtils.forceMkdir(serverDir);
 
-        // load all current group templates
-        NodeDriver.getInstance().getNodeTemplateService().copyTemplates(service);
+        // load all current configuration templates
+        ServerConfiguration configuration = service.getConfiguration();
+        for (ServiceTemplate template : configuration.getTemplates()) {
+            TemplateStorage storage = template.getStorage();
+            if (storage != null) {
+                storage.copyTemplate(service, template, serverDir);
+            }
+        }
 
         String jar = service.getConfiguration().getVersion().getJar();
-        FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, jar), new File(tmpFolder, jar));
+        FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, jar), new File(serverDir, jar));
 
         // copy plugin
-        FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "plugin.jar"), new File(tmpFolder, "plugins/plugin.jar"));
+        FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "plugin.jar"), new File(serverDir, "plugins/plugin.jar"));
 
         // TODO: 11.04.2022 change address if other node
         ServiceIdentity identity = new ServiceIdentity(service.getConfiguration().getNode(), NodeDriver.getInstance().getExecutor().getHostName(), service.getName(), NodeDriver.getInstance().getExecutor().getPort());
 
         // write property for identify service
-        identity.save(new File(tmpFolder, "property.json"));
+        identity.save(new File(serverDir, "property.json"));
 
         //copy extra downloads
         for (ConfigurationDownloadEntry entry : service.getConfiguration().getStartupDownloadEntries()) {
-
+            CloudDriver.getInstance().getLogger().log(LogLevel.INFO, "Downloading entry for '{}' [url={}, dest={}]", service.getName(), entry.getUrl(), entry.getDestination());
             String url = entry.getUrl();
-            FileUtils.copyURLToFile(new URL(url), new File(tmpFolder, entry.getDestination()));
+            FileUtils.copyURLToFile(new URL(url), new File(serverDir, entry.getDestination()));
         }
 
         // check properties and modify
         if (service.getConfiguration().getVersion().isProxy()) {
-            File file = new File(tmpFolder, "config.yml");
+            File file = new File(serverDir, "config.yml");
             if (file.exists()) {
                 ConfigurationFileEditor editor = new ConfigurationFileEditor(file, ConfigSplitSpacer.YAML);
                 editor.setValue("host", "0.0.0.0:" + service.getPort());
                 editor.saveFile();
-            } else new BungeeProperties(tmpFolder, service.getPort(), service.getMaxPlayers());
+            } else new BungeeProperties(serverDir, service.getPort(), service.getMaxPlayers());
         } else {
-            File file = new File(tmpFolder, "server.properties");
+            File file = new File(serverDir, "server.properties");
             if (file.exists()) {
                 ConfigurationFileEditor editor = new ConfigurationFileEditor(file, ConfigSplitSpacer.PROPERTIES);
                 editor.setValue("server-port", String.valueOf(service.getPort()));
                 editor.saveFile();
-            } else new SpigotProperties(tmpFolder, service.getPort());
+            } else new SpigotProperties(serverDir, service.getPort());
         }
     }
 
@@ -133,6 +145,7 @@ public class ProcessServiceStarter {
 
         Process process = result.getProcess();
         this.service.asCloudServer().setProcess(process);
+        this.service.asCloudServer().setWorkingDirectory(folder);
         wrapper.setResult(this.service);
 
         return wrapper;
@@ -140,36 +153,32 @@ public class ProcessServiceStarter {
 
 
     private String[] args(CloudServer service) {
-        List<String> arguments = new ArrayList<>(Arrays.asList(
-                "java",
-                "-XX:+UseG1GC",
-                "-XX:+ParallelRefProcEnabled",
-                "-XX:MaxGCPauseMillis=200",
-                "-XX:+UnlockExperimentalVMOptions",
-                "-XX:+DisableExplicitGC",
-                "-XX:+AlwaysPreTouch",
-                "-XX:G1NewSizePercent=30",
-                "-XX:G1MaxNewSizePercent=40",
-                "-XX:G1HeapRegionSize=8M",
-                "-XX:G1ReservePercent=20",
-                "-XX:G1HeapWastePercent=5",
-                "-XX:G1MixedGCCountTarget=4",
-                "-XX:InitiatingHeapOccupancyPercent=15",
-                "-XX:G1MixedGCLiveThresholdPercent=90",
-                "-XX:G1RSetUpdatingPauseTimePercent=5",
-                "-XX:SurvivorRatio=32",
-                "-XX:+PerfDisableSharedMem",
-                "-XX:MaxTenuringThreshold=1",
-                "-Dusing.aikars.flags=https://mcflags.emc.gs",
-                "-Daikars.new.flags=true",
-                "-XX:-UseAdaptiveSizePolicy",
-                "-XX:CompileThreshold=100",
+        ServerConfiguration configuration = service.getConfiguration();
+        List<String> arguments = new ArrayList<>(Arrays.asList("java"));
+        int javaVersion = configuration.getJavaVersion();
+
+
+        if (javaVersion != -1) {
+
+            INodeConfig config = NodeDriver.getInstance().getConfig();
+            JavaVersion version = config.getJavaVersions().stream().filter(jv -> jv.getId() == javaVersion).findFirst().orElse(null);
+
+            if (version != null) {
+                arguments.add(version.getPath()); //adding path to custom java version
+            }
+        }
+
+        //adding pre defined arguments
+        arguments.addAll(Arrays.asList(
                 "-Dcom.mojang.eula.agree=true",
-                "-Dio.netty.recycler.maxCapacity=0",
-                "-Dio.netty.recycler.maxCapacity.default=0",
-                "-Djline.terminal=jline.UnsupportedTerminal",
                 "-Xms" + service.getConfiguration().getMemory() + "M",
-                "-Xmx" + service.getConfiguration().getMemory() + "M"));
+                "-Xmx" + service.getConfiguration().getMemory() + "M")
+        );
+
+        //adding custom configuration arguments
+        if (configuration.getJavaArguments() != null && configuration.getJavaArguments().length > 0) {
+            arguments.addAll(Arrays.asList(configuration.getJavaArguments()));
+        }
 
         Path remoteFile = new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "remote.jar").toPath();
 

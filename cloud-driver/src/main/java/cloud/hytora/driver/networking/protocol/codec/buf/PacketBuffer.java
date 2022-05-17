@@ -161,8 +161,14 @@ public interface PacketBuffer {
 	@Nonnull
 	String[] readStringArray();
 
+	@Nullable
+	String[] readOptionalStringArray();
+
 	@Nonnull
 	PacketBuffer writeStringArray(@Nonnull String[] strings);
+
+	@Nonnull
+	PacketBuffer writeOptionalStringArray(@Nullable String[] strings);
 
 	@Nonnull
 	UUID readUniqueId();

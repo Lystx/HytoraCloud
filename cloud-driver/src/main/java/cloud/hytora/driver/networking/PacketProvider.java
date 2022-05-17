@@ -4,7 +4,7 @@ import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.packets.RedirectPacket;
 import cloud.hytora.driver.networking.packets.StorageUpdatePacket;
-import cloud.hytora.driver.networking.packets.group.ServiceGroupExecutePacket;
+import cloud.hytora.driver.networking.packets.group.ServiceConfigurationExecutePacket;
 import cloud.hytora.driver.networking.packets.group.ServerConfigurationCacheUpdatePacket;
 import cloud.hytora.driver.networking.packets.node.*;
 import cloud.hytora.driver.networking.packets.player.*;
@@ -60,7 +60,7 @@ public class PacketProvider {
         PacketProvider.autoRegister(StorageUpdatePacket.class);
 
         //service group packets
-        PacketProvider.autoRegister(ServiceGroupExecutePacket.class);
+        PacketProvider.autoRegister(ServiceConfigurationExecutePacket.class);
         PacketProvider.autoRegister(ServerConfigurationCacheUpdatePacket.class);
 
         //cloud player packets

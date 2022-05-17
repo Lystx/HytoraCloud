@@ -10,6 +10,8 @@ import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 
 @AllArgsConstructor
 @Getter
@@ -23,7 +25,12 @@ public class DefaultNodeConfig implements INodeConfig{
     private ProtocolAddress[] clusterAddresses;
     private int bindPort;
     private boolean remote;
-    private SimpleJavaVersion[] javaVersions;
+    private Collection<SimpleJavaVersion> javaVersions;
+
+
+    public Collection<JavaVersion> getJavaVersions() {
+        return new ArrayList<>(javaVersions);
+    }
 
     @Override
     public void markAsRemote() {
@@ -42,7 +49,7 @@ public class DefaultNodeConfig implements INodeConfig{
                 clusterAddresses = buf.readObjectArray(ProtocolAddress.class);
                 bindPort = buf.readInt();
                 remote = buf.readBoolean();
-                javaVersions = buf.readObjectArray(SimpleJavaVersion.class);
+                javaVersions = buf.readObjectCollection(SimpleJavaVersion.class);
                 break;
 
             case WRITE:
@@ -52,7 +59,7 @@ public class DefaultNodeConfig implements INodeConfig{
                 buf.writeObjectArray(clusterAddresses);
                 buf.writeInt(bindPort);
                 buf.writeBoolean(remote);
-                buf.writeObjectArray(javaVersions);
+                buf.writeObjectCollection(javaVersions);
                 break;
         }
     }

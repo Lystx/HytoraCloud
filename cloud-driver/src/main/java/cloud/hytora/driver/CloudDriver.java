@@ -13,6 +13,8 @@ import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.configuration.ConfigurationManager;
+import cloud.hytora.driver.services.template.TemplateManager;
+import cloud.hytora.driver.services.template.def.DefaultTemplateManager;
 import cloud.hytora.driver.storage.DriverStorage;
 import cloud.hytora.driver.command.sender.CommandSender;
 
@@ -51,6 +53,11 @@ public abstract class CloudDriver {
     protected final EventManager eventManager;
 
     /**
+     * The default template manager
+     */
+    protected final TemplateManager templateManager;
+
+    /**
      * The java executor service
      */
     protected final ScheduledExecutorService scheduledExecutor;
@@ -61,6 +68,7 @@ public abstract class CloudDriver {
         this.environment = environment;
         this.logger = logger;
         this.eventManager = new DefaultEventManager();
+        this.templateManager = new DefaultTemplateManager();
         this.scheduledExecutor = Executors.newScheduledThreadPool(4, new NamedThreadFactory("Scheduler"));
 
         // use jdk logger to prevent issues with older slf4j versions

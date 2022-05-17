@@ -10,6 +10,12 @@ public interface NodeCloudServer extends CloudServer {
     @CheckReturnValue
     Process getProcess();
 
+    @Nonnull
+    @CheckReturnValue
+    File getWorkingDirectory();
+
+    void setWorkingDirectory(@Nonnull File workingDirectory);
+
     @CheckReturnValue
     boolean isScreenServer();
 

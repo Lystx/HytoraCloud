@@ -13,6 +13,7 @@ import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.services.NodeCloudServer;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
 
@@ -24,6 +25,7 @@ import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.zeroturnaround.exec.ProcessResult;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
@@ -43,6 +45,7 @@ public class SimpleCloudServer implements NodeCloudServer, Bufferable {
 
     private Process process;
     private ProcessResult processResult;
+    private File workingDirectory;
 
     private ServiceState serviceState = ServiceState.PREPARED;
     private ServiceVisibility serviceVisibility = ServiceVisibility.NONE;
@@ -80,6 +83,11 @@ public class SimpleCloudServer implements NodeCloudServer, Bufferable {
     @Override
     public List<String> queryServiceOutput() {
         return CloudDriver.getInstance().getServiceManager().queryServiceOutput(this);
+    }
+
+    @Override
+    public void deploy(ServiceDeployment... deployments) {
+        CloudDriver.getInstance().getTemplateManager().deployService(this, deployments);
     }
 
     @Override

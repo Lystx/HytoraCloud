@@ -326,10 +326,22 @@ public class DefaultPacketBuffer implements PacketBuffer {
 		return readArray(String.class, this::readString);
 	}
 
+	@org.jetbrains.annotations.Nullable
+	@Override
+	public String[] readOptionalStringArray() {
+		return readOptional(this::readStringArray);
+	}
+
 	@Nonnull
 	@Override
 	public PacketBuffer writeStringArray(@Nonnull String[] strings) {
 		return writeArray(strings, this::writeString);
+	}
+
+	@NotNull
+	@Override
+	public PacketBuffer writeOptionalStringArray(@org.jetbrains.annotations.Nullable String[] strings) {
+		return this.writeOptional(strings, this::writeStringArray);
 	}
 
 	@Nonnull

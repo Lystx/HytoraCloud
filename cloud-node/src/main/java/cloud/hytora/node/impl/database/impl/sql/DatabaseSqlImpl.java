@@ -55,7 +55,7 @@ public class DatabaseSqlImpl implements IDatabase {
     @Override
     public void addGroup(@NotNull ServerConfiguration serviceGroup) {
         executeUpdate("INSERT INTO " + tableName + "(name, template, node, memory, minOnlineService, maxOnlineService, staticService, fallbackGroup, version, maxPlayers, motd) VALUES (" +
-                "'" + serviceGroup.getName() + "', '" + serviceGroup.getTemplate() + "', '" + serviceGroup.getNode() + "', " + serviceGroup.getMemory() + ", " +
+                "'" + serviceGroup.getName() + "', '" + "default" + "', '" + serviceGroup.getNode() + "', " + serviceGroup.getMemory() + ", " +
                 serviceGroup.getMinOnlineService() + ", " + serviceGroup.getMaxOnlineService() + ", " + (serviceGroup.getShutdownBehaviour() == ServiceShutdownBehaviour.KEEP ? 1 : 0) +
                 ", " + (serviceGroup.getFallback().isEnabled() ? 1 : 0) + ", '" + serviceGroup.getVersion().name() + "', " + serviceGroup.getDefaultMaxPlayers() +
                 ",'" + serviceGroup.getMotd() + "');");

@@ -49,8 +49,8 @@ public class ConfigurationSetup extends Setup<ConfigurationSetup> {
     private boolean maintenance;
 
     @Question(id = 10, question = "What JavaVersion should this configuration use?")
-    @QuestionTip("Default: 8")
-    @SuggestedAnswer("8")
+    @QuestionTip("Use '-1' for default java on virtual machine")
+    @SuggestedAnswer("-1")
     private int javaVersion;
 
     @Question(id = 11, question = "Is this group a Fallback?")

@@ -2,13 +2,17 @@ package cloud.hytora.driver.services.configuration;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
 import cloud.hytora.driver.common.SelfCloneable;
+import cloud.hytora.driver.property.PropertyHolder;
 import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
+import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
 import cloud.hytora.driver.services.utils.ServiceVersion;
 import org.jetbrains.annotations.NotNull;
 
-public interface ServerConfiguration extends Bufferable, SelfCloneable<ServerConfiguration> {
+import java.util.Collection;
+
+public interface ServerConfiguration extends Bufferable, PropertyHolder, SelfCloneable<ServerConfiguration> {
 
     /**
      * @return the name of the group
@@ -20,29 +24,18 @@ public interface ServerConfiguration extends Bufferable, SelfCloneable<ServerCon
      */
     String getPermission();
 
-    /**
-     * Startup download entries
-     */
-    ConfigurationDownloadEntry[] getStartupDownloadEntries();
+    String[] getJavaArguments();
+
+    Collection<ConfigurationDownloadEntry> getStartupDownloadEntries();
+
+    Collection<ServiceTemplate> getTemplates();
 
     /**
      * Sets the permission of this group
      *
      * @param permission the permission to set
      */
-    void setPermission(@NotNull String permission);
-
-    /**
-     * @return the template of the group
-     */
-    @NotNull String getTemplate();
-
-    /**
-     * sets the template of the group
-     *
-     * @param template the template to set
-     */
-    void setTemplate(@NotNull String template);
+    void setPermission(String permission);
 
     /**
      * @return the node of the group

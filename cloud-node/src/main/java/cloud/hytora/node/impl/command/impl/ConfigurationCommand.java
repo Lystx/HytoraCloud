@@ -1,5 +1,6 @@
 package cloud.hytora.node.impl.command.impl;
 
+import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
@@ -7,12 +8,17 @@ import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.fallback.SimpleFallback;
 import cloud.hytora.driver.services.configuration.SimpleServerConfiguration;
+import cloud.hytora.driver.services.template.ServiceTemplate;
+import cloud.hytora.driver.services.template.TemplateStorage;
+import cloud.hytora.driver.services.template.def.CloudTemplate;
 import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
 import cloud.hytora.driver.services.utils.ServiceVersion;
 import cloud.hytora.driver.setup.SetupControlState;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.setup.ConfigurationSetup;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Command(
@@ -39,7 +45,7 @@ public class ConfigurationCommand {
         sender.sendMessage("§8");
         sender.sendMessage("§bInformation§8: ");
         sender.sendMessage("§bName: §f" + configuration.getName());
-        sender.sendMessage("§bTemplate: §f" + configuration.getTemplate());
+        sender.sendMessage("§bTemplates: §f" + configuration.getTemplates().toString());
         sender.sendMessage("§bNode: §f" + configuration.getNode());
         sender.sendMessage("§bMemory: §f" + configuration.getMemory() + "MB");
         sender.sendMessage("§bMin online services: §f" + configuration.getMinOnlineService());
@@ -72,9 +78,40 @@ public class ConfigurationCommand {
                 configuration.setVersion(version);
                 configuration.setNode(node);
                 configuration.setMaintenance(maintenance);
-                configuration.setTemplate("default");
+                configuration.setPermission(null);
+                configuration.setProperty("example.property", "value");
                 configuration.setJavaVersion(javaVersion);
-                configuration.setMotd("Please configure me!");
+                configuration.setJavaArguments(new String[]{
+                        "-XX:+UseG1GC",
+                        "-XX:+ParallelRefProcEnabled",
+                        "-XX:MaxGCPauseMillis=200",
+                        "-XX:+UnlockExperimentalVMOptions",
+                        "-XX:+DisableExplicitGC",
+                        "-XX:+AlwaysPreTouch",
+                        "-XX:G1NewSizePercent=30",
+                        "-XX:G1MaxNewSizePercent=40",
+                        "-XX:G1HeapRegionSize=8M",
+                        "-XX:G1ReservePercent=20",
+                        "-XX:G1HeapWastePercent=5",
+                        "-XX:G1MixedGCCountTarget=4",
+                        "-XX:InitiatingHeapOccupancyPercent=15",
+                        "-XX:G1MixedGCLiveThresholdPercent=90",
+                        "-XX:G1RSetUpdatingPauseTimePercent=5",
+                        "-XX:SurvivorRatio=32",
+                        "-XX:+PerfDisableSharedMem",
+                        "-XX:MaxTenuringThreshold=1",
+                        "-Dusing.aikars.flags=https://mcflags.emc.gs",
+                        "-Daikars.new.flags=true",
+                        "-XX:-UseAdaptiveSizePolicy",
+                        "-XX:CompileThreshold=100",
+                        "-Dio.netty.recycler.maxCapacity=0",
+                        "-Dio.netty.recycler.maxCapacity.default=0",
+                        "-Djline.terminal=jline.UnsupportedTerminal"
+                });
+                configuration.setMotd("Default HytoraCloud Service.");
+
+                configuration.setTemplates(Collections.singleton(new CloudTemplate(name, "default", "local", true)));
+                configuration.setStartupDownloadEntries(new ArrayList<>());
 
                 SimpleFallback fallback = new SimpleFallback();
                 fallback.setEnabled(setup.isFallback());
@@ -94,7 +131,14 @@ public class ConfigurationCommand {
                 configuration.setMaxOnlineService(maxServers);
 
                 CloudDriver.getInstance().getConfigurationManager().addConfiguration(configuration);
-                NodeDriver.getInstance().getNodeTemplateService().createTemplateFolder(configuration);
+
+                //creating templates
+                for (ServiceTemplate template : configuration.getTemplates()) {
+                    TemplateStorage storage = template.getStorage();
+                    if (storage != null) {
+                        storage.createTemplate(template);
+                    }
+                }
 
                 sender.sendMessage("§7The configuration §b" + name + " §7was created§8!");
 

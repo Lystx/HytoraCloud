@@ -5,14 +5,15 @@ import cloud.hytora.driver.event.CloudEventHandler;
 import cloud.hytora.driver.event.defaults.server.CloudServiceGroupUpdateEvent;
 
 import cloud.hytora.driver.services.configuration.DefaultConfigurationManager;
-import cloud.hytora.driver.networking.packets.group.ServiceGroupExecutePacket;
+import cloud.hytora.driver.networking.packets.group.ServiceConfigurationExecutePacket;
 import cloud.hytora.driver.networking.packets.group.ServerConfigurationCacheUpdatePacket;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.template.ServiceTemplate;
+import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.database.IDatabase;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
-import cloud.hytora.node.service.template.NodeTemplateService;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.stream.Collectors;
@@ -22,19 +23,27 @@ public class NodeConfigurationManager extends DefaultConfigurationManager {
 
     private final IDatabase database;
 
-    public NodeConfigurationManager(NodeTemplateService templateService) {
+    public NodeConfigurationManager() {
         this.database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
 
         // loading all database groups
         this.getAllCachedConfigurations().addAll(this.database.getAllServiceGroups());
 
-        CloudDriver.getInstance().getExecutor().registerPacketHandler((PacketHandler<ServiceGroupExecutePacket>) (ctx, packet) -> {
-            if (packet.getPayLoad().equals(ServiceGroupExecutePacket.ExecutionPayLoad.CREATE)) {
-                getAllCachedConfigurations().add(packet.getGroup());
-                NodeDriver.getInstance().getNodeTemplateService().createTemplateFolder(packet.getGroup());
+        CloudDriver.getInstance().getExecutor().registerPacketHandler((PacketHandler<ServiceConfigurationExecutePacket>) (ctx, packet) -> {
+            if (packet.getPayLoad().equals(ServiceConfigurationExecutePacket.ExecutionPayLoad.CREATE)) {
+                getAllCachedConfigurations().add(packet.getConfiguration());
+
+                //creating templates
+                for (ServiceTemplate template : packet.getConfiguration().getTemplates()) {
+                    TemplateStorage storage = template.getStorage();
+                    if (storage != null) {
+                        storage.createTemplate(template);
+                    }
+                }
+
                 NodeDriver.getInstance().getServiceQueue().dequeue();
             } else {
-                this.getAllCachedConfigurations().remove(packet.getGroup());
+                this.getAllCachedConfigurations().remove(packet.getConfiguration());
             }
         });
 
@@ -50,7 +59,14 @@ public class NodeConfigurationManager extends DefaultConfigurationManager {
 
         //checking if directories got deleted meanwhile
         for (ServerConfiguration allCachedConfiguration : this.getAllCachedConfigurations()) {
-            templateService.createTemplateFolder(allCachedConfiguration);
+
+            //creating templates
+            for (ServiceTemplate template : allCachedConfiguration.getTemplates()) {
+                TemplateStorage storage = template.getStorage();
+                if (storage != null) {
+                    storage.createTemplate(template);
+                }
+            }
         }
     }
 
@@ -62,7 +78,7 @@ public class NodeConfigurationManager extends DefaultConfigurationManager {
     @Override
     public void addConfiguration(@NotNull ServerConfiguration serviceGroup) {
         this.database.addGroup(serviceGroup);
-        NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceGroupExecutePacket(serviceGroup, ServiceGroupExecutePacket.ExecutionPayLoad.CREATE));
+        NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceConfigurationExecutePacket(serviceGroup, ServiceConfigurationExecutePacket.ExecutionPayLoad.CREATE));
         super.addConfiguration(serviceGroup);
     }
 
@@ -70,7 +86,7 @@ public class NodeConfigurationManager extends DefaultConfigurationManager {
     @Override
     public void removeConfiguration(@NotNull ServerConfiguration serviceGroup) {
         this.database.removeGroup(serviceGroup);
-        NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceGroupExecutePacket(serviceGroup, ServiceGroupExecutePacket.ExecutionPayLoad.REMOVE));
+        NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceConfigurationExecutePacket(serviceGroup, ServiceConfigurationExecutePacket.ExecutionPayLoad.REMOVE));
         super.removeConfiguration(serviceGroup);
     }
 

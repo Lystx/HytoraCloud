@@ -25,7 +25,6 @@ import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.node.NodeCycleData;
 import cloud.hytora.driver.node.NodeManager;
@@ -38,6 +37,7 @@ import cloud.hytora.driver.services.NodeCloudServer;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.configuration.ConfigurationManager;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.node.service.template.LocalTemplateStorage;
 import cloud.hytora.driver.setup.SetupControlState;
 import cloud.hytora.driver.storage.DriverStorage;
 import cloud.hytora.driver.services.utils.ServiceVersion;
@@ -50,7 +50,6 @@ import cloud.hytora.node.impl.node.NodeNodeManager;
 import cloud.hytora.node.impl.setup.database.MongoDBSetup;
 import cloud.hytora.node.impl.setup.database.MySqlSetup;
 import cloud.hytora.node.service.NodeServiceManager;
-import cloud.hytora.node.service.template.NodeTemplateService;
 import cloud.hytora.node.impl.setup.NodeSetup;
 import cloud.hytora.node.impl.config.ConfigManager;
 import cloud.hytora.node.impl.config.MainConfiguration;
@@ -70,11 +69,7 @@ import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -105,7 +100,6 @@ public class NodeDriver extends CloudDriver implements Node {
 
     private HytoraNode executor;
     private NodeServiceQueue serviceQueue;
-    private NodeTemplateService nodeTemplateService;
 
 
     public static final File NODE_FOLDER = new File("local/");
@@ -210,13 +204,15 @@ public class NodeDriver extends CloudDriver implements Node {
         //initializing managers
         new InternalDriverEventAdapter(this.eventManager, executor);
         this.databaseManager = new DatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType());
-        this.nodeTemplateService = new NodeTemplateService();
-        this.configurationManager = new NodeConfigurationManager(this.nodeTemplateService);
+        this.configurationManager = new NodeConfigurationManager();
         this.serviceManager = new NodeServiceManager();
         this.playerManager = new NodePlayerManager(this.eventManager);
         this.channelMessenger = new NodeChannelMessenger(executor);
         this.nodeManager = new NodeNodeManager();
         this.logger.info("§8");
+
+        //registering template storage
+        this.templateManager.registerStorage(new LocalTemplateStorage());
 
         //copying files
         this.logger.info("§7Copying files§8...");
