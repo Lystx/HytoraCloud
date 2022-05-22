@@ -132,6 +132,11 @@ public class SimpleCloudServer implements NodeCloudServer, Bufferable {
     }
 
     @Override
+    public void log(String message, Object... args) {
+        CloudDriver.getInstance().logToExecutor(this, message, args);
+    }
+
+    @Override
     public void cloneInternally(CloudServer from, CloudServer to) {
 
         to.setServiceState(from.getServiceState());

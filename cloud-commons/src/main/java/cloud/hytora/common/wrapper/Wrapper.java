@@ -19,16 +19,15 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * 
  * This class represents a wrapper for an {@link Object} of your choice.
  * The object inside this wrapper might be null at any time.
- * 
+ *
  * <br>
  * <br> There are multiple checks to get if there is a value being held
  * like {@link Wrapper#isNull()} or {@link Wrapper#isPresent()}
- * 
+ *
  * <br>
- * <br>Values may be immutable, so they can't be modified after they 
+ * <br>Values may be immutable, so they can't be modified after they
  * have received a value or have been updated once
  * The immutable changed can be retrieved or change using {@link Wrapper#isImmutable()}
  * and {@link Wrapper#setImmutable(boolean)} at any time
@@ -48,7 +47,7 @@ public interface Wrapper<T> extends Serializable {
      * @return the created value instance
      */
     static <T> Wrapper<T> empty() {
-        return build((T)null);
+        return build((T) null);
     }
 
     /**
@@ -59,7 +58,7 @@ public interface Wrapper<T> extends Serializable {
      * @return the created value instance
      */
     static <T> Wrapper<T> empty(Class<T> typeClass) {
-        return build((T)null);
+        return build((T) null);
     }
 
     static <T> Wrapper<Boolean> multiTasking(Wrapper<?>... tasks) {
@@ -83,7 +82,7 @@ public interface Wrapper<T> extends Serializable {
      * The created value is not immutable, so it may be modified
      *
      * @param value the value that should be held
-     * @param <T> the type of the object the new value should hold
+     * @param <T>   the type of the object the new value should hold
      * @return the created value instance
      */
     static <T> Wrapper<T> build(T value) {
@@ -95,7 +94,7 @@ public interface Wrapper<T> extends Serializable {
      * The created value is not immutable, so it may be modified
      *
      * @param value the value that should be held
-     * @param <T> the type of the object the new value should hold
+     * @param <T>   the type of the object the new value should hold
      * @return the created value instance
      */
     static <T> Wrapper<T> build(Supplier<T> value) {
@@ -108,9 +107,9 @@ public interface Wrapper<T> extends Serializable {
      * The created value will be immutable depending on the value you provide
      * as a parameter
      *
-     * @param value the value that should be held
+     * @param value     the value that should be held
      * @param immutable if the value may be modified
-     * @param <T> the type of the object the new value should hold
+     * @param <T>       the type of the object the new value should hold
      * @return the created value instance
      */
     static <T> Wrapper<T> build(T value, boolean immutable) {
@@ -118,18 +117,23 @@ public interface Wrapper<T> extends Serializable {
     }
 
     static Wrapper<Void> runSync(@Nonnull Runnable runnable) {
-        return callSync(() -> { runnable.run(); return null; });
+        return callSync(() -> {
+            runnable.run();
+            return null;
+        });
     }
 
 
     static Wrapper<Void> runAsync(@Nonnull Runnable runnable) {
-        return callAsync(() -> { runnable.run(); return null; });
+        return callAsync(() -> {
+            runnable.run();
+            return null;
+        });
     }
 
     static Wrapper<Void> runExceptionally(@Nonnull ExceptionallyRunnable runnable) {
         return runSync(runnable);
     }
-
 
     static Wrapper<Void> runAsyncExceptionally(@Nonnull ExceptionallyRunnable runnable) {
         return runAsync(runnable);
@@ -137,8 +141,10 @@ public interface Wrapper<T> extends Serializable {
 
     static <V> Wrapper<V> callAsync(@Nonnull Callable<V> callable) {
         Wrapper<V> task = empty();
+        task.denyNull();
         SERVICE.execute(() -> {
             try {
+                task.allowNull();
                 task.setResult(callable.call());
             } catch (Throwable ex) {
                 task.setFailure(ex);
@@ -147,9 +153,11 @@ public interface Wrapper<T> extends Serializable {
         return task;
     }
 
-     static <V> Wrapper<V> callSync(@Nonnull Callable<V> callable) {
+    static <V> Wrapper<V> callSync(@Nonnull Callable<V> callable) {
         Wrapper<V> task = empty();
+        task.denyNull();
         try {
+            task.allowNull();
             task.setResult(callable.call());
         } catch (Throwable ex) {
             task.setFailure(ex);
@@ -161,6 +169,11 @@ public interface Wrapper<T> extends Serializable {
      * Denies null values
      */
     Wrapper<T> denyNull();
+
+    /**
+     * Denies null values
+     */
+    Wrapper<T> allowNull();
 
     /**
      * Returns null if there is no provided value
@@ -188,7 +201,7 @@ public interface Wrapper<T> extends Serializable {
      * The method internally tries to cast the held object to the wrapper
      *
      * @param wrapperClass the class to get it as
-     * @param <V> the generic of the value to hold
+     * @param <V>          the generic of the value to hold
      * @return value or null
      * @throws ValueHoldsNoObjectException if there is no value held right now
      */
@@ -223,8 +236,8 @@ public interface Wrapper<T> extends Serializable {
     /**
      * Sets the time-out for {@link Wrapper#syncUninterruptedly()}
      *
-     * @param unit the unit of the timeOut
-     * @param timeOut the value for the given unit
+     * @param unit          the unit of the timeOut
+     * @param timeOut       the value for the given unit
      * @param fallbackValue the value to fall back to if timed out
      * @return current value instance
      */
@@ -263,7 +276,7 @@ public interface Wrapper<T> extends Serializable {
      * If there is no current object the provided {@link Throwable} will be thrown
      *
      * @param exception the exception to throw if no value is held
-     * @param <E> the type of the exception to throw
+     * @param <E>       the type of the exception to throw
      * @return value if held or nothing (because of interrupt by exception)
      */
     <E extends Throwable> T orThrow(Supplier<? extends E> exception);
@@ -273,7 +286,7 @@ public interface Wrapper<T> extends Serializable {
      * If there is no current object the provided {@link Throwable} will be thrown
      *
      * @param exception the exception to throw if no value is held
-     * @param <E> the type of the exception to throw
+     * @param <E>       the type of the exception to throw
      * @return value if held or nothing (because of interrupt by exception)
      */
     <E extends Throwable> T orThrow(E exception);
@@ -284,8 +297,8 @@ public interface Wrapper<T> extends Serializable {
      * executed and if the predicate returns true the consumer "or" will be invoked
      *
      * @param predicate the check-function
-     * @param ifFalse the task to perform if the check returns false
-     * @param or the task to perform if the check returns true
+     * @param ifFalse   the task to perform if the check returns false
+     * @param or        the task to perform if the check returns true
      */
     void orElseDo(Predicate<T> predicate, Runnable ifFalse, Consumer<T> or);
 
@@ -296,7 +309,7 @@ public interface Wrapper<T> extends Serializable {
      * and if the result is non-null, return a {@link Wrapper} describing the
      * result. Otherwise, return an empty {@link Wrapper}
      *
-     * @param <V> The type of the result of the mapping function
+     * @param <V>    The type of the result of the mapping function
      * @param mapper a mapping function to apply to the value, if present
      * @return a new value describing the result of applying a mapping
      */
@@ -305,10 +318,10 @@ public interface Wrapper<T> extends Serializable {
     /**
      * Maps this value thread-blocking
      *
-     * @see Wrapper#map(Function)
-     * @param <V> The type of the result of the mapping function
+     * @param <V>    The type of the result of the mapping function
      * @param mapper a mapping function to apply to the value, if present
      * @return a new value describing the result of applying a mapping
+     * @see Wrapper#map(Function)
      */
     <V> Wrapper<V> mapBlocking(Function<T, V> mapper);
 
@@ -399,7 +412,7 @@ public interface Wrapper<T> extends Serializable {
     /**
      * Waits until a value is provided in this value
      *
-     * @param value the handler to perform
+     * @param value      the handler to perform
      * @param checkSleep the time to sleep before checking again
      */
     void whenPresent(int checkSleep, WrapperListener<T> value);

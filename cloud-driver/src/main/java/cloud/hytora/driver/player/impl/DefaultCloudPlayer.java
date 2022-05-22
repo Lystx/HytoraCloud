@@ -3,6 +3,7 @@ package cloud.hytora.driver.player.impl;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.exception.PlayerNotOnlineException;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.player.CloudPlayer;
@@ -10,7 +11,6 @@ import cloud.hytora.driver.player.connection.DefaultPlayerConnection;
 import cloud.hytora.driver.player.connection.PlayerConnection;
 import cloud.hytora.driver.services.CloudServer;
 
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import lombok.*;
 import org.jetbrains.annotations.NotNull;
@@ -43,6 +43,17 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements Clo
 
         this.connection = new DefaultPlayerConnection(proxyServer.getName(), new ProtocolAddress("127.0.0.1", -1), -1, true, false);
         this.temporaryProperties = DocumentFactory.newJsonDocument();
+
+    }
+
+    @Override
+    public boolean isOnline() {
+        return true;
+    }
+
+    @Override
+    public CloudPlayer asOnlinePlayer() throws PlayerNotOnlineException {
+        return this;
     }
 
     @Override
@@ -60,7 +71,7 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements Clo
                 this.name = buf.readString();
 
                 this.temporaryProperties = buf.readDocument();
-                this.connection = buf.readObject(DefaultPlayerConnection.class);
+                this.connection = buf.readOptionalObject(DefaultPlayerConnection.class);
 
                 this.proxyServer = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(buf.readString());
                 this.server = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(buf.readString());
@@ -71,7 +82,7 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements Clo
                 buf.writeString(this.name);
 
                 buf.writeDocument(this.temporaryProperties);
-                buf.writeObject(this.connection);
+                buf.writeOptionalObject(this.connection);
 
                 buf.writeString(this.proxyServer.getName());
                 buf.writeString(this.server.getName());

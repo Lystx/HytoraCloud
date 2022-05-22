@@ -4,20 +4,20 @@ import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
-import cloud.hytora.driver.command.annotation.Command;
-import cloud.hytora.driver.command.annotation.CommandAutoHelp;
-import cloud.hytora.driver.command.annotation.CommandDescription;
-import cloud.hytora.driver.command.annotation.SubCommand;
+import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.driver.player.connection.DefaultPlayerConnection;
 import cloud.hytora.driver.player.impl.DefaultCloudOfflinePlayer;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.database.impl.SectionedDatabase;
 import cloud.hytora.node.impl.database.impl.section.DatabaseSection;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -51,53 +51,33 @@ public class PlayerCommand {
         sender.sendMessage("§8");
     }
 
-
-    @SubCommand("debugSet")
+    @SubCommand("info <name>")
     @CommandDescription("debug command")
-    public void executeDebug(CommandSender sender) {
-        SectionedDatabase database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
+    public void executeInfo(CommandSender sender, @CommandArgument("name") String name) {
 
-        CloudOfflinePlayer player = new DefaultCloudOfflinePlayer(
-                UUID.fromString("82e8f5a2-4077-407b-af8b-e8325cad7191"),
-                "Lystx",
-                new DefaultPlayerConnection("Proxy-1", new ProtocolAddress("127.0.0.1", -1), -1, true, false),
-                System.currentTimeMillis(),
-                System.currentTimeMillis(),
-                DocumentFactory.newJsonDocument()
-        );
+        PlayerManager playerManager = CloudDriver.getInstance().getPlayerManager();
+        CloudOfflinePlayer player = playerManager.getOfflinePlayerByNameBlockingOrNull(name);
 
-        database.getSection(CloudOfflinePlayer.class).insert(player);
-        sender.sendMessage("Done!");
-    }
+        if (player == null) {
+            sender.sendMessage("§cNo such player with the name §e" + name + " §chas ever joined the network!");
+            return;
+        }
 
-    @SubCommand("debugGet")
-    @CommandDescription("debug command")
-    public void executeDebug2(CommandSender sender) {
-        SectionedDatabase database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy - HH:mm:ss");
 
-        CloudOfflinePlayer offlinePlayer = database.getSection(CloudOfflinePlayer.class).get("82e8f5a2-4077-407b-af8b-e8325cad7191");
-
-        System.out.println("FOUND : " + offlinePlayer.getName());
-        System.out.println(offlinePlayer.toString());
-
-    }
-
-    @SubCommand("debugEdit")
-    @CommandDescription("debug command")
-    public void executeDebug3(CommandSender sender) {
-        SectionedDatabase database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
-        DatabaseSection<CloudOfflinePlayer> db = database.getSection(CloudOfflinePlayer.class);
-
-        CloudOfflinePlayer offlinePlayer = db.get("82e8f5a2-4077-407b-af8b-e8325cad7191");
-        Document properties = offlinePlayer.getProperties();
-
-        properties.set("rank", "ADMIN");
-        properties.set("ts3Verified", true);
-
-        offlinePlayer.setProperties(properties);
-        db.insert(offlinePlayer);
-
-        System.out.println("Done edit!");
-
+        sender.sendMessage("§8");
+        sender.sendMessage("Service information:");
+        sender.sendMessage("§bName: §7" + player.getName() + " §8[§3" + player.getUniqueId() + "§8]");
+        sender.sendMessage("§bFirst Login: §7" +  sdf.format(new Date(player.getFirstLogin())));
+        sender.sendMessage("§bLast Login: §7" +  sdf.format(new Date(player.getLastLogin())));
+        sender.sendMessage("§bProperties: §7" +  player.getProperties().asRawJsonString());
+        sender.sendMessage("§bStatus: §7" + (player.isOnline() ? "§aOnline" : "§cOffline"));
+        if (player.isOnline()) {
+            CloudPlayer onlinePlayer = player.asOnlinePlayer();
+            sender.sendMessage("§bProxy: §7" + onlinePlayer.getProxyServer());
+            sender.sendMessage("§bServer: §7" + onlinePlayer.getServer());
+            sender.sendMessage("§bOnline Properties: §7" + onlinePlayer.getTemporaryProperties().asRawJsonString());
+        }
+        sender.sendMessage("§8");
     }
 }

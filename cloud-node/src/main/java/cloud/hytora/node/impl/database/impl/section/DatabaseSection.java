@@ -1,15 +1,18 @@
 package cloud.hytora.node.impl.database.impl.section;
 
+import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.common.IdentityHolder;
 import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
 import cloud.hytora.node.impl.database.IDatabase;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
+@Getter
 public class DatabaseSection<T extends Bufferable> {
 
     /**
@@ -39,12 +42,30 @@ public class DatabaseSection<T extends Bufferable> {
         this.database.update(collectionName, key, DocumentFactory.newJsonDocument(value));
     }
 
+    public void upsert(String key, T value) {
+        if (this.database.contains(collectionName, key)) {
+            this.update(key, value);
+        } else {
+            this.insert(key, value);
+        }
+    }
+
+    public <E extends IdentityHolder> void upsert(E value) {
+        this.upsert(value.getMainIdentity(), (T) value);
+    }
+
+
     public void delete(String key) {
         database.delete(collectionName, key);
     }
 
-    public <E> E get(String key) {
-        return (E) database.byId(collectionName, key).toInstance(this.typeClass);
+    public T findById(String key) {
+        return database.byId(collectionName, key).toInstance(this.typeClass);
+    }
+
+    public T findByMatch(String key, Object value) {
+        Document document = database.filter(collectionName, key, value).stream().findFirst().orElse(null);
+        return document == null ? null : document.toInstance(typeClass);
     }
 
     public Collection<T> getAll() {

@@ -1,8 +1,11 @@
 package cloud.hytora.driver.player;
 
+import cloud.hytora.common.wrapper.Wrapper;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.common.IdentityHolder;
+import cloud.hytora.driver.exception.PlayerNotOnlineException;
 import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.packets.QueryState;
 import cloud.hytora.driver.player.connection.PlayerConnection;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,6 +21,16 @@ public interface CloudOfflinePlayer extends Bufferable, IdentityHolder {
      */
     @NotNull
     String getName();
+
+    /**
+     * Checks if this player is currently online
+     */
+    boolean isOnline();
+
+    /**
+     * Tries to get this player as online player
+     */
+    CloudPlayer asOnlinePlayer() throws PlayerNotOnlineException;
 
     /**
      * Overrides the name of this cached player entry
@@ -93,5 +106,10 @@ public interface CloudOfflinePlayer extends Bufferable, IdentityHolder {
      * @param time the time to set
      */
     void setLastLogin(long time);
+
+    /**
+     * Saves this player in database
+     */
+    void saveOfflinePlayer();
 
 }

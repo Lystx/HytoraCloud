@@ -75,6 +75,12 @@ public class SimpleWrapper<T> implements Wrapper<T> {
     }
 
     @Override
+    public Wrapper<T> allowNull() {
+        this.denyNull = false;
+        return this;
+    }
+
+    @Override
     public Throwable error() {
         return throwable;
     }

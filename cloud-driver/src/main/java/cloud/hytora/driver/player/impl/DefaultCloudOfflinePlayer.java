@@ -1,14 +1,16 @@
 package cloud.hytora.driver.player.impl;
 
+import cloud.hytora.common.wrapper.Wrapper;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.exception.PlayerNotOnlineException;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
+import cloud.hytora.driver.networking.protocol.packets.QueryState;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
+import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.connection.DefaultPlayerConnection;
 import cloud.hytora.driver.player.connection.PlayerConnection;
-import com.google.common.base.Preconditions;
 import lombok.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -50,6 +52,24 @@ public class DefaultCloudOfflinePlayer implements CloudOfflinePlayer {
 				properties = buffer.readDocument();
 				break;
 		}
+	}
+
+	@Override
+	public boolean isOnline() {
+		return CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(this.uniqueId) != null;
+	}
+
+	@Override
+	public CloudPlayer asOnlinePlayer() throws PlayerNotOnlineException {
+		if (this.isOnline()) {
+			return CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(this.uniqueId);
+		}
+		throw new PlayerNotOnlineException();
+	}
+
+	@Override
+	public void saveOfflinePlayer() {
+		CloudDriver.getInstance().getPlayerManager().saveOfflinePlayerAsync(this);
 	}
 
 	@Nonnull

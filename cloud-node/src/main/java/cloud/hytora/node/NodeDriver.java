@@ -34,6 +34,7 @@ import cloud.hytora.driver.node.config.DefaultNodeConfig;
 import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;
+import cloud.hytora.driver.player.impl.DefaultCloudOfflinePlayer;
 import cloud.hytora.driver.player.impl.DefaultCloudPlayer;
 import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.NodeCloudServer;
@@ -228,7 +229,7 @@ public class NodeDriver extends CloudDriver implements Node {
         this.databaseManager = new DefaultDatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType());
 
         SectionedDatabase database = this.databaseManager.getDatabase();
-        database.registerSection("players", DefaultCloudPlayer.class);
+        database.registerSection("players", DefaultCloudOfflinePlayer.class);
         database.registerSection("configurations", DefaultServerConfiguration.class);
         database.registerSection("groups", DefaultConfigurationParent.class);
 
@@ -291,6 +292,7 @@ public class NodeDriver extends CloudDriver implements Node {
         this.executor.registerPacketHandler(new NodeRemoteShutdownHandler());
         this.executor.registerPacketHandler(new NodeRemoteServerStartHandler());
         this.executor.registerPacketHandler(new NodeRemoteServerStopHandler());
+        this.executor.registerPacketHandler(new NodeOfflinePlayerPacketHandler());
 
         this.logger.info("§a=> Registered §a" + PacketProvider.getRegisteredPackets().size() + " Packets §8& §a" + this.executor.getRegisteredPacketHandlers().size() + " Handlers§8.");
         this.logger.info("§8");

@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferedResponse;
-import cloud.hytora.driver.networking.protocol.packets.ConnectionResponse;
+import cloud.hytora.driver.networking.protocol.packets.QueryState;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,7 +29,7 @@ public class ResponsePacket extends Packet implements BufferedResponse {
     /**
      * The state of this response
      */
-    private ConnectionResponse state;
+    private QueryState state;
 
     /**
      * The responded data for this response
@@ -47,7 +47,7 @@ public class ResponsePacket extends Packet implements BufferedResponse {
 
             case READ:
                 responderName = buf.readString();
-                this.state = buf.readEnum(ConnectionResponse.class);
+                this.state = buf.readEnum(QueryState.class);
                 data = buf.readOptionalDocument();
 
                 this.buffer = buf.readBuffer();
@@ -68,7 +68,7 @@ public class ResponsePacket extends Packet implements BufferedResponse {
     }
 
     @Override
-    public ConnectionResponse state() {
+    public QueryState state() {
         return state;
     }
 
