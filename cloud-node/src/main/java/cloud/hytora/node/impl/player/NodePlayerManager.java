@@ -4,7 +4,7 @@ import cloud.hytora.driver.event.EventManager;
 import cloud.hytora.driver.networking.packets.player.CloudPlayerUpdatePacket;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.impl.DefaultPlayerManager;
-import cloud.hytora.driver.player.impl.SimpleCloudPlayer;
+import cloud.hytora.driver.player.impl.DefaultCloudPlayer;
 import cloud.hytora.node.NodeDriver;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,7 +18,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
 
     @Override
     public void registerCloudPlayer(@NotNull UUID uniqueID, @NotNull String username) {
-        this.cachedCloudPlayers.put(uniqueID, new SimpleCloudPlayer(uniqueID, username));
+        this.cachedCloudPlayers.put(uniqueID, new DefaultCloudPlayer(uniqueID, username));
     }
 
     @Override

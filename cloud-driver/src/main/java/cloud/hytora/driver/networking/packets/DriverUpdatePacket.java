@@ -3,11 +3,11 @@ package cloud.hytora.driver.networking.packets;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
-import cloud.hytora.driver.player.impl.SimpleCloudPlayer;
+import cloud.hytora.driver.player.impl.DefaultCloudPlayer;
 import cloud.hytora.driver.CloudDriver;
 
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
-import cloud.hytora.driver.services.configuration.SimpleServerConfiguration;
+import cloud.hytora.driver.services.configuration.DefaultServerConfiguration;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.impl.SimpleCloudServer;
@@ -37,13 +37,13 @@ public class DriverUpdatePacket extends Packet {
         switch (state) {
 
             case READ:
-                groups = buf.readWrapperObjectCollection(SimpleServerConfiguration.class);
+                groups = buf.readWrapperObjectCollection(DefaultServerConfiguration.class);
                 CloudDriver.getInstance().getConfigurationManager().setAllCachedConfigurations((List<ServerConfiguration>) groups);
 
                 allCachedServices = buf.readWrapperObjectCollection(SimpleCloudServer.class);
                 CloudDriver.getInstance().getServiceManager().setAllCachedServices((List<CloudServer>) allCachedServices);
 
-                cloudPlayers = buf.readWrapperObjectCollection(SimpleCloudPlayer.class);
+                cloudPlayers = buf.readWrapperObjectCollection(DefaultCloudPlayer.class);
                 CloudDriver.getInstance().getPlayerManager().setAllCachedCloudPlayers((List<CloudPlayer>) cloudPlayers);
                 break;
 

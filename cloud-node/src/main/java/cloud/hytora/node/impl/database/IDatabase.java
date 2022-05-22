@@ -21,13 +21,14 @@ public interface IDatabase {
 
     void delete(String collection,  String key);
 
-    Document get(String collection,  String key);
+    Document byId(String collection, String key);
 
-    Collection<Document> get(String collection,  String fieldName, Object fieldValue);
+    Collection<Document> filter(String collection, String fieldName, Object fieldValue);
 
     Collection<String> keys(String collection);
 
     Collection<Document> documents(String collection);
+
 
     Map<String, Document> entries(String collection);
 

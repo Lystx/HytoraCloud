@@ -5,7 +5,7 @@ import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
-import cloud.hytora.driver.services.configuration.SimpleServerConfiguration;
+import cloud.hytora.driver.services.configuration.DefaultServerConfiguration;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -28,7 +28,7 @@ public class ServiceConfigurationExecutePacket extends Packet {
         switch (state) {
 
             case READ:
-                this.configuration = buf.readObject(SimpleServerConfiguration.class);
+                this.configuration = buf.readObject(DefaultServerConfiguration.class);
                 this.payLoad = buf.readEnum(ExecutionPayLoad.class);
                 break;
 

@@ -8,7 +8,7 @@ import cloud.hytora.driver.networking.packets.player.CloudPlayerLoginPacket;
 import cloud.hytora.driver.networking.packets.player.CloudPlayerUpdatePacket;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.impl.DefaultPlayerManager;
-import cloud.hytora.driver.player.impl.SimpleCloudPlayer;
+import cloud.hytora.driver.player.impl.DefaultCloudPlayer;
 import cloud.hytora.remote.Remote;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,7 +23,7 @@ public class RemotePlayerManager extends DefaultPlayerManager {
 
     @Override
     public void registerCloudPlayer(@NotNull UUID uniqueId, @NotNull String username) {
-        CloudPlayer cloudPlayer = new SimpleCloudPlayer(uniqueId, username);
+        CloudPlayer cloudPlayer = new DefaultCloudPlayer(uniqueId, username);
 
         this.cachedCloudPlayers.put(uniqueId, cloudPlayer);
         Remote.getInstance().getEventManager().callEvent(new CloudPlayerLoginEvent(cloudPlayer));

@@ -69,7 +69,7 @@ public class DatabaseMySQL implements IDatabase {
     }
 
     @Override
-    public Document get(String collection, String key) {
+    public Document byId(String collection, String key) {
         this.checkTable(collection);
         return executeQuery("SELECT document FROM " + collection + " WHERE key LIKE '" + key + "'", resultSet -> {
             String json = resultSet.getString("document");
@@ -78,7 +78,7 @@ public class DatabaseMySQL implements IDatabase {
     }
 
     @Override
-    public Collection<Document> get(String collection, String fieldName, Object fieldValue) {
+    public Collection<Document> filter(String collection, String fieldName, Object fieldValue) {
         this.checkTable(collection);
         return documents(collection).stream().filter(d -> d.getObject(fieldName).equals(fieldName)).collect(Collectors.toList());
     }

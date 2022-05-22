@@ -2,6 +2,7 @@ package cloud.hytora.node.impl.database.impl;
 
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
+import cloud.hytora.document.bson.BsonDocument;
 import cloud.hytora.node.impl.config.MainConfiguration;
 import cloud.hytora.node.impl.database.config.DatabaseConfiguration;
 import cloud.hytora.node.impl.database.IDatabase;
@@ -82,12 +83,13 @@ public class DatabaseMongoDB implements IDatabase {
     }
 
     @Override
-    public Document get(String collection, String key) {
-        return entries(collection).get(key);
+    public Document byId(String collection, String key) {
+        org.bson.Document idFound = this.database.getCollection(collection).find(Filters.eq("_id", key)).first();
+        return new BsonDocument(idFound);
     }
 
     @Override
-    public Collection<Document> get(String collection, String fieldName, Object fieldValue) {
+    public Collection<Document> filter(String collection, String fieldName, Object fieldValue) {
         FindIterable<org.bson.Document> documents = this.database.getCollection(collection).find(Filters.eq(fieldName, fieldValue));
         ArrayList<org.bson.Document> into = documents.into(new ArrayList<>());
         return into.stream().map(b -> DocumentFactory.newJsonDocument(b.toJson())).collect(Collectors.toList());

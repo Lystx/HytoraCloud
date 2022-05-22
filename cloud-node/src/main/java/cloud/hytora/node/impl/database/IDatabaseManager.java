@@ -1,7 +1,7 @@
 package cloud.hytora.node.impl.database;
 
 import cloud.hytora.common.wrapper.Wrapper;
-import cloud.hytora.node.impl.database.impl.CloudDatabase;
+import cloud.hytora.node.impl.database.impl.SectionedDatabase;
 import org.jetbrains.annotations.NotNull;
 
 public interface IDatabaseManager {
@@ -9,7 +9,7 @@ public interface IDatabaseManager {
     @NotNull
     IDatabase getInternalDatabase();
 
-    CloudDatabase getDatabase();
+    SectionedDatabase getDatabase();
 
     @NotNull
     Wrapper<Boolean> shutdown();

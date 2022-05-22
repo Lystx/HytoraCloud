@@ -3,7 +3,7 @@ package cloud.hytora.node.impl.database.def;
 import cloud.hytora.common.wrapper.Wrapper;
 
 
-import cloud.hytora.node.impl.database.impl.CloudDatabase;
+import cloud.hytora.node.impl.database.impl.SectionedDatabase;
 import cloud.hytora.node.impl.database.config.DatabaseType;
 import cloud.hytora.node.impl.database.IDatabase;
 import cloud.hytora.node.impl.database.IDatabaseManager;
@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 public class DefaultDatabaseManager implements IDatabaseManager {
 
     private final IDatabase internalDatabase;
-    private final CloudDatabase database;
+    private final SectionedDatabase database;
 
     public DefaultDatabaseManager(DatabaseType type) {
         if (type == DatabaseType.MYSQL) {
@@ -31,7 +31,8 @@ public class DefaultDatabaseManager implements IDatabaseManager {
         }
         //database cannot be null
         this.internalDatabase.connect();
-        this.database = new CloudDatabase(this.internalDatabase);
+
+        this.database = new SectionedDatabase(this.internalDatabase);
     }
 
     @Override

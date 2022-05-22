@@ -69,6 +69,8 @@ public class PacketProvider {
         PacketProvider.autoRegister(CloudPlayerUpdatePacket.class);
         PacketProvider.autoRegister(CloudPlayerKickPacket.class);
         PacketProvider.autoRegister(CloudPlayerSendServicePacket.class);
+        PacketProvider.autoRegister(CloudPlayerPlainMessagePacket.class);
+        PacketProvider.autoRegister(CloudPlayerComponentMessagePacket.class);
 
         //util packets
         PacketProvider.autoRegister(RedirectPacket.class);

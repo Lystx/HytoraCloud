@@ -4,7 +4,7 @@ import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
-import cloud.hytora.driver.services.configuration.SimpleServerConfiguration;
+import cloud.hytora.driver.services.configuration.DefaultServerConfiguration;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,7 +26,7 @@ public class ServerConfigurationCacheUpdatePacket extends Packet {
         switch (state) {
 
             case READ:
-                configuration = buf.readObject(SimpleServerConfiguration.class);
+                configuration = buf.readObject(DefaultServerConfiguration.class);
                 break;
 
             case WRITE:

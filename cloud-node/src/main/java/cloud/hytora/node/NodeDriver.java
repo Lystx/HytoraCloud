@@ -34,14 +34,18 @@ import cloud.hytora.driver.node.config.DefaultNodeConfig;
 import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;
+import cloud.hytora.driver.player.impl.DefaultCloudPlayer;
 import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.NodeCloudServer;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.configuration.ConfigurationManager;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.configuration.DefaultServerConfiguration;
 import cloud.hytora.driver.services.configuration.bundle.ConfigurationParent;
+import cloud.hytora.driver.services.configuration.bundle.DefaultConfigurationParent;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
+import cloud.hytora.node.impl.database.impl.SectionedDatabase;
 import cloud.hytora.node.impl.handler.http.V1PingRouter;
 import cloud.hytora.node.impl.handler.http.V1StatusRouter;
 import cloud.hytora.node.service.template.LocalTemplateStorage;
@@ -222,6 +226,12 @@ public class NodeDriver extends CloudDriver implements Node {
         //initializing managers
         new InternalDriverEventAdapter(this.eventManager, executor);
         this.databaseManager = new DefaultDatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType());
+
+        SectionedDatabase database = this.databaseManager.getDatabase();
+        database.registerSection("players", DefaultCloudPlayer.class);
+        database.registerSection("configurations", DefaultServerConfiguration.class);
+        database.registerSection("groups", DefaultConfigurationParent.class);
+
         this.configurationManager = new NodeConfigurationManager();
         this.serviceManager = new NodeServiceManager();
         this.playerManager = new NodePlayerManager(this.eventManager);
@@ -258,6 +268,7 @@ public class NodeDriver extends CloudDriver implements Node {
         this.commandManager.registerCommand(new ConfigurationCommand());
         this.commandManager.registerCommand(new ClearCommand());
         this.commandManager.registerCommand(new ServiceCommand());
+        this.commandManager.registerCommand(new PlayerCommand());
 
         //registering command argument parsers
         this.commandManager.registerParser(ServiceVersion.class, ServiceVersion::valueOf);

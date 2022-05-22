@@ -1,14 +1,13 @@
 package cloud.hytora.node.impl.command.impl;
 
-import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
-import cloud.hytora.driver.services.configuration.bundle.SimpleParent;
+import cloud.hytora.driver.services.configuration.bundle.DefaultConfigurationParent;
 import cloud.hytora.driver.services.fallback.SimpleFallback;
-import cloud.hytora.driver.services.configuration.SimpleServerConfiguration;
+import cloud.hytora.driver.services.configuration.DefaultServerConfiguration;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.driver.services.template.def.CloudTemplate;
@@ -21,7 +20,6 @@ import cloud.hytora.node.impl.setup.ConfigurationSetup;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 @Command(
         name = {"config", "configurations", "con"},
@@ -76,10 +74,10 @@ public class ConfigurationCommand {
                 String templateStorage = setup.getTemplateStorage();
                 ServiceShutdownBehaviour shutdownBehaviour = dynamic ? ServiceShutdownBehaviour.DELETE : ServiceShutdownBehaviour.KEEP;
 
-                SimpleServerConfiguration configuration = new SimpleServerConfiguration();
+                DefaultServerConfiguration configuration = new DefaultServerConfiguration();
 
                 if (!CloudDriver.getInstance().getConfigurationManager().getParentByName(parentName).isPresent()) {
-                    SimpleParent parent = new SimpleParent(name, version.getWrapperEnvironment(), shutdownBehaviour, new String[]{
+                    DefaultConfigurationParent parent = new DefaultConfigurationParent(name, version.getWrapperEnvironment(), shutdownBehaviour, new String[]{
                             "-XX:+UseG1GC",
                             "-XX:+ParallelRefProcEnabled",
                             "-XX:MaxGCPauseMillis=200",

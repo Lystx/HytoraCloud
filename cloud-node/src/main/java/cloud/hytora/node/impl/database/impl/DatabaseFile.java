@@ -71,7 +71,7 @@ public class DatabaseFile implements IDatabase {
     }
 
     @Override
-    public Document get(String collection, String key) {
+    public Document byId(String collection, String key) {
         File entryFile = new File(this.checkCollection(collection), key + fileExtension);
         try {
             return DocumentFactory.newJsonDocument(entryFile);
@@ -81,7 +81,7 @@ public class DatabaseFile implements IDatabase {
     }
 
     @Override
-    public Collection<Document> get(String collection, String fieldName, Object fieldValue) {
+    public Collection<Document> filter(String collection, String fieldName, Object fieldValue) {
         return documents(collection).stream().filter(d -> d.getObject(fieldName).equals(fieldValue)).collect(Collectors.toList());
     }
 

@@ -12,24 +12,25 @@ import cloud.hytora.driver.services.configuration.bundle.ConfigurationParent;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.node.NodeDriver;
-import cloud.hytora.node.impl.database.impl.CloudDatabase;
+import cloud.hytora.node.impl.database.impl.SectionedDatabase;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.stream.Collectors;
 
 
 public class NodeConfigurationManager extends DefaultConfigurationManager {
 
-    private final CloudDatabase database;
+    private final SectionedDatabase database;
 
     public NodeConfigurationManager() {
         this.database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
 
         // loading all database groups and configurations
-        this.getAllParentConfigurations().addAll(this.database.getAllParentConfigurations());
-        this.getAllCachedConfigurations().addAll(this.database.getAllConfigurations());
+        this.getAllParentConfigurations().addAll(this.database.getSection(ConfigurationParent.class).getAll());
+        this.getAllCachedConfigurations().addAll(this.database.getSection(ServerConfiguration.class).getAll());
 
         CloudDriver.getInstance().getExecutor().registerPacketHandler((PacketHandler<ServiceConfigurationExecutePacket>) (ctx, packet) -> {
             if (packet.getPayLoad().equals(ServiceConfigurationExecutePacket.ExecutionPayLoad.CREATE)) {
@@ -69,26 +70,26 @@ public class NodeConfigurationManager extends DefaultConfigurationManager {
 
     @Override
     public void addConfiguration(@NotNull ServerConfiguration serviceGroup) {
-        this.database.saveConfiguration(serviceGroup);
+        this.database.getSection(ServerConfiguration.class).insert(serviceGroup.getName(), serviceGroup);
         NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceConfigurationExecutePacket(serviceGroup, ServiceConfigurationExecutePacket.ExecutionPayLoad.CREATE));
         super.addConfiguration(serviceGroup);
     }
 
     @Override
     public void addParentConfiguration(@NotNull ConfigurationParent serviceGroup) {
-        this.database.saveParentConfiguration(serviceGroup);
+        this.database.getSection(ConfigurationParent.class).insert(serviceGroup.getName(), serviceGroup);
         super.addParentConfiguration(serviceGroup);
     }
 
     @Override
     public void removeParentConfiguration(@NotNull ConfigurationParent serviceGroup) {
-        this.database.deleteParent(serviceGroup);
+        this.database.getSection(ConfigurationParent.class).delete(serviceGroup.getName());
         super.removeParentConfiguration(serviceGroup);
     }
 
     @Override
     public void removeConfiguration(@NotNull ServerConfiguration serviceGroup) {
-        this.database.deleteConfiguration(serviceGroup);
+        this.database.getSection(ServerConfiguration.class).delete(serviceGroup.getName());
         NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceConfigurationExecutePacket(serviceGroup, ServiceConfigurationExecutePacket.ExecutionPayLoad.REMOVE));
         super.removeConfiguration(serviceGroup);
     }

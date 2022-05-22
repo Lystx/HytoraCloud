@@ -184,6 +184,11 @@ public class SimpleCloudServer implements NodeCloudServer, Bufferable {
     }
 
     @Override
+    public String toString() {
+        return getName();
+    }
+
+    @Override
     public void setCreationTimeStamp(long creationTime) {
         this.creationTimestamp = creationTime;
     }
