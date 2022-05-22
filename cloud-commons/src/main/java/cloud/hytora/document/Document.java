@@ -97,7 +97,6 @@ public interface Document extends JsonEntity {
 	 * @param path the path of the target object
 	 * @return the object at the given path wrapped as {@link IEntry}
 	 */
-	@Nonnull
 	IEntry getEntry(@Nonnull String path);
 
 	/**

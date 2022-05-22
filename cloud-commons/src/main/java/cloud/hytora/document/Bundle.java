@@ -17,8 +17,6 @@ import java.util.function.Consumer;
 /**
  * A Bundle represents an array or list of string, numbers, objects or arrays.
  *
-
- *
  * @see Document
  * @see IEntry
  */
