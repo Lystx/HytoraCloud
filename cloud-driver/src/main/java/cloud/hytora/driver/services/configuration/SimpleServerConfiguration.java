@@ -8,6 +8,8 @@ import cloud.hytora.driver.property.ProtocolPropertyHolder;
 import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.configuration.bundle.ConfigurationParent;
 import cloud.hytora.driver.services.fallback.SimpleFallback;
+import cloud.hytora.driver.services.template.ServiceTemplate;
+import cloud.hytora.driver.services.template.def.CloudTemplate;
 import cloud.hytora.driver.services.utils.ServiceVersion;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -20,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -35,6 +38,15 @@ public class SimpleServerConfiguration extends ProtocolPropertyHolder implements
 
     private SimpleFallback fallback = new SimpleFallback();
     private ServiceVersion version;
+    private Collection<CloudTemplate> templates = new ArrayList<>();
+
+    public void setTemplates(Collection<ServiceTemplate> templates) {
+        this.templates = templates.stream().map(t -> ((CloudTemplate)t)).collect(Collectors.toList());
+    }
+
+    public Collection<ServiceTemplate> getTemplates() {
+        return new ArrayList<>(templates);
+    }
 
     public ConfigurationParent getParent() {
         return CloudDriver
@@ -78,6 +90,7 @@ public class SimpleServerConfiguration extends ProtocolPropertyHolder implements
                 this.maintenance = buf.readBoolean();
 
                 this.version = buf.readEnum(ServiceVersion.class);
+                this.templates = buf.readObjectCollection(CloudTemplate.class);
                 break;
 
             case WRITE:
@@ -98,6 +111,7 @@ public class SimpleServerConfiguration extends ProtocolPropertyHolder implements
                 buf.writeBoolean(this.isMaintenance());
 
                 buf.writeEnum(this.getVersion());
+                buf.writeObjectCollection(this.templates);
                 break;
         }
     }
@@ -121,6 +135,7 @@ public class SimpleServerConfiguration extends ProtocolPropertyHolder implements
         to.setMaintenance(from.isMaintenance());
 
         to.setVersion(from.getVersion());
+        to.setTemplates(from.getTemplates());
 
     }
 

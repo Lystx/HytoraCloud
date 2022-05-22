@@ -65,7 +65,12 @@ public class ProcessServiceStarter {
 
         // load all current configuration templates
         ServerConfiguration configuration = service.getConfiguration();
-        for (ServiceTemplate template : configuration.getParent().getTemplates()) {
+
+        //all templates for this service
+        Collection<ServiceTemplate> templates = configuration.getParent().getTemplates(); //parent templates
+        templates.addAll(configuration.getTemplates()); //configuration templates
+
+        for (ServiceTemplate template : templates) {
             TemplateStorage storage = template.getStorage();
             if (storage != null) {
                 storage.copyTemplate(service, template, serverDir);

@@ -14,6 +14,8 @@ import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.InternalDriverEventAdapter;
 
 
+import cloud.hytora.driver.http.api.HttpServer;
+import cloud.hytora.driver.http.impl.NettyHttpServer;
 import cloud.hytora.driver.message.ChannelMessenger;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.PacketProvider;
@@ -40,6 +42,8 @@ import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.configuration.bundle.ConfigurationParent;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
+import cloud.hytora.node.impl.handler.http.V1PingRouter;
+import cloud.hytora.node.impl.handler.http.V1StatusRouter;
 import cloud.hytora.node.service.template.LocalTemplateStorage;
 import cloud.hytora.driver.setup.SetupControlState;
 import cloud.hytora.driver.storage.DriverStorage;
@@ -100,6 +104,7 @@ public class NodeDriver extends CloudDriver implements Node {
     private PlayerManager playerManager;
     private ChannelMessenger channelMessenger;
     private NodeManager nodeManager;
+    private HttpServer webServer;
 
     private HytoraNode executor;
     private NodeServiceQueue serviceQueue;
@@ -112,7 +117,7 @@ public class NodeDriver extends CloudDriver implements Node {
     public static final File STORAGE_FOLDER = new File(NODE_FOLDER, "storage/");
     public static final File CONFIGURATIONS_FOLDER = new File(STORAGE_FOLDER, "configurations/");
     public static final File CONFIGURATIONS_PARENTS_FOLDER = new File(STORAGE_FOLDER, "groups/");
-    public static final File STORAGE_VERSIONS_FOLDER = new File(STORAGE_FOLDER , "versions/");
+    public static final File STORAGE_VERSIONS_FOLDER = new File(STORAGE_FOLDER, "versions/");
     public static final File STORAGE_TEMP_FOLDER = new File(STORAGE_FOLDER, "tmp-" + UUID.randomUUID().toString().substring(0, 5) + "/");
     public static final File TEMPLATES_DIR = new File(STORAGE_FOLDER, "templates/");
 
@@ -173,6 +178,15 @@ public class NodeDriver extends CloudDriver implements Node {
         this.logger.info("§8");
         this.logger.info("§8");
 
+        //starting web-server
+        this.webServer = new NettyHttpServer(config.getSslConfiguration());
+        for (ProtocolAddress address : config.getHttpListeners()) {
+            this.webServer.addListener(address);
+        }
+
+        //registering default web api handlers
+        this.webServer.getHandlerRegistry().registerHandlers("v1", new V1PingRouter(), new V1StatusRouter());
+
         this.executor = new HytoraNode(this.configManager.getConfig());
 
         if (this.config.getClusterAddresses() != null && this.config.getClusterAddresses().length > 0) {
@@ -216,7 +230,6 @@ public class NodeDriver extends CloudDriver implements Node {
         this.logger.info("§8");
 
 
-
         //checking if directories got deleted meanwhile
         for (ConfigurationParent parent : this.configurationManager.getAllParentConfigurations()) {
 
@@ -231,6 +244,7 @@ public class NodeDriver extends CloudDriver implements Node {
 
         //registering template storage
         this.templateManager.registerStorage(new LocalTemplateStorage());
+
 
         //copying files
         this.logger.info("§7Copying files§8...");
@@ -311,6 +325,8 @@ public class NodeDriver extends CloudDriver implements Node {
 
         this.logger.info("§7Trying to terminate the §cCloudsystem§8...");
 
+        this.webServer.shutdown();
+
         //shutting down servers
         for (CloudServer service : this.serviceManager.getAllCachedServices()) {
             NodeCloudServer cloudServer = service.asCloudServer();
@@ -337,19 +353,19 @@ public class NodeDriver extends CloudDriver implements Node {
 
             if (setupControlState != SetupControlState.FINISHED) return;
 
-            switch (setup.getDatabaseType()){
+            switch (setup.getDatabaseType()) {
                 case FILE:
                     initConfigs(setup, null, null);
                     break;
                 case MYSQL:
                     new MySqlSetup().start((mySqlSetup, setupControlState1) -> {
-                        if(setupControlState1 != SetupControlState.FINISHED) return;
+                        if (setupControlState1 != SetupControlState.FINISHED) return;
                         initConfigs(setup, mySqlSetup, null);
                     });
                     break;
                 case MONGODB:
                     new MongoDBSetup().start((mongoDBSetup, setupControlState1) -> {
-                        if(setupControlState1 != SetupControlState.FINISHED) return;
+                        if (setupControlState1 != SetupControlState.FINISHED) return;
                         initConfigs(setup, null, mongoDBSetup);
                     });
                     break;
@@ -383,7 +399,7 @@ public class NodeDriver extends CloudDriver implements Node {
         String databasePassword = null;
         String databaseName = null;
         String authDatabase = null;
-        switch (databaseType){
+        switch (databaseType) {
             case MYSQL:
                 databaseHost = mySqlSetup.getDatabaseHost();
                 databasePort = mySqlSetup.getDatabasePort();
@@ -433,7 +449,8 @@ public class NodeDriver extends CloudDriver implements Node {
     }
 
     @Override
-    public void setLastCycleData(NodeCycleData data) {}
+    public void setLastCycleData(NodeCycleData data) {
+    }
 
     @Override
     public void log(String message, Object... args) {

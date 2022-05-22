@@ -7,7 +7,6 @@ import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.configuration.bundle.ConfigurationParent;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
 import cloud.hytora.driver.services.template.ServiceTemplate;
-import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
 import cloud.hytora.driver.services.utils.ServiceVersion;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,6 +20,8 @@ public interface ServerConfiguration extends Bufferable, PropertyHolder, SelfClo
     @NotNull String getName();
 
     ConfigurationParent getParent();
+
+    Collection<ServiceTemplate> getTemplates();
 
     /**
      * The permission to access a service of this configuration

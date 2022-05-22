@@ -58,6 +58,9 @@ public class LocalTemplateStorage implements TemplateStorage {
             for (ServiceTemplate template : con.getParent().getTemplates()) {
                 this.createTemplate(template);
             }
+            for (ServiceTemplate template : con.getTemplates()) {
+                this.createTemplate(template);
+            }
         }
     }
 

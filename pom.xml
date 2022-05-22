@@ -26,6 +26,7 @@
         <module>cloud-bridge</module>
         <module>cloud-remote</module>
         <module>cloud-commons</module>
+        <module>cloud-modules</module>
     </modules>
 
     <dependencies>

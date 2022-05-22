@@ -8,7 +8,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 
 @AllArgsConstructor
 @Getter
@@ -17,6 +19,11 @@ public class ProtocolAddress implements Bufferable {
 
     private String host;
     private int port;
+
+    public ProtocolAddress(@Nonnull InetSocketAddress socketAddress) {
+        this.host = socketAddress.getAddress().getHostAddress();
+        this.port = socketAddress.getPort();
+    }
 
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
