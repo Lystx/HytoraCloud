@@ -13,7 +13,9 @@ import cloud.hytora.driver.command.DefaultCommandSender;
 import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.command.Console;
 import cloud.hytora.driver.InternalDriverEventAdapter;
+import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.message.ChannelMessenger;
+import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
@@ -30,6 +32,7 @@ import cloud.hytora.remote.impl.*;
 import cloud.hytora.remote.impl.handler.RemoteCommandHandler;
 import cloud.hytora.remote.impl.handler.RemoteLoggingHandler;
 import cloud.hytora.remote.impl.log.DefaultLogHandler;
+import cloud.hytora.remote.impl.module.RemoteModuleManager;
 import lombok.Getter;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import lombok.Setter;
@@ -42,6 +45,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Getter
 public class Remote extends CloudDriver {
@@ -55,6 +59,7 @@ public class Remote extends CloudDriver {
     private final DriverStorage storage;
     private final ChannelMessenger channelMessenger;
     private final NodeManager nodeManager;
+    private final ModuleManager moduleManager;
 
     @Setter
     private RemoteAdapter adapter;
@@ -85,9 +90,15 @@ public class Remote extends CloudDriver {
         this.commandManager = new RemoteCommandManager();
         this.channelMessenger = new RemoteChannelMessenger(this.client);
         this.nodeManager = new RemoteNodeManager();
+        this.moduleManager = new RemoteModuleManager();
 
         this.storage = new RemoteDriverStorage(this.client);
 
+
+        this.scheduledExecutor.scheduleAtFixedRate(() -> {
+            CloudServer cloudServer = thisService();
+            cloudServer.update();
+        }, 0, SERVER_PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
     }
 
     public static void main(String[] args) {
@@ -153,6 +164,12 @@ public class Remote extends CloudDriver {
     @Override
     public AdvancedNetworkExecutor getExecutor() {
         return client;
+    }
+
+    @Nullable
+    @Override
+    public HttpServer getHttpServer() {
+        return null;
     }
 
     @Nullable

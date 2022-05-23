@@ -6,11 +6,15 @@ import cloud.hytora.driver.command.CommandManager;
 import cloud.hytora.driver.command.Console;
 import cloud.hytora.driver.event.EventManager;
 import cloud.hytora.driver.event.defaults.DefaultEventManager;
+import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.message.ChannelMessenger;
+import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.player.PlayerManager;
+import cloud.hytora.driver.scheduler.Scheduler;
+import cloud.hytora.driver.scheduler.def.DefaultScheduler;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.configuration.ConfigurationManager;
 import cloud.hytora.driver.services.template.TemplateManager;
@@ -19,10 +23,14 @@ import cloud.hytora.driver.storage.DriverStorage;
 import cloud.hytora.driver.command.sender.CommandSender;
 
 import cloud.hytora.driver.networking.PacketProvider;
+import cloud.hytora.driver.tps.TickWorker;
+import cloud.hytora.driver.tps.def.DefaultTickWorker;
 import io.netty.util.ResourceLeakDetector;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.JdkLoggerFactory;
 import lombok.Getter;
+import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -62,6 +70,25 @@ public abstract class CloudDriver {
      */
     protected final ScheduledExecutorService scheduledExecutor;
 
+    /**
+     * The tps manager
+     */
+    protected final TickWorker tickWorker;
+
+    /**
+     * The cloud provided scheduler api
+     */
+    protected final Scheduler scheduler;
+
+    /**
+     * If the current driver instance is running
+     */
+    @Setter
+    protected boolean running;
+
+    public static final int SERVER_PUBLISH_INTERVAL = 90_000; // publish all 1.5 minutes
+    public static final int SERVER_CYCLE_TIMEOUT = 2; // service times out after 3 minutes
+
     public CloudDriver(Logger logger, DriverEnvironment environment) {
         instance = this;
 
@@ -69,6 +96,8 @@ public abstract class CloudDriver {
         this.logger = logger;
         this.eventManager = new DefaultEventManager();
         this.templateManager = new DefaultTemplateManager();
+        this.tickWorker = new DefaultTickWorker(20);
+        this.scheduler = new DefaultScheduler();
         this.scheduledExecutor = Executors.newScheduledThreadPool(4, new NamedThreadFactory("Scheduler"));
 
         // use jdk logger to prevent issues with older slf4j versions
@@ -87,6 +116,8 @@ public abstract class CloudDriver {
             ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
         }
         PacketProvider.registerPackets();
+
+        this.running = true;
     }
 
     public abstract void shutdown();
@@ -96,6 +127,10 @@ public abstract class CloudDriver {
     @Nullable
     @CheckReturnValue
     public abstract Console getConsole();
+
+    @Nullable
+    @CheckReturnValue
+    public abstract HttpServer getHttpServer();
 
     @Nonnull
     public abstract DriverStorage getStorage();
@@ -119,16 +154,19 @@ public abstract class CloudDriver {
     public abstract ServiceManager getServiceManager();
 
     @Nonnull
+    public abstract ModuleManager getModuleManager();
+
+    @Nonnull
     public abstract ConfigurationManager getConfigurationManager();
 
     @Nonnull
     public abstract AdvancedNetworkExecutor getExecutor();
-
 
     @Nonnull
     @CheckReturnValue
     public DriverStatus status() {
         return CloudDriver.class.getAnnotation(DriverStatus.class);
     }
+
 }
 

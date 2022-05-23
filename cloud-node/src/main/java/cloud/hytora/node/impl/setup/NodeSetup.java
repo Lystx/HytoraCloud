@@ -26,7 +26,11 @@ public class NodeSetup extends Setup<NodeSetup> {
     @SuggestedAnswer("30000")
     private int serviceStartPort;
 
-    @Question(id = 5, question = "Which database do you want to use?")
+    @Question(id = 5, question = "Is this Node a Remote (Slave) in the Cluster?")
+    @QuestionTip("A Remote receives commands and connects to the HeadNode")
+    private boolean remote;
+
+    @Question(id = 6, question = "Which database do you want to use?")
     @QuestionTip("When using multiple Nodes, you should use an online database!")
     @RequiresEnum(DatabaseType.class)
     @ExitAfterInput("FILE")

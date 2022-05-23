@@ -91,6 +91,16 @@ public class SimpleCloudServer implements NodeCloudServer, Bufferable {
     }
 
     @Override
+    public boolean isTimedOut() {
+        long lastCycleDelay = System.currentTimeMillis() - this.creationTimestamp - 30;
+        int lostCycles = (int) lastCycleDelay / CloudDriver.SERVER_PUBLISH_INTERVAL;
+        if (lostCycles > 0) {
+            CloudDriver.getInstance().getLogger().warn("Service timeout " + this.getName() + ": lost {} cycles ({}ms)", lostCycles, lastCycleDelay);
+        }
+        return lostCycles >= CloudDriver.SERVER_CYCLE_TIMEOUT;
+    }
+
+    @Override
     public void edit(@NotNull Consumer<CloudServer> serviceConsumer) {
         serviceConsumer.accept(this);
         this.update();

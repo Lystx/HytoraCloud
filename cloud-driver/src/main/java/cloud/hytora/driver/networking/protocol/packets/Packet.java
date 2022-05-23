@@ -53,8 +53,6 @@ public abstract class Packet implements IPacket {
         return destinationChannel;
     }
 
-
-
     @Override
     public void setDestinationChannel(String destinationChannel) {
         this.destinationChannel = destinationChannel;

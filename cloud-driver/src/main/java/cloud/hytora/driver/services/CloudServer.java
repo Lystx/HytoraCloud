@@ -25,6 +25,8 @@ public interface CloudServer extends Bufferable, SelfCloneable<CloudServer>, Net
 
     void deploy(ServiceDeployment... deployments);
 
+    boolean isTimedOut();
+
     /**
      * @return the service id
      */
@@ -116,9 +118,6 @@ public interface CloudServer extends Bufferable, SelfCloneable<CloudServer>, Net
 
     void executeCommand(@NotNull String commandLine);
 
-    /**
-     * updates the properties of the service
-     */
     void update();
 
     long getCreationTimestamp();

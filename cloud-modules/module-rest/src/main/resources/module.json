@@ -1,0 +1,9 @@
+{
+	"name": "module-rest",
+	"author": "Lystx",
+	"version": "1.0",
+	"main": "cloud.hytora.modules.rest.RestModule",
+	"description": "Module for the Rest-API",
+	"environment": "NODE",
+	"copy": "NODE"
+}

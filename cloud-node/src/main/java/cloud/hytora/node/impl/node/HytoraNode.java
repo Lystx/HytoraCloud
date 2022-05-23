@@ -207,6 +207,15 @@ public class HytoraNode extends ClusterExecutor {
         super.sendPacketToAll(packet);
     }
 
+    @Override
+    public void sendPacket(IPacket packet) {
+        if (this.nodeAsClient != null) {
+            this.nodeAsClient.sendPacket(packet);
+            return;
+        }
+        super.sendPacket(packet);
+    }
+
     public void registerStats(CloudServer service) {
         bootUpStatistics.put(service, System.currentTimeMillis());
     }

@@ -4,6 +4,7 @@ import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
+import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -13,7 +14,6 @@ import static cloud.hytora.driver.networking.packets.player.OfflinePlayerRequest
 
 
 public class OfflinePlayerRequestPacket extends Packet {
-
 
     public OfflinePlayerRequestPacket() {
         super(buf -> buf.writeEnum(GET_ALL));

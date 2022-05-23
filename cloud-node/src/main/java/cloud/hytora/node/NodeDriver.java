@@ -17,6 +17,9 @@ import cloud.hytora.driver.InternalDriverEventAdapter;
 import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.http.impl.NettyHttpServer;
 import cloud.hytora.driver.message.ChannelMessenger;
+import cloud.hytora.driver.setup.SetupListener;
+import cloud.hytora.node.impl.module.NodeModuleManager;
+import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.PacketProvider;
 import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
@@ -35,7 +38,6 @@ import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.driver.player.impl.DefaultCloudOfflinePlayer;
-import cloud.hytora.driver.player.impl.DefaultCloudPlayer;
 import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.NodeCloudServer;
 import cloud.hytora.driver.services.ServiceManager;
@@ -49,6 +51,7 @@ import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.node.impl.database.impl.SectionedDatabase;
 import cloud.hytora.node.impl.handler.http.V1PingRouter;
 import cloud.hytora.node.impl.handler.http.V1StatusRouter;
+import cloud.hytora.node.impl.setup.NodeRemoteSetup;
 import cloud.hytora.node.service.template.LocalTemplateStorage;
 import cloud.hytora.driver.setup.SetupControlState;
 import cloud.hytora.driver.storage.DriverStorage;
@@ -79,6 +82,7 @@ import cloud.hytora.node.service.helper.NodeServiceQueue;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -107,6 +111,7 @@ public class NodeDriver extends CloudDriver implements Node {
     private ConfigurationManager configurationManager;
     private ServiceManager serviceManager;
     private PlayerManager playerManager;
+    private ModuleManager moduleManager;
     private ChannelMessenger channelMessenger;
     private NodeManager nodeManager;
     private HttpServer webServer;
@@ -118,6 +123,7 @@ public class NodeDriver extends CloudDriver implements Node {
     public static final File NODE_FOLDER = new File("local/");
     public static final File CONFIG_FILE = new File(NODE_FOLDER, "config.json");
     public static final File LOG_FOLDER = new File(NODE_FOLDER, "logs/");
+    public static final File MODULE_FOLDER = new File(NODE_FOLDER, "modules/");
 
     public static final File STORAGE_FOLDER = new File(NODE_FOLDER, "storage/");
     public static final File CONFIGURATIONS_FOLDER = new File(STORAGE_FOLDER, "configurations/");
@@ -129,11 +135,6 @@ public class NodeDriver extends CloudDriver implements Node {
     public static final File SERVICE_DIR = new File(NODE_FOLDER, "services/");
     public static final File SERVICE_DIR_STATIC = new File(SERVICE_DIR, "permanent/");
     public static final File SERVICE_DIR_DYNAMIC = new File(SERVICE_DIR, "temporary/");
-
-    /**
-     * If the node is still running
-     */
-    private boolean running;
 
     public NodeDriver(Logger logger, Console console) throws Exception {
         super(logger, DriverEnvironment.NODE);
@@ -238,8 +239,13 @@ public class NodeDriver extends CloudDriver implements Node {
         this.playerManager = new NodePlayerManager(this.eventManager);
         this.channelMessenger = new NodeChannelMessenger(executor);
         this.nodeManager = new NodeNodeManager();
+        this.moduleManager = new NodeModuleManager();
         this.logger.info("§8");
 
+        //managing and loading modules
+        moduleManager.setModulesDirectory(MODULE_FOLDER.toPath());
+        moduleManager.resolveModules();
+        moduleManager.loadModules();
 
         //checking if directories got deleted meanwhile
         for (ConfigurationParent parent : this.configurationManager.getAllParentConfigurations()) {
@@ -270,6 +276,7 @@ public class NodeDriver extends CloudDriver implements Node {
         this.commandManager.registerCommand(new ClearCommand());
         this.commandManager.registerCommand(new ServiceCommand());
         this.commandManager.registerCommand(new PlayerCommand());
+        this.commandManager.registerCommand(new TickCommand());
 
         //registering command argument parsers
         this.commandManager.registerParser(ServiceVersion.class, ServiceVersion::valueOf);
@@ -293,9 +300,16 @@ public class NodeDriver extends CloudDriver implements Node {
         this.executor.registerPacketHandler(new NodeRemoteServerStartHandler());
         this.executor.registerPacketHandler(new NodeRemoteServerStopHandler());
         this.executor.registerPacketHandler(new NodeOfflinePlayerPacketHandler());
+        this.executor.registerPacketHandler(new NodeModulePacketHandler());
+        this.executor.registerPacketHandler(new NodeModuleControllerPacketHandler());
 
         this.logger.info("§a=> Registered §a" + PacketProvider.getRegisteredPackets().size() + " Packets §8& §a" + this.executor.getRegisteredPacketHandlers().size() + " Handlers§8.");
         this.logger.info("§8");
+
+        //enabling modules after having loaded the database
+        this.logger.info("Enabling §bModules§8...");
+        this.logger.info("§8");
+        moduleManager.enableModules();
 
         // print finish successfully message
         this.logger.info("§7This Node has §asuccessfully §7booted up§8!");
@@ -309,6 +323,9 @@ public class NodeDriver extends CloudDriver implements Node {
         //add node cycle data
         scheduledExecutor.scheduleAtFixedRate(() -> executor.sendPacket(new NodeCycleDataPacket(this.config.getNodeName(), getLastCycleData())), 1_000, NodeCycleData.PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
 
+        //heart-beat execution for time out checking
+        TimeOutChecker check = new TimeOutChecker();
+        scheduledExecutor.scheduleAtFixedRate(check, 1, 1, TimeUnit.SECONDS);
 
         // add a shutdown hook for fast closes
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
@@ -321,11 +338,32 @@ public class NodeDriver extends CloudDriver implements Node {
         this.executor.sendPacketToAll(packet);
     }
 
+
+    public void reload() {
+        logger.info("Reloading..");
+
+        logger.info("Loading translations..");
+
+
+        // TODO send files to other nodes on reload
+        logger.info("Reloading modules..");
+        moduleManager.disableModules();
+        moduleManager.unregisterModules();
+        moduleManager.resolveModules();
+        moduleManager.loadModules();
+        moduleManager.enableModules();
+
+        logger.info("Reloading complete");
+    }
+
     @Override
     public void shutdown() {
         if (!this.running) {
             return;
         }
+
+        moduleManager.disableModules();
+        moduleManager.unregisterModules();
 
         // TODO: 03.05.2022  migrating of head node
         if (this.nodeManager.isHeadNode() && this.nodeManager.getAllConnectedNodes().size() > 0) {
@@ -396,6 +434,21 @@ public class NodeDriver extends CloudDriver implements Node {
         String host = setup.getHost();
         int port = setup.getPort();
         int serviceStartPort = setup.getServiceStartPort();
+        boolean remote = setup.isRemote();
+
+        if (remote) {
+            new NodeRemoteSetup().start((setup1, state) -> {
+                if (state == SetupControlState.FINISHED) {
+                    String host1 = setup1.getHost();
+                    int port1 = setup1.getPort();
+                    String authKey = setup1.getAuthKey();
+
+                    nodeConfig.setAuthKey(authKey);
+                    nodeConfig.setClusterAddresses(new ProtocolAddress[]{new ProtocolAddress(host1, port1)});
+                }
+            });
+            nodeConfig.setHttpListeners(new ProtocolAddress[0]);
+        }
 
         nodeConfig.setNodeName(nodeName);
         nodeConfig.setBindAddress(host);
@@ -473,6 +526,12 @@ public class NodeDriver extends CloudDriver implements Node {
     @Override
     public void stopServer(CloudServer server) {
         CloudDriver.getInstance().getServiceManager().shutdownService(server);
+    }
+
+    @Nullable
+    @Override
+    public HttpServer getHttpServer() {
+        return webServer;
     }
 
     @Override
