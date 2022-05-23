@@ -1,4 +1,4 @@
-package cloud.hytora.node.impl.handler;
+package cloud.hytora.node.impl.handler.packet.remote;
 
 import cloud.hytora.driver.networking.packets.node.NodeRequestServerStartPacket;
 import cloud.hytora.driver.networking.packets.node.NodeRequestShutdownPacket;

@@ -17,8 +17,9 @@ public class TimeOutChecker implements Runnable {
 	public synchronized void run() {
 		CloudDriver.getInstance().getLogger().trace("Running cloud main loop iteration");
 
-		this.checkNodeTimeout(); //checking nodes
-		this.checkServiceTimeout(); //checking for service timeout
+		// TODO: 23.05.2022 check why not work properly
+		//this.checkNodeTimeout(); //checking nodes
+		//this.checkServiceTimeout(); //checking for service timeout
 	}
 
 	private void checkServiceTimeout() {
@@ -41,6 +42,9 @@ public class TimeOutChecker implements Runnable {
 
 	private void checkNodeTimeout() {
 		for (Node node : NodeDriver.getInstance().getNodeManager().getAllConnectedNodes()) {
+			if (node.getName().equalsIgnoreCase(NodeDriver.getInstance().getName())) {
+				continue;
+			}
 			NodeCycleData cycleData = node.getLastCycleData();
 			if (cycleData == null) {
 				continue;

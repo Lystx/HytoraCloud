@@ -1,4 +1,4 @@
-package cloud.hytora.node.impl.handler;
+package cloud.hytora.node.impl.handler.packet.remote;
 
 import cloud.hytora.driver.networking.packets.node.NodeRequestShutdownPacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
@@ -9,6 +9,8 @@ public class NodeRemoteShutdownHandler implements PacketHandler<NodeRequestShutd
 
     @Override
     public void handle(ChannelWrapper wrapper, NodeRequestShutdownPacket packet) {
-        NodeDriver.getInstance().shutdown();
+        if (packet.getName().equalsIgnoreCase(NodeDriver.getInstance().getName())) {
+            NodeDriver.getInstance().shutdown();
+        }
     }
 }

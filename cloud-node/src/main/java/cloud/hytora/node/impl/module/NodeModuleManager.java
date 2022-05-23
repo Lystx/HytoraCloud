@@ -6,6 +6,7 @@ import cloud.hytora.common.wrapper.Wrapper;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.ModuleManager;
+import cloud.hytora.driver.module.controller.base.ModuleConfig;
 import cloud.hytora.driver.networking.packets.module.RemoteModuleExecutionPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferedResponse;
@@ -26,172 +27,196 @@ import java.util.stream.Collectors;
 
 public class NodeModuleManager implements ModuleManager {
 
-	private List<DefaultModuleController> modules = Collections.emptyList();
-	private Path directory;
+    private List<DefaultModuleController> modules = Collections.emptyList();
+    private Path directory;
 
-	@Nonnull
-	public Path getModulesDirectory() {
-		return directory;
-	}
+    @Nonnull
+    public Path getModulesDirectory() {
+        return directory;
+    }
 
-	@Override
-	public void setModulesDirectory(@Nonnull Path directory) {
-		FileUtils.createDirectory(directory);
-		this.directory = directory;
-	}
+    @Override
+    public void setModulesDirectory(@Nonnull Path directory) {
+        FileUtils.createDirectory(directory);
+        this.directory = directory;
+    }
 
-	@Override
-	public synchronized void unregisterModules() {
-		for (DefaultModuleController module : modules) {
-			try {
-				module.unregisterModule();
-			} catch (Throwable ex) {
-				CloudDriver.getInstance().getLogger().error("An error occurred while closing class loader", ex);
-			}
-		}
-		modules.clear();
-	}
+    @Override
+    public synchronized void unregisterModules() {
+        for (DefaultModuleController module : modules) {
+            try {
+                module.unregisterModule();
+            } catch (Throwable ex) {
+                CloudDriver.getInstance().getLogger().error("An error occurred while closing class loader", ex);
+            }
+        }
+        modules.clear();
+
+        if (NodeDriver.getInstance().getConfig().isRemote()) { //deleting so can be received
+            FileUtils.delete(NodeDriver.MODULE_FOLDER.toPath());
+        }
+    }
 
 
+    @Override
+    public synchronized void resolveModules() {
+        unregisterModules();
+        CloudDriver.getInstance().getLogger().info("Resolving modules..");
+        FileUtils.createDirectory(directory);
 
-	@Override
-	public synchronized void resolveModules() {
-		unregisterModules();
-		CloudDriver.getInstance().getLogger().info("Resolving modules..");
-		FileUtils.createDirectory(directory);
+        if (NodeDriver.getInstance().getConfig().isRemote()) {
+            //is remote
+            PacketBuffer buffer = NodeDriver.getInstance()
+                    .getExecutor()
+                    .getNodeAsClient()
+                    .getWrapper()
+                    .prepareSingleQuery()
+                    .execute(new RemoteModuleExecutionPacket(RemoteModuleExecutionPacket.PayLoad.TRANSFER_MODULES))
+                    .syncUninterruptedly()
+                    .get()
+                    .buffer();
 
-		if (NodeDriver.getInstance().getConfig().isRemote()) {
-			//is remote
+            int moduleAmount = buffer.readInt();
+            CloudDriver.getInstance().getLogger().info("Downloading {} Modules from HeadNode...", moduleAmount);
 
-			ChanneledPacketAction<BufferedResponse> query = NodeDriver.getInstance().getExecutor().getNodeAsClient().getWrapper().prepareSingleQuery();
-			query.execute(new RemoteModuleExecutionPacket(RemoteModuleExecutionPacket.PayLoad.TRANSFER_MODULES)).addUpdateListener(new Consumer<Wrapper<BufferedResponse>>() {
-				@Override
-				public void accept(Wrapper<BufferedResponse> wrappedResponse) {
-					PacketBuffer buffer = wrappedResponse.get().buffer();
-					int moduleAmount = buffer.readInt();
+            for (int i = 0; i < moduleAmount; i++) {
+                try {
+                    String jarName = buffer.readString();
+                    String folderName = buffer.readString();
 
-					for (int i = 0; i < moduleAmount; i++) {
-						try {
-							File jarFile = buffer.readFile();
-							File dataFolder = buffer.readFile();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
-				}
-			});
-		}
+                    File destination = new File(NodeDriver.MODULE_FOLDER, jarName);
+                    File folder = new File(NodeDriver.MODULE_FOLDER, folderName + "/");
+                    folder.mkdirs();
 
-		List<DefaultModuleController> modules = new CopyOnWriteArrayList<>();
+                    File jarFile = buffer.readFile(destination);
+                    File dataFolder = buffer.readFile(folder);
+                    CloudDriver.getInstance().getLogger().info("Downloaded Module " + jarName + " from HeadNode!");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
 
-		// resolve modules and load configs
-		for (Path file : FileUtils.list(directory).filter(path -> path.toString().endsWith(".jar")).collect(Collectors.toList())) {
-			try {
-				CloudDriver.getInstance().getLogger().info("Resolving module {}..", file.getFileName());
-				Path selfBasePath = new File(CloudDriver.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath();
+        List<DefaultModuleController> modules = new CopyOnWriteArrayList<>();
 
-				DefaultModuleController module = new DefaultModuleController(CloudDriver.class.getClassLoader(), this, file, selfBasePath, (loggingType, message) -> {
-					switch (loggingType) {
-						case "INFO": CloudDriver.getInstance().getLogger().info(message); break;
-						case "ERROR": CloudDriver.getInstance().getLogger().error(message); break;
-						case "DEBUG": CloudDriver.getInstance().getLogger().debug(message); break;
-						case "WARN": CloudDriver.getInstance().getLogger().warn(message); break;
-						case "TRACE": CloudDriver.getInstance().getLogger().trace(message); break;
-					}
-				}, moduleClassLoader -> CloudDriver.getInstance().getEventManager().unregisterListeners(moduleClassLoader));
-				module.initConfig();
+        // resolve modules and load configs
+        for (Path file : FileUtils.list(directory).filter(path -> path.toString().endsWith(".jar")).collect(Collectors.toList())) {
+            try {
+                CloudDriver.getInstance().getLogger().info("Resolving module {}..", file.getFileName());
+                Path selfBasePath = new File(CloudDriver.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath();
 
-				modules.add(module);
-			} catch (Throwable ex) {
-				CloudDriver.getInstance().getLogger().error("Could not resolve module {}", FileUtils.getRealFileName(file), ex);
-			}
-		}
+                DefaultModuleController module = new DefaultModuleController(CloudDriver.class.getClassLoader(), this, file, selfBasePath, (loggingType, message) -> {
+                    switch (loggingType) {
+                        case "INFO":
+                            CloudDriver.getInstance().getLogger().info(message);
+                            break;
+                        case "ERROR":
+                            CloudDriver.getInstance().getLogger().error(message);
+                            break;
+                        case "DEBUG":
+                            CloudDriver.getInstance().getLogger().debug(message);
+                            break;
+                        case "WARN":
+                            CloudDriver.getInstance().getLogger().warn(message);
+                            break;
+                        case "TRACE":
+                            CloudDriver.getInstance().getLogger().trace(message);
+                            break;
+                    }
+                }, moduleClassLoader -> CloudDriver.getInstance().getEventManager().unregisterListeners(moduleClassLoader));
+                module.initConfig();
 
-		// check if the depends are existing
-		for (DefaultModuleController module : modules) {
-			for (String depend : module.getModuleConfig().getDepends()) {
-				if (hasModule(modules, depend)) continue;
+                modules.add(module);
+            } catch (Throwable ex) {
+                CloudDriver.getInstance().getLogger().error("Could not resolve module {}", FileUtils.getRealFileName(file), ex);
+            }
+        }
 
-				modules.remove(module);
-				CloudDriver.getInstance().getLogger().error("Could not find required depend '{}' for module {}", depend, module.getModuleConfig());
-			}
-		}
+        // check if the depends are existing
+        for (DefaultModuleController module : modules) {
+            for (String depend : module.getModuleConfig().getDepends()) {
+                if (hasModule(modules, depend)) continue;
 
-		// order the modules by depends
-		// TODO handle: a requires b, b requires c, c requires a -> invalid
-		modules.sort((module1, module2) -> {
+                modules.remove(module);
+                CloudDriver.getInstance().getLogger().error("Could not find required depend '{}' for module {}", depend, module.getModuleConfig());
+            }
+        }
 
-			// if this module requires the other module, load this after the other
-			if (arrayContains(module1.getModuleConfig().getDepends(), module2.getModuleConfig().getName()))
-				return -1;
+        // order the modules by depends
+        // TODO handle: a requires b, b requires c, c requires a -> invalid
+        modules.sort((module1, module2) -> {
 
-			// if the other module requires this module, load the other after this
-			if (arrayContains(module2.getModuleConfig().getDepends(), module1.getModuleConfig().getName()))
-				return 1;
+            // if this module requires the other module, load this after the other
+            if (arrayContains(module1.getModuleConfig().getDepends(), module2.getModuleConfig().getName()))
+                return -1;
 
-			return 0;
-		});
+            // if the other module requires this module, load the other after this
+            if (arrayContains(module2.getModuleConfig().getDepends(), module1.getModuleConfig().getName()))
+                return 1;
 
-		// init modules
-		for (DefaultModuleController module : modules) {
-			try {
-				if (!module.getModuleConfig().getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
-					CloudDriver.getInstance().getLogger().info("Skipping initialization of {} (ModuleEnvironment.{}, DriverEnvironment.{})",
-						 module, module.getModuleConfig().getEnvironment(), CloudDriver.getInstance().getEnvironment());
-					continue;
-				}
+            return 0;
+        });
 
-				module.initModule();
-			} catch (Throwable ex) {
-				modules.remove(module);
-				CloudDriver.getInstance().getLogger().error("An error occurred while initializing {}", module.getModuleConfig(), ex);
-			}
-		}
+        // init modules
+        for (DefaultModuleController module : modules) {
+            try {
+                if (!module.getModuleConfig().getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
+                    CloudDriver.getInstance().getLogger().info("Skipping initialization of {} (ModuleEnvironment.{}, DriverEnvironment.{})",
+                            module, module.getModuleConfig().getEnvironment(), CloudDriver.getInstance().getEnvironment());
+                    continue;
+                }
 
-		this.modules = modules;
-	}
+                module.initModule();
+            } catch (Throwable ex) {
+                modules.remove(module);
+                CloudDriver.getInstance().getLogger().error("An error occurred while initializing {}", module.getModuleConfig(), ex);
+            }
+        }
 
-	private boolean hasModule(@Nonnull Collection<DefaultModuleController> modules, @Nonnull String depend) {
-		for (DefaultModuleController module : modules) {
-			if (module.getModuleConfig().getName().equals(depend))
-				return true;
-		}
-		return false;
-	}
+        this.modules = modules;
+    }
 
-	private <T> boolean arrayContains(@Nonnull T[] array, T subject) {
-		for (T t : array) {
-			if (t.equals(subject))
-				return true;
-		}
-		return false;
-	}
+    private boolean hasModule(@Nonnull Collection<DefaultModuleController> modules, @Nonnull String depend) {
+        for (DefaultModuleController module : modules) {
+            if (module.getModuleConfig().getName().equals(depend))
+                return true;
+        }
+        return false;
+    }
 
-	@Override
-	public synchronized void loadModules() {
-		for (ModuleController module : modules) {
-			module.loadModule();
-		}
-	}
+    private <T> boolean arrayContains(@Nonnull T[] array, T subject) {
+        for (T t : array) {
+            if (t.equals(subject))
+                return true;
+        }
+        return false;
+    }
 
-	@Override
-	public synchronized void enableModules() {
-		for (ModuleController module : modules) {
-			module.enableModule();
-		}
-	}
+    @Override
+    public synchronized void loadModules() {
+        for (ModuleController module : modules) {
+            module.loadModule();
+        }
+    }
 
-	@Override
-	public synchronized void disableModules() {
-		for (ModuleController module : modules) {
-			module.disableModule();
-		}
-	}
+    @Override
+    public synchronized void enableModules() {
+        for (ModuleController module : modules) {
+            module.enableModule();
+        }
+    }
 
-	@Nonnull
-	@Override
-	public List<ModuleController> getModules() {
-		return Collections.unmodifiableList(modules);
-	}
+    @Override
+    public synchronized void disableModules() {
+        for (ModuleController module : modules) {
+            module.disableModule();
+        }
+    }
+
+    @Nonnull
+    @Override
+    public List<ModuleController> getModules() {
+        return Collections.unmodifiableList(modules);
+    }
 
 }

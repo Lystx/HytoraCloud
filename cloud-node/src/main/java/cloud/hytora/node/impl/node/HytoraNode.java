@@ -25,7 +25,10 @@ import cloud.hytora.driver.networking.cluster.ClusterExecutor;
 
 import io.netty.channel.ChannelHandlerContext;
 import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -36,6 +39,7 @@ public class HytoraNode extends ClusterExecutor {
     private final Map<CloudServer, Long> bootUpStatistics;
     private final String hostName;
     private final int port;
+    private final List<PacketHandler<?>> remoteHandlers;
 
     public HytoraNode(MainConfiguration mainConfiguration) {
         super(mainConfiguration.getNodeConfig().getNodeName());
@@ -43,6 +47,7 @@ public class HytoraNode extends ClusterExecutor {
         this.hostName = mainConfiguration.getNodeConfig().getBindAddress();
         this.port = mainConfiguration.getNodeConfig().getBindPort();
         this.bootUpStatistics = new ConcurrentHashMap<>();
+        this.remoteHandlers = new ArrayList<>();
 
         this.bootAsync().handlePacketsAsync().openConnection(this.hostName, this.port)
                 .addUpdateListener(wrapper -> {
@@ -54,6 +59,15 @@ public class HytoraNode extends ClusterExecutor {
                 });
     }
 
+
+    public <T extends IPacket> void registerRemoteHandler(PacketHandler<T> handler) {
+        this.remoteHandlers.add(handler);
+    }
+
+    public <T extends IPacket> void registerUniversalHandler(PacketHandler<T> handler) {
+        this.registerRemoteHandler(handler);
+        this.registerPacketHandler(handler);
+    }
 
     @Override
     public void handleConnectionChange(ConnectionState state, ClusterClientExecutor executor, ChannelWrapper wrapper) {
@@ -69,17 +83,19 @@ public class HytoraNode extends ClusterExecutor {
                         DefaultNodeConfig nodeConfig = response.buffer().readObject(DefaultNodeConfig.class);
                         NodeCycleData data = response.buffer().readObject(NodeCycleData.class);
 
+                        Node currentNode = new NodeInfo(NodeDriver.getInstance().getName(), ConnectionType.NODE, NodeDriver.getInstance().getConfig(), NodeDriver.getInstance().getLastCycleData());
+
                         if (CloudDriver.getInstance().getNodeManager().getNode(nodeConfig.getNodeName()).isPresent()) {
-                            wrapper.sendPacket(new NodeConnectionDataResponsePacket(nodeConfig.getNodeName(), NodeConnectionDataResponsePacket.PayLoad.ALREADY_NODE_EXISTS));
+                            wrapper.sendPacket(new NodeConnectionDataResponsePacket(nodeConfig.getNodeName(), NodeConnectionDataResponsePacket.PayLoad.ALREADY_NODE_EXISTS, currentNode));
                             return;
                         } else if (getNodeName().equalsIgnoreCase(nodeConfig.getNodeName())) {
-                            wrapper.sendPacket(new NodeConnectionDataResponsePacket(nodeConfig.getNodeName(), NodeConnectionDataResponsePacket.PayLoad.SAME_NAME_AS_HEAD_NODE));
+                            wrapper.sendPacket(new NodeConnectionDataResponsePacket(nodeConfig.getNodeName(), NodeConnectionDataResponsePacket.PayLoad.SAME_NAME_AS_HEAD_NODE, currentNode));
                             return;
                         }
 
                         String authKey = nodeConfig.getAuthKey();
                         if (authKey.equals(NodeDriver.getInstance().getConfig().getAuthKey())) {
-                            wrapper.sendPacket(new NodeConnectionDataResponsePacket(getNodeName(), NodeConnectionDataResponsePacket.PayLoad.SUCCESS));
+                            wrapper.sendPacket(new NodeConnectionDataResponsePacket(getNodeName(), NodeConnectionDataResponsePacket.PayLoad.SUCCESS, currentNode));
 
                             //right auth key -> registering node
                             Node node = new NodeInfo(executor.getName(), ConnectionType.NODE, nodeConfig, data);
@@ -88,7 +104,7 @@ public class HytoraNode extends ClusterExecutor {
                             NodeDriver.getInstance().getServiceQueue().dequeue();
 
                         } else {
-                            wrapper.sendPacket(new NodeConnectionDataResponsePacket(getNodeName(), NodeConnectionDataResponsePacket.PayLoad.WRONG_AUTH_KEY));
+                            wrapper.sendPacket(new NodeConnectionDataResponsePacket(getNodeName(), NodeConnectionDataResponsePacket.PayLoad.WRONG_AUTH_KEY, currentNode));
                         }
 
                     }
@@ -137,6 +153,7 @@ public class HytoraNode extends ClusterExecutor {
 
     private ClusterParticipant nodeAsClient;
 
+
     public Wrapper<Boolean> connectToOtherNode(String name, String hostname, int port, Document customData) {
         Wrapper<Boolean> wrapper = Wrapper.empty();
         ClusterParticipant client = new ClusterParticipant(name, ConnectionType.NODE, customData) {
@@ -163,19 +180,35 @@ public class HytoraNode extends ClusterExecutor {
                 closeClient(channelHandlerContext);
             }
 
+            @Override
+            public <T extends IPacket> void handlePacket(ChannelWrapper wrapper, @NotNull T packet) {
+
+
+                for (PacketHandler packetHandler : new ArrayList<>(HytoraNode.this.remoteHandlers)) {
+                    try {
+                        packetHandler.handle(wrapper, packet);
+                    } catch (Exception e) {
+                        if (e instanceof ClassCastException) {
+                            //not right handler
+                            continue;
+                        }
+                        e.printStackTrace();
+                    }
+                }
+                super.handlePacket(wrapper, packet);
+            }
         };
-        client.registerPacketHandler((PacketHandler<NodeConnectionDataRequestPacket>) (wrapper1, packet) -> {
-            wrapper1.prepareResponse().buffer(buf -> {
-                buf.writeObject(NodeDriver.getInstance().getConfig());
-                buf.writeObject(NodeCycleData.current());
-            }).execute(packet);
-        });
+
+
+        client.registerPacketHandler((PacketHandler<NodeConnectionDataRequestPacket>) (wrapper1, packet) -> wrapper1.prepareResponse().buffer(buf -> buf.writeObject(NodeDriver.getInstance().getConfig()).writeObject(NodeCycleData.current())).execute(packet));
         client.registerPacketHandler((PacketHandler<NodeConnectionDataResponsePacket>) (wrapper12, packet) -> {
             NodeConnectionDataResponsePacket.PayLoad payLoad = packet.getPayLoad();
             String node = packet.getNode();
             switch (payLoad) {
                 case SUCCESS:
-                    CloudDriver.getInstance().getLogger().info("This Node §asuccessfully §7connected to §b{}§8.", node);
+                    Node nodeInfo = packet.getNodeInfo();
+                    NodeDriver.getInstance().getNodeManager().registerNode(nodeInfo); //registering node that we connected to
+                    CloudDriver.getInstance().getLogger().info("This Node §asuccessfully §7connected to §b{}§8.", nodeInfo);
                     break;
                 case WRONG_AUTH_KEY:
                     CloudDriver.getInstance().getLogger().error("You provided a wrong AuthKey for the Node to check! Check again and reboot the CloudSystem!");

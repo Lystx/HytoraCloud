@@ -17,7 +17,16 @@ import cloud.hytora.driver.InternalDriverEventAdapter;
 import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.http.impl.NettyHttpServer;
 import cloud.hytora.driver.message.ChannelMessenger;
-import cloud.hytora.driver.setup.SetupListener;
+import cloud.hytora.node.impl.handler.packet.normal.*;
+import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteLoggingHandler;
+import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteServerStartHandler;
+import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteServerStopHandler;
+import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteShutdownHandler;
+import cloud.hytora.node.impl.handler.packet.normal.NodeDataCycleHandler;
+import cloud.hytora.node.impl.handler.packet.normal.NodeLoggingPacketHandler;
+import cloud.hytora.node.impl.handler.packet.universal.NodeServiceAddPacketHandler;
+import cloud.hytora.node.impl.handler.packet.universal.NodeServiceRemovePacketHandler;
+import cloud.hytora.node.impl.handler.packet.normal.NodeStoragePacketHandler;
 import cloud.hytora.node.impl.module.NodeModuleManager;
 import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.networking.NetworkComponent;
@@ -59,7 +68,6 @@ import cloud.hytora.driver.services.utils.ServiceVersion;
 import cloud.hytora.node.impl.command.*;
 import cloud.hytora.node.impl.command.impl.*;
 import cloud.hytora.node.impl.database.config.DatabaseType;
-import cloud.hytora.node.impl.handler.*;
 import cloud.hytora.node.impl.message.NodeChannelMessenger;
 import cloud.hytora.node.impl.node.NodeNodeManager;
 import cloud.hytora.node.impl.setup.database.MongoDBSetup;
@@ -86,6 +94,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -259,6 +268,8 @@ public class NodeDriver extends CloudDriver implements Node {
             }
         }
 
+        FileUtils.setTempDirectory(Paths.get(".temp"));
+
         //registering template storage
         this.templateManager.registerStorage(new LocalTemplateStorage());
 
@@ -277,6 +288,7 @@ public class NodeDriver extends CloudDriver implements Node {
         this.commandManager.registerCommand(new ServiceCommand());
         this.commandManager.registerCommand(new PlayerCommand());
         this.commandManager.registerCommand(new TickCommand());
+        this.commandManager.registerCommand(new ClusterCommand());
 
         //registering command argument parsers
         this.commandManager.registerParser(ServiceVersion.class, ServiceVersion::valueOf);
@@ -290,21 +302,30 @@ public class NodeDriver extends CloudDriver implements Node {
 
         //registering packet handlers
         this.logger.info("Registering §bPacketts §8& §bHandlers§8...");
-        this.executor.registerPacketHandler(new NodeStoragePacketHandler());
         this.executor.registerPacketHandler(new NodeRedirectPacketHandler());
-        this.executor.registerPacketHandler(new NodeServiceRemovePacketHandler());
-        this.executor.registerPacketHandler(new NodeServiceAddPacketHandler());
-        this.executor.registerPacketHandler(new NodeLoggingPacketHandler());
         this.executor.registerPacketHandler(new NodeDataCycleHandler());
-        this.executor.registerPacketHandler(new NodeRemoteShutdownHandler());
-        this.executor.registerPacketHandler(new NodeRemoteServerStartHandler());
-        this.executor.registerPacketHandler(new NodeRemoteServerStopHandler());
         this.executor.registerPacketHandler(new NodeOfflinePlayerPacketHandler());
         this.executor.registerPacketHandler(new NodeModulePacketHandler());
         this.executor.registerPacketHandler(new NodeModuleControllerPacketHandler());
+        this.executor.registerPacketHandler(new NodeStoragePacketHandler());
+        this.executor.registerPacketHandler(new NodeLoggingPacketHandler());
+
+        //remote packet handlers
+        this.executor.registerRemoteHandler(new NodeRemoteShutdownHandler());
+        this.executor.registerRemoteHandler(new NodeRemoteServerStartHandler());
+        this.executor.registerRemoteHandler(new NodeRemoteServerStopHandler());
+        this.executor.registerRemoteHandler(new NodeRemoteLoggingHandler());
+
+        //remote and commander packet handlers
+        this.executor.registerUniversalHandler(new NodeServiceRemovePacketHandler());
+        this.executor.registerUniversalHandler(new NodeServiceAddPacketHandler());
 
         this.logger.info("§a=> Registered §a" + PacketProvider.getRegisteredPackets().size() + " Packets §8& §a" + this.executor.getRegisteredPacketHandlers().size() + " Handlers§8.");
         this.logger.info("§8");
+
+        //heart-beat execution for time out checking
+        TimeOutChecker check = new TimeOutChecker();
+        scheduledExecutor.scheduleAtFixedRate(check, 1, 1, TimeUnit.SECONDS);
 
         //enabling modules after having loaded the database
         this.logger.info("Enabling §bModules§8...");
@@ -321,11 +342,7 @@ public class NodeDriver extends CloudDriver implements Node {
         this.serviceQueue.dequeue();
 
         //add node cycle data
-        scheduledExecutor.scheduleAtFixedRate(() -> executor.sendPacket(new NodeCycleDataPacket(this.config.getNodeName(), getLastCycleData())), 1_000, NodeCycleData.PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
-
-        //heart-beat execution for time out checking
-        TimeOutChecker check = new TimeOutChecker();
-        scheduledExecutor.scheduleAtFixedRate(check, 1, 1, TimeUnit.SECONDS);
+        scheduledExecutor.scheduleAtFixedRate(() -> executor.sendPacketToAll(new NodeCycleDataPacket(this.config.getNodeName(), getLastCycleData())), 1_000, NodeCycleData.PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
 
         // add a shutdown hook for fast closes
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
@@ -334,6 +351,10 @@ public class NodeDriver extends CloudDriver implements Node {
     @Override
     public void logToExecutor(NetworkComponent component, String message, Object... args) {
         message = StringUtils.formatMessage(message, args);
+        if (component.matches(this)) {
+            this.logger.info(message, args);
+            return;
+        }
         DriverLoggingPacket packet = new DriverLoggingPacket(component, message);
         this.executor.sendPacketToAll(packet);
     }
@@ -361,10 +382,6 @@ public class NodeDriver extends CloudDriver implements Node {
         if (!this.running) {
             return;
         }
-
-        moduleManager.disableModules();
-        moduleManager.unregisterModules();
-
         // TODO: 03.05.2022  migrating of head node
         if (this.nodeManager.isHeadNode() && this.nodeManager.getAllConnectedNodes().size() > 0) {
             this.logger.warn("§eThis Node is the §cHeadNode §eright now and it's not possible for HeadNodes to shutdown because the migration of SubNodes to HeadNodes is not finished yet!");
@@ -374,7 +391,11 @@ public class NodeDriver extends CloudDriver implements Node {
 
         this.running = false;
 
+
         this.logger.info("§7Trying to terminate the §cCloudsystem§8...");
+
+        this.moduleManager.disableModules();
+        this.moduleManager.unregisterModules();
 
         this.webServer.shutdown();
 

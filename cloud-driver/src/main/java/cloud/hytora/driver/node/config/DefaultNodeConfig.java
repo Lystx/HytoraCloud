@@ -18,7 +18,7 @@ import java.util.Collection;
 @Getter
 @NoArgsConstructor
 @Setter
-public class DefaultNodeConfig implements INodeConfig{
+public class DefaultNodeConfig implements INodeConfig {
 
     private String nodeName;
     private String authKey;

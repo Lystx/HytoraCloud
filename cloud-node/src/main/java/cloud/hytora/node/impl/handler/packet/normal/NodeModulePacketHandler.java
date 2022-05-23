@@ -1,4 +1,4 @@
-package cloud.hytora.node.impl.handler;
+package cloud.hytora.node.impl.handler.packet.normal;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.module.ModuleController;
@@ -46,6 +46,9 @@ public class NodeModulePacketHandler implements PacketHandler<RemoteModuleExecut
                 for (ModuleController module : copyModules) {
                     response.buffer(buf -> {
                         try {
+                            buf.writeString(module.getJarFile().toFile().getName());
+                            buf.writeString(module.getDataFolder().toFile().getName());
+
                             buf.writeFile(module.getJarFile().toFile());
                             buf.writeFile(module.getDataFolder().toFile());
                         } catch (IOException e) {

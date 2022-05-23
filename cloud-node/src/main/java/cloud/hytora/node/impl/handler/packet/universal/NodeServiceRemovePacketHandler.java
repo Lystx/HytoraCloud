@@ -1,4 +1,4 @@
-package cloud.hytora.node.impl.handler;
+package cloud.hytora.node.impl.handler.packet.universal;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.packets.services.CloudServerCacheUnregisterPacket;

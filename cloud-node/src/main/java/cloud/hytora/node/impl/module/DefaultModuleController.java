@@ -108,6 +108,7 @@ public class DefaultModuleController implements ModuleController {
         );
 
         dataFolder = manager.getModulesDirectory().resolve(moduleConfig.getName());
+        dataFolder.toFile().mkdirs();
     }
 
     public void registerModuleTasks(Object objectClass) {

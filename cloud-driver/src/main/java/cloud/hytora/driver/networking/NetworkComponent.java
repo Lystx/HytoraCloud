@@ -14,6 +14,10 @@ public interface NetworkComponent extends Bufferable {
         return new SimpleNetworkComponent(name, type);
     }
 
+    @Deprecated
+    static NetworkComponent of(String name) {
+        return new SimpleNetworkComponent(name, ConnectionType.UNKNOWN);
+    }
 
     String getName();
 
@@ -22,6 +26,6 @@ public interface NetworkComponent extends Bufferable {
     void log(String message, Object... args);
 
     default boolean matches(NetworkComponent component) {
-        return getName().equalsIgnoreCase(component.getName()) && getType() == component.getType();
+        return getName().equalsIgnoreCase(component.getName()) && (getType() == component.getType() || getType() == ConnectionType.UNKNOWN);
     }
 }

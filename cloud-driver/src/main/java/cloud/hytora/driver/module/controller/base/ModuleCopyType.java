@@ -7,6 +7,7 @@ import javax.annotation.Nonnull;
 public enum ModuleCopyType {
 
 	ALL,
+	NODE,
 	PROXY,
 	SERVER,
 	NONE;

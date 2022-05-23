@@ -63,12 +63,9 @@ public abstract class AbstractNetworkComponent<T extends AbstractNetworkComponen
 
     @Override
     public <P extends IPacket> void registerSelfDestructivePacketHandler(@NotNull PacketHandler<P> packetHandler) {
-        this.registerPacketHandler(new PacketHandler<P>() {
-            @Override
-            public void handle(ChannelWrapper wrapper, P packet) {
-                packetHandler.handle(wrapper, packet);
-                unRegisterChannelHandler("global_packet_channel", packetHandler);
-            }
+        this.registerPacketHandler((PacketHandler<P>) (wrapper, packet) -> {
+            packetHandler.handle(wrapper, packet);
+            unRegisterChannelHandler("global_packet_channel", packetHandler);
         });
     }
 
