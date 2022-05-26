@@ -1,21 +1,39 @@
 package cloud.hytora.driver.services.configuration;
 
+import cloud.hytora.driver.services.configuration.bundle.ConfigurationParent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public interface ConfigurationManager {
 
+    Collection<ConfigurationParent> getAllParentConfigurations();
+
+    void setAllParentConfigurations(Collection<ConfigurationParent> parents);
+
+    void addParentConfiguration(@NotNull ConfigurationParent serviceGroup);
+
+    void removeParentConfiguration(@NotNull ConfigurationParent serviceGroup);
+
+    default @NotNull Optional<ConfigurationParent> getParentByName(@NotNull String name) {
+        return this.getAllParentConfigurations().stream().filter(it -> it.getName().equalsIgnoreCase(name)).findAny();
+    }
+
+    default @Nullable ConfigurationParent getParentByNameOrNull(@NotNull String name) {
+        return this.getParentByName(name).orElse(null);
+    }
+
     /**
      * gets all cached service groups
      * @return the cached service groups
      */
-    @NotNull List<ServerConfiguration> getAllCachedConfigurations();
+    @NotNull Collection<ServerConfiguration> getAllCachedConfigurations();
 
-    void setAllCachedConfigurations(List<ServerConfiguration> groups);
+    void setAllCachedConfigurations(Collection<ServerConfiguration> groups);
 
     /**
      * adds a service group

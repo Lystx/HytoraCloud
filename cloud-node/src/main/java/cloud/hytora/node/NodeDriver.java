@@ -14,7 +14,21 @@ import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.InternalDriverEventAdapter;
 
 
+import cloud.hytora.driver.http.api.HttpServer;
+import cloud.hytora.driver.http.impl.NettyHttpServer;
 import cloud.hytora.driver.message.ChannelMessenger;
+import cloud.hytora.node.impl.handler.packet.normal.*;
+import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteLoggingHandler;
+import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteServerStartHandler;
+import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteServerStopHandler;
+import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteShutdownHandler;
+import cloud.hytora.node.impl.handler.packet.normal.NodeDataCycleHandler;
+import cloud.hytora.node.impl.handler.packet.normal.NodeLoggingPacketHandler;
+import cloud.hytora.node.impl.handler.packet.universal.NodeServiceAddPacketHandler;
+import cloud.hytora.node.impl.handler.packet.universal.NodeServiceRemovePacketHandler;
+import cloud.hytora.node.impl.handler.packet.normal.NodeStoragePacketHandler;
+import cloud.hytora.node.impl.module.NodeModuleManager;
+import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.PacketProvider;
 import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
@@ -25,7 +39,6 @@ import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.node.NodeCycleData;
 import cloud.hytora.driver.node.NodeManager;
@@ -33,30 +46,41 @@ import cloud.hytora.driver.node.config.DefaultNodeConfig;
 import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;
+import cloud.hytora.driver.player.impl.DefaultCloudOfflinePlayer;
 import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.NodeCloudServer;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.configuration.ConfigurationManager;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.configuration.DefaultServerConfiguration;
+import cloud.hytora.driver.services.configuration.bundle.ConfigurationParent;
+import cloud.hytora.driver.services.configuration.bundle.DefaultConfigurationParent;
+import cloud.hytora.driver.services.template.ServiceTemplate;
+import cloud.hytora.driver.services.template.TemplateStorage;
+import cloud.hytora.node.impl.database.impl.SectionedDatabase;
+import cloud.hytora.node.impl.handler.http.V1PingRouter;
+import cloud.hytora.node.impl.handler.http.V1StatusRouter;
+import cloud.hytora.node.impl.setup.NodeRemoteSetup;
+import cloud.hytora.node.service.template.LocalTemplateStorage;
 import cloud.hytora.driver.setup.SetupControlState;
 import cloud.hytora.driver.storage.DriverStorage;
 import cloud.hytora.driver.services.utils.ServiceVersion;
 import cloud.hytora.node.impl.command.*;
 import cloud.hytora.node.impl.command.impl.*;
-import cloud.hytora.node.impl.database.DatabaseType;
-import cloud.hytora.node.impl.handler.*;
+import cloud.hytora.node.impl.database.config.DatabaseType;
 import cloud.hytora.node.impl.message.NodeChannelMessenger;
 import cloud.hytora.node.impl.node.NodeNodeManager;
+import cloud.hytora.node.impl.setup.database.MongoDBSetup;
+import cloud.hytora.node.impl.setup.database.MySqlSetup;
 import cloud.hytora.node.service.NodeServiceManager;
-import cloud.hytora.node.service.template.NodeTemplateService;
 import cloud.hytora.node.impl.setup.NodeSetup;
 import cloud.hytora.node.impl.config.ConfigManager;
 import cloud.hytora.node.impl.config.MainConfiguration;
 import cloud.hytora.driver.command.Console;
 import cloud.hytora.node.impl.config.NodeDriverStorage;
-import cloud.hytora.node.impl.database.DatabaseConfiguration;
+import cloud.hytora.node.impl.database.config.DatabaseConfiguration;
 import cloud.hytora.node.impl.database.IDatabaseManager;
-import cloud.hytora.node.impl.database.impl.DatabaseManager;
+import cloud.hytora.node.impl.database.def.DefaultDatabaseManager;
 import cloud.hytora.node.service.NodeConfigurationManager;
 import cloud.hytora.node.impl.node.HytoraNode;
 import cloud.hytora.node.impl.player.NodePlayerManager;
@@ -66,13 +90,11 @@ import cloud.hytora.node.service.helper.NodeServiceQueue;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -98,31 +120,30 @@ public class NodeDriver extends CloudDriver implements Node {
     private ConfigurationManager configurationManager;
     private ServiceManager serviceManager;
     private PlayerManager playerManager;
+    private ModuleManager moduleManager;
     private ChannelMessenger channelMessenger;
     private NodeManager nodeManager;
+    private HttpServer webServer;
 
     private HytoraNode executor;
     private NodeServiceQueue serviceQueue;
-    private NodeTemplateService nodeTemplateService;
 
 
     public static final File NODE_FOLDER = new File("local/");
     public static final File CONFIG_FILE = new File(NODE_FOLDER, "config.json");
     public static final File LOG_FOLDER = new File(NODE_FOLDER, "logs/");
+    public static final File MODULE_FOLDER = new File(NODE_FOLDER, "modules/");
 
     public static final File STORAGE_FOLDER = new File(NODE_FOLDER, "storage/");
-    public static final File STORAGE_VERSIONS_FOLDER = new File(STORAGE_FOLDER , "versions/");
+    public static final File CONFIGURATIONS_FOLDER = new File(STORAGE_FOLDER, "configurations/");
+    public static final File CONFIGURATIONS_PARENTS_FOLDER = new File(STORAGE_FOLDER, "groups/");
+    public static final File STORAGE_VERSIONS_FOLDER = new File(STORAGE_FOLDER, "versions/");
     public static final File STORAGE_TEMP_FOLDER = new File(STORAGE_FOLDER, "tmp-" + UUID.randomUUID().toString().substring(0, 5) + "/");
     public static final File TEMPLATES_DIR = new File(STORAGE_FOLDER, "templates/");
 
     public static final File SERVICE_DIR = new File(NODE_FOLDER, "services/");
     public static final File SERVICE_DIR_STATIC = new File(SERVICE_DIR, "permanent/");
     public static final File SERVICE_DIR_DYNAMIC = new File(SERVICE_DIR, "temporary/");
-
-    /**
-     * If the node is still running
-     */
-    private boolean running;
 
     public NodeDriver(Logger logger, Console console) throws Exception {
         super(logger, DriverEnvironment.NODE);
@@ -172,8 +193,16 @@ public class NodeDriver extends CloudDriver implements Node {
         this.logger.info("§8");
         this.logger.info("§8");
 
-        this.executor = new HytoraNode(this.configManager.getConfig());
+        //starting web-server
+        this.webServer = new NettyHttpServer(config.getSslConfiguration());
+        for (ProtocolAddress address : config.getHttpListeners()) {
+            this.webServer.addListener(address);
+        }
 
+        //registering default web api handlers
+        this.webServer.getHandlerRegistry().registerHandlers("v1", new V1PingRouter(), new V1StatusRouter());
+
+        this.executor = new HytoraNode(this.configManager.getConfig());
 
         if (this.config.getClusterAddresses() != null && this.config.getClusterAddresses().length > 0) {
             this.config.markAsRemote();
@@ -193,21 +222,62 @@ public class NodeDriver extends CloudDriver implements Node {
             this.logger.info("§7This Node is a §aHeadNode §7and boots up the Cluster...");
         }
 
+
+        //creating needed files
+        NodeDriver.NODE_FOLDER.mkdirs();
+        NodeDriver.CONFIGURATIONS_FOLDER.mkdirs();
+
+        NodeDriver.STORAGE_FOLDER.mkdirs();
+        NodeDriver.STORAGE_VERSIONS_FOLDER.mkdirs();
+
+        NodeDriver.SERVICE_DIR.mkdirs();
+        NodeDriver.SERVICE_DIR_STATIC.mkdirs();
+        NodeDriver.SERVICE_DIR_DYNAMIC.mkdirs();
+
         //initializing managers
         new InternalDriverEventAdapter(this.eventManager, executor);
-        this.databaseManager = new DatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType());
+        this.databaseManager = new DefaultDatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType());
+
+        SectionedDatabase database = this.databaseManager.getDatabase();
+        database.registerSection("players", DefaultCloudOfflinePlayer.class);
+        database.registerSection("configurations", DefaultServerConfiguration.class);
+        database.registerSection("groups", DefaultConfigurationParent.class);
+
         this.configurationManager = new NodeConfigurationManager();
         this.serviceManager = new NodeServiceManager();
-        this.nodeTemplateService = new NodeTemplateService();
         this.playerManager = new NodePlayerManager(this.eventManager);
         this.channelMessenger = new NodeChannelMessenger(executor);
         this.nodeManager = new NodeNodeManager();
+        this.moduleManager = new NodeModuleManager();
         this.logger.info("§8");
+
+        //managing and loading modules
+        moduleManager.setModulesDirectory(MODULE_FOLDER.toPath());
+        moduleManager.resolveModules();
+        moduleManager.loadModules();
+
+        //checking if directories got deleted meanwhile
+        for (ConfigurationParent parent : this.configurationManager.getAllParentConfigurations()) {
+
+            //creating templates
+            for (ServiceTemplate template : parent.getTemplates()) {
+                TemplateStorage storage = template.getStorage();
+                if (storage != null) {
+                    storage.createTemplate(template);
+                }
+            }
+        }
+
+        FileUtils.setTempDirectory(Paths.get(".temp"));
+
+        //registering template storage
+        this.templateManager.registerStorage(new LocalTemplateStorage());
+
 
         //copying files
         this.logger.info("§7Copying files§8...");
-        FileUtils.copyResource("/impl/plugin.jar", "storage/jars/plugin.jar", getClass());
-        FileUtils.copyResource("/impl/remote.jar", "storage/jars/remote.jar", getClass());
+        FileUtils.copyResource("/impl/plugin.jar", STORAGE_VERSIONS_FOLDER + "/plugin.jar", getClass());
+        FileUtils.copyResource("/impl/remote.jar", STORAGE_VERSIONS_FOLDER + "/remote.jar", getClass());
 
         this.logger.info("§7Registering §bCommands §8& §bArgumentParsers§8...");
         this.commandManager.registerCommand(new ShutdownCommand());
@@ -216,6 +286,9 @@ public class NodeDriver extends CloudDriver implements Node {
         this.commandManager.registerCommand(new ConfigurationCommand());
         this.commandManager.registerCommand(new ClearCommand());
         this.commandManager.registerCommand(new ServiceCommand());
+        this.commandManager.registerCommand(new PlayerCommand());
+        this.commandManager.registerCommand(new TickCommand());
+        this.commandManager.registerCommand(new ClusterCommand());
 
         //registering command argument parsers
         this.commandManager.registerParser(ServiceVersion.class, ServiceVersion::valueOf);
@@ -229,18 +302,35 @@ public class NodeDriver extends CloudDriver implements Node {
 
         //registering packet handlers
         this.logger.info("Registering §bPacketts §8& §bHandlers§8...");
-        this.executor.registerPacketHandler(new NodeStoragePacketHandler());
         this.executor.registerPacketHandler(new NodeRedirectPacketHandler());
-        this.executor.registerPacketHandler(new NodeServiceRemovePacketHandler());
-        this.executor.registerPacketHandler(new NodeServiceAddPacketHandler());
-        this.executor.registerPacketHandler(new NodeLoggingPacketHandler());
         this.executor.registerPacketHandler(new NodeDataCycleHandler());
-        this.executor.registerPacketHandler(new NodeRemoteShutdownHandler());
-        this.executor.registerPacketHandler(new NodeRemoteServerStartHandler());
-        this.executor.registerPacketHandler(new NodeRemoteServerStopHandler());
+        this.executor.registerPacketHandler(new NodeOfflinePlayerPacketHandler());
+        this.executor.registerPacketHandler(new NodeModulePacketHandler());
+        this.executor.registerPacketHandler(new NodeModuleControllerPacketHandler());
+        this.executor.registerPacketHandler(new NodeStoragePacketHandler());
+        this.executor.registerPacketHandler(new NodeLoggingPacketHandler());
+
+        //remote packet handlers
+        this.executor.registerRemoteHandler(new NodeRemoteShutdownHandler());
+        this.executor.registerRemoteHandler(new NodeRemoteServerStartHandler());
+        this.executor.registerRemoteHandler(new NodeRemoteServerStopHandler());
+        this.executor.registerRemoteHandler(new NodeRemoteLoggingHandler());
+
+        //remote and commander packet handlers
+        this.executor.registerUniversalHandler(new NodeServiceRemovePacketHandler());
+        this.executor.registerUniversalHandler(new NodeServiceAddPacketHandler());
 
         this.logger.info("§a=> Registered §a" + PacketProvider.getRegisteredPackets().size() + " Packets §8& §a" + this.executor.getRegisteredPacketHandlers().size() + " Handlers§8.");
         this.logger.info("§8");
+
+        //heart-beat execution for time out checking
+        TimeOutChecker check = new TimeOutChecker();
+        scheduledExecutor.scheduleAtFixedRate(check, 1, 1, TimeUnit.SECONDS);
+
+        //enabling modules after having loaded the database
+        this.logger.info("Enabling §bModules§8...");
+        this.logger.info("§8");
+        moduleManager.enableModules();
 
         // print finish successfully message
         this.logger.info("§7This Node has §asuccessfully §7booted up§8!");
@@ -252,8 +342,7 @@ public class NodeDriver extends CloudDriver implements Node {
         this.serviceQueue.dequeue();
 
         //add node cycle data
-        scheduledExecutor.scheduleAtFixedRate(() -> executor.sendPacket(new NodeCycleDataPacket(this.config.getNodeName(), getLastCycleData())), 1_000, NodeCycleData.PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
-
+        scheduledExecutor.scheduleAtFixedRate(() -> executor.sendPacketToAll(new NodeCycleDataPacket(this.config.getNodeName(), getLastCycleData())), 1_000, NodeCycleData.PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
 
         // add a shutdown hook for fast closes
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
@@ -262,8 +351,30 @@ public class NodeDriver extends CloudDriver implements Node {
     @Override
     public void logToExecutor(NetworkComponent component, String message, Object... args) {
         message = StringUtils.formatMessage(message, args);
+        if (component.matches(this)) {
+            this.logger.info(message, args);
+            return;
+        }
         DriverLoggingPacket packet = new DriverLoggingPacket(component, message);
         this.executor.sendPacketToAll(packet);
+    }
+
+
+    public void reload() {
+        logger.info("Reloading..");
+
+        logger.info("Loading translations..");
+
+
+        // TODO send files to other nodes on reload
+        logger.info("Reloading modules..");
+        moduleManager.disableModules();
+        moduleManager.unregisterModules();
+        moduleManager.resolveModules();
+        moduleManager.loadModules();
+        moduleManager.enableModules();
+
+        logger.info("Reloading complete");
     }
 
     @Override
@@ -271,7 +382,6 @@ public class NodeDriver extends CloudDriver implements Node {
         if (!this.running) {
             return;
         }
-
         // TODO: 03.05.2022  migrating of head node
         if (this.nodeManager.isHeadNode() && this.nodeManager.getAllConnectedNodes().size() > 0) {
             this.logger.warn("§eThis Node is the §cHeadNode §eright now and it's not possible for HeadNodes to shutdown because the migration of SubNodes to HeadNodes is not finished yet!");
@@ -281,7 +391,13 @@ public class NodeDriver extends CloudDriver implements Node {
 
         this.running = false;
 
+
         this.logger.info("§7Trying to terminate the §cCloudsystem§8...");
+
+        this.moduleManager.disableModules();
+        this.moduleManager.unregisterModules();
+
+        this.webServer.shutdown();
 
         //shutting down servers
         for (CloudServer service : this.serviceManager.getAllCachedServices()) {
@@ -307,51 +423,103 @@ public class NodeDriver extends CloudDriver implements Node {
     private void startSetup() {
         new NodeSetup().start((setup, setupControlState) -> {
 
-            MainConfiguration config = configManager.getConfig();
-            DatabaseConfiguration databaseConfiguration = config.getDatabaseConfiguration();
-            DefaultNodeConfig nodeConfig = config.getNodeConfig();
+            if (setupControlState != SetupControlState.FINISHED) return;
 
-            if (setupControlState == SetupControlState.FINISHED) {
-                String nodeName = setup.getName();
-                String host = setup.getHost();
-                int port = setup.getPort();
-                int serviceStartPort = setup.getServiceStartPort();
-
-                nodeConfig.setNodeName(nodeName);
-                nodeConfig.setBindAddress(host);
-                nodeConfig.setBindPort(port);
-                nodeConfig.setRemote(false);
-
-                config.setSpigotStartPort(serviceStartPort);
-                config.setNodeConfig(nodeConfig);
-
-                DatabaseType databaseType = setup.getDatabaseType();
-                if (databaseType != DatabaseType.FILE) {
-                    String databaseHost = setup.getDatabaseHost();
-                    int databasePort = setup.getDatabasePort();
-                    String databaseUser = setup.getDatabaseUser();
-                    String databasePassword = setup.getDatabasePassword();
-                    String databaseName = setup.getDatabaseName();
-
-                    databaseConfiguration.setHost(databaseHost);
-                    databaseConfiguration.setPort(databasePort);
-                    databaseConfiguration.setUser(databaseUser);
-                    databaseConfiguration.setPassword(databasePassword);
-                    databaseConfiguration.setDatabase(databaseName);
-                }
-
-                databaseConfiguration.setType(databaseType);
-                config.setDatabaseConfiguration(databaseConfiguration);
-
-                configManager.setConfig(config);
-                configManager.save();
-
-                this.logger.info("§7You §acompleted §7the NodeSetup§8!");
-                this.logger.info("Please reboot the Node now to apply all changes!");
-                System.exit(0);
+            switch (setup.getDatabaseType()) {
+                case FILE:
+                    initConfigs(setup, null, null);
+                    break;
+                case MYSQL:
+                    new MySqlSetup().start((mySqlSetup, setupControlState1) -> {
+                        if (setupControlState1 != SetupControlState.FINISHED) return;
+                        initConfigs(setup, mySqlSetup, null);
+                    });
+                    break;
+                case MONGODB:
+                    new MongoDBSetup().start((mongoDBSetup, setupControlState1) -> {
+                        if (setupControlState1 != SetupControlState.FINISHED) return;
+                        initConfigs(setup, null, mongoDBSetup);
+                    });
+                    break;
             }
 
         });
+    }
+
+    private void initConfigs(NodeSetup setup, MySqlSetup mySqlSetup, MongoDBSetup mongoDBSetup) throws IOException {
+        MainConfiguration config = configManager.getConfig();
+        DatabaseConfiguration databaseConfiguration = config.getDatabaseConfiguration();
+        DefaultNodeConfig nodeConfig = config.getNodeConfig();
+
+        String nodeName = setup.getName();
+        String host = setup.getHost();
+        int port = setup.getPort();
+        int serviceStartPort = setup.getServiceStartPort();
+        boolean remote = setup.isRemote();
+
+        if (remote) {
+            new NodeRemoteSetup().start((setup1, state) -> {
+                if (state == SetupControlState.FINISHED) {
+                    String host1 = setup1.getHost();
+                    int port1 = setup1.getPort();
+                    String authKey = setup1.getAuthKey();
+
+                    nodeConfig.setAuthKey(authKey);
+                    nodeConfig.setClusterAddresses(new ProtocolAddress[]{new ProtocolAddress(host1, port1)});
+                }
+            });
+            nodeConfig.setHttpListeners(new ProtocolAddress[0]);
+        }
+
+        nodeConfig.setNodeName(nodeName);
+        nodeConfig.setBindAddress(host);
+        nodeConfig.setBindPort(port);
+        nodeConfig.setRemote(false);
+
+        config.setSpigotStartPort(serviceStartPort);
+        config.setNodeConfig(nodeConfig);
+
+        DatabaseType databaseType = setup.getDatabaseType();
+        String databaseHost = null;
+        int databasePort = -1;
+        String databaseUser = null;
+        String databasePassword = null;
+        String databaseName = null;
+        String authDatabase = null;
+        switch (databaseType) {
+            case MYSQL:
+                databaseHost = mySqlSetup.getDatabaseHost();
+                databasePort = mySqlSetup.getDatabasePort();
+                databaseUser = mySqlSetup.getDatabaseUser();
+                databasePassword = mySqlSetup.getDatabasePassword();
+                databaseName = mySqlSetup.getDatabaseName();
+                authDatabase = "";
+                break;
+            case MONGODB:
+                databaseHost = mongoDBSetup.getDatabaseHost();
+                databasePort = mongoDBSetup.getDatabasePort();
+                databaseUser = mongoDBSetup.getDatabaseUser();
+                databasePassword = mongoDBSetup.getDatabasePassword();
+                databaseName = mongoDBSetup.getDatabaseName();
+                authDatabase = mongoDBSetup.getAuthDatabase();
+                break;
+        }
+
+        databaseConfiguration.setHost(databaseHost);
+        databaseConfiguration.setPort(databasePort);
+        databaseConfiguration.setUser(databaseUser);
+        databaseConfiguration.setPassword(databasePassword);
+        databaseConfiguration.setDatabase(databaseName);
+        databaseConfiguration.setAuthDatabase(authDatabase);
+        databaseConfiguration.setType(databaseType);
+        config.setDatabaseConfiguration(databaseConfiguration);
+
+        configManager.setConfig(config);
+        configManager.save();
+
+        this.logger.info("§7You §acompleted §7the NodeSetup§8!");
+        this.logger.info("Please reboot the Node now to apply all changes!");
+        System.exit(0);
     }
 
     @Override
@@ -368,7 +536,8 @@ public class NodeDriver extends CloudDriver implements Node {
     }
 
     @Override
-    public void setLastCycleData(NodeCycleData data) {}
+    public void setLastCycleData(NodeCycleData data) {
+    }
 
     @Override
     public void log(String message, Object... args) {
@@ -378,6 +547,12 @@ public class NodeDriver extends CloudDriver implements Node {
     @Override
     public void stopServer(CloudServer server) {
         CloudDriver.getInstance().getServiceManager().shutdownService(server);
+    }
+
+    @Nullable
+    @Override
+    public HttpServer getHttpServer() {
+        return webServer;
     }
 
     @Override

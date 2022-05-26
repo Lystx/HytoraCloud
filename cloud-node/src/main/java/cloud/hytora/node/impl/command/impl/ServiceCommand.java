@@ -10,10 +10,16 @@ import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.event.CloudEventHandler;
 import cloud.hytora.driver.event.defaults.server.CloudServerRequestScreenLeaveEvent;
 import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.deployment.CloudDeployment;
+import cloud.hytora.driver.services.deployment.ServiceDeployment;
+import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.utils.ServiceState;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 @Command(
         name = {"service", "ser"},
@@ -42,6 +48,32 @@ public class ServiceCommand {
         }
         sender.sendMessage("§8");
     }
+
+    @SubCommand("deploy <service> <templateName> <excludes>")
+    @CommandDescription("Copies a service into its template (exclusions are split by ';', use '#' to include all)")
+    public void onDeployCommand(
+            CommandSender sender,
+            @CommandArgument(value = "service", completer = CloudServerCompleter.class) CloudServer service,
+            @CommandArgument("templateName") String templateName,
+            @CommandArgument("excludes") String excludes
+    ) {
+
+        if (service == null) {
+            sender.sendMessage("§cThere is no such Server online!");
+            return;
+        }
+
+        ServiceTemplate serviceTemplate = service.getConfiguration().getParent().getTemplates().stream().filter(t -> t.getPrefix().equalsIgnoreCase(templateName)).findFirst().orElse(null);
+        if (serviceTemplate == null) {
+            sender.sendMessage("§cThere is no template with name '" + templateName + "' for server " + service.getName() + "!");
+            return;
+        }
+
+        ServiceDeployment deployment = new CloudDeployment(serviceTemplate, (excludes.equals("#") ? new ArrayList<>() : Arrays.asList(excludes.split(";"))));
+        service.deploy(deployment);
+        sender.sendMessage("§7Deployed §b" + service.getName() + "§8!");
+    }
+
 
     @SubCommand("screen <service> <join/leave>")
 

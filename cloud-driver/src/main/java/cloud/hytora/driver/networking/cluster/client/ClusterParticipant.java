@@ -129,6 +129,7 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
         super.handlePacket(wrapper, packet);
     }
 
+
     public Wrapper<Boolean> shutdown() {
         Wrapper<Boolean> wrapper = Wrapper.empty();
         this.workerGroup.shutdownGracefully().addListener(future -> {

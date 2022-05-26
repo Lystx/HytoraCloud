@@ -69,17 +69,31 @@ public class NodeServiceManager extends DefaultServiceManager {
 
         ServerConfiguration con = service.getConfiguration();
 
-        File parent = (service.getConfiguration().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
+        File parent = (con.getParent().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
         File folder = new File(parent, service.getName() + "/");
 
+        if (con.getParent().getShutdownBehaviour().isStatic()) {
+            //only delete cloud files
+            File property = new File(folder, "property.json");
+            property.delete();
 
-        if (folder.exists()) {
-            try {
-                FileUtils.deleteDirectory(folder);
-            } catch (IOException e) {
-                e.printStackTrace();
+            File bridgePlugin = new File(folder, "plugins/plugin.jar");
+            bridgePlugin.delete();
+
+            File applicationFile = new File(folder, con.getVersion().getJar());
+            applicationFile.delete();
+
+        } else {
+            //dynamic -> delete everything
+            if (folder.exists()) {
+                try {
+                    FileUtils.deleteDirectory(folder);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
+
 
         CloudDriver.getInstance().getEventManager().callEvent(new CloudServerCacheUnregisterEvent(service.getName()));
         NodeDriver.getInstance().getExecutor().sendPacketToAll(new CloudServerCacheUnregisterPacket(service.getName()));
@@ -89,7 +103,7 @@ public class NodeServiceManager extends DefaultServiceManager {
     }
 
     public Wrapper<CloudServer> startService(@NotNull CloudServer service) {
-        return new ProcessServiceStarter(this,service).start();
+        return new ProcessServiceStarter(this, service).start();
     }
 
     public void sendPacketToService(CloudServer service, Packet packet) {

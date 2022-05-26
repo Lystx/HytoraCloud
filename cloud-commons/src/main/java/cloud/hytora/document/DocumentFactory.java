@@ -1,5 +1,6 @@
 package cloud.hytora.document;
 
+import cloud.hytora.document.bson.BsonDocument;
 import cloud.hytora.document.empty.EmptyBundle;
 import cloud.hytora.document.empty.EmptyDocument;
 import cloud.hytora.document.gson.GsonBundle;
@@ -11,6 +12,7 @@ import cloud.hytora.document.wrapped.StorableBundle;
 import cloud.hytora.document.wrapped.StorableDocument;
 import cloud.hytora.document.wrapped.WrappedBundle;
 import cloud.hytora.document.wrapped.WrappedDocument;
+import com.google.gson.Gson;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -49,8 +51,26 @@ public class DocumentFactory {
 
     @Nonnull
     @CheckReturnValue
+    public static Document newBsonDocument() {
+        return new BsonDocument();
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    public static Document newBsonDocument(org.bson.Document bsonDocument) {
+        return new BsonDocument(bsonDocument);
+    }
+
+    @Nonnull
+    @CheckReturnValue
     public static Document newJsonDocument(@Nonnull String json) {
         return new GsonDocument(json);
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    public static Document newBsonDocument(@Nonnull String json) {
+        return new BsonDocument(json);
     }
 
     @Nonnull
@@ -276,6 +296,16 @@ public class DocumentFactory {
             }
 
             @Override
+            public DocumentWrapper<org.bson.Document> asBsonDocument() {
+                return document.asBsonDocument();
+            }
+
+            @Override
+            public DocumentWrapper<Gson> asGsonDocument() {
+                return document.asGsonDocument();
+            }
+
+            @Override
             public Object getFallbackValue() {
                 return getTargetDocument().getFallbackValue();
             }
@@ -338,6 +368,16 @@ public class DocumentFactory {
             @Nonnull
             public Document getTargetDocument() {
                 return document;
+            }
+
+            @Override
+            public DocumentWrapper<org.bson.Document> asBsonDocument() {
+                return document.asBsonDocument();
+            }
+
+            @Override
+            public DocumentWrapper<Gson> asGsonDocument() {
+                return document.asGsonDocument();
             }
 
             public boolean canEdit() {

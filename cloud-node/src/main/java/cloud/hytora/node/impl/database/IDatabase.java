@@ -1,25 +1,42 @@
 package cloud.hytora.node.impl.database;
 
+import cloud.hytora.document.Document;
 
-import cloud.hytora.common.wrapper.Wrapper;
-
-import cloud.hytora.driver.services.configuration.ServerConfiguration;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
+import java.util.Collection;
+import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 
 public interface IDatabase {
 
     void connect();
 
-    @NotNull
-    Wrapper<Boolean> disconnect();
+    void disconnect();
 
-    List<ServerConfiguration> getAllServiceGroups();
+    void insert(String collection, String key, Document document);
 
-    void addGroup(@NotNull ServerConfiguration serviceGroup);
+    void update(String collection,  String key, Document document);
 
-    void removeGroup(@NotNull ServerConfiguration serviceGroup);
+    boolean contains(String collection,  String key);
+
+    void delete(String collection,  String key);
+
+    Document byId(String collection, String key);
+
+    Collection<Document> filter(String collection, String fieldName, Object fieldValue);
+
+    Collection<String> keys(String collection);
+
+    Collection<Document> documents(String collection);
+
+
+    Map<String, Document> entries(String collection);
+
+    Map<String, Document> filter(String collection, BiPredicate<String, Document> predicate);
+
+    void iterate(String collection, BiConsumer<String, Document> consumer);
+
+    void clear(String collection);
 
 
 }

@@ -1,9 +1,8 @@
 package cloud.hytora.node.impl.config;
 
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
-import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.node.NodeDriver;
-import cloud.hytora.node.impl.database.DatabaseConfiguration;
+import cloud.hytora.node.impl.database.config.DatabaseConfiguration;
 import lombok.AllArgsConstructor;
 
 import lombok.Getter;

@@ -2,9 +2,11 @@ package cloud.hytora.driver.networking.protocol.codec.buf;
 
 import cloud.hytora.common.collection.WrappedException;
 import cloud.hytora.common.misc.CollectionUtils;
+import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.common.misc.ZipUtils;
 import cloud.hytora.document.Document;
+import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.networking.protocol.packets.*;
 import cloud.hytora.driver.networking.NetworkExecutor;
 import cloud.hytora.driver.networking.PacketProvider;
@@ -88,6 +90,16 @@ public class DefaultPacketBuffer implements PacketBuffer {
 	public PacketBuffer write(@Nonnull byte[] bytes) {
 		buffer.writeBytes(bytes);
 		return this;
+	}
+
+	@Override
+	public ProtocolAddress readAddress() {
+		return this.readObject(ProtocolAddress.class);
+	}
+
+	@Override
+	public PacketBuffer writeAddress(@NotNull ProtocolAddress address) {
+		return this.writeObject(address);
 	}
 
 	@Nonnull
@@ -315,10 +327,22 @@ public class DefaultPacketBuffer implements PacketBuffer {
 		return readArray(String.class, this::readString);
 	}
 
+	@org.jetbrains.annotations.Nullable
+	@Override
+	public String[] readOptionalStringArray() {
+		return readOptional(this::readStringArray);
+	}
+
 	@Nonnull
 	@Override
 	public PacketBuffer writeStringArray(@Nonnull String[] strings) {
 		return writeArray(strings, this::writeString);
+	}
+
+	@NotNull
+	@Override
+	public PacketBuffer writeOptionalStringArray(@org.jetbrains.annotations.Nullable String[] strings) {
+		return this.writeOptional(strings, this::writeStringArray);
 	}
 
 	@Nonnull
@@ -543,6 +567,7 @@ public class DefaultPacketBuffer implements PacketBuffer {
 		}
 		return path.toFile();
 	}
+
 
 	@Override
 	public File readFile(File destinationFile) throws IOException {

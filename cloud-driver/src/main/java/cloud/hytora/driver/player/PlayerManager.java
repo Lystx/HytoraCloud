@@ -1,44 +1,53 @@
 package cloud.hytora.driver.player;
 
+import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.driver.networking.protocol.packets.QueryState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface PlayerManager {
 
-    /**
-     * @return a list of all cloud players
-     */
     @NotNull List<CloudPlayer> getAllCachedCloudPlayers();
+
 
     void setAllCachedCloudPlayers(List<CloudPlayer> allCachedCloudPlayers);
 
-    /**
-     * @param uniqueId the unique id to get the player
-     * @return the player in an optional
-     */
-    @NotNull Optional<CloudPlayer> getCloudPlayer(@NotNull UUID uniqueId);
+    @NotNull
+    Optional<CloudPlayer> getCloudPlayer(@NotNull UUID uniqueId);
 
-    /**
-     * @param username the username to get the player
-     * @return the player in an optional
-     */
-    @NotNull Optional<CloudPlayer> getCloudPlayer(@NotNull String username);
+    @NotNull
+    Optional<CloudPlayer> getCloudPlayer(@NotNull String username);
 
-    /**
-     * @param uniqueId the unique id to get the player
-     * @return the player
-     */
-    @Nullable CloudPlayer getCloudPlayerByUniqueIdOrNull(@NotNull UUID uniqueId);
+    @Nullable
+    CloudPlayer getCloudPlayerByUniqueIdOrNull(@NotNull UUID uniqueId);
 
-    /**
-     * @param username the username to get the player
-     * @return the player
-     */
-    @Nullable CloudPlayer getCloudPlayerByNameOrNull(@NotNull String username);
+    @Nullable
+    CloudPlayer getCloudPlayerByNameOrNull(@NotNull String username);
+
+    @NotNull
+    Wrapper<Collection<CloudOfflinePlayer>> getAllOfflinePlayersAsync();
+
+    @NotNull
+    Collection<CloudOfflinePlayer> getAllOfflinePlayersBlockingOrEmpty();
+
+    @NotNull
+    Wrapper<CloudOfflinePlayer> getOfflinePlayerByUniqueIdAsync(@NotNull UUID uniqueId);
+
+    @NotNull
+    Wrapper<CloudOfflinePlayer> getOfflinePlayerByNameAsync(@NotNull String name);
+
+    @Nullable
+    CloudOfflinePlayer getOfflinePlayerByUniqueIdBlockingOrNull(@NotNull UUID uniqueId);
+
+    @Nullable
+    CloudOfflinePlayer getOfflinePlayerByNameBlockingOrNull(@NotNull String name);
+
+    void saveOfflinePlayerAsync(@NotNull CloudOfflinePlayer player);
 
     /**
      * @return the online count

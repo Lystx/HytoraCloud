@@ -1,6 +1,7 @@
 package cloud.hytora.document;
 
 import cloud.hytora.common.misc.FileUtils;
+import com.google.gson.Gson;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -24,6 +25,10 @@ import java.util.function.Consumer;
  * @see IEntry
  */
 public interface Document extends JsonEntity {
+
+	DocumentWrapper<org.bson.Document> asBsonDocument();
+
+	DocumentWrapper<Gson> asGsonDocument();
 
 	/**
 	 * Returns an immutable map containing all values of this document.
@@ -92,7 +97,6 @@ public interface Document extends JsonEntity {
 	 * @param path the path of the target object
 	 * @return the object at the given path wrapped as {@link IEntry}
 	 */
-	@Nonnull
 	IEntry getEntry(@Nonnull String path);
 
 	/**

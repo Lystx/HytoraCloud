@@ -11,11 +11,13 @@ import cloud.hytora.driver.event.defaults.server.CloudServerCacheUnregisterEvent
 import cloud.hytora.driver.networking.packets.player.CloudPlayerDisconnectPacket;
 import cloud.hytora.driver.networking.packets.player.CloudPlayerLoginPacket;
 import cloud.hytora.driver.networking.packets.player.CloudPlayerUpdatePacket;
+import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,7 +56,7 @@ public abstract class DefaultPlayerManager implements PlayerManager {
         });
 
         executor.registerPacketHandler((PacketHandler<CloudPlayerLoginPacket>) (wrapper, packet) -> {
-            CloudPlayer cloudPlayer = new SimpleCloudPlayer(packet.getUuid(), packet.getUsername());
+            CloudPlayer cloudPlayer = new DefaultCloudPlayer(packet.getUuid(), packet.getUsername());
             this.cachedCloudPlayers.put(packet.getUuid(), cloudPlayer);
             eventManager.callEvent(new CloudPlayerLoginEvent(cloudPlayer));
         });
@@ -85,6 +87,21 @@ public abstract class DefaultPlayerManager implements PlayerManager {
         this.cachedCloudPlayers = cachedCloudPlayers;
     }
 
+    @Override
+    public @Nullable CloudOfflinePlayer getOfflinePlayerByUniqueIdBlockingOrNull(@NotNull UUID uniqueId) {
+        return getOfflinePlayerByUniqueIdAsync(uniqueId).syncUninterruptedly().orElse(null);
+    }
+
+    @Override
+    public @Nullable CloudOfflinePlayer getOfflinePlayerByNameBlockingOrNull(@NotNull String name) {
+        return getOfflinePlayerByNameAsync(name).syncUninterruptedly().orElse(null);
+    }
+
+    @Override
+    public @NotNull Collection<CloudOfflinePlayer> getAllOfflinePlayersBlockingOrEmpty() {
+        return getAllOfflinePlayersAsync().syncUninterruptedly().orElse(new ArrayList<>());
+    }
+
     public abstract void registerCloudPlayer(@NotNull UUID uniqueID, @NotNull String username);
 
     public abstract void unregisterCloudPlayer(@NotNull UUID uuid, @NotNull String name);
@@ -103,7 +120,7 @@ public abstract class DefaultPlayerManager implements PlayerManager {
 
     @Override
     public @NotNull Optional<CloudPlayer> getCloudPlayer(final @NotNull String username) {
-        return this.cachedCloudPlayers.values().stream().filter(it -> it.getUsername().equalsIgnoreCase(username)).findAny();
+        return this.cachedCloudPlayers.values().stream().filter(it -> it.getName().equalsIgnoreCase(username)).findAny();
     }
 
     @Override

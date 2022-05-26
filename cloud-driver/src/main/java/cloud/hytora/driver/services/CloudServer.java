@@ -8,6 +8,7 @@ import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
 
@@ -21,6 +22,10 @@ public interface CloudServer extends Bufferable, SelfCloneable<CloudServer>, Net
     NodeCloudServer asCloudServer() throws IncompatibleDriverEnvironment;
 
     List<String> queryServiceOutput();
+
+    void deploy(ServiceDeployment... deployments);
+
+    boolean isTimedOut();
 
     /**
      * @return the service id
@@ -113,9 +118,6 @@ public interface CloudServer extends Bufferable, SelfCloneable<CloudServer>, Net
 
     void executeCommand(@NotNull String commandLine);
 
-    /**
-     * updates the properties of the service
-     */
     void update();
 
     long getCreationTimestamp();

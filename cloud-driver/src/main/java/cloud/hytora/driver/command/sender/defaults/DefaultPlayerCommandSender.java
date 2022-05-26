@@ -28,7 +28,7 @@ public class DefaultPlayerCommandSender implements PlayerCommandSender {
 	@Nonnull
 	@Override
 	public String getName() {
-		return player.getUsername();
+		return player.getName();
 	}
 
 	@Nonnull

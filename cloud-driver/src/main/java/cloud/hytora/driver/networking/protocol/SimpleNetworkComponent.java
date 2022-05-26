@@ -1,5 +1,6 @@
 package cloud.hytora.driver.networking.protocol;
 
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
@@ -43,5 +44,10 @@ public class SimpleNetworkComponent implements NetworkComponent {
                 buf.writeEnum(type);
                 break;
         }
+    }
+
+    @Override
+    public void log(String message, Object... args) {
+        CloudDriver.getInstance().logToExecutor(this, message, args);
     }
 }

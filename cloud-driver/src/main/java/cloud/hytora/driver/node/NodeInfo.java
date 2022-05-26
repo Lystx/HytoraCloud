@@ -60,7 +60,7 @@ public class NodeInfo implements Node {
 
     @Override
     public void shutdown() {
-        this.sendPacket(new NodeRequestShutdownPacket());
+        this.sendPacket(new NodeRequestShutdownPacket(this.name));
     }
 
     @Override

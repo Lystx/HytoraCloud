@@ -4,8 +4,10 @@ import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.packets.RedirectPacket;
 import cloud.hytora.driver.networking.packets.StorageUpdatePacket;
-import cloud.hytora.driver.networking.packets.group.ServiceGroupExecutePacket;
+import cloud.hytora.driver.networking.packets.group.ServiceConfigurationExecutePacket;
 import cloud.hytora.driver.networking.packets.group.ServerConfigurationCacheUpdatePacket;
+import cloud.hytora.driver.networking.packets.module.RemoteModuleControllerPacket;
+import cloud.hytora.driver.networking.packets.module.RemoteModuleExecutionPacket;
 import cloud.hytora.driver.networking.packets.node.*;
 import cloud.hytora.driver.networking.packets.player.*;
 import cloud.hytora.driver.networking.packets.services.*;
@@ -59,8 +61,12 @@ public class PacketProvider {
         PacketProvider.autoRegister(DriverUpdatePacket.class);
         PacketProvider.autoRegister(StorageUpdatePacket.class);
 
+        //module packets
+        PacketProvider.autoRegister(RemoteModuleExecutionPacket.class);
+        PacketProvider.autoRegister(RemoteModuleControllerPacket.class);
+
         //service group packets
-        PacketProvider.autoRegister(ServiceGroupExecutePacket.class);
+        PacketProvider.autoRegister(ServiceConfigurationExecutePacket.class);
         PacketProvider.autoRegister(ServerConfigurationCacheUpdatePacket.class);
 
         //cloud player packets
@@ -69,6 +75,9 @@ public class PacketProvider {
         PacketProvider.autoRegister(CloudPlayerUpdatePacket.class);
         PacketProvider.autoRegister(CloudPlayerKickPacket.class);
         PacketProvider.autoRegister(CloudPlayerSendServicePacket.class);
+        PacketProvider.autoRegister(CloudPlayerPlainMessagePacket.class);
+        PacketProvider.autoRegister(CloudPlayerComponentMessagePacket.class);
+        PacketProvider.autoRegister(OfflinePlayerRequestPacket.class);
 
         //util packets
         PacketProvider.autoRegister(RedirectPacket.class);

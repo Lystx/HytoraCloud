@@ -16,6 +16,7 @@ public class SimpleJavaVersion implements JavaVersion{
 
     private String name;
     private String path;
+    private int id;
 
 
     @Override
@@ -26,11 +27,13 @@ public class SimpleJavaVersion implements JavaVersion{
             case READ:
                 name = buf.readString();
                 path = buf.readString();
+                id = buf.readInt();
                 break;
 
             case WRITE:
                 buf.writeString(name);
                 buf.writeString(path);
+                buf.writeInt(id);
                 break;
         }
     }

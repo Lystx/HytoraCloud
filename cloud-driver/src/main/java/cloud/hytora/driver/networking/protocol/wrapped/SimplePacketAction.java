@@ -16,7 +16,6 @@ import cloud.hytora.driver.networking.protocol.packets.defaults.ResponsePacket;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -32,7 +31,7 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
     private ConnectionType[] receiverTypes;
 
     //response values
-    private ConnectionResponse state;
+    private QueryState state;
     private Document data;
     private PacketBuffer buffer;
 
@@ -41,13 +40,13 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
         this.returnTypeClass = returnTypeClass;
         this.identifier = identifier;
 
-        this.state = ConnectionResponse.SUCCESS;
+        this.state = QueryState.OK;
         this.data = DocumentFactory.newJsonDocument();
         this.buffer = PacketBuffer.unsafe();
     }
 
     @Override
-    public ChanneledPacketAction<R> state(ConnectionResponse state) {
+    public ChanneledPacketAction<R> state(QueryState state) {
         this.state = state;
         return this;
     }

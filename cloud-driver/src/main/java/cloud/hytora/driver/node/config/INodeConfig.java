@@ -1,7 +1,10 @@
 package cloud.hytora.driver.node.config;
 
+import cloud.hytora.driver.http.SSLConfiguration;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+
+import java.util.Collection;
 
 public interface INodeConfig extends Bufferable {
 
@@ -11,6 +14,10 @@ public interface INodeConfig extends Bufferable {
 
     String getBindAddress();
 
+    ProtocolAddress[] getHttpListeners();
+
+    SSLConfiguration getSslConfiguration();
+
     ProtocolAddress[] getClusterAddresses();
 
     int getBindPort();
@@ -19,5 +26,5 @@ public interface INodeConfig extends Bufferable {
 
     void markAsRemote();
 
-    JavaVersion[] getJavaVersions();
+    Collection<JavaVersion> getJavaVersions();
 }

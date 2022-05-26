@@ -2,7 +2,9 @@ package cloud.hytora.document.empty;
 
 import cloud.hytora.document.Bundle;
 import cloud.hytora.document.Document;
+import cloud.hytora.document.DocumentWrapper;
 import cloud.hytora.document.IEntry;
+import com.google.gson.Gson;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -24,6 +26,16 @@ public class EmptyDocument implements Document {
 	private static final Collection<String> keys = Collections.emptyList();
 	private static final Collection<Object> values = Collections.emptyList();
 	private static final Collection<IEntry> entries = Collections.emptyList();
+
+	@Override
+	public DocumentWrapper<org.bson.Document> asBsonDocument() {
+		return null;
+	}
+
+	@Override
+	public DocumentWrapper<Gson> asGsonDocument() {
+		return null;
+	}
 
 	@Nonnull
 	@Override

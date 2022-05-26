@@ -1,6 +1,11 @@
 package cloud.hytora.bridge;
 
+import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.networking.NetworkComponent;
+import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
+import cloud.hytora.driver.networking.protocol.packets.QueryState;
+import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
@@ -17,6 +22,7 @@ public interface PluginBridge {
         service.update();
 
         CloudDriver.getInstance().getLogger().info("Bridge recognised itself as '" + service.getName() + "'!");
+
     }
 
     void shutdown();

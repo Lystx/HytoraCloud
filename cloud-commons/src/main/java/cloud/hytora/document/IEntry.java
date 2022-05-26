@@ -39,6 +39,11 @@ public interface IEntry extends JsonEntity {
 	 */
 	boolean isDocument();
 
+
+	default boolean isPrimitive() {
+		return isBoolean() || isNumber() || isChar();
+	}
+
 	/**
 	 * @return whether this entry is an object (number, string, boolean, ...), not a document or bundle
 	 */

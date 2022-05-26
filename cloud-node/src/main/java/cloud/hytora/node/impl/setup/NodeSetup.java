@@ -2,7 +2,7 @@ package cloud.hytora.node.impl.setup;
 
 import cloud.hytora.driver.setup.Setup;
 import cloud.hytora.driver.setup.annotations.*;
-import cloud.hytora.node.impl.database.DatabaseType;
+import cloud.hytora.node.impl.database.config.DatabaseType;
 import lombok.Getter;
 
 @Getter
@@ -26,26 +26,15 @@ public class NodeSetup extends Setup<NodeSetup> {
     @SuggestedAnswer("30000")
     private int serviceStartPort;
 
-    @Question(id = 5, question = "Which database do you want to use?")
+    @Question(id = 5, question = "Is this Node a Remote (Slave) in the Cluster?")
+    @QuestionTip("A Remote receives commands and connects to the HeadNode")
+    private boolean remote;
+
+    @Question(id = 6, question = "Which database do you want to use?")
     @QuestionTip("When using multiple Nodes, you should use an online database!")
     @RequiresEnum(DatabaseType.class)
     @ExitAfterInput("FILE")
     private DatabaseType databaseType;
-
-    @Question(id = 6, question = "What's the host of your database?")
-    private String databaseHost;
-
-    @Question(id = 7, question = "What's the port of your database?")
-    private int databasePort;
-
-    @Question(id = 7, question = "What's the username of your database?")
-    private String databaseUser;
-
-    @Question(id = 8, question = "What's the password of your database?")
-    private String databasePassword;
-
-    @Question(id = 9, question = "What's the name of your database?")
-    private String databaseName;
 
     @Override
     public boolean isCancellable() {

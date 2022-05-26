@@ -40,6 +40,7 @@ public class BsonEntry implements IEntry {
 		return value instanceof org.bson.Document || value instanceof org.bson.BsonDocument;
 	}
 
+
 	@Override
 	public boolean isNumber() {
 		return value instanceof Number || bsonValue != null && bsonValue.isNumber();

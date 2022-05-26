@@ -2,8 +2,10 @@ package cloud.hytora.driver.networking.protocol.codec.buf;
 
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
+import cloud.hytora.document.DocumentWrapper;
 import cloud.hytora.document.wrapped.WrappedDocument;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
+import com.google.gson.Gson;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,6 +39,16 @@ public class ProtocolDocument implements WrappedDocument, Bufferable {
 				buf.writeString(targetDocument.asRawJsonString());
 				break;
 		}
+	}
+
+	@Override
+	public DocumentWrapper<org.bson.Document> asBsonDocument() {
+		return targetDocument.asBsonDocument();
+	}
+
+	@Override
+	public DocumentWrapper<Gson> asGsonDocument() {
+		return targetDocument.asGsonDocument();
 	}
 
 	@Override

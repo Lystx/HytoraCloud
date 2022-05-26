@@ -395,6 +395,10 @@ public final class FileUtils {
 		return file;
 	}
 
+	public static Path getTempFile(UUID uuid) {
+		return tempDirectory.resolve(uuid.toString());
+	}
+
 	public static void setAttribute(@Nonnull Path path, @Nonnull String attribute, @Nullable Object value, @Nonnull LinkOption... options) {
 		try {
 			Files.setAttribute(path, attribute, value, options);

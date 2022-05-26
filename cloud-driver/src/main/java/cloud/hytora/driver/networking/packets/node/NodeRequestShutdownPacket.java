@@ -11,10 +11,18 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class NodeRequestShutdownPacket extends Packet {
+
+    private String name;
 
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
-
+        if (state == BufferState.READ) {
+            name = buf.readString();
+        } else {
+            buf.writeString(name);
+        }
     }
 }

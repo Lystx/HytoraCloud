@@ -28,12 +28,14 @@ D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\no
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\node\CloudBootstrap.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\node\impl\database\IDatabase.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\node\impl\database\DatabaseConfiguration.java
+D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\node\impl\setup\database\MongoDBSetup.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\node\impl\config\ConfigManager.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\node\service\properties\BungeeProperties.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\node\impl\handler\NodeRemoteServerStartHandler.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\node\impl\database\DatabaseType.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\node\service\properties\ServiceProperties.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\node\console\ColorTranslator.java
+D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\node\impl\setup\database\MySqlSetup.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\node\impl\handler\NodeStoragePacketHandler.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\node\impl\database\impl\DatabaseFunction.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\node\impl\database\impl\file\DatabaseFile.java
@@ -51,3 +53,4 @@ D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\no
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\node\NodeDriver.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\node\impl\event\ServiceOutputLineAddEvent.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\node\impl\player\NodePlayerManager.java
+D:\Games\IntelliJ\workspace\HytoraCloud\cloud-node\src\main\java\cloud\hytora\node\impl\database\impl\mongodb\DatabaseMongoDBImpl.java

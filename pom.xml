@@ -13,6 +13,11 @@
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
+
+        <jdk.version>1.8</jdk.version>
+        <jodatime.version>2.5</jodatime.version>
+        <junit.version>4.11</junit.version>
+        <log4j.version>1.2.17</log4j.version>
     </properties>
 
     <modules>
@@ -21,6 +26,7 @@
         <module>cloud-bridge</module>
         <module>cloud-remote</module>
         <module>cloud-commons</module>
+        <module>cloud-modules</module>
     </modules>
 
     <dependencies>
@@ -37,5 +43,7 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+
+
 
 </project>

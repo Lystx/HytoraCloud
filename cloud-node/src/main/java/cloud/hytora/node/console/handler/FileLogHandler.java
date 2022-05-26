@@ -4,6 +4,7 @@ import cloud.hytora.common.logging.formatter.UncoloredMessageFormatter;
 import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.logging.handler.LogHandler;
 import cloud.hytora.common.misc.FileUtils;
+import cloud.hytora.node.NodeDriver;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -24,7 +25,7 @@ public class FileLogHandler implements LogHandler {
 
     private static final String fileExtension = ".cloud";
     private static final long maxBytes = 16 * (1024 * 1024);
-    private static final Path directory = Paths.get("storage", "logs");
+    private static final Path directory = NodeDriver.LOG_FOLDER.toPath();
 
     private final AtomicReference<Path> errorFile, outFile;
 
