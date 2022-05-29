@@ -1,5 +1,6 @@
 package cloud.hytora.driver;
 
+import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.collection.NamedThreadFactory;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.driver.command.CommandManager;
@@ -30,7 +31,6 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.JdkLoggerFactory;
 import lombok.Getter;
 import lombok.Setter;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -40,7 +40,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 @Getter
 @DriverStatus(version = "SNAPSHOT-0.1", experimental = true, developers = {"Lystx"})
-public abstract class CloudDriver {
+public abstract class CloudDriver extends DriverUtility {
 
     @Getter
     private static CloudDriver instance;
@@ -123,6 +123,11 @@ public abstract class CloudDriver {
     public abstract void shutdown();
 
     public abstract void logToExecutor(NetworkComponent component, String message, Object... args);
+
+    public void logToExecutorAndSelf(NetworkComponent component, String message, Object... args) {
+        this.logToExecutor(component, message, args);
+        this.logger.info(message, args);
+    }
 
     @Nullable
     @CheckReturnValue

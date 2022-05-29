@@ -5,7 +5,7 @@ import java.util.List;
 public interface Scheduler {
 
     /**
-     * Gets a {@link SchedulerFutureObject} by its id
+     * Gets a {@link SchedulerFuture} by its id
      *
      * @param id the id to search for
      * @return task or null if not found
@@ -13,7 +13,7 @@ public interface Scheduler {
     SchedulerFuture getTask(int id);
 
     /**
-     * Gets a list of all pending {@link SchedulerFutureObject}s
+     * Gets a list of all pending {@link SchedulerFuture}s
      *
      * @return list of tasks
      */

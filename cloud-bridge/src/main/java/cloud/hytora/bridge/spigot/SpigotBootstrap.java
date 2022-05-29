@@ -5,7 +5,7 @@ import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
 import cloud.hytora.bridge.PluginBridge;
 import cloud.hytora.remote.Remote;
-import cloud.hytora.remote.RemoteAdapter;
+import cloud.hytora.remote.adapter.RemoteAdapter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 

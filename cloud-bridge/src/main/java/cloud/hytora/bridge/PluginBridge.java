@@ -19,6 +19,7 @@ public interface PluginBridge {
         CloudServer service = Remote.getInstance().thisService();
         service.setServiceVisibility(ServiceVisibility.VISIBLE);
         service.setServiceState(ServiceState.ONLINE);
+        service.setReady(true);
         service.update();
 
         CloudDriver.getInstance().getLogger().info("Bridge recognised itself as '" + service.getName() + "'!");

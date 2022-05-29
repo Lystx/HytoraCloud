@@ -5,6 +5,8 @@ import cloud.hytora.common.wrapper.Wrapper;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.defaults.server.CloudServerCacheUnregisterEvent;
 import cloud.hytora.driver.networking.packets.services.*;
+import cloud.hytora.driver.node.config.INodeConfig;
+import cloud.hytora.driver.node.config.ServiceCrashPrevention;
 import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.impl.DefaultServiceManager;
@@ -14,17 +16,18 @@ import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 
+import cloud.hytora.node.service.helper.NodeServiceQueue;
 import cloud.hytora.node.service.helper.ProcessServiceStarter;
 import lombok.Getter;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+
 @Getter
 public class NodeServiceManager extends DefaultServiceManager {
 
@@ -65,12 +68,46 @@ public class NodeServiceManager extends DefaultServiceManager {
     @Override
     public void unregisterService(CloudServer service) {
         super.unregisterService(service);
-        this.cachedServiceOutputs.remove(service.getName());
 
         ServerConfiguration con = service.getConfiguration();
 
         File parent = (con.getParent().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
         File folder = new File(parent, service.getName() + "/");
+
+        if (!service.isReady()) {
+            NodeDriver.getInstance().getLogger().warn("Service {} probably crashed during startup because it was not authenticated when it stopped", service.getName());
+
+            File crashFolder = new File(NodeDriver.LOG_FOLDER, "crashes/");
+            crashFolder.mkdirs();
+
+            File specificCrashFolders = new File(crashFolder, con.getName() + "/");
+            specificCrashFolders.mkdirs();
+
+            File crashFile = new File(specificCrashFolders, service.getName() + "_" + UUID.randomUUID().toString() + ".log");
+
+            try {
+                cloud.hytora.common.misc.FileUtils.writeToFile(crashFile, service.queryServiceOutput());
+                NodeDriver.getInstance().getLogger().warn("Saving logs to identify crash under {}...", crashFile.getName());
+            } catch (IOException e) {
+                e.printStackTrace();
+                NodeDriver.getInstance().getLogger().warn("Couldn't save crash logs...");
+            }
+            INodeConfig config = NodeDriver.getInstance().getConfig();
+            ServiceCrashPrevention scp = config.getServiceCrashPrevention();
+
+            if (scp.isEnabled()) {
+
+                NodeDriver.getInstance().getServiceQueue().getPausedGroups().add(con.getName());
+
+                CloudDriver.getInstance().getScheduler().scheduleDelayedTask(() -> {
+                    NodeDriver.getInstance().getServiceQueue().getPausedGroups().remove(con.getName());
+                    NodeDriver.getInstance().getServiceQueue().dequeue();
+                }, scp.getTimeUnit().toMillis(scp.getTime()));
+
+                NodeDriver.getInstance().getLogger().warn("Due to ServiceCrashPrevention (SCP) being enabled, starting services of configuration {} is now paused for {} {}", con.getName(), scp.getTime(), scp.getTimeUnit().name().toLowerCase());
+            }
+
+        }
 
         if (con.getParent().getShutdownBehaviour().isStatic()) {
             //only delete cloud files
@@ -94,6 +131,8 @@ public class NodeServiceManager extends DefaultServiceManager {
             }
         }
 
+        //removing cached screen
+        this.cachedServiceOutputs.remove(service.getName());
 
         CloudDriver.getInstance().getEventManager().callEvent(new CloudServerCacheUnregisterEvent(service.getName()));
         NodeDriver.getInstance().getExecutor().sendPacketToAll(new CloudServerCacheUnregisterPacket(service.getName()));

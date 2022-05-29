@@ -179,6 +179,7 @@ public class ServiceCommand {
         sender.sendMessage("§bVisibility: §7" + service.getServiceVisibility());
         sender.sendMessage("§bPlayers: §7" + service.getOnlinePlayers() + "§8/§7" + service.getMaxPlayers());
         sender.sendMessage("§bMotd: §7" + service.getMotd());
+        sender.sendMessage("§bReady: §7" + (service.isReady() ? "§aYes" : "§cNo"));
         sender.sendMessage("§8");
 
     }

@@ -2,6 +2,7 @@ package cloud.hytora.driver.networking.cluster;
 
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.EndpointNetworkExecutor;
 import cloud.hytora.driver.networking.cluster.client.SimpleClusterClientExecutor;
 import cloud.hytora.driver.networking.protocol.codec.NetworkBossHandler;
@@ -130,7 +131,11 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
                                                          client.setType(authPacket.getType());
                                                          client.setData(authPacket.getExtraData());
 
-                                                         client.sendPacket(packet);
+
+                                                         //setting node name and sending back
+                                                         authPacket.setNodeName(getNodeName());
+                                                         client.sendPacket(authPacket);
+
                                                          handleConnectionChange(ConnectionState.CONNECTED, client, cachedContexts.get(channelHandlerContext));
                                                      } else {
                                                          System.out.println(" ");
@@ -213,7 +218,6 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
         if (connectedClient == null) {
             return;
         }
-
         this.handleConnectionChange(ConnectionState.DISCONNECTED, connectedClient, cachedContexts.get(context));
         this.allCachedConnectedClients.remove(connectedClient);
     }

@@ -22,16 +22,19 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import cloud.hytora.driver.networking.AbstractNetworkComponent;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.channels.AlreadyConnectedException;
 
+@Getter
 public abstract class ClusterParticipant extends AbstractNetworkComponent<ClusterParticipant> {
 
     private MultithreadEventLoopGroup workerGroup;
     private boolean active;
     private Channel channel;
     private Document customData;
+    private String connectedNodeName;
 
     public ClusterParticipant(String clientName, ConnectionType type, Document customData) {
         super(type, clientName);
@@ -39,6 +42,7 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
         this.active = false;
         this.channel = null;
         this.customData = customData;
+        this.connectedNodeName = "UNKNOWN";
     }
 
     @Override
@@ -118,6 +122,9 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
     @Override
     public <T extends IPacket> void handlePacket(ChannelWrapper wrapper, @NotNull T packet) {
         if (packet instanceof HandshakePacket) {
+            HandshakePacket handshake = (HandshakePacket) packet;
+            connectedNodeName = handshake.getNodeName();
+
             ThreadRunnable runnable = new ThreadRunnable(() -> onAuthenticationChanged(wrapper));
             if (handlePacketsAsync) {
                 runnable.runAsync();

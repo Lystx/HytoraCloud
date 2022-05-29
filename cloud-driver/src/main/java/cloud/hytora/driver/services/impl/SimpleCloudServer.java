@@ -52,6 +52,7 @@ public class SimpleCloudServer implements NodeCloudServer, Bufferable {
 
     private long creationTimestamp; // the timestamp this ServiceInfo was created (changing any property will not influence this timestamp)
     private boolean screenServer;
+    private boolean ready;
     private Document properties; // custom properties, which are not used internally
 
     public SimpleCloudServer(String group, int id, int port, String hostname) {
@@ -154,6 +155,7 @@ public class SimpleCloudServer implements NodeCloudServer, Bufferable {
 
         to.setMaxPlayers(from.getMaxPlayers());
         to.setMotd(from.getMotd());
+        to.setReady(from.isReady());
         ((SimpleCloudServer)to).setCreationTimeStamp(from.getCreationTimestamp());
         to.setProperties(from.getProperties());
     }
@@ -167,6 +169,8 @@ public class SimpleCloudServer implements NodeCloudServer, Bufferable {
                 this.configuration = CloudDriver.getInstance().getConfigurationManager().getConfigurationByNameOrNull(buf.readString());
                 this.hostName = buf.readString();
                 this.motd = buf.readString();
+
+                this.ready = buf.readBoolean();
 
                 this.serviceID = buf.readInt();
                 this.port = buf.readInt();
@@ -184,6 +188,8 @@ public class SimpleCloudServer implements NodeCloudServer, Bufferable {
                 buf.writeString(this.getConfiguration().getName());
                 buf.writeString(this.getHostName());
                 buf.writeString(this.getMotd());
+
+                buf.writeBoolean(this.isReady());
 
                 buf.writeInt(this.getServiceID());
                 buf.writeInt(this.getPort());
