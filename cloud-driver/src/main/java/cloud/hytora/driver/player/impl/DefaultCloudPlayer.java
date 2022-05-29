@@ -41,7 +41,7 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements Clo
         this.server = server;
         this.proxyServer = proxyServer;
 
-        this.connection = new DefaultPlayerConnection(proxyServer.getName(), new ProtocolAddress("127.0.0.1", -1), -1, true, false);
+        this.connection = new DefaultPlayerConnection(proxyServer == null ? "UNKNOWN" : proxyServer.getName(), new ProtocolAddress("127.0.0.1", -1), -1, true, false);
         this.temporaryProperties = DocumentFactory.newJsonDocument();
 
     }

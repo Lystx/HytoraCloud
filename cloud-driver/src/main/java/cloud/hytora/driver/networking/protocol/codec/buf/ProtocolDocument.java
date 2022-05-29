@@ -57,6 +57,11 @@ public class ProtocolDocument implements WrappedDocument, Bufferable {
 	}
 
 	@Override
+	public String toString() {
+		return asRawJsonString();
+	}
+
+	@Override
 	public Document fallbackValue(Object value) {
 		return targetDocument.fallbackValue(value);
 	}

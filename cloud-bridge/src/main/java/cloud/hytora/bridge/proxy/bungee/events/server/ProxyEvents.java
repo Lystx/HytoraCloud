@@ -18,10 +18,7 @@ import net.md_5.bungee.api.event.*;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public class ProxyEvents implements Listener {
 
@@ -33,16 +30,24 @@ public class ProxyEvents implements Listener {
 
     @EventHandler
     public void handle(PreLoginEvent event) {
-
         System.out.println(CloudDriver.getInstance().getStorage().getRawData());
+        /*
 
         List<String> whitelistedPlayers = CloudDriver.getInstance().getStorage().get("cloud::whitelist", List.class);
 
-        if (!whitelistedPlayers.contains(event.getConnection().getName())) {
-            event.setCancelReason(new TextComponent("§cDu besitzt momentan keinen Zuganng, um das §nNetzwerk §czu betreten."));
-            event.setCancelled(true);
-            return;
+        if (whitelistedPlayers == null) {
+            whitelistedPlayers = new ArrayList<>();
         }
+
+        if (event.getConnection().getName() != null) {
+            if (!whitelistedPlayers.contains(event.getConnection().getName())) {
+                event.setCancelReason(new TextComponent("§cDu besitzt momentan keinen Zuganng, um das §nNetzwerk §czu betreten."));
+                event.setCancelled(true);
+                return;
+            }
+        }*/
+        // TODO: 29.05.2022 whitelist
+
 
         if (!CloudDriver.getInstance().getServiceManager().getFallbackOrNullAsService().isPresent()) {
             event.setCancelReason(new TextComponent("§cEs konnte kein passender Fallback gefunden werden."));
@@ -54,7 +59,6 @@ public class ProxyEvents implements Listener {
     public void handle(LoginEvent event) {
         playerManager.registerCloudPlayer(event.getConnection().getUniqueId(), event.getConnection().getName());
     }
-
     
     
     @EventHandler

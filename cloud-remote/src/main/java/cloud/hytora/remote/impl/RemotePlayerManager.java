@@ -103,6 +103,9 @@ public class RemotePlayerManager extends DefaultPlayerManager {
 
     @Override
     public void unregisterCloudPlayer(@NotNull UUID uuid, @NotNull String username) {
+        if (this.getCloudPlayerByUniqueIdOrNull(uuid) == null) {
+            return;
+        }
         Remote.getInstance().getEventManager().callEvent(new CloudPlayerDisconnectEvent(this.cachedCloudPlayers.remove(uuid)));
         Remote.getInstance().getClient().sendPacket(new CloudPlayerDisconnectPacket(uuid, username));
     }
