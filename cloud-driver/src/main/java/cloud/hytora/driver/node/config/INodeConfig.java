@@ -14,7 +14,11 @@ public interface INodeConfig extends Bufferable {
 
     String getBindAddress();
 
+    int getMaxBootableServicesAtSameTime();
+
     ProtocolAddress[] getHttpListeners();
+
+    ServiceCrashPrevention getServiceCrashPrevention();
 
     SSLConfiguration getSslConfiguration();
 

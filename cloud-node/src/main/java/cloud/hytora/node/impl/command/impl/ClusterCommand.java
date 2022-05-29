@@ -38,13 +38,13 @@ public class ClusterCommand {
 
     @SubCommand("publish all")
     @CommandDescription("Publishes every data to the whole cluster")
-    public void executeMessage(CommandSender sender) {
+    public void executePublishAll(CommandSender sender) {
 
     }
 
     @SubCommand("publish modules")
     @CommandDescription("Publishes all modules to the whole cluster")
-    public void executePublisModules(CommandSender sender) {
+    public void executePublishModules(CommandSender sender) {
 
     }
 }

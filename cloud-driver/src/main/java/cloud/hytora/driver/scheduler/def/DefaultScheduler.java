@@ -131,7 +131,7 @@ public class DefaultScheduler implements Scheduler {
 				cancel();
 				Thread.interrupted();
 			}
-		}, delay * 50, 1);
+		}, delay, 1);
 
 		return defaultSchedulerFuture;
 	}
@@ -149,7 +149,7 @@ public class DefaultScheduler implements Scheduler {
 						Thread.interrupted();
 					}
 			}
-		}, delay * 50, period * 50);
+		}, delay, period);
 		return defaultSchedulerFuture;
 	}
 
@@ -166,7 +166,7 @@ public class DefaultScheduler implements Scheduler {
 						Thread.interrupted();
 					}
 			}
-		}, delay * 50, period * 50);
+		}, delay, period);
 		return defaultSchedulerFuture;
 	}
 

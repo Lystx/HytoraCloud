@@ -16,7 +16,6 @@ import java.io.IOException;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 public class HandshakePacket extends Packet {
 
     /**
@@ -34,6 +33,17 @@ public class HandshakePacket extends Packet {
      */
     private Document extraData;
 
+    /**
+     * The authentication node
+     */
+    private String nodeName;
+
+    public HandshakePacket(String clientName, ConnectionType type, Document extraData) {
+        this.clientName = clientName;
+        this.type = type;
+        this.extraData = extraData;
+    }
+
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
         switch (state) {
@@ -42,12 +52,14 @@ public class HandshakePacket extends Packet {
                 type = buf.readEnum(ConnectionType.class);
                 clientName = buf.readString();
                 extraData = buf.readDocument();
+                nodeName = buf.readOptionalString();
                 break;
 
             case WRITE:
                 buf.writeEnum(this.type);
                 buf.writeString(this.clientName);
                 buf.writeDocument(extraData);
+                buf.writeOptionalString(nodeName);
                 break;
         }
     }

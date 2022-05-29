@@ -2,8 +2,11 @@ package cloud.hytora.remote.impl;
 
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.cluster.client.ClusterParticipant;
 import cloud.hytora.driver.networking.protocol.wrapped.ChannelWrapper;
+import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.remote.Remote;
 import io.netty.channel.ChannelHandlerContext;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 
@@ -26,6 +29,7 @@ public class RemoteNetworkClient extends ClusterParticipant {
     @Override
     public void onAuthenticationChanged(ChannelWrapper wrapper) {
         CloudDriver.getInstance().getLogger().info("This service was authenticated by the cluster");
+
     }
 
     @Override

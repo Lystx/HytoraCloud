@@ -27,6 +27,10 @@ public interface CloudServer extends Bufferable, SelfCloneable<CloudServer>, Net
 
     boolean isTimedOut();
 
+    boolean isReady();
+
+    void setReady(boolean ready);
+
     /**
      * @return the service id
      */

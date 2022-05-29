@@ -28,6 +28,8 @@ import cloud.hytora.driver.services.utils.ServiceIdentity;
 import cloud.hytora.driver.storage.DriverStorage;
 import cloud.hytora.driver.storage.RemoteDriverStorage;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
+import cloud.hytora.remote.adapter.RemoteAdapter;
+import cloud.hytora.remote.adapter.proxy.RemoteProxyAdapter;
 import cloud.hytora.remote.impl.*;
 import cloud.hytora.remote.impl.handler.RemoteCommandHandler;
 import cloud.hytora.remote.impl.handler.RemoteLoggingHandler;
@@ -94,10 +96,9 @@ public class Remote extends CloudDriver {
 
         this.storage = new RemoteDriverStorage(this.client);
 
-
         this.scheduledExecutor.scheduleAtFixedRate(() -> {
             CloudServer cloudServer = thisService();
-            cloudServer.update();
+            perform(cloudServer != null, cloudServer::update);
         }, 0, SERVER_PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
     }
 
@@ -142,6 +143,10 @@ public class Remote extends CloudDriver {
 
     public static Remote getInstance() {
         return instance;
+    }
+
+    public RemoteProxyAdapter getProxyAdapter() {
+        return perform(adapter instanceof RemoteProxyAdapter, () -> cast(adapter), new IllegalStateException("Not a " + RemoteProxyAdapter.class.getSimpleName()));
     }
 
     public CloudServer thisService() {

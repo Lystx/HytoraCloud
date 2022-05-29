@@ -15,19 +15,28 @@ import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.config.MainConfiguration;
 import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
 import cloud.hytora.node.service.NodeServiceManager;
+import lombok.Getter;
 
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+@Getter
 public class NodeServiceQueue {
 
-    private static final int MAX_BOOTABLE_SERVICES = 2;
+    private static int MAX_BOOTABLE_SERVICES = 2;
 
+    private final Collection<String> pausedGroups;
+
+    public NodeServiceQueue() {
+        MAX_BOOTABLE_SERVICES = NodeDriver.getInstance().getConfig().getMaxBootableServicesAtSameTime();
+        this.pausedGroups = new ArrayList<>();
+    }
 
     public void dequeue() {
         if (!NodeDriver.getInstance().isRunning()) {
@@ -55,28 +64,29 @@ public class NodeServiceQueue {
 
     }
 
-    public void queue() {
+    private void queue() {
         CloudDriver.getInstance().getConfigurationManager().getAllCachedConfigurations().stream()
-                .filter(serviceGroup -> this.getAmountOfGroupServices(serviceGroup) < serviceGroup.getMinOnlineService())
+                .filter(con -> this.getAmountOfGroupServices(con) < con.getMinOnlineService())
+                .filter(con -> !pausedGroups.contains(con.getName()))
                 .sorted(Comparator.comparingInt(ServerConfiguration::getStartOrder))
-                .forEach(serviceGroup -> {
+                .forEach(con -> {
 
-                    ClusterClientExecutor nodeClient = NodeDriver.getInstance().getExecutor().getClient(serviceGroup.getNode()).orElse(null);
-                    boolean thisSidesNode = serviceGroup.getNode().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName());
+                    ClusterClientExecutor nodeClient = NodeDriver.getInstance().getExecutor().getClient(con.getNode()).orElse(null);
+                    boolean thisSidesNode = con.getNode().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName());
 
                     if (nodeClient == null && !thisSidesNode) {
-                        CloudDriver.getInstance().getLogger().info("Tried to start a Service of Group '" + serviceGroup.getName() + "' but no Node with name '" + serviceGroup.getNode() + "' is connected!");
+                        CloudDriver.getInstance().getLogger().info("Tried to start a Service of Group '" + con.getName() + "' but no Node with name '" + con.getNode() + "' is connected!");
                         return;
                    }
 
                     String address = thisSidesNode ? "127.0.0.1" : ((InetSocketAddress)nodeClient.getChannel().remoteAddress()).getAddress().getHostAddress();
 
-                    int port = serviceGroup.getVersion().isProxy() ? MainConfiguration.getInstance().getProxyStartPort() : MainConfiguration.getInstance().getSpigotStartPort();
+                    int port = con.getVersion().isProxy() ? MainConfiguration.getInstance().getProxyStartPort() : MainConfiguration.getInstance().getSpigotStartPort();
                     while (isPortUsed(port)) {
                         port++;
                     }
 
-                    CloudServer service = new SimpleCloudServer(serviceGroup.getName(), this.getPossibleServiceIDByGroup(serviceGroup), port, address);
+                    CloudServer service = new SimpleCloudServer(con.getName(), this.getPossibleServiceIDByGroup(con), port, address);
                     CloudDriver.getInstance().getServiceManager().registerService(service);
 
                     if (thisSidesNode) {

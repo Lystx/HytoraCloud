@@ -26,6 +26,10 @@ public class DefaultNodeConfig implements INodeConfig {
     private int bindPort;
     private boolean remote;
 
+    private int maxBootableServicesAtSameTime;
+
+    private ServiceCrashPrevention serviceCrashPrevention;
+
     private Collection<SimpleJavaVersion> javaVersions;
     private ProtocolAddress[] clusterAddresses;
     private ProtocolAddress[] httpListeners;
@@ -49,9 +53,11 @@ public class DefaultNodeConfig implements INodeConfig {
                 nodeName = buf.readString();
                 authKey = buf.readString();
                 bindAddress = buf.readString();
+                maxBootableServicesAtSameTime = buf.readInt();
                 clusterAddresses = buf.readObjectArray(ProtocolAddress.class);
                 bindPort = buf.readInt();
                 remote = buf.readBoolean();
+                serviceCrashPrevention = buf.readObject(ServiceCrashPrevention.class);
                 javaVersions = buf.readObjectCollection(SimpleJavaVersion.class);
                 break;
 
@@ -59,9 +65,11 @@ public class DefaultNodeConfig implements INodeConfig {
                 buf.writeString(nodeName);
                 buf.writeString(authKey);
                 buf.writeString(bindAddress);
+                buf.writeInt(maxBootableServicesAtSameTime);
                 buf.writeObjectArray(clusterAddresses);
                 buf.writeInt(bindPort);
                 buf.writeBoolean(remote);
+                buf.writeObject(serviceCrashPrevention);
                 buf.writeObjectCollection(javaVersions);
                 break;
         }

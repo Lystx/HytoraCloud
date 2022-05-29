@@ -366,12 +366,20 @@ public final class FileUtils {
 
 
 	public static void writeToFile(File file, String content) throws IOException {
+		writeToFile(file, Collections.singletonList(content));
+	}
+
+	public static void writeToFile(File file, Collection<String> content) throws IOException {
 		FileWriter writer = new FileWriter(file);
-		writer.write(content);
+		for (String s : content) {
+			writer.write(s);
+			writer.write("\n");
+		}
 
 		writer.flush();
 		writer.close();
 	}
+
 
 	@Nonnull
 	public static Path createTempFile() {
