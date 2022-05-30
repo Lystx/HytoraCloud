@@ -4,16 +4,19 @@ import cloud.hytora.bridge.proxy.bungee.adapter.BungeeLocalProxyPlayer;
 import cloud.hytora.bridge.proxy.bungee.events.cloud.ProxyRemoteHandler;
 import cloud.hytora.bridge.proxy.bungee.utils.CloudReconnectHandler;
 
+import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
 import cloud.hytora.bridge.PluginBridge;
 import cloud.hytora.bridge.proxy.bungee.events.server.ProxyEvents;
+import cloud.hytora.driver.services.utils.WrapperEnvironment;
 import cloud.hytora.remote.Remote;
 import cloud.hytora.remote.adapter.proxy.RemoteProxyAdapter;
 import cloud.hytora.remote.adapter.proxy.LocalProxyPlayer;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
 
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -61,6 +64,27 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
 
     @Override
     public Collection<LocalProxyPlayer> getPlayers() {
-        return this.getProxy().getPlayers().stream().map(BungeeLocalProxyPlayer::new).collect(Collectors.toList());
+        return ProxyServer.getInstance().getPlayers().stream().map(BungeeLocalProxyPlayer::new).collect(Collectors.toList());
+    }
+
+    @Override
+    public void registerService(CloudServer server) {
+        if (server.getConfiguration().getParent().getEnvironment() == WrapperEnvironment.PROXY_SERVER) {
+            return;
+        }
+        ProxyServer.getInstance().getServers().put(server.getName(), ProxyServer.getInstance().constructServerInfo(server.getName(), new InetSocketAddress(server.getHostName(), server.getPort()), server.getMotd(), false));
+    }
+
+    @Override
+    public void unregisterService(CloudServer server) {
+        if (server.getConfiguration().getParent().getEnvironment() == WrapperEnvironment.PROXY_SERVER) {
+            return;
+        }
+        ProxyServer.getInstance().getServers().remove(server.getName());
+    }
+
+    @Override
+    public void clearServices() {
+        ProxyServer.getInstance().getServers().clear();
     }
 }

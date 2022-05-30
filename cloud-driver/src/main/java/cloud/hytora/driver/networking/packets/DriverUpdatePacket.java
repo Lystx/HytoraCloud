@@ -10,6 +10,8 @@ import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.configuration.DefaultServerConfiguration;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.configuration.bundle.ConfigurationParent;
+import cloud.hytora.driver.services.configuration.bundle.DefaultConfigurationParent;
 import cloud.hytora.driver.services.impl.SimpleCloudServer;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,6 +28,7 @@ import java.util.List;
 public class DriverUpdatePacket extends Packet {
 
     private Collection<ServerConfiguration> groups;
+    private Collection<ConfigurationParent> parentGroups;
     private Collection<CloudServer> allCachedServices;
     private Collection<CloudPlayer> cloudPlayers;
 
@@ -37,8 +40,12 @@ public class DriverUpdatePacket extends Packet {
         switch (state) {
 
             case READ:
+
+                parentGroups = buf.readWrapperObjectCollection(DefaultConfigurationParent.class);
+                CloudDriver.getInstance().getConfigurationManager().setAllParentConfigurations(parentGroups);
+
                 groups = buf.readWrapperObjectCollection(DefaultServerConfiguration.class);
-                CloudDriver.getInstance().getConfigurationManager().setAllCachedConfigurations((List<ServerConfiguration>) groups);
+                CloudDriver.getInstance().getConfigurationManager().setAllCachedConfigurations(groups);
 
                 allCachedServices = buf.readWrapperObjectCollection(SimpleCloudServer.class);
                 CloudDriver.getInstance().getServiceManager().setAllCachedServices((List<CloudServer>) allCachedServices);
@@ -48,6 +55,7 @@ public class DriverUpdatePacket extends Packet {
                 break;
 
             case WRITE:
+                buf.writeObjectCollection(parentGroups);
                 buf.writeObjectCollection(groups);
                 buf.writeObjectCollection(allCachedServices);
                 buf.writeObjectCollection(cloudPlayers);

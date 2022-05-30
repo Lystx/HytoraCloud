@@ -43,7 +43,7 @@ public class ConfigurationFileEditor {
                 .forEach(it -> this.keyToValues.put(it[0], it.length == 1 ? "" : it[1]));
     }
 
-    public String getValue(final String key) {
+    public String getValue(String key) {
         return this.keyToValues.get(key);
     }
 
@@ -63,7 +63,7 @@ public class ConfigurationFileEditor {
         this.file.delete();
         try {
             if (!this.file.exists()) file.createNewFile();
-            final FileWriter fileWriter = new FileWriter(this.file);
+            FileWriter fileWriter = new FileWriter(this.file);
             for (final String line : property) {
                 int index = this.getIndexFromLine(line);
                 fileWriter.write(this.getStringWithSpaces(getAmountOfStartSpacesInLine(this.listWithSpaces.get(index))) + line + "\n");

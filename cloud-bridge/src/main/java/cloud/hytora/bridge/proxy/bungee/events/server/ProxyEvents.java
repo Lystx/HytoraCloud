@@ -2,6 +2,7 @@ package cloud.hytora.bridge.proxy.bungee.events.server;
 
 import cloud.hytora.common.wrapper.Wrapper;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.driver.services.CloudServer;
@@ -13,7 +14,9 @@ import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ServerInfo;
+import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.api.connection.Server;
 import net.md_5.bungee.api.event.*;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
@@ -30,7 +33,6 @@ public class ProxyEvents implements Listener {
 
     @EventHandler
     public void handle(PreLoginEvent event) {
-        System.out.println(CloudDriver.getInstance().getStorage().getRawData());
         /*
 
         List<String> whitelistedPlayers = CloudDriver.getInstance().getStorage().get("cloud::whitelist", List.class);
@@ -48,53 +50,72 @@ public class ProxyEvents implements Listener {
         }*/
         // TODO: 29.05.2022 whitelist
 
+        Wrapper<CloudServer> fallback = CloudDriver.getInstance().getServiceManager().getFallbackOrNullAsService();
 
-        if (!CloudDriver.getInstance().getServiceManager().getFallbackOrNullAsService().isPresent()) {
-            event.setCancelReason(new TextComponent("§cEs konnte kein passender Fallback gefunden werden."));
+        if (fallback.isNull()) {
+            event.setCancelReason(new TextComponent("§cCould not find any fallback to connect you to..."));
             event.setCancelled(true);
         }
+
     }
 
     @EventHandler
     public void handle(LoginEvent event) {
-        playerManager.registerCloudPlayer(event.getConnection().getUniqueId(), event.getConnection().getName());
+        PendingConnection c = event.getConnection();
+        CloudDriver.getInstance().getLogger().info("Logging in Player[uuid={}, name={}]", c.getUniqueId(), c.getName());
+
+        playerManager.registerCloudPlayer(c.getUniqueId(), c.getName());
     }
     
-    
+
+
     @EventHandler
     public void handle(ServerConnectEvent event) {
         ServerInfo target = event.getTarget();
         ProxiedPlayer player = event.getPlayer();
-        
+
         ServiceManager serviceManager = CloudDriver.getInstance().getServiceManager();
         CloudServer server = serviceManager.getServiceByNameOrNull(target.getName());
-        
+
         if (server != null && !(server.getConfiguration().getPermission() == null || player.hasPermission(server.getConfiguration().getPermission()))) {
             //kick player
             event.setCancelled(true);
             player.sendMessage("§cThis server has a specific permission to join it"); // TODO: 15.05.2022 customizable 
         }
 
-        this.playerManager.getCloudPlayer(event.getPlayer().getUniqueId()).ifPresent(cloudPlayer -> {
-            if (event.getTarget().getName().equalsIgnoreCase("fallback")) {
-                Wrapper<CloudServer> optional = serviceManager.getFallbackOrNullAsService();
+        if (event.getTarget().getName().equalsIgnoreCase("fallback")) {
+            Wrapper<CloudServer> fallback = serviceManager.getFallbackOrNullAsService();
 
-                if (optional.isPresent()) {
-                    event.setTarget(ProxyServer.getInstance().getServerInfo(optional.get().getName()));
-                    cloudPlayer.setServer(optional.get());
-                    cloudPlayer.setProxyServer(Remote.getInstance().thisService());
-                    cloudPlayer.update();
-                } else {
-                    event.getPlayer().disconnect(new TextComponent("§cEs konnte kein passender Fallback gefunden werden."));
-                }
-
+            if (fallback.isPresent()) {
+                event.setTarget(ProxyServer.getInstance().getServerInfo(fallback.get().getName()));
+                System.out.println("Changed fallback to => " + fallback.get().getName());
             } else {
-                cloudPlayer.setServer(Objects.requireNonNull(CloudDriver.getInstance().getServiceManager()
-                        .getServiceByNameOrNull(event.getTarget().getName())));
-                cloudPlayer.setProxyServer(Remote.getInstance().thisService());
-                cloudPlayer.update();
+                System.out.println("Couldn't find any fallback");
+                event.getPlayer().disconnect(new TextComponent("§cCould not find any available fallback..."));
             }
-        });
+        } else {
+            System.out.println("Connecting " + player.getName() + " to => " + target.getName() + " [" + target.getAddress() + "]");
+
+        }
+    }
+
+    @EventHandler
+    public void handle(ServerConnectedEvent event) {
+        Server server = event.getServer();
+        ProxiedPlayer player = event.getPlayer();
+
+        CloudPlayer cloudPlayer = this.playerManager.getCloudPlayerByUniqueIdOrNull(player.getUniqueId());
+        if (cloudPlayer == null) {
+            return;
+        }
+
+        //setting new service
+        CloudServer service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(server.getInfo().getName());
+        if (service != null) {
+            cloudPlayer.setServer(service);
+            cloudPlayer.setProxyServer(Remote.getInstance().thisService());
+            cloudPlayer.update();
+        }
     }
 
     @EventHandler
@@ -113,20 +134,10 @@ public class ProxyEvents implements Listener {
 
     @EventHandler
     public void handle(ServerKickEvent event) {
-        this.getFallback(event.getPlayer()).ifPresent(serverInfo -> {
+        CloudDriver.getInstance().getServiceManager().getFallbackOrNullAsService().ifPresent(serverInfo -> {
             event.setCancelled(true);
-            event.setCancelServer(serverInfo);
+            event.setCancelServer(ProxyServer.getInstance().getServerInfo(serverInfo.getName()));
         });
     }
 
-    private Optional<ServerInfo> getFallback(final ProxiedPlayer player) {
-        return CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream()
-                .filter(service -> service.getServiceState() == ServiceState.ONLINE)
-                .filter(service -> service.getServiceVisibility() == ServiceVisibility.VISIBLE)
-                .filter(service -> !service.getConfiguration().getVersion().isProxy())
-                .filter(service -> service.getConfiguration().getFallback().isEnabled())
-                .filter(service -> (player.getServer() == null || !player.getServer().getInfo().getName().equals(service.getName())))
-                .min(Comparator.comparing(CloudServer::getOnlinePlayers))
-                .map(service -> ProxyServer.getInstance().getServerInfo(service.getName()));
-    }
 }

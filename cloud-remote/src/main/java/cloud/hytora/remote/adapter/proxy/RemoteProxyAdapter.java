@@ -1,6 +1,7 @@
 package cloud.hytora.remote.adapter.proxy;
 
 import cloud.hytora.common.DriverUtility;
+import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.remote.adapter.RemoteAdapter;
 
 import java.util.Collection;
@@ -18,5 +19,10 @@ public interface RemoteProxyAdapter extends RemoteAdapter {
         return DriverUtility.findOrNull(getPlayers(), p -> p.getUniqueId().equals(uniqueId));
     }
 
+    void registerService(CloudServer server);
+
+    void unregisterService(CloudServer server);
+
+    void clearServices();
 
 }

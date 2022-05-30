@@ -122,6 +122,7 @@ public class HytoraNode extends ClusterExecutor {
                 // update cache
                 service.sendPacket(new DriverUpdatePacket(
                         NodeDriver.getInstance().getConfigurationManager().getAllCachedConfigurations(),
+                        NodeDriver.getInstance().getConfigurationManager().getAllParentConfigurations(),
                         NodeDriver.getInstance().getServiceManager().getAllCachedServices(),
                         NodeDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()
                 ));

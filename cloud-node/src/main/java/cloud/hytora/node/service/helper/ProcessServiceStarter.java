@@ -104,7 +104,7 @@ public class ProcessServiceStarter {
                 ConfigurationFileEditor editor = new ConfigurationFileEditor(file, ConfigSplitSpacer.YAML);
                 editor.setValue("host", "0.0.0.0:" + service.getPort());
                 editor.saveFile();
-            } else new BungeeProperties(serverDir, service.getPort(), service.getMaxPlayers());
+            } else new BungeeProperties(serverDir, service.getPort(), service.getMaxPlayers(), Objects.requireNonNull(CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream().filter(s -> s.getConfiguration().getParent().getEnvironment() == WrapperEnvironment.MINECRAFT_SERVER).findFirst().orElse(null)));
         } else {
             File file = new File(serverDir, "server.properties");
             if (file.exists()) {
@@ -131,6 +131,9 @@ public class ProcessServiceStarter {
 
                         DestructiveListener listener = CloudDriver.getInstance().getEventManager().registerSelfDestructiveHandler(ServiceOutputLineAddEvent.class, event -> {
                             String line1 = event.getLine();
+                            if (serviceManager.getCachedServiceOutputs().get(service.getName()) == null) {
+                                return;
+                            }
                             serviceManager.getCachedServiceOutputs().get(service.getName()).add(line1);
                             if (service.asCloudServer().isScreenServer()) {
                                 CloudDriver.getInstance().getCommandSender().sendMessage(line1);

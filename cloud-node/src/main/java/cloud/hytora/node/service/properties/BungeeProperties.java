@@ -1,10 +1,12 @@
 package cloud.hytora.node.service.properties;
 
+import cloud.hytora.driver.services.CloudServer;
+
 import java.io.File;
 
 public class BungeeProperties extends ServiceProperties {
 
-    public BungeeProperties(File directory, int port, int maxPlayers) {
+    public BungeeProperties(File directory, int port, int maxPlayers, CloudServer firstServer) {
         super(directory, "config.yml", port);
 
         this.setProperties(new String[]{
@@ -26,9 +28,9 @@ public class BungeeProperties extends ServiceProperties {
                         "  - disabledcommandhere\n" +
                         "log_pings: false\n" +
                         "servers:\n" +
-                        "  Lobby-1:\n" +
+                        "  " + (firstServer == null ? "Lobby-1" : firstServer.getName()) + ":\n" +
                         "    motd: '" + "MOTD" + "'\n" +
-                        "    address: '127.0.0.1:" + 3000 + "'\n" +
+                        "    address: '127.0.0.1:" + (firstServer == null ? 40000 : firstServer.getPort()) + "'\n" +
                         "    restricted: false\n" +
                         "listeners:\n" +
                         "  - query_port: 25577\n" +

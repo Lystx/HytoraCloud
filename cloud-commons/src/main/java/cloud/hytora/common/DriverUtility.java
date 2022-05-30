@@ -50,6 +50,13 @@ public class DriverUtility {
         }
     }
 
+    public static <R, T extends Throwable> R perform(boolean condition, Supplier<R> ifTrue, Supplier<R> ifFalse) {
+        if (condition) {
+            return ifTrue.get();
+        } else {
+            return ifFalse.get();
+        }
+    }
     public static void perform(boolean condition, Runnable ifTrue, Runnable ifFalse) {
         if (condition) {
             ifTrue.run();

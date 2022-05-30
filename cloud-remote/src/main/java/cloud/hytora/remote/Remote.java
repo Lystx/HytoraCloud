@@ -31,6 +31,7 @@ import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.remote.adapter.RemoteAdapter;
 import cloud.hytora.remote.adapter.proxy.RemoteProxyAdapter;
 import cloud.hytora.remote.impl.*;
+import cloud.hytora.remote.impl.handler.RemoteCacheUpdateHandler;
 import cloud.hytora.remote.impl.handler.RemoteCommandHandler;
 import cloud.hytora.remote.impl.handler.RemoteLoggingHandler;
 import cloud.hytora.remote.impl.log.DefaultLogHandler;
@@ -48,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 @Getter
 public class Remote extends CloudDriver {
@@ -82,6 +84,7 @@ public class Remote extends CloudDriver {
         //registering handlers
         this.client.registerPacketHandler(new RemoteLoggingHandler());
         this.client.registerPacketHandler(new RemoteCommandHandler());
+        this.client.registerPacketHandler(new RemoteCacheUpdateHandler());
 
         //registering event handlers
         new InternalDriverEventAdapter(this.eventManager, client);
@@ -123,6 +126,14 @@ public class Remote extends CloudDriver {
                         CloudDriver.getInstance().getLogger().info("Launching '" + main.getName() + "' ...");
                         try {
                             method.invoke(null, (Object) arguments.toArray(new String[0]));
+                            RemoteProxyAdapter proxy = Remote.getInstance().getProxyAdapterOrNull();
+                            if (proxy != null) {
+                                CloudDriver.getInstance().getLogger().info("Pre registered all services");
+                                proxy.clearServices();
+                                for (CloudServer allCachedService : packet.getAllCachedServices()) {
+                                    proxy.registerService(allCachedService);
+                                }
+                            }
                         } catch (IllegalAccessException | InvocationTargetException e) {
                             e.printStackTrace();
                         }
@@ -147,6 +158,10 @@ public class Remote extends CloudDriver {
 
     public RemoteProxyAdapter getProxyAdapter() {
         return perform(adapter instanceof RemoteProxyAdapter, () -> cast(adapter), new IllegalStateException("Not a " + RemoteProxyAdapter.class.getSimpleName()));
+    }
+
+    public RemoteProxyAdapter getProxyAdapterOrNull() {
+        return perform(adapter instanceof RemoteProxyAdapter, () -> cast(adapter), (Supplier<RemoteProxyAdapter>) () -> null);
     }
 
     public CloudServer thisService() {
