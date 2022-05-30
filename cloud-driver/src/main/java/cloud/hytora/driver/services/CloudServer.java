@@ -46,6 +46,8 @@ public interface CloudServer extends Bufferable, SelfCloneable<CloudServer>, Net
      */
     @NotNull String getHostName();
 
+    String getReadableUptime();
+
     /**
      * @return the group of the service
      */

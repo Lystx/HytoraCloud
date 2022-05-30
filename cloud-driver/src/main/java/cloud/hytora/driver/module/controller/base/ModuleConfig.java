@@ -11,25 +11,27 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.Arrays;
 
 @AllArgsConstructor
 @Getter
 @NoArgsConstructor
 public class ModuleConfig implements Bufferable {
 
-    private String name, author, description, version, mainClass, website;
+    private String name, description, version, mainClass, website;
+    private String[] author;
     private String[] depends;
     private ModuleCopyType copyType;
     private ModuleEnvironment environment;
 
     @Nonnull
     public String getFullName() {
-        return name + " v" + version + " by " + author;
+        return name + " v" + version + " by " + Arrays.toString(author);
     }
 
     @Override
     public String toString() {
-        return "ModuleConfig[" + name + " v" + version + " by " + author + " copy=" + copyType + " environment=" + environment + "]";
+        return "ModuleConfig[" + name + " v" + version + " by " + Arrays.toString(author) + " copy=" + copyType + " environment=" + environment + "]";
     }
 
     @Override
@@ -37,7 +39,7 @@ public class ModuleConfig implements Bufferable {
         switch (state) {
             case READ:
                 name = buffer.readString();
-                author = buffer.readString();
+                author = buffer.readStringArray();
                 description = buffer.readString();
                 version = buffer.readString();
                 mainClass = buffer.readString();
@@ -49,7 +51,7 @@ public class ModuleConfig implements Bufferable {
 
             case WRITE:
                 buffer.writeString(name);
-                buffer.writeString(author);
+                buffer.writeStringArray(author);
                 buffer.writeString(description);
                 buffer.writeString(version);
                 buffer.writeString(mainClass);

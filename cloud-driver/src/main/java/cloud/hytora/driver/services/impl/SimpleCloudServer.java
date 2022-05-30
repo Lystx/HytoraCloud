@@ -1,5 +1,6 @@
 package cloud.hytora.driver.services.impl;
 
+import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
@@ -158,6 +159,11 @@ public class SimpleCloudServer implements NodeCloudServer, Bufferable {
         to.setReady(from.isReady());
         ((SimpleCloudServer)to).setCreationTimeStamp(from.getCreationTimestamp());
         to.setProperties(from.getProperties());
+    }
+
+    @Override
+    public String getReadableUptime() {
+        return StringUtils.getReadableMillisDifference(this.getCreationTimestamp(), System.currentTimeMillis());
     }
 
     @Override

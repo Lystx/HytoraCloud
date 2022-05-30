@@ -8,10 +8,7 @@ import cloud.hytora.driver.module.controller.DriverModule;
 import cloud.hytora.driver.module.controller.ModuleClassLoader;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.ModuleManager;
-import cloud.hytora.driver.module.controller.base.ModuleConfig;
-import cloud.hytora.driver.module.controller.base.ModuleCopyType;
-import cloud.hytora.driver.module.controller.base.ModuleEnvironment;
-import cloud.hytora.driver.module.controller.base.ModuleState;
+import cloud.hytora.driver.module.controller.base.*;
 import cloud.hytora.driver.module.controller.task.ModuleTask;
 import cloud.hytora.driver.module.controller.task.ScheduledModuleTask;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
@@ -33,6 +30,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 
 public class DefaultModuleController implements ModuleController {
@@ -76,39 +75,79 @@ public class DefaultModuleController implements ModuleController {
         URL url = jarFile.toUri().toURL();
         URL selfUrl = selfJar.toUri().toURL();
 
-        classLoader = new ModuleClassLoader(Arrays.asList(url, selfUrl).toArray(new URL[0]), this.mainClassLoader);
+        this.classLoader = new ModuleClassLoader(Arrays.asList(url, selfUrl).toArray(new URL[0]), this.mainClassLoader, jarFile.toFile());
 
-        InputStream input = classLoader.getResourceAsStream(CONFIG_RESOURCE);
-        if (input == null) throw new IllegalArgumentException("No such resource " + CONFIG_RESOURCE);
 
-        InputStreamReader reader = new InputStreamReader(input, StandardCharsets.UTF_8);
-        Document document;
+        Class<?> loadedClass;
+        Document document = classLoader.loadDocument("config.json");
 
-        try {
-            document = DocumentFactory.newJsonDocument(reader);
-        } catch (Exception ex) {
-            throw new IllegalArgumentException("Unable to parse module config", ex);
+        if (document == null || document.isEmpty()) {
+            JarFile jarFile = new JarFile(this.jarFile.toFile());
+            Enumeration<JarEntry> e = jarFile.entries();
+
+            while (e.hasMoreElements()) {
+                JarEntry jarEntry = e.nextElement();
+                if (jarEntry.isDirectory() || !jarEntry.getName().endsWith(".class")) {
+                    continue;
+                }
+                String className = jarEntry.getName().substring(0, jarEntry.getName().length() - 6);
+                className = className.replace('/', '.');
+
+                try {
+                    loadedClass = classLoader.loadClass(className);
+                    if (DriverModule.class.isAssignableFrom(loadedClass)) {
+                        //found main class
+
+                        if (loadedClass.isAnnotationPresent(ModuleConfiguration.class)) {
+                            ModuleConfiguration info = loadedClass.getAnnotation(ModuleConfiguration.class);
+
+                            this.moduleConfig = new ModuleConfig(
+                                    info.name(),
+                                    info.description(),
+                                    info.version(),
+                                    info.main().getName(),
+                                    info.website(),
+                                    info.author(),
+                                    info.depends(),
+                                    info.copyType(),
+                                    info.environment()
+                            );
+
+                        } else {
+                            CloudDriver.getInstance().getLogger().error( "§cThe provided main-class §e" + loadedClass.getName() + " §cof the Module §e" + this.jarFile.toFile().getName() + " §cdoesn't have a §e@" + ModuleConfiguration.class.getSimpleName() + "-Annotation!");
+                        }
+                        break;
+                    }
+                } catch (ClassNotFoundException ex) {
+                    //Ignoring
+                }
+            }
+
+        } else {
+            if (!document.contains("name")) throw new IllegalArgumentException("Missing property 'name'");
+            if (!document.contains("version")) throw new IllegalArgumentException("Missing property 'version'");
+            if (!document.contains("author")) throw new IllegalArgumentException("Missing property 'author'");
+            if (!document.contains("main")) throw new IllegalArgumentException("Missing property 'main'");
+
+            this.moduleConfig = new ModuleConfig(
+                    document.getString("name"),
+                    document.getString("description", ""),
+                    document.getString("version"),
+                    document.getString("main"),
+                    document.getString("website", ""),
+                    document.getStrings("author").toArray(new String[0]),
+                    document.getStrings("depends").toArray(new String[0]),
+                    document.getEnum("copy", ModuleCopyType.NONE),
+                    document.getEnum("environment", ModuleEnvironment.ALL)
+            );
+
         }
-
-        if (!document.contains("name")) throw new IllegalArgumentException("Missing property 'name'");
-        if (!document.contains("version")) throw new IllegalArgumentException("Missing property 'version'");
-        if (!document.contains("author")) throw new IllegalArgumentException("Missing property 'author'");
-        if (!document.contains("main")) throw new IllegalArgumentException("Missing property 'main'");
-
-        moduleConfig = new ModuleConfig(
-                document.getString("name"),
-                document.getString("author"),
-                document.getString("description", ""),
-                document.getString("version"),
-                document.getString("main"),
-                document.getString("website", ""),
-                document.getStrings("depends").toArray(new String[0]),
-                document.getEnum("copy", ModuleCopyType.NONE),
-                document.getEnum("environment", ModuleEnvironment.ALL)
-        );
 
         dataFolder = manager.getModulesDirectory().resolve(moduleConfig.getName());
         dataFolder.toFile().mkdirs();
+
+        Document config = DocumentFactory.newJsonDocument();
+        config.saveToFile(dataFolder.resolve("config.json"));
     }
 
     public void registerModuleTasks(Object objectClass) {

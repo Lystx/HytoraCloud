@@ -135,6 +135,9 @@ public class NodeModuleManager implements ModuleManager {
         // check if the depends are existing
         for (DefaultModuleController module : modules) {
             for (String depend : module.getModuleConfig().getDepends()) {
+                if (depend.trim().isEmpty()) {
+                    continue;
+                }
                 if (hasModule(modules, depend)) continue;
 
                 modules.remove(module);

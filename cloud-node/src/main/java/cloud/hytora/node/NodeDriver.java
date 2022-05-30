@@ -89,6 +89,8 @@ import cloud.hytora.node.service.helper.NodeServiceQueue;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.spi.LoggingEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -172,6 +174,22 @@ public class NodeDriver extends CloudDriver implements Node {
             this.startSetup();
             return;
         }
+
+        //avoid log4j errors
+        org.apache.log4j.BasicConfigurator.configure(new AppenderSkeleton() {
+            @Override
+            protected void append(LoggingEvent loggingEvent) {
+            }
+
+            @Override
+            public void close() {
+            }
+
+            @Override
+            public boolean requiresLayout() {
+                return false;
+            }
+        });
 
         DriverStatus status = status();
         this.logger.info("§8==================================================");

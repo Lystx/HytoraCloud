@@ -74,7 +74,7 @@ public class NodeServiceManager extends DefaultServiceManager {
         File parent = (con.getParent().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
         File folder = new File(parent, service.getName() + "/");
 
-        if (!service.isReady()) {
+        if (!service.isReady() && CloudDriver.getInstance().isRunning()) {
             NodeDriver.getInstance().getLogger().warn("Service {} probably crashed during startup because it was not authenticated when it stopped", service.getName());
 
             File crashFolder = new File(NodeDriver.LOG_FOLDER, "crashes/");
@@ -137,8 +137,7 @@ public class NodeServiceManager extends DefaultServiceManager {
         CloudDriver.getInstance().getEventManager().callEvent(new CloudServerCacheUnregisterEvent(service.getName()));
         NodeDriver.getInstance().getExecutor().sendPacketToAll(new CloudServerCacheUnregisterPacket(service.getName()));
 
-        String uptime = StringUtils.getReadableMillisDifference(service.getCreationTimestamp(), System.currentTimeMillis());
-        NodeDriver.getInstance().getLogger().info("§c==> §7Channel §8[§b" + service.getName() + "@" + service.getHostName() + ":" + service.getPort() + "§8] §7disconnected §8[§eUptime: " + uptime+ "§8]");
+        NodeDriver.getInstance().getLogger().info("§c==> §7Channel §8[§b" + service.getName() + "@" + service.getHostName() + ":" + service.getPort() + "§8] §7disconnected §8[§eUptime: " +  service.getReadableUptime() + "§8]");
     }
 
     public Wrapper<CloudServer> startService(@NotNull CloudServer service) {
@@ -151,11 +150,7 @@ public class NodeServiceManager extends DefaultServiceManager {
 
     @Override
     public void shutdownService(CloudServer service) {
-        if (service.getConfiguration().getNode().equals(NodeDriver.getInstance().getExecutor().getNodeName())) {
-            this.sendPacketToService(service, new ServiceShutdownPacket(service.getName()));
-        } else {
-            //TODO
-        }
+        this.sendPacketToService(service, new ServiceShutdownPacket(service.getName()));
     }
 
 
