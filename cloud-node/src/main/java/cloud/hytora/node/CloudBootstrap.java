@@ -4,10 +4,15 @@ import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.common.logging.handler.HandledLogger;
+import cloud.hytora.common.logging.handler.LogEntry;
+import cloud.hytora.common.logging.handler.LogHandler;
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.Console;
+import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
 import cloud.hytora.node.console.handler.ConsoleLogHandler;
 import cloud.hytora.node.console.handler.FileLogHandler;
 import cloud.hytora.node.console.jline3.JLine3Console;
+import org.jetbrains.annotations.NotNull;
 
 public class CloudBootstrap {
 
@@ -22,7 +27,14 @@ public class CloudBootstrap {
             System.setOut(logger.asPrintStream(LogLevel.INFO));
             System.setErr(logger.asPrintStream(LogLevel.ERROR));
 
-            new NodeDriver(logger, console);
+            CloudDriver driver = new NodeDriver(logger, console);
+
+            logger.addHandler(new LogHandler() {
+                @Override
+                public void handle(@NotNull LogEntry entry) throws Exception {
+                    driver.getEventManager().callEvent(new DriverLogEvent(entry));
+                }
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }

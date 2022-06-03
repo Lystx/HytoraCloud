@@ -13,6 +13,7 @@ import cloud.hytora.driver.command.DefaultCommandSender;
 import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.command.Console;
 import cloud.hytora.driver.InternalDriverEventAdapter;
+import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
 import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.message.ChannelMessenger;
 import cloud.hytora.driver.module.ModuleManager;
@@ -24,7 +25,7 @@ import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.configuration.ConfigurationManager;
-import cloud.hytora.driver.services.utils.ServiceIdentity;
+import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.driver.storage.DriverStorage;
 import cloud.hytora.driver.storage.RemoteDriverStorage;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
@@ -69,17 +70,17 @@ public class Remote extends CloudDriver {
     private RemoteAdapter adapter;
 
     private final RemoteNetworkClient client;
-    private final ServiceIdentity property;
+    private final RemoteIdentity property;
 
-    public Remote(Logger logger) {
+    public Remote(RemoteIdentity identity, Logger logger) {
         super(logger, DriverEnvironment.SERVICE);
 
         instance = this;
 
         this.commandSender = new DefaultCommandSender("Wrapper", this.getConsole()).function(System.out::println);
-        this.property = new ServiceIdentity().read(new File("property.json"));
+        this.property = identity;
 
-        this.client = new RemoteNetworkClient(property.getService(), property.getHostname(), property.getPort(), DocumentFactory.emptyDocument());
+        this.client = new RemoteNetworkClient(property.getName(), property.getHostname(), property.getPort(), DocumentFactory.emptyDocument());
 
         //registering handlers
         this.client.registerPacketHandler(new RemoteLoggingHandler());
@@ -105,15 +106,24 @@ public class Remote extends CloudDriver {
         }, 0, SERVER_PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
     }
 
+    private static Logger init() {
+        HandledLogger logger = new HandledAsyncLogger(LogLevel.TRACE);
+        logger.addHandler(new DefaultLogHandler());
+        logger.addHandler(entry -> CloudDriver.getInstance().getEventManager().callEvent(new DriverLogEvent(entry)));
+        Logger.setFactory(logger);
+
+        return logger;
+    }
+
+    public static Remote initFromOtherInstance(RemoteIdentity identity) {
+        return new Remote(identity, init());
+    }
+
     public static void main(String[] args) {
         try {
 
-            HandledLogger logger = new HandledAsyncLogger(LogLevel.TRACE);
-            logger.addHandler(new DefaultLogHandler());
-            Logger.setFactory(logger);
+            Remote remote = initFromOtherInstance(new RemoteIdentity().read(new File("property.json")));
 
-            Remote remote = new Remote(logger);
-            
             List<String> arguments = new ArrayList<>(Arrays.asList(args));
             Class<?> main = Class.forName(arguments.remove(0));
             Method method = main.getMethod("main", String[].class);
@@ -165,12 +175,12 @@ public class Remote extends CloudDriver {
     }
 
     public CloudServer thisService() {
-        return this.serviceManager.getAllCachedServices().stream().filter(it -> it.getName().equalsIgnoreCase(this.property.getService())).findAny().orElse(null);
+        return this.serviceManager.getAllCachedServices().stream().filter(it -> it.getName().equalsIgnoreCase(this.property.getName())).findAny().orElse(null);
     }
 
     @Override
     public void shutdown() {
-        // TODO: 11.04.2022  
+        // TODO: 11.04.2022
     }
 
     @Override

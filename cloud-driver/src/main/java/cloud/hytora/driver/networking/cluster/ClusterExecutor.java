@@ -3,6 +3,8 @@ package cloud.hytora.driver.networking.cluster;
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.wrapper.Wrapper;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.event.defaults.driver.DriverConnectEvent;
+import cloud.hytora.driver.event.defaults.driver.DriverDisconnectEvent;
 import cloud.hytora.driver.networking.EndpointNetworkExecutor;
 import cloud.hytora.driver.networking.cluster.client.SimpleClusterClientExecutor;
 import cloud.hytora.driver.networking.protocol.codec.NetworkBossHandler;
@@ -169,6 +171,7 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
                 .bind(hostname, port).addListener(future -> {
                     this.wrapper.setEverConnected(true);
                     this.wrapper.setState(ConnectionState.CONNECTED);
+                    CloudDriver.getInstance().getEventManager().callEvent(new DriverConnectEvent());
                     if (future.isSuccess()) {
                         connectPromise.setResult(this);
                     } else {
@@ -184,6 +187,7 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
         Wrapper<Boolean> shutdownWorkerPromise = Wrapper.empty();
         Wrapper<Boolean> executePromise = Wrapper.empty();
 
+        CloudDriver.getInstance().getEventManager().callEvent(new DriverDisconnectEvent());
         Wrapper<Boolean> promise = Wrapper.multiTasking(shutdownBossPromise, shutdownBossPromise, executePromise);
 
         this.bossGroup.shutdownGracefully(0, 1, TimeUnit.MINUTES).addListener(it -> shutdownBossPromise.setResult(true));

@@ -12,7 +12,7 @@ import java.io.IOException;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class ServiceIdentity {
+public class RemoteIdentity {
 
     /**
      * The name of the node this service runs on
@@ -27,7 +27,7 @@ public class ServiceIdentity {
     /**
      * The name of this service to identify itself
      */
-    private String service;
+    private String name;
 
     /**
      * The port this service runs on
@@ -43,17 +43,17 @@ public class ServiceIdentity {
         }
     }
 
-    public ServiceIdentity read(File file) {
+    public RemoteIdentity read(File file) {
         try {
             Document document = DocumentFactory.newJsonDocument(file);
-            ServiceIdentity identity = document.toInstance(ServiceIdentity.class);
+            RemoteIdentity identity = document.toInstance(RemoteIdentity.class);
 
             this.node = identity.getNode();
             this.hostname = identity.getHostname();
-            this.service = identity.getService();
+            this.name = identity.getName();
             this.port = identity.getPort();
         } catch (IOException e) {
-            e.printStackTrace();
+            return this;
         }
         return this;
     }

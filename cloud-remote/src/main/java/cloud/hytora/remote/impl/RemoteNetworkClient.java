@@ -15,15 +15,6 @@ public class RemoteNetworkClient extends ClusterParticipant {
     public RemoteNetworkClient(String clientName, String hostname, int port, Document customData) {
         super(clientName, ConnectionType.SERVICE, customData);
 
-        this.bootAsync().handlePacketsAsync().openConnection(hostname, port)
-                .addUpdateListener(wrapper -> {
-                    if (wrapper.isSuccess()) {
-                        CloudDriver.getInstance().getLogger().info("The service start successfully network service.");
-                    } else {
-                        CloudDriver.getInstance().getLogger().info("The wrapper couldn't connect to the Node!");
-                        wrapper.error().printStackTrace();
-                    }
-                });
     }
 
     @Override

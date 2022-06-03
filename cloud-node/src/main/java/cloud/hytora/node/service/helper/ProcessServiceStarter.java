@@ -16,7 +16,7 @@ import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.driver.services.utils.WrapperEnvironment;
 import cloud.hytora.driver.services.CloudServer;
-import cloud.hytora.driver.services.utils.ServiceIdentity;
+import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVersion;
 import cloud.hytora.node.impl.event.ServiceOutputLineAddEvent;
@@ -85,7 +85,7 @@ public class ProcessServiceStarter {
         FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "plugin.jar"), new File(serverDir, "plugins/plugin.jar"));
 
         // TODO: 11.04.2022 change address if other node
-        ServiceIdentity identity = new ServiceIdentity(service.getConfiguration().getNode(), NodeDriver.getInstance().getExecutor().getHostName(), service.getName(), NodeDriver.getInstance().getExecutor().getPort());
+        RemoteIdentity identity = new RemoteIdentity(service.getConfiguration().getNode(), NodeDriver.getInstance().getExecutor().getHostName(), service.getName(), NodeDriver.getInstance().getExecutor().getPort());
 
         // write property for identify service
         identity.save(new File(serverDir, "property.json"));

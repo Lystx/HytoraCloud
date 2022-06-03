@@ -37,6 +37,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 @Getter
 @DriverStatus(version = "SNAPSHOT-0.1", experimental = true, developers = {"Lystx"})
@@ -110,6 +112,8 @@ public abstract class CloudDriver extends DriverUtility {
             this.logger.error("Couldn't override Netty Logger to prevent slf4j-spam!");
         }
 
+
+
         // check if the leak detection level is set before overriding it
         // may be useful for debugging of the network
         if (System.getProperty("io.netty.leakDetection.level") == null) {
@@ -127,6 +131,30 @@ public abstract class CloudDriver extends DriverUtility {
     public void logToExecutorAndSelf(NetworkComponent component, String message, Object... args) {
         this.logToExecutor(component, message, args);
         this.logger.info(message, args);
+    }
+
+
+    public void executeIf(Runnable runnable, Supplier<Boolean> request, long timeOut) {
+        this.scheduledExecutor.execute(() -> {
+            long deadline = System.currentTimeMillis() + timeOut;
+            boolean done;
+
+            do {
+                done = request.get();
+                if (!done) {
+                    long msRemaining = deadline - System.currentTimeMillis();
+                    if (msRemaining < 0) {
+                        done = true;
+                    }
+                } else {
+                    runnable.run();
+                }
+            } while (!done);
+        });
+    }
+
+    public void executeIf(Runnable runnable, Supplier<Boolean> request) {
+        this.executeIf(runnable, request, TimeUnit.DAYS.toMillis(1));
     }
 
     @Nullable
@@ -164,7 +192,6 @@ public abstract class CloudDriver extends DriverUtility {
     @Nonnull
     public abstract ConfigurationManager getConfigurationManager();
 
-    @Nonnull
     public abstract AdvancedNetworkExecutor getExecutor();
 
     @Nonnull

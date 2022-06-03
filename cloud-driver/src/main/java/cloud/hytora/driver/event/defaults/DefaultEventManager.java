@@ -6,6 +6,7 @@ import cloud.hytora.common.wrapper.Wrapper;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.CloudEventHandler;
 import cloud.hytora.driver.event.*;
+import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -124,7 +125,9 @@ public class DefaultEventManager implements EventManager {
 	@Nonnull
 	@Override
 	public <E extends CloudEvent> E callEvent(@Nonnull E event) {
-		CloudDriver.getInstance().getLogger().trace("Calling event {} | {}", event.getClass().getSimpleName(), event);
+		if (!(event instanceof DriverLogEvent)) {
+			CloudDriver.getInstance().getLogger().trace("Calling event {} | {}", event.getClass().getSimpleName(), event);
+		}
 
 		for (Class<?> clazz : ClassWalker.walk(event.getClass())) {
 			List<RegisteredListener> listeners = this.listeners.get(clazz);

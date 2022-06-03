@@ -3,6 +3,8 @@ package cloud.hytora.driver.networking.cluster.client;
 import cloud.hytora.common.collection.ThreadRunnable;
 import cloud.hytora.common.wrapper.Wrapper;
 import cloud.hytora.document.Document;
+import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.event.defaults.driver.DriverConnectEvent;
 import cloud.hytora.driver.networking.protocol.codec.NetworkBossHandler;
 import cloud.hytora.driver.networking.protocol.codec.PacketDecoder;
 import cloud.hytora.driver.networking.protocol.codec.PacketEncoder;
@@ -84,11 +86,15 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
                                             ClusterParticipant.this.sendPacket(new HandshakePacket(getName(), ClusterParticipant.this.type, customData));
                                             result.setResult(ctx.channel());
 
+                                            //fire connect event
+                                            CloudDriver.getInstance().getEventManager().callEvent(new DriverConnectEvent());
+
                                             super.channelActive(ctx);
                                         }
 
                                         @Override
                                         public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+                                            CloudDriver.getInstance().getEventManager().callEvent(new DriverConnectEvent());
                                             onClose(ctx);
                                             super.channelInactive(ctx);
                                         }
