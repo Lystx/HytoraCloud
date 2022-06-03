@@ -27,6 +27,8 @@ import io.netty.channel.ChannelHandlerContext;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +44,7 @@ public class HytoraNode extends ClusterExecutor {
     private final List<PacketHandler<?>> remoteHandlers;
 
     public HytoraNode(MainConfiguration mainConfiguration) {
-        super(mainConfiguration.getNodeConfig().getNodeName());
+        super(NodeDriver.getInstance().getConfig().getAuthKey(), mainConfiguration.getNodeConfig().getNodeName());
 
         this.hostName = mainConfiguration.getNodeConfig().getBindAddress();
         this.port = mainConfiguration.getNodeConfig().getBindPort();
@@ -117,6 +119,14 @@ public class HytoraNode extends ClusterExecutor {
             if (state == ConnectionState.CONNECTED) {
                 // set online
                 CloudServer service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(executor.getName());
+                if (service == null) {
+                    //other remote connection
+                    if (executor.getName().equalsIgnoreCase("Application")) {
+                        InetSocketAddress address = (InetSocketAddress) executor.getChannel().remoteAddress();
+                        NodeDriver.getInstance().getLogger().info("§a==> Channel §8[§b" + executor.getName() + "@" + address.getHostName() + ":" + address.getPort() + "§8] §7connected");
+                    }
+                    return;
+                }
                 service.setServiceState(ServiceState.ONLINE);
 
                 // update cache
@@ -139,6 +149,10 @@ public class HytoraNode extends ClusterExecutor {
             } else {
 
                 String service = executor.getName();
+                if (service.equalsIgnoreCase("Application")) {
+                    NodeDriver.getInstance().getLogger().warn("§a==> Channel §e{} - {} disconnected", "Cloud Application", executor.getChannel());
+                    return;
+                }
                 NodeDriver base = NodeDriver.getInstance();
                 CloudServer cloudServer = base.getServiceManager().getServiceByNameOrNull(service);
                 if (cloudServer != null) {
@@ -155,9 +169,9 @@ public class HytoraNode extends ClusterExecutor {
     private ClusterParticipant nodeAsClient;
 
 
-    public Wrapper<Boolean> connectToOtherNode(String name, String hostname, int port, Document customData) {
+    public Wrapper<Boolean> connectToOtherNode(String authKey, String name, String hostname, int port, Document customData) {
         Wrapper<Boolean> wrapper = Wrapper.empty();
-        ClusterParticipant client = new ClusterParticipant(name, ConnectionType.NODE, customData) {
+        ClusterParticipant client = new ClusterParticipant(authKey, name, ConnectionType.NODE, customData) {
 
             @Override
             public void onAuthenticationChanged(ChannelWrapper wrapper) {

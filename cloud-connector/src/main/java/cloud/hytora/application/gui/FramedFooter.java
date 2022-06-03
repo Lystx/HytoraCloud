@@ -54,13 +54,14 @@ public class FramedFooter extends JPanel {
         lockInteraction.addActionListener(e -> lockChanged());
         add(lockInteraction, "cell 2 1");
 
-        infoLabel.setText("text");
+        infoLabel.setText("???");
         add(infoLabel, "cell 3 1,alignx center,growx 0");
+
+        updateInfoLabel();
 
         closeButton.setText("Quit");
         closeButton.addActionListener(e -> closePerformed());
         add(closeButton, "cell 4 1");
-        // JFormDesigner - End of component initialization  //GEN-END:initComponents
 
         MigLayout layout = (MigLayout) getLayout();
         LC lc = ConstraintParser.parseLayoutConstraint((String) layout.getLayoutConstraints());
@@ -203,6 +204,9 @@ public class FramedFooter extends JPanel {
     }
 
     private void enabledDisable(Container container, boolean enabled) {
+        if (container == null) {
+            return;
+        }
         for (Component c : container.getComponents()) {
             if (c instanceof JPanel) {
                 enabledDisable((JPanel) c, enabled);
@@ -231,7 +235,9 @@ public class FramedFooter extends JPanel {
     }
 
     private void closePerformed() {
-        frame.dispose();
+        if (frame != null) {
+            frame.dispose();
+        }
         CloudDriver.getInstance().shutdown();
         System.exit(0);
     }

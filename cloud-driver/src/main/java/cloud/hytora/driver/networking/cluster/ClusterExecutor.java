@@ -52,6 +52,11 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
     private final String nodeName;
 
     /**
+     * Authentication key
+     */
+    private final String authKey;
+
+    /**
      * All cached clients
      */
     private final List<ClusterClientExecutor> allCachedConnectedClients;
@@ -63,8 +68,10 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
     private EventExecutorGroup eventExecutorGroup;
     private SimpleChannelWrapper wrapper;
 
-    public ClusterExecutor(String nodeName) {
+    public ClusterExecutor(String authKey, String nodeName) {
         super(ConnectionType.NODE, nodeName);
+
+        this.authKey = authKey;
         this.nodeName = nodeName;
         this.allCachedConnectedClients = new ArrayList<>();
 
@@ -128,11 +135,20 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
 
                                                      if (packet instanceof HandshakePacket) {
                                                          HandshakePacket authPacket = (HandshakePacket) packet;
+                                                         if (!authPacket.getAuthKey().equalsIgnoreCase(authKey)) {
+                                                             System.out.println(" ");
+                                                             System.out.println("<===  WARNING   =====>");
+                                                             System.out.println(StringUtils.format("Tried to authenticate '{0}' but a wrong AuthKey was provided", client.getName()));
+                                                             System.out.println("Closing channel...");
+                                                             System.out.println("<===  WARNING   =====>");
+                                                             System.out.println(" ");
+                                                             channelHandlerContext.close();
+                                                             return;
+                                                         }
                                                          client.setName(authPacket.getClientName());
                                                          client.setAuthenticated(true);
                                                          client.setType(authPacket.getType());
                                                          client.setData(authPacket.getExtraData());
-
 
                                                          //setting node name and sending back
                                                          authPacket.setNodeName(getNodeName());

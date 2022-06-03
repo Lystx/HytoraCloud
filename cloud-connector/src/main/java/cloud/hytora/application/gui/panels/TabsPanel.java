@@ -166,7 +166,7 @@ public class TabsPanel extends JPanel {
             trailing.add(Box.createHorizontalGlue());
             trailing.add(new JButton(new FlatSVGIcon("cloud/hytora/application/icons/commit.svg")));
             trailing.add(new JButton(new FlatSVGIcon("cloud/hytora/application/icons/diff.svg")));
-            trailing.add(new JButton(new FlatSVGIcon("cloud/hytora/application/icons/listFiles.svg")));
+            trailing.add(new JButton(new FlatSVGIcon("cloud/hytora/img/services.svg")));
         }
         customComponentsTabbedPane.putClientProperty(TABBED_PANE_LEADING_COMPONENT, leading);
         customComponentsTabbedPane.putClientProperty(TABBED_PANE_TRAILING_COMPONENT, trailing);

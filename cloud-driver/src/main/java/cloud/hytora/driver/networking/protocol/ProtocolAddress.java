@@ -19,10 +19,22 @@ public class ProtocolAddress implements Bufferable {
 
     private String host;
     private int port;
+    private String authKey;
+
+    public ProtocolAddress(String host, int port) {
+        this.host = host;
+        this.port = port;
+    }
 
     public ProtocolAddress(@Nonnull InetSocketAddress socketAddress) {
         this.host = socketAddress.getAddress().getHostAddress();
         this.port = socketAddress.getPort();
+    }
+
+    public ProtocolAddress(@Nonnull InetSocketAddress socketAddress, String authKey) {
+        this.host = socketAddress.getAddress().getHostAddress();
+        this.port = socketAddress.getPort();
+        this.authKey = authKey;
     }
 
     @Override
@@ -33,11 +45,13 @@ public class ProtocolAddress implements Bufferable {
             case READ:
                 host = buf.readString();
                 port = buf.readInt();
+                authKey = buf.readOptionalString();
                 break;
 
             case WRITE:
                 buf.writeString(host);
                 buf.writeInt(port);
+                buf.writeOptionalString(authKey);
                 break;
         }
     }

@@ -15,6 +15,11 @@ import java.io.IOException;
 public class RemoteIdentity {
 
     /**
+     * The node auth key
+     */
+    private String authKey;
+
+    /**
      * The name of the node this service runs on
      */
     private String node;
@@ -34,7 +39,6 @@ public class RemoteIdentity {
      */
     private int port;
 
-
     public void save(File file) {
         try {
             DocumentFactory.newJsonDocument(this).saveToFile(file);
@@ -48,6 +52,7 @@ public class RemoteIdentity {
             Document document = DocumentFactory.newJsonDocument(file);
             RemoteIdentity identity = document.toInstance(RemoteIdentity.class);
 
+            this.authKey = identity.getAuthKey();
             this.node = identity.getNode();
             this.hostname = identity.getHostname();
             this.name = identity.getName();

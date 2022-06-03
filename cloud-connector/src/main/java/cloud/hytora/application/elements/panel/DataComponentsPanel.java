@@ -436,8 +436,7 @@ public class DataComponentsPanel extends JPanel {
 
     //---- class DummyTransferHandler -----------------------------------------
 
-    private static class DummyTransferHandler
-            extends TransferHandler {
+    private static class DummyTransferHandler extends TransferHandler {
         @Override
         protected Transferable createTransferable(JComponent c) {
             if (c instanceof JList && ((JList<?>) c).isSelectionEmpty())

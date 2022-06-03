@@ -37,10 +37,12 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
     private Channel channel;
     private Document customData;
     private String connectedNodeName;
+    private String authKey;
 
-    public ClusterParticipant(String clientName, ConnectionType type, Document customData) {
+    public ClusterParticipant(String authKey, String clientName, ConnectionType type, Document customData) {
         super(type, clientName);
 
+        this.authKey = authKey;
         this.active = false;
         this.channel = null;
         this.customData = customData;
@@ -83,7 +85,7 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
                                         @Override
                                         public void channelActive(ChannelHandlerContext ctx) throws Exception {
                                             ClusterParticipant.this.onActivated(ctx);
-                                            ClusterParticipant.this.sendPacket(new HandshakePacket(getName(), ClusterParticipant.this.type, customData));
+                                            ClusterParticipant.this.sendPacket(new HandshakePacket(authKey, getName(), ClusterParticipant.this.type, customData));
                                             result.setResult(ctx.channel());
 
                                             //fire connect event

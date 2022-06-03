@@ -9,10 +9,13 @@ import java.net.URISyntaxException;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import javax.swing.*;
 import javax.swing.text.StyleContext;
 
 import cloud.hytora.application.bootstrap.Bootstrap;
+import cloud.hytora.application.elements.StartPanelInfoBox;
 import cloud.hytora.application.gui.panels.SettingsPanel;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLaf;
@@ -29,6 +32,7 @@ import com.formdev.flatlaf.extras.components.FlatButton;
 import com.formdev.flatlaf.extras.components.FlatButton.ButtonType;
 import com.formdev.flatlaf.extras.FlatSVGUtils;
 import com.formdev.flatlaf.ui.FlatUIUtils;
+import lombok.Getter;
 import net.miginfocom.layout.ConstraintParser;
 import net.miginfocom.layout.LC;
 import net.miginfocom.layout.UnitValue;
@@ -46,13 +50,24 @@ public class MainFrame extends JFrame {
     private JTabbedPane tabbedPane;
     private FramedFooter controlBar;
 
+    @Getter
+    private final Map<Integer, StartPanelInfoBox> boxes = new HashMap<>();
+
+    public void registerInfoBox(StartPanelInfoBox infoBox) {
+        this.boxes.put(infoBox.getId(), infoBox);
+    }
+
+    public StartPanelInfoBox getInfoBox(int id) {
+        return boxes.get(id);
+    }
+
     public MainFrame() {
         int tabIndex = Bootstrap.getState().getInt("tab", 0);
 
         availableFontFamilyNames = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames().clone();
         Arrays.sort(availableFontFamilyNames);
 
-        initComponents();
+        init();
         updateFontMenuItems();
         controlBar.initialize(this, tabbedPane);
 
@@ -64,9 +79,7 @@ public class MainFrame extends JFrame {
         // integrate into macOS screen menu
         FlatDesktop.setAboutHandler(this::showAboutScreen);
         FlatDesktop.setPreferencesHandler(this::showPreferences);
-        FlatDesktop.setQuitHandler(response -> {
-            response.performQuit();
-        });
+        FlatDesktop.setQuitHandler(FlatDesktop.QuitResponse::performQuit);
 
     }
 
@@ -232,8 +245,7 @@ public class MainFrame extends JFrame {
             item.setEnabled(enabled);
     }
 
-    private void initComponents() {
-        // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents
+    public void init() {
         JMenuBar menuBar1 = new JMenuBar();
         JMenu viewMenu = new JMenu();
         JCheckBoxMenuItem checkBoxMenuItem1 = new JCheckBoxMenuItem();
@@ -262,7 +274,7 @@ public class MainFrame extends JFrame {
         JPanel contentPanel = new JPanel();
         tabbedPane = new JTabbedPane();
         ServicePanel servicePanel = new ServicePanel();
-        StartPanel startPanel = new StartPanel();
+        StartPanel startPanel = new StartPanel(this);
         DataComponentsPanel dataComponentsPanel = new DataComponentsPanel();
         TabsPanel tabsPanel = new TabsPanel();
         OptionPanePanel optionPanePanel = new OptionPanePanel();

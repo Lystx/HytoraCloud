@@ -85,7 +85,7 @@ public class ProcessServiceStarter {
         FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "plugin.jar"), new File(serverDir, "plugins/plugin.jar"));
 
         // TODO: 11.04.2022 change address if other node
-        RemoteIdentity identity = new RemoteIdentity(service.getConfiguration().getNode(), NodeDriver.getInstance().getExecutor().getHostName(), service.getName(), NodeDriver.getInstance().getExecutor().getPort());
+        RemoteIdentity identity = new RemoteIdentity(NodeDriver.getInstance().getConfig().getAuthKey(), service.getConfiguration().getNode(), NodeDriver.getInstance().getExecutor().getHostName(), service.getName(), NodeDriver.getInstance().getExecutor().getPort());
 
         // write property for identify service
         identity.save(new File(serverDir, "property.json"));

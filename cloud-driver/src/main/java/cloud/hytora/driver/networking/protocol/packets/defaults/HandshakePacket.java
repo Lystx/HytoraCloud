@@ -19,6 +19,11 @@ import java.io.IOException;
 public class HandshakePacket extends Packet {
 
     /**
+     * The authentication key
+     */
+    private String authKey;
+
+    /**
      * The provided name
      */
     private String clientName;
@@ -38,7 +43,8 @@ public class HandshakePacket extends Packet {
      */
     private String nodeName;
 
-    public HandshakePacket(String clientName, ConnectionType type, Document extraData) {
+    public HandshakePacket(String authKey, String clientName, ConnectionType type, Document extraData) {
+        this.authKey = authKey;
         this.clientName = clientName;
         this.type = type;
         this.extraData = extraData;
@@ -49,6 +55,7 @@ public class HandshakePacket extends Packet {
         switch (state) {
 
             case READ:
+                authKey = buf.readString();
                 type = buf.readEnum(ConnectionType.class);
                 clientName = buf.readString();
                 extraData = buf.readDocument();
@@ -56,6 +63,7 @@ public class HandshakePacket extends Packet {
                 break;
 
             case WRITE:
+                buf.writeString(authKey);
                 buf.writeEnum(this.type);
                 buf.writeString(this.clientName);
                 buf.writeDocument(extraData);

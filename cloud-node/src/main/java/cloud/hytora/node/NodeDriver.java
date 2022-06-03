@@ -230,7 +230,7 @@ public class NodeDriver extends CloudDriver implements Node {
             this.logger.info("§7This Node is a §eSubNode §7and will now connect to all provided Nodes in Cluster...");
             ProtocolAddress[] clusterAddresses = this.config.getClusterAddresses();
             for (ProtocolAddress address : clusterAddresses) {
-                this.executor.connectToOtherNode(this.config.getNodeName(), address.getHost(), address.getPort(), DocumentFactory.emptyDocument()).addUpdateListener(b -> {
+                this.executor.connectToOtherNode(address.getAuthKey(), this.config.getNodeName(), address.getHost(), address.getPort(), DocumentFactory.emptyDocument()).addUpdateListener(b -> {
                     if (b.isSuccess()) {
                         this.logger.info("§aSuccessfully §7connected to §b" + address);
                     }

@@ -1,7 +1,9 @@
 package cloud.hytora.driver.player;
 
 import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.packets.QueryState;
+import cloud.hytora.driver.services.CloudServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -54,6 +56,14 @@ public interface PlayerManager {
      */
     default int getCloudPlayerOnlineAmount() {
         return this.getAllCachedCloudPlayers().size();
+    }
+
+    default int countPlayerCapacity() {
+        int capacity = 0;
+        for (CloudServer allCachedService : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
+            capacity += allCachedService.getMaxPlayers();
+        }
+        return capacity;
     }
 
     /**
