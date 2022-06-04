@@ -35,6 +35,7 @@ import cloud.hytora.remote.impl.*;
 import cloud.hytora.remote.impl.handler.RemoteCacheUpdateHandler;
 import cloud.hytora.remote.impl.handler.RemoteCommandHandler;
 import cloud.hytora.remote.impl.handler.RemoteLoggingHandler;
+import cloud.hytora.remote.impl.handler.RemoteNodeUpdateHandler;
 import cloud.hytora.remote.impl.log.DefaultLogHandler;
 import cloud.hytora.remote.impl.module.RemoteModuleManager;
 import lombok.Getter;
@@ -87,6 +88,7 @@ public class Remote extends CloudDriver {
         this.client.registerPacketHandler(new RemoteLoggingHandler());
         this.client.registerPacketHandler(new RemoteCommandHandler());
         this.client.registerPacketHandler(new RemoteCacheUpdateHandler());
+        this.client.registerPacketHandler(new RemoteNodeUpdateHandler());
 
         //registering event handlers
         new InternalDriverEventAdapter(this.eventManager, client);

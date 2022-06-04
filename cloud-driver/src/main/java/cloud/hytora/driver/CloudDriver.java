@@ -12,6 +12,7 @@ import cloud.hytora.driver.message.ChannelMessenger;
 import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
+import cloud.hytora.driver.networking.protocol.SimpleNetworkComponent;
 import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.driver.scheduler.Scheduler;

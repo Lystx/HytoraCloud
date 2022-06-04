@@ -4,6 +4,7 @@ import cloud.hytora.common.wrapper.Wrapper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -14,6 +15,11 @@ public interface NodeManager {
      * All connected nodes (excluding the own if executed on node-side)
      */
     List<Node> getAllConnectedNodes();
+
+    /**
+     * All nodes including the main node
+     */
+    Collection<Node> getAllNodes();
 
     void setAllConnectedNodes(List<Node> nodes);
 

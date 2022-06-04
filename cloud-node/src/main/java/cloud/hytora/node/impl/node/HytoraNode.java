@@ -127,7 +127,8 @@ public class HytoraNode extends ClusterExecutor {
                             NodeDriver.getInstance().getConfigurationManager().getAllCachedConfigurations(),
                             NodeDriver.getInstance().getConfigurationManager().getAllParentConfigurations(),
                             NodeDriver.getInstance().getServiceManager().getAllCachedServices(),
-                            NodeDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()
+                            NodeDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers(),
+                            CloudDriver.getInstance().getNodeManager().getAllNodes()
                     ));
 
                     executor.sendPacket(new StorageUpdatePacket(
@@ -149,7 +150,8 @@ public class HytoraNode extends ClusterExecutor {
                         NodeDriver.getInstance().getConfigurationManager().getAllCachedConfigurations(),
                         NodeDriver.getInstance().getConfigurationManager().getAllParentConfigurations(),
                         NodeDriver.getInstance().getServiceManager().getAllCachedServices(),
-                        NodeDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()
+                        NodeDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers(),
+                        CloudDriver.getInstance().getNodeManager().getAllNodes()
                 ));
 
                 service.sendPacket(new StorageUpdatePacket(

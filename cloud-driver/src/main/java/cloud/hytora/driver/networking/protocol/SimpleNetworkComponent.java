@@ -1,5 +1,6 @@
 package cloud.hytora.driver.networking.protocol;
 
+import cloud.hytora.common.DriverUtility;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
@@ -17,7 +18,7 @@ import java.io.IOException;
 @AllArgsConstructor
 @Setter
 @NoArgsConstructor
-public class SimpleNetworkComponent implements NetworkComponent {
+public class SimpleNetworkComponent extends DriverUtility implements NetworkComponent {
 
     /**
      * The name of this component

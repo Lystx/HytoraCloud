@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +32,13 @@ public class NodeNodeManager extends DefaultNodeManager {
     @Override
     public List<Node> getAllConnectedNodes() {
         return super.getAllConnectedNodes().stream().filter(n -> !n.matches(NodeDriver.getInstance())).collect(Collectors.toList());
+    }
+
+    @Override
+    public Collection<Node> getAllNodes() {
+        List<Node> allConnectedNodes = getAllConnectedNodes();
+        allConnectedNodes.add(NodeDriver.getInstance());
+        return allConnectedNodes;
     }
 
     @Override

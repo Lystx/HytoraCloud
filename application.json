@@ -6,6 +6,20 @@
       "type": "ADD_CONTENT",
       "message": "First update entry",
       "versionNow": "SNAPSHOT-1.0"
+    },
+    {
+      "date": "04.06.2022 - 23:12",
+      "committer": "Lystx",
+      "type": "ADD_CONTENT",
+      "message": "Added CPU Usages for Nodes",
+      "versionNow": "SNAPSHOT-1.0"
+    },
+    {
+      "date": "04.06.2022 - 23:38",
+      "committer": "Lystx",
+      "type": "ADD_CONTENT",
+      "message": "Finished StartPanel",
+      "versionNow": "SNAPSHOT-1.0"
     }
   ]
 }

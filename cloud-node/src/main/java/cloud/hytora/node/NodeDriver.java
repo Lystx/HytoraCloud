@@ -118,7 +118,7 @@ public class NodeDriver extends CloudDriver implements Node {
     private final CommandManager commandManager;
     private final CommandSender commandSender;
     private final DriverStorage storage;
-    private final INodeConfig config;
+    private INodeConfig config;
 
     private IDatabaseManager databaseManager;
     private ConfigurationManager configurationManager;
@@ -373,7 +373,8 @@ public class NodeDriver extends CloudDriver implements Node {
                             NodeDriver.getInstance().getConfigurationManager().getAllCachedConfigurations(),
                             NodeDriver.getInstance().getConfigurationManager().getAllParentConfigurations(),
                             NodeDriver.getInstance().getServiceManager().getAllCachedServices(),
-                            NodeDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()
+                            NodeDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers(),
+                            CloudDriver.getInstance().getNodeManager().getAllNodes()
                     ));
 
                 }
@@ -632,19 +633,23 @@ public class NodeDriver extends CloudDriver implements Node {
 
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
-
         switch (state) {
 
             case READ:
                 buf.readString();
                 buf.readEnum(ConnectionType.class);
+                config = buf.readObject(DefaultNodeConfig.class);
+                buf.readObject(NodeCycleData.class);
                 break;
 
             case WRITE:
                 buf.writeString(getName());
                 buf.writeEnum(ConnectionType.NODE);
+                buf.writeObject(config);
+                buf.writeObject(getLastCycleData());
                 break;
         }
+
     }
 
 }

@@ -3,6 +3,8 @@ package cloud.hytora.driver.networking.packets;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.node.Node;
+import cloud.hytora.driver.node.NodeInfo;
 import cloud.hytora.driver.player.impl.DefaultCloudPlayer;
 import cloud.hytora.driver.CloudDriver;
 
@@ -31,6 +33,7 @@ public class DriverUpdatePacket extends Packet {
     private Collection<ConfigurationParent> parentGroups;
     private Collection<CloudServer> allCachedServices;
     private Collection<CloudPlayer> cloudPlayers;
+    private Collection<Node> connectedNodes;
 
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
@@ -52,6 +55,10 @@ public class DriverUpdatePacket extends Packet {
 
                 cloudPlayers = buf.readWrapperObjectCollection(DefaultCloudPlayer.class);
                 CloudDriver.getInstance().getPlayerManager().setAllCachedCloudPlayers((List<CloudPlayer>) cloudPlayers);
+
+                connectedNodes = buf.readWrapperObjectCollection(NodeInfo.class);
+                CloudDriver.getInstance().getNodeManager().setAllConnectedNodes((List<Node>) connectedNodes);
+
                 break;
 
             case WRITE:
@@ -59,6 +66,7 @@ public class DriverUpdatePacket extends Packet {
                 buf.writeObjectCollection(groups);
                 buf.writeObjectCollection(allCachedServices);
                 buf.writeObjectCollection(cloudPlayers);
+                buf.writeObjectCollection(connectedNodes);
                 break;
         }
     }
