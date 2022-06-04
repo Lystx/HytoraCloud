@@ -35,10 +35,6 @@ import java.util.concurrent.TimeUnit;
 
 public class StartPanel extends JPanel {
 
-    private final JProgressBar progressBar3;
-    private final JProgressBar progressBar4;
-    private final JProgressBar progressBar1;
-    private final JProgressBar progressBar2;
     private JTable updateTable;
 
     private int boxStartX = 65;
@@ -48,15 +44,7 @@ public class StartPanel extends JPanel {
 
     public StartPanel(Application instance) throws IOException {
 
-        progressBar1 = new JProgressBar();
-        progressBar2 = new JProgressBar();
-        progressBar3 = new JProgressBar();
-        progressBar4 = new JProgressBar();
-
         setLayout(null);
-
-
-
 
         for (StartPanelInfoBox box : instance.getBoxes().values()) {
             createBox(box);
@@ -71,37 +59,20 @@ public class StartPanel extends JPanel {
             e.printStackTrace();
         }
 
-
-        //---- progressBar2 ----
-        progressBar2.setStringPainted(true);
-        progressBar2.setValue(60);
-        //add(progressBar2, "cell 1 8 3 1,growx");
-
-
         JScrollPane scrollPane = new JScrollPane();
-        JPopupMenu popupMenu = new JPopupMenu();
-
-        popupMenu.add(new JMenuItem("Some Action"));
-        popupMenu.add(new JMenuItem("More Action"));
-        popupMenu.addSeparator();
-        popupMenu.add(new JMenuItem("More More Action"));
 
         updateTable = new JTable();
-        updateTable.setShowHorizontalLines(true);
         updateTable.setShowVerticalLines(true);
+        updateTable.setAutoCreateRowSorter(true);
 
+        scrollPane.setViewportView(updateTable);
+        scrollPane.setBounds(65, 300, 800, 400);
 
         try {
             this.updateTable(updateTable);
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        updateTable.setAutoCreateRowSorter(true);
-        updateTable.setComponentPopupMenu(popupMenu);
-
-        scrollPane.setViewportView(updateTable);
-        scrollPane.setBounds(65, 300, 800, 400);
 
         add(scrollPane);
 
@@ -124,12 +95,12 @@ public class StartPanel extends JPanel {
 
     private void updateTable(JTable updateTable) throws Exception {
 
-        InputStream input = new URL("https://github.com/Lystx/HytoraCloud").openStream();
+        InputStream input = new URL("https://raw.githubusercontent.com/Lystx/HytoraCloud/master/application.json").openStream();
 
         Document document = DocumentFactory.newJsonDocument(input);
         Bundle updates = document.getBundle("updates");
 
-        String[] rows = new String[]{"Date", "From", "Message", "Files affected"};
+        String[] rows = new String[]{"Date", "From", "Type", "Message", "New Version"};
         Object[][] tableContent = new Object[updates.size()][rows.length];
 
         for (int i = 0; i < updates.size(); i++) {

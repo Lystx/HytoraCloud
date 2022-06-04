@@ -13,11 +13,12 @@ public class CloudUpdateInfo {
 
     private String date;
     private String committer;
+    private String type;
     private String message;
     private String versionNow;
 
 
     public String[] toArray() {
-        return new String[]{date, committer, message,versionNow};
+        return new String[]{date, committer, type, message, versionNow};
     }
 }
