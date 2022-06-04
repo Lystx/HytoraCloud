@@ -1,0 +1,10 @@
+{
+  "updates": [
+    {
+     "date": "04.06.2022 - 11:06",
+      "committer": "Lystx",
+      "message": "First update entry",
+      "versionNow": "SNAPSHOT-1.0"
+    }
+  ]
+}

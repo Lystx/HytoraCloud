@@ -96,7 +96,6 @@ public abstract class AbstractNetworkComponent<T extends AbstractNetworkComponen
 
     @Override
     public <P extends IPacket> void handlePacket(ChannelWrapper wrapper, @NotNull P packet) {
-
         ThreadRunnable runnable = new ThreadRunnable(() -> {
 
             List<PacketHandler<?>> packetHandlers = this.channelPacketHandlers.get(packet.getDestinationChannel());

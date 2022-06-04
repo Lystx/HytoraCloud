@@ -17,6 +17,8 @@ import cloud.hytora.driver.InternalDriverEventAdapter;
 import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.http.impl.NettyHttpServer;
 import cloud.hytora.driver.message.ChannelMessenger;
+import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
+import cloud.hytora.driver.networking.packets.StorageUpdatePacket;
 import cloud.hytora.node.impl.handler.packet.normal.*;
 import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteLoggingHandler;
 import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteServerStartHandler;
@@ -361,6 +363,22 @@ public class NodeDriver extends CloudDriver implements Node {
 
         //add node cycle data
         scheduledExecutor.scheduleAtFixedRate(() -> executor.sendPacketToAll(new NodeCycleDataPacket(this.config.getNodeName(), getLastCycleData())), 1_000, NodeCycleData.PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
+        scheduledExecutor.scheduleAtFixedRate(() -> {
+
+            for (ClusterClientExecutor client : this.executor.getAllCachedConnectedClients()) {
+                if (client.getName().equalsIgnoreCase("Application")) {
+
+                    // update cache
+                    client.sendPacket(new DriverUpdatePacket(
+                            NodeDriver.getInstance().getConfigurationManager().getAllCachedConfigurations(),
+                            NodeDriver.getInstance().getConfigurationManager().getAllParentConfigurations(),
+                            NodeDriver.getInstance().getServiceManager().getAllCachedServices(),
+                            NodeDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()
+                    ));
+
+                }
+            }
+        }, 1_000, 1, TimeUnit.SECONDS);
 
         // add a shutdown hook for fast closes
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));

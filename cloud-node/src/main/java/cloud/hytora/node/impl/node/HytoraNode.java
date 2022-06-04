@@ -121,10 +121,25 @@ public class HytoraNode extends ClusterExecutor {
                 CloudServer service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(executor.getName());
                 if (service == null) {
                     //other remote connection
+
+                    // update cache
+                    executor.sendPacket(new DriverUpdatePacket(
+                            NodeDriver.getInstance().getConfigurationManager().getAllCachedConfigurations(),
+                            NodeDriver.getInstance().getConfigurationManager().getAllParentConfigurations(),
+                            NodeDriver.getInstance().getServiceManager().getAllCachedServices(),
+                            NodeDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()
+                    ));
+
+                    executor.sendPacket(new StorageUpdatePacket(
+                            StorageUpdatePacket.StoragePayLoad.UPDATE,
+                            CloudDriver.getInstance().getStorage().getRawData()
+                    ));
+
                     if (executor.getName().equalsIgnoreCase("Application")) {
                         InetSocketAddress address = (InetSocketAddress) executor.getChannel().remoteAddress();
                         NodeDriver.getInstance().getLogger().info("§a==> Channel §8[§b" + executor.getName() + "@" + address.getHostName() + ":" + address.getPort() + "§8] §7connected");
                     }
+
                     return;
                 }
                 service.setServiceState(ServiceState.ONLINE);

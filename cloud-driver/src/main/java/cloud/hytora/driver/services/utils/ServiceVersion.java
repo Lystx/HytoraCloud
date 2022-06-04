@@ -114,7 +114,6 @@ public enum ServiceVersion {
             inputStream.close();
             return document;
         } catch (IOException e) {
-            e.printStackTrace();
         }
         return null;
     }

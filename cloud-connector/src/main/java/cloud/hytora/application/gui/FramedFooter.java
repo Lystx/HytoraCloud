@@ -24,7 +24,7 @@ import net.miginfocom.swing.*;
 
 public class FramedFooter extends JPanel {
 
-    protected MainFrame frame;
+    protected Application frame;
     protected JTabbedPane tabbedPane;
 
     private final JSeparator separator1;
@@ -85,6 +85,9 @@ public class FramedFooter extends JPanel {
             if ("lookAndFeel".equals(e.getPropertyName())) {
                 EventQueue.invokeLater(() -> {
                     updateInfoLabel();
+                    if (frame == null) {
+                        return;
+                    }
                     frame.updateFontMenuItems();
                     frame.getRootPane().setDefaultButton(closeButton);
                 });
@@ -104,7 +107,7 @@ public class FramedFooter extends JPanel {
             updateInfoLabel();
     }
 
-    public void initialize(MainFrame frame, JTabbedPane tabbedPane) {
+    public void initialize(Application frame, JTabbedPane tabbedPane) {
         this.frame = frame;
         this.tabbedPane = tabbedPane;
 

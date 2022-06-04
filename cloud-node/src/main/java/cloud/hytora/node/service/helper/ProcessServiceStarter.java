@@ -104,7 +104,23 @@ public class ProcessServiceStarter {
                 ConfigurationFileEditor editor = new ConfigurationFileEditor(file, ConfigSplitSpacer.YAML);
                 editor.setValue("host", "0.0.0.0:" + service.getPort());
                 editor.saveFile();
-            } else new BungeeProperties(serverDir, service.getPort(), service.getMaxPlayers(), Objects.requireNonNull(CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream().filter(s -> s.getConfiguration().getParent().getEnvironment() == WrapperEnvironment.MINECRAFT_SERVER).findFirst().orElse(null)));
+            } else {
+                new BungeeProperties(
+                        serverDir,
+                        service.getPort(),
+                        service.getMaxPlayers(),
+                        CloudDriver.getInstance()
+                                .getServiceManager()
+                                .getAllCachedServices()
+                                .stream()
+                                .filter(
+                                        s -> s.getConfiguration()
+                                                .getParent()
+                                                .getEnvironment() == WrapperEnvironment.MINECRAFT_SERVER
+                                ).findFirst()
+                                .orElse(null)
+                );
+            }
         } else {
             File file = new File(serverDir, "server.properties");
             if (file.exists()) {

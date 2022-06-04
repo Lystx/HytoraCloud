@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 
 public class RemoteNetworkClient extends ClusterParticipant {
 
-    public RemoteNetworkClient(String authKey, String clientName, String hostname, int port, Document customData) {
+    public RemoteNetworkClient(String authKey, String clientName, String hostname, int port, Document customData, Runnable... connectionFailed) {
         super(authKey, clientName, ConnectionType.SERVICE, customData);
 
         this.openConnection(hostname, port).addUpdateListener(new Consumer<Wrapper<Channel>>() {
@@ -26,6 +26,11 @@ public class RemoteNetworkClient extends ClusterParticipant {
                     CloudDriver.getInstance().getLogger().info("This service has connected to the Cluster!");
                 } else {
                     CloudDriver.getInstance().getLogger().info("This service couldn't connect to the Cluster!");
+                    if (connectionFailed.length != 0) {
+                        for (Runnable runnable : connectionFailed) {
+                            runnable.run();
+                        }
+                    }
                 }
             }
         });

@@ -73,7 +73,7 @@ public class Remote extends CloudDriver {
     private final RemoteNetworkClient client;
     private final RemoteIdentity property;
 
-    public Remote(RemoteIdentity identity, Logger logger) {
+    public Remote(RemoteIdentity identity, Logger logger, Runnable... ifConnectionFailed) {
         super(logger, DriverEnvironment.SERVICE);
 
         instance = this;
@@ -81,7 +81,7 @@ public class Remote extends CloudDriver {
         this.commandSender = new DefaultCommandSender("Wrapper", this.getConsole()).function(System.out::println);
         this.property = identity;
 
-        this.client = new RemoteNetworkClient(property.getAuthKey(), property.getName(), property.getHostname(), property.getPort(), DocumentFactory.emptyDocument());
+        this.client = new RemoteNetworkClient(property.getAuthKey(), property.getName(), property.getHostname(), property.getPort(), DocumentFactory.emptyDocument(), ifConnectionFailed);
 
         //registering handlers
         this.client.registerPacketHandler(new RemoteLoggingHandler());
@@ -116,14 +116,14 @@ public class Remote extends CloudDriver {
         return logger;
     }
 
-    public static Remote initFromOtherInstance(RemoteIdentity identity, Consumer<DriverUpdatePacket> thenExecute) {
-        Remote remote = new Remote(identity, init());
+    public static Remote initFromOtherInstance(RemoteIdentity identity, Consumer<DriverUpdatePacket> thenExecute, Runnable... ifConnectionFailed) {
+        Remote remote = new Remote(identity, init(), ifConnectionFailed);
         Thread thread = new Thread(() -> {
             try {
 
                 CloudDriver.getInstance().getLogger().info("Waiting for CacheUpdate to start Application...");
                 CloudDriver.getInstance().getExecutor().registerSelfDestructivePacketHandler((PacketHandler<DriverUpdatePacket>) (wrapper1, packet) -> {
-                    remote.getStorage().fetch();
+                    CloudDriver.getInstance().getLogger().info("Received CacheUpdate!");
                     thenExecute.accept(packet);
                     RemoteProxyAdapter proxy = Remote.getInstance().getProxyAdapterOrNull();
                     if (proxy != null) {
@@ -133,11 +133,12 @@ public class Remote extends CloudDriver {
                             proxy.registerService(allCachedService);
                         }
                     }
+                    remote.getStorage().fetch(); //fetching storage data
                 });
             } catch (Exception exception) {
                 exception.printStackTrace();
             }
-        }, "Minecraft-Thread");
+        }, "RemoteThread");
         thread.setContextClassLoader(ClassLoader.getSystemClassLoader());
         thread.start();
 
@@ -154,18 +155,11 @@ public class Remote extends CloudDriver {
                 CloudDriver.getInstance().getLogger().info("Launching '" + main.getName() + "' ...");
                 try {
                     method.invoke(null, (Object) arguments.toArray(new String[0]));
-                    RemoteProxyAdapter proxy = Remote.getInstance().getProxyAdapterOrNull();
-                    if (proxy != null) {
-                        CloudDriver.getInstance().getLogger().info("Pre registered all services");
-                        proxy.clearServices();
-                        for (CloudServer allCachedService : packet.getAllCachedServices()) {
-                            proxy.registerService(allCachedService);
-                        }
-                    }
+                    CloudDriver.getInstance().getLogger().info("Launched '" + main.getName() + "'!");
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     e.printStackTrace();
+                    CloudDriver.getInstance().getLogger().error("Couldn't launch '" + main.getName() + "'!");
                 }
-                CloudDriver.getInstance().getLogger().info("Launched '" + main.getName() + "'!");
             });
 
         } catch (Exception e) {

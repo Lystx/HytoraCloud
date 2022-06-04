@@ -3,15 +3,14 @@ package cloud.hytora.application.bootstrap;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Supplier;
-import java.util.prefs.Preferences;
 import javax.swing.*;
 
+import cloud.hytora.application.data.ApplicationData;
 import cloud.hytora.application.elements.StartPanelInfoBox;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.remote.Remote;
 import com.formdev.flatlaf.*;
-import cloud.hytora.application.gui.MainFrame;
+import cloud.hytora.application.gui.Application;
 import cloud.hytora.application.data.CloudTheme;
 import com.formdev.flatlaf.extras.FlatInspector;
 import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
@@ -58,39 +57,40 @@ public class Bootstrap {
         Remote.initFromOtherInstance(new RemoteIdentity(key, "", host, "Application", port), packet -> {
             SwingUtilities.invokeLater(() -> {
 
-                Bootstrap.setup("/flatlaf-demo", CloudTheme.DARK); // TODO: 31.05.2022 store theme
+                Bootstrap.setup(new ApplicationData(1, CloudTheme.DARK)); // TODO: 31.05.2022 store theme
                 FlatLaf.registerCustomDefaultsSource("com.formdev.flatlaf.demo");
                 FlatInspector.install("ctrl shift alt X");
                 FlatUIDefaultsInspector.install("ctrl shift alt Y");
 
-                // create frame
-                MainFrame instance = new MainFrame();
+                try {
 
-                //first boxes => then init
-                instance.registerInfoBox(new StartPanelInfoBox(0x00, "Players", "-1/0 Online", "users", () -> Remote.getInstance().getPlayerManager().getCloudPlayerOnlineAmount() + "/" + Remote.getInstance().getPlayerManager().countPlayerCapacity() + " Online"));
-                instance.registerInfoBox(new StartPanelInfoBox(0x01, "Nodes", "-1/0 Connected", "show", () -> Remote.getInstance().getNodeManager().getAllConnectedNodes().size() + " Connected"));
-                instance.registerInfoBox(new StartPanelInfoBox(0x02, "Services", "-1 Online", "services", () -> Remote.getInstance().getServiceManager().getAllCachedServices().size() + " Online"));
+                    // create frame
+                    Application instance = new Application();
 
-                instance.init();
+                    //first boxes => then init
+                    instance.registerInfoBox(new StartPanelInfoBox(0x00, "Players", "-1/0 Online", "users", () -> Remote.getInstance().getPlayerManager().getCloudPlayerOnlineAmount() + "/" + Remote.getInstance().getPlayerManager().countPlayerCapacity() + " Online"));
+                    instance.registerInfoBox(new StartPanelInfoBox(0x01, "Nodes", "-1/0 Connected", "show", () -> Remote.getInstance().getNodeManager().getAllConnectedNodes().size() + " Connected"));
+                    instance.registerInfoBox(new StartPanelInfoBox(0x02, "Services", "-1 Online", "services", () -> Remote.getInstance().getServiceManager().getAllCachedServices().size() + " Online"));
+                    instance.registerInfoBox(new StartPanelInfoBox(0x03, "Configurations", "-1 Loaded", "services", () -> Remote.getInstance().getConfigurationManager().getAllCachedConfigurations().size() + " Loaded"));
 
-                instance.pack();
-                instance.setResizable(false);
-                instance.setLocationRelativeTo(null);
-                instance.setVisible(true);
+                    instance.init();
+
+                    instance.pack();
+                    instance.setResizable(false);
+                    instance.setLocationRelativeTo(null);
+                    instance.setVisible(true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             });
+        }, () -> {
+            System.exit(0);
         });
 
     }
 
-
-    private static Preferences state;
-
-    public static Preferences getState() {
-        return state;
-    }
-
-    public static void setup(String rootPath, CloudTheme theme) {
-        state = Preferences.userRoot().node(rootPath);
+    public static void setup(ApplicationData data) {
+        CloudTheme theme = data.getTheme();
         switch (theme) {
             case DARK:
                 FlatDarkLaf.setup();

@@ -13,5 +13,9 @@ public class Test {
         for (GHCommit commit : repo.listCommits()) {
             System.out.println(commit.getCommitter().getName() +  " => " + commit.getCommitShortInfo().getMessage() + " => " + new SimpleDateFormat("dd.MM.yyyy - HH:mm:ss").format(commit.getCommitDate()));
         }
+        System.out.println("======");
+        for (GHCommit commit : repo.listCommits()) {
+            System.out.println(commit.getCommitter().getName() +  " => " + commit.getCommitShortInfo().getMessage() + " => " + new SimpleDateFormat("dd.MM.yyyy - HH:mm:ss").format(commit.getCommitDate()));
+        }
     }
 }
