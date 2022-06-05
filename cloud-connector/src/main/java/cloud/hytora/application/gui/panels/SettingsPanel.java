@@ -4,6 +4,8 @@ package cloud.hytora.application.gui.panels;
 import javax.swing.*;
 import javax.swing.event.ChangeListener;
 
+import cloud.hytora.common.logging.LogLevel;
+import cloud.hytora.driver.CloudDriver;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.extras.components.FlatTriStateCheckBox;
@@ -114,12 +116,15 @@ public class SettingsPanel extends JPanel {
 		switch (boxLabel.getText()) {
 			case "TRACE":
 				boxLabel.setText("DEBUG");
+				CloudDriver.getInstance().getLogger().setMinLevel(LogLevel.DEBUG);
 				break;
 			case "DEBUG":
 				boxLabel.setText("INFO");
+				CloudDriver.getInstance().getLogger().setMinLevel(LogLevel.INFO);
 				break;
 			case "INFO":
 				boxLabel.setText("TRACE");
+				CloudDriver.getInstance().getLogger().setMinLevel(LogLevel.TRACE);
 				break;
 		}
 	}

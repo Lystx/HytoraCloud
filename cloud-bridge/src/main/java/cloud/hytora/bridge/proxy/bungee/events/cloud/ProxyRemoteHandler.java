@@ -2,7 +2,7 @@ package cloud.hytora.bridge.proxy.bungee.events.cloud;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.component.ChatComponent;
-import cloud.hytora.driver.event.CloudEventHandler;
+import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.server.CloudServerCacheRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.CloudServerCacheUnregisterEvent;
 
@@ -19,7 +19,6 @@ import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import net.md_5.bungee.chat.ComponentSerializer;
-import net.md_5.bungee.chat.TextComponentSerializer;
 
 import java.net.InetSocketAddress;
 
@@ -49,7 +48,7 @@ public class ProxyRemoteHandler {
     }
 
 
-    @CloudEventHandler
+    @EventListener
     public void handle(CloudServerCacheRegisterEvent event) {
         CloudServer cloudServer = event.getServer();
         if (!cloudServer.getConfiguration().getVersion().isProxy()) {
@@ -57,7 +56,7 @@ public class ProxyRemoteHandler {
         }
     }
 
-    @CloudEventHandler
+    @EventListener
     public void handle(CloudServerCacheUnregisterEvent event) {
         ProxyServer.getInstance().getServers().remove(event.getService());
     }

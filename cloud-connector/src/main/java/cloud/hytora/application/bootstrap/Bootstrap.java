@@ -1,20 +1,28 @@
 
 package cloud.hytora.application.bootstrap;
 
+import java.awt.*;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import javax.swing.*;
 
-import cloud.hytora.application.data.ApplicationData;
+import cloud.hytora.application.elements.data.ApplicationData;
 import cloud.hytora.application.elements.StartPanelInfoBox;
+import cloud.hytora.application.elements.event.CommitHistoryLoadedEvent;
+import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.remote.Remote;
 import com.formdev.flatlaf.*;
 import cloud.hytora.application.gui.Application;
-import cloud.hytora.application.data.CloudTheme;
-import com.formdev.flatlaf.extras.FlatInspector;
-import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
+import cloud.hytora.application.elements.data.CloudTheme;
 import com.formdev.flatlaf.util.SystemInfo;
+import com.sun.glass.ui.Screen;
+import org.kohsuke.github.GHCommit;
+import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GitHub;
+import org.kohsuke.github.GitHubBuilder;
 
 
 public class Bootstrap {
@@ -55,12 +63,24 @@ public class Bootstrap {
 
         //connecting to cloud node
         Remote.initFromOtherInstance(new RemoteIdentity(key, "", host, "Application", port), packet -> {
-            SwingUtilities.invokeLater(() -> {
 
-                Bootstrap.setup(new ApplicationData(1, CloudTheme.DARK)); // TODO: 31.05.2022 store theme
-                FlatLaf.registerCustomDefaultsSource("com.formdev.flatlaf.demo");
-                FlatInspector.install("ctrl shift alt X");
-                FlatUIDefaultsInspector.install("ctrl shift alt Y");
+            Wrapper.runAsync(() -> {
+                try {
+                    GitHub github = GitHubBuilder.fromEnvironment().build();
+                    GHRepository repository = github.getRepository("Lystx/HytoraCloud");
+                    Collection<GHCommit> cachedCommits = repository.listCommits().toList();
+                    CloudDriver.getInstance().getEventManager().callEvent(new CommitHistoryLoadedEvent(cachedCommits));
+                    CloudDriver.getInstance().getLogger().info("Loaded GitHub data");
+                } catch (Exception e) {
+                    CloudDriver.getInstance().getLogger().info("Couldn't load GitHub data");
+                    e.printStackTrace();
+                }
+            });
+
+            Bootstrap.setup(new ApplicationData(1, CloudTheme.DARK)); // TODO: 31.05.2022 store theme
+
+
+            SwingUtilities.invokeLater(() -> {
 
                 try {
 
@@ -76,6 +96,8 @@ public class Bootstrap {
                     instance.init();
 
                     instance.pack();
+                    instance.setSize(1000, 850);
+
                     instance.setResizable(false);
                     instance.setLocationRelativeTo(null);
                     instance.setVisible(true);

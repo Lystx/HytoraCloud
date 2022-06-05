@@ -2,7 +2,7 @@ package cloud.hytora.driver.player.impl;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
-import cloud.hytora.driver.event.CloudEventHandler;
+import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.EventManager;
 import cloud.hytora.driver.event.defaults.player.CloudPlayerDisconnectEvent;
 import cloud.hytora.driver.event.defaults.player.CloudPlayerLoginEvent;
@@ -72,7 +72,7 @@ public abstract class DefaultPlayerManager implements PlayerManager {
 
     }
 
-    @CloudEventHandler
+    @EventListener
     public void handle(CloudServerCacheUnregisterEvent event) {
 
         this.cachedCloudPlayers.values().forEach(player -> {

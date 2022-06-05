@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface CloudEventHandler {
+public @interface EventListener {
 
 	@Nonnull
 	EventOrder order() default EventOrder.NORMAL;

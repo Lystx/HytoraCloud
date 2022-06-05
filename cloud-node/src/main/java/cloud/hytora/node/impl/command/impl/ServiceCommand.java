@@ -7,7 +7,7 @@ import cloud.hytora.driver.command.Console;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.completer.CloudServerCompleter;
 import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.event.CloudEventHandler;
+import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.server.CloudServerRequestScreenLeaveEvent;
 import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.deployment.CloudDeployment;
@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 @Command(
         name = {"service", "ser"},
@@ -34,7 +33,7 @@ public class ServiceCommand {
         CloudDriver.getInstance().getEventManager().registerListener(this);
     }
 
-    @CloudEventHandler
+    @EventListener
     public void handleQuit(CloudServerRequestScreenLeaveEvent event) {
         this.leaveScreen(event.getCommandManager(), event.getConsole(), event.getSender(), event.getService());
     }

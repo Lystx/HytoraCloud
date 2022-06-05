@@ -6,26 +6,16 @@ import java.awt.event.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.SimpleDateFormat;
 import java.time.Year;
 import java.util.*;
 import javax.swing.*;
 import javax.swing.text.StyleContext;
 
-import cloud.hytora.application.data.ApplicationData;
+import cloud.hytora.application.elements.data.ApplicationData;
 import cloud.hytora.application.elements.StartPanelInfoBox;
-import cloud.hytora.application.elements.event.CommitHistoryLoadedEvent;
-import cloud.hytora.application.gui.panels.SettingsPanel;
-import cloud.hytora.common.collection.ThreadRunnable;
-import cloud.hytora.common.wrapper.Wrapper;
-import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.application.gui.panels.*;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLaf;
-import cloud.hytora.application.gui.panels.StartPanel;
-import cloud.hytora.application.gui.panels.TabsPanel;
-import cloud.hytora.application.elements.panel.ServicePanel;
-import cloud.hytora.application.elements.panel.DataComponentsPanel;
-import cloud.hytora.application.elements.panel.OptionPanePanel;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.extras.FlatDesktop;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
@@ -39,10 +29,6 @@ import net.miginfocom.layout.ConstraintParser;
 import net.miginfocom.layout.LC;
 import net.miginfocom.layout.UnitValue;
 import net.miginfocom.swing.*;
-import org.kohsuke.github.GHCommit;
-import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.GitHub;
-import org.kohsuke.github.GitHubBuilder;
 
 public class Application extends JFrame {
 
@@ -55,9 +41,6 @@ public class Application extends JFrame {
     private JToolBar toolBar;
     private JTabbedPane tabbedPane;
     private FramedFooter controlBar;
-
-    @Getter
-    private Collection<GHCommit> cachedCommits;
 
     @Getter
     private static Application instance;
@@ -75,27 +58,17 @@ public class Application extends JFrame {
 
     public Application() throws Exception {
         instance = this;
-
-
-
-        this.cachedCommits = new ArrayList<>();
-        Wrapper.runAsyncExceptionally(() -> {
-            GitHub github = GitHubBuilder.fromEnvironment().build();
-            GHRepository repository = github.getRepository("Lystx/HytoraCloud");
-            cachedCommits = repository.listCommits().toList();
-            CloudDriver.getInstance().getEventManager().callEvent(new CommitHistoryLoadedEvent());
-        });
-
-        int tabIndex = ApplicationData.getCurrent().getLastOpenedTab();
-
         availableFontFamilyNames = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames().clone();
         Arrays.sort(availableFontFamilyNames);
 
         init();
+
         updateFontMenuItems();
         controlBar.initialize(this, tabbedPane);
 
         setIconImages(FlatSVGUtils.createWindowIconImages("/cloud/hytora/img/hytoraCloud.svg"));
+
+        int tabIndex = ApplicationData.getCurrent().getLastOpenedTab();
 
         if (tabIndex >= 0 && tabIndex < tabbedPane.getTabCount() && tabIndex != tabbedPane.getSelectedIndex())
             tabbedPane.setSelectedIndex(tabIndex);
@@ -104,7 +77,6 @@ public class Application extends JFrame {
         FlatDesktop.setAboutHandler(this::showAboutScreen);
         FlatDesktop.setPreferencesHandler(this::showPreferences);
         FlatDesktop.setQuitHandler(FlatDesktop.QuitResponse::performQuit);
-
     }
 
     @Override
@@ -296,13 +268,8 @@ public class Application extends JFrame {
         toolBar = new JToolBar();
         JButton refreshButton = new JButton();
         JPanel contentPanel = new JPanel();
-        tabbedPane = new JTabbedPane();
-        ServicePanel servicePanel = new ServicePanel();
         StartPanel startPanel = new StartPanel(this);
-        DataComponentsPanel dataComponentsPanel = new DataComponentsPanel();
-        TabsPanel tabsPanel = new TabsPanel();
-        OptionPanePanel optionPanePanel = new OptionPanePanel();
-        SettingsPanel settingsPanel1 = new SettingsPanel();
+        tabbedPane = new JTabbedPane();
         controlBar = new FramedFooter();
 
         //======== this ========
@@ -482,11 +449,12 @@ public class Application extends JFrame {
                 tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
                 tabbedPane.addChangeListener(e -> selectedTabChanged());
                 tabbedPane.addTab("Start", startPanel);
-                tabbedPane.addTab("Services", servicePanel);
-                tabbedPane.addTab("Nodes", dataComponentsPanel);
-                tabbedPane.addTab("Players", tabsPanel);
-                tabbedPane.addTab("Modules", optionPanePanel);
-                tabbedPane.addTab("Settings", settingsPanel1);
+                tabbedPane.addTab("Services", new ServicePanel());
+                tabbedPane.addTab("Nodes", new NodesPanel());
+                tabbedPane.addTab("Players", new PlayersPanel());
+                tabbedPane.addTab("Modules", new ModulesPanel());
+                tabbedPane.addTab("Settings", new SettingsPanel());
+                tabbedPane.addTab("Console", new ConsolePanel());
             }
             contentPanel.add(tabbedPane, "cell 0 0");
         }
@@ -510,7 +478,6 @@ public class Application extends JFrame {
         menuBar1.add(usersButton);
 
         refreshButton.setIcon(new FlatSVGIcon("cloud/hytora/img/refresh.svg"));
-
 
         // remove contentPanel bottom insets
         MigLayout layout = (MigLayout) contentPanel.getLayout();

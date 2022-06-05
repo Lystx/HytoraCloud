@@ -1,4 +1,4 @@
-package cloud.hytora.application.data;
+package cloud.hytora.application.elements.data;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

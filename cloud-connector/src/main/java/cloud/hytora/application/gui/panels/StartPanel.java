@@ -1,15 +1,11 @@
 
 package cloud.hytora.application.gui.panels;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 
-import cloud.hytora.application.bootstrap.Bootstrap;
-import cloud.hytora.application.data.CloudUpdateInfo;
+import cloud.hytora.application.elements.data.CloudUpdateInfo;
 import cloud.hytora.application.elements.StartPanelInfoBox;
 import cloud.hytora.application.elements.event.CommitHistoryLoadedEvent;
 import cloud.hytora.application.gui.Application;
@@ -18,15 +14,11 @@ import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.IEntry;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.event.CloudEventHandler;
+import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.node.Node;
 import cloud.hytora.remote.Remote;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
-import javafx.scene.layout.Border;
-import org.jetbrains.annotations.NotNull;
 import org.kohsuke.github.GHCommit;
-import org.kohsuke.github.PagedIterable;
-import org.kohsuke.github.PagedIterator;
 
 import java.awt.*;
 import java.io.IOException;
@@ -163,8 +155,7 @@ public class StartPanel extends JPanel {
         Document document = DocumentFactory.newJsonDocument(input);
         Bundle updates = document.getBundle("updates");
 
-        String[] rows = new String[]{"Date", "From", "Type", "Message", "New Version"};
-        Object[][] tableContent = new Object[updates.size()][rows.length];
+        Object[][] tableContent = new Object[updates.size()][tableRows.length];
 
         for (int i = 0; i < updates.size(); i++) {
 
@@ -174,9 +165,14 @@ public class StartPanel extends JPanel {
 
             tableContent[i] = updateInfo.toArray();
         }
+        this.setTableContent(tableContent, updateTable);
+    }
 
 
-        updateTable.setModel(new DefaultTableModel(tableContent, rows) {
+    String[] tableRows = new String[]{"Date", "From", "Type", "Message", "New Version"};
+
+    private void setTableContent(Object[][] tableContent, JTable updateTable) {
+        updateTable.setModel(new DefaultTableModel(tableContent, tableRows) {
 
             @Override
             public Class<?> getColumnClass(int columnIndex) {
@@ -190,6 +186,25 @@ public class StartPanel extends JPanel {
         });
     }
 
+    private void updateTableWithCommits(JTable updateTable, List<GHCommit> commits) throws Exception {
+
+        Object[][] tableContent = new Object[commits.size()][tableRows.length];
+
+        for (int i = 0; i < commits.size(); i++) {
+
+            GHCommit commit = commits.get(i);
+
+            tableContent[i] = new Object[]{
+                    new SimpleDateFormat("dd.MM.yyyy - HH:mm:ss").format(commit.getCommitDate()),
+                    commit.getCommitter().getName(),
+                    "ADD_CONTENT",
+                    commit.getCommitShortInfo().getMessage(),
+                    "???"
+            };
+        }
+
+        this.setTableContent(tableContent, updateTable);
+    }
     public void createBox(StartPanelInfoBox box) {
 
         int width = 200;
@@ -218,6 +233,16 @@ public class StartPanel extends JPanel {
         boxPanes.put(box.getId(), pane);
 
         boxStartX = width + 20 + boxStartX;
+    }
+
+    @EventListener
+    public void handle(CommitHistoryLoadedEvent event) {
+        Collection<GHCommit> loadedCommits = event.getLoadedCommits();
+        /*try {
+            updateTableWithCommits(updateTable, (List<GHCommit>) loadedCommits);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }*/
     }
 
 }

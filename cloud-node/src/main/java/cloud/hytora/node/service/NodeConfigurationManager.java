@@ -1,7 +1,7 @@
 package cloud.hytora.node.service;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.event.CloudEventHandler;
+import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.server.CloudServiceGroupUpdateEvent;
 
 import cloud.hytora.driver.services.configuration.DefaultConfigurationManager;
@@ -17,7 +17,6 @@ import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
 import java.util.stream.Collectors;
 
 
@@ -63,7 +62,7 @@ public class NodeConfigurationManager extends DefaultConfigurationManager {
 
     }
 
-    @CloudEventHandler
+    @EventListener
     public void handle(CloudServiceGroupUpdateEvent event) {
         NodeDriver.getInstance().getServiceQueue().dequeue();
     }

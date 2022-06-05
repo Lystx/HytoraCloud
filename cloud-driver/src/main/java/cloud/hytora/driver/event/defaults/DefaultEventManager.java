@@ -4,7 +4,7 @@ import cloud.hytora.common.collection.ClassWalker;
 import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.common.wrapper.Wrapper;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.event.CloudEventHandler;
+import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.*;
 import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +13,6 @@ import javax.annotation.Nonnull;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 
@@ -48,7 +47,7 @@ public class DefaultEventManager implements EventManager {
 	@Nonnull
 	@Override
 	public EventManager registerListener(@Nonnull Object listener) {
-		for (Method method : ReflectionUtils.getMethodsAnnotatedWith(listener.getClass(), CloudEventHandler.class)) {
+		for (Method method : ReflectionUtils.getMethodsAnnotatedWith(listener.getClass(), EventListener.class)) {
 
 			if (method.getParameterCount() != 1 || !Modifier.isPublic(method.getModifiers())) {
 				throw new IllegalArgumentException(String.format(
@@ -68,7 +67,7 @@ public class DefaultEventManager implements EventManager {
 				));
 			}
 
-			CloudEventHandler annotation = method.getAnnotation(CloudEventHandler.class);
+			EventListener annotation = method.getAnnotation(EventListener.class);
 			addListener(new DefaultRegisteredListener(listener, method, parameterType.asSubclass(CloudEvent.class), annotation.order(), annotation.ignoreCancelled()));
 		}
 
