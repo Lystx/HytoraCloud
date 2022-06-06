@@ -10,7 +10,7 @@ import cloud.hytora.driver.networking.packets.player.CloudPlayerComponentMessage
 import cloud.hytora.driver.networking.packets.player.CloudPlayerKickPacket;
 import cloud.hytora.driver.networking.packets.player.CloudPlayerPlainMessagePacket;
 import cloud.hytora.driver.networking.packets.player.CloudPlayerSendServicePacket;
-import cloud.hytora.driver.networking.protocol.wrapped.ChannelWrapper;
+import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.remote.Remote;
@@ -73,7 +73,7 @@ public class ProxyRemoteHandler {
     private static class KickHandler implements PacketHandler<CloudPlayerKickPacket> {
 
         @Override
-        public void handle(ChannelWrapper wrapper, CloudPlayerKickPacket packet) {
+        public void handle(PacketChannel wrapper, CloudPlayerKickPacket packet) {
             ProxiedPlayer player = ProxyServer.getInstance().getPlayer(packet.getUuid());
             if (player == null) {
                 return;
@@ -85,7 +85,7 @@ public class ProxyRemoteHandler {
     private static class MessageHandler implements PacketHandler<CloudPlayerPlainMessagePacket> {
 
         @Override
-        public void handle(ChannelWrapper wrapper, CloudPlayerPlainMessagePacket packet) {
+        public void handle(PacketChannel wrapper, CloudPlayerPlainMessagePacket packet) {
             ProxiedPlayer player = ProxyServer.getInstance().getPlayer(packet.getUuid());
             if (player == null) {
                 return;
@@ -97,7 +97,7 @@ public class ProxyRemoteHandler {
     private static class ComponentHandler implements PacketHandler<CloudPlayerComponentMessagePacket> {
 
         @Override
-        public void handle(ChannelWrapper wrapper, CloudPlayerComponentMessagePacket packet) {
+        public void handle(PacketChannel wrapper, CloudPlayerComponentMessagePacket packet) {
             ProxiedPlayer player = ProxyServer.getInstance().getPlayer(packet.getUuid());
             if (player == null) {
                 return;
@@ -112,7 +112,7 @@ public class ProxyRemoteHandler {
     private static class SendHandler implements PacketHandler<CloudPlayerSendServicePacket> {
 
         @Override
-        public void handle(ChannelWrapper wrapper, CloudPlayerSendServicePacket packet) {
+        public void handle(PacketChannel wrapper, CloudPlayerSendServicePacket packet) {
             ProxiedPlayer player = ProxyServer.getInstance().getPlayer(packet.getUuid());
             if (player == null || player.getServer().getInfo().getName().equals(packet.getService())) {
                 return;

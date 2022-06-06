@@ -1,8 +1,8 @@
 package cloud.hytora.driver.networking.protocol.packets;
 
-import cloud.hytora.driver.networking.protocol.wrapped.ChannelWrapper;
+import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 
 public interface PacketHandler<T> {
 
-    void handle(ChannelWrapper wrapper, T packet);
+    void handle(PacketChannel wrapper, T packet);
 }

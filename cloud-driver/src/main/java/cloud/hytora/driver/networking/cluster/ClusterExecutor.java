@@ -17,8 +17,8 @@ import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.networking.protocol.packets.defaults.HandshakePacket;
-import cloud.hytora.driver.networking.protocol.wrapped.ChannelWrapper;
-import cloud.hytora.driver.networking.protocol.wrapped.SimpleChannelWrapper;
+import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
+import cloud.hytora.driver.networking.protocol.wrapped.SimplePacketChannel;
 import cloud.hytora.driver.networking.AbstractNetworkComponent;
 
 
@@ -60,13 +60,13 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
      * All cached clients
      */
     private final List<ClusterClientExecutor> allCachedConnectedClients;
-    private final Map<ChannelHandlerContext, ChannelWrapper> cachedContexts = new HashMap<>();
+    private final Map<ChannelHandlerContext, PacketChannel> cachedContexts = new HashMap<>();
 
     //netty stuff
     private NioEventLoopGroup bossGroup;
     private NioEventLoopGroup workerGroup;
     private EventExecutorGroup eventExecutorGroup;
-    private SimpleChannelWrapper wrapper;
+    private SimplePacketChannel packetChannel;
 
     public ClusterExecutor(String authKey, String nodeName) {
         super(ConnectionType.NODE, nodeName);
@@ -75,12 +75,12 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
         this.nodeName = nodeName;
         this.allCachedConnectedClients = new ArrayList<>();
 
-        this.wrapper = new SimpleChannelWrapper();
-        this.wrapper.setState(ConnectionState.DISCONNECTED);
-        this.wrapper.setModificationTime(System.currentTimeMillis());
-        this.wrapper.setParticipant(this);
-        this.wrapper.setEverConnected(false);
-        this.wrapper.setWrapped(null);
+        this.packetChannel = new SimplePacketChannel();
+        this.packetChannel.setState(ConnectionState.DISCONNECTED);
+        this.packetChannel.setModificationTime(System.currentTimeMillis());
+        this.packetChannel.setParticipant(this);
+        this.packetChannel.setEverConnected(false);
+        this.packetChannel.setWrapped(null);
     }
 
     public Wrapper<ClusterExecutor> openConnection(String hostname, int port) {
@@ -111,7 +111,7 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
                                              public void channelActive(ChannelHandlerContext ctx) {
                                                  ClusterClientExecutor clusterClientExecutor = addConnectedClient(ctx.channel());
 
-                                                 SimpleChannelWrapper wrapper = new SimpleChannelWrapper();
+                                                 SimplePacketChannel wrapper = new SimplePacketChannel();
 
                                                  wrapper.setParticipant(clusterClientExecutor);
                                                  wrapper.setWrapped(ctx);
@@ -130,6 +130,9 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
                                                      channelHandlerContext.close();
                                                      return;
                                                  }
+
+                                                 PacketChannel channel = cachedContexts.get(channelHandlerContext);
+                                                 System.out.println("==> " + channel.executor().getName() + " ==> " + packet.getClass().getSimpleName() + " [CH: " + packet.getDestinationChannel() + "]");
 
                                                  if (!client.isAuthenticated()) {
 
@@ -166,27 +169,27 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
                                                      }
                                                      return;
                                                  }
-                                                 handlePacket(cachedContexts.get(channelHandlerContext), packet);
+                                                 handlePacket(channel, packet);
                                              }
 
                                              @Override
                                              public void channelInactive(final ChannelHandlerContext ctx) {
                                                  closeClient(ctx);
-                                                 cachedContexts.remove(ctx, wrapper);
+                                                 cachedContexts.remove(ctx, packetChannel);
                                              }
 
                                              @Override
                                              public void channelUnregistered(final ChannelHandlerContext ctx) {
                                                  closeClient(ctx);
-                                                 cachedContexts.remove(ctx, wrapper);
+                                                 cachedContexts.remove(ctx, packetChannel);
                                              }
                                          }
                                 );
                     }
                 }).option(ChannelOption.SO_BACKLOG, 128)
                 .bind(hostname, port).addListener(future -> {
-                    this.wrapper.setEverConnected(true);
-                    this.wrapper.setState(ConnectionState.CONNECTED);
+                    this.packetChannel.setEverConnected(true);
+                    this.packetChannel.setState(ConnectionState.CONNECTED);
                     CloudDriver.getInstance().getEventManager().callEvent(new DriverConnectEvent());
                     if (future.isSuccess()) {
                         connectPromise.setResult(this);
@@ -276,7 +279,7 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
         allCachedConnectedClients.forEach(it -> it.sendPacket(packet));
     }
 
-    public abstract void handleConnectionChange(ConnectionState state, ClusterClientExecutor executor, ChannelWrapper wrapper);
+    public abstract void handleConnectionChange(ConnectionState state, ClusterClientExecutor executor, PacketChannel wrapper);
 
 
 }

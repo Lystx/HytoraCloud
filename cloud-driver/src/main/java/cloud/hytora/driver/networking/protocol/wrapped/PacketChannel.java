@@ -1,5 +1,6 @@
 package cloud.hytora.driver.networking.protocol.wrapped;
 
+import cloud.hytora.driver.networking.PacketSender;
 import cloud.hytora.driver.networking.protocol.packets.BufferedResponse;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionState;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
@@ -10,7 +11,7 @@ import java.net.InetSocketAddress;
 import java.util.Optional;
 import java.util.Set;
 
-public interface ChannelWrapper {
+public interface PacketChannel extends PacketSender {
 
     /**
      * If a connection has been built up before
@@ -57,8 +58,6 @@ public interface ChannelWrapper {
      */
     NetworkExecutor executor();
 
-    void sendPacket(Packet packet);
-
     /**
      * The last modification time
      */
@@ -69,7 +68,7 @@ public interface ChannelWrapper {
      */
     InetSocketAddress getClientAddress();
 
-    ChannelWrapper overrideExecutor(NetworkExecutor executor);
+    PacketChannel overrideExecutor(NetworkExecutor executor);
 
     ChanneledPacketAction<Set<BufferedResponse>> prepareMultiQuery();
 

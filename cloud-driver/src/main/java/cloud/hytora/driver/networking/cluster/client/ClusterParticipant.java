@@ -12,9 +12,8 @@ import cloud.hytora.driver.networking.protocol.codec.prepender.NettyPacketLength
 import cloud.hytora.driver.networking.protocol.codec.prepender.NettyPacketLengthSerializer;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.networking.protocol.packets.defaults.HandshakePacket;
-import cloud.hytora.driver.networking.protocol.wrapped.ChannelWrapper;
+import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
@@ -50,8 +49,8 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
     }
 
     @Override
-    public ChannelWrapper getWrapper() {
-        return channel.pipeline().get(NetworkBossHandler.class).getWrapper();
+    public PacketChannel getPacketChannel() {
+        return channel.pipeline().get(NetworkBossHandler.class).getPacketChannel();
     }
 
 
@@ -128,7 +127,7 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
     }
 
     @Override
-    public <T extends IPacket> void handlePacket(ChannelWrapper wrapper, @NotNull T packet) {
+    public <T extends IPacket> void handlePacket(PacketChannel wrapper, @NotNull T packet) {
         if (packet instanceof HandshakePacket) {
             HandshakePacket handshake = (HandshakePacket) packet;
             connectedNodeName = handshake.getNodeName();
@@ -162,7 +161,7 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
         this.channel.writeAndFlush(packet).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
     }
 
-    public abstract void onAuthenticationChanged(ChannelWrapper wrapper);
+    public abstract void onAuthenticationChanged(PacketChannel wrapper);
 
     public abstract void onActivated(ChannelHandlerContext ctx);
 

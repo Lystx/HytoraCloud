@@ -126,7 +126,11 @@ public class Remote extends CloudDriver {
                 CloudDriver.getInstance().getLogger().info("Waiting for CacheUpdate to start Application...");
                 CloudDriver.getInstance().getExecutor().registerSelfDestructivePacketHandler((PacketHandler<DriverUpdatePacket>) (wrapper1, packet) -> {
                     CloudDriver.getInstance().getLogger().info("Received CacheUpdate!");
+                    remote.getClient().getPacketChannel().sendPacket(new DriverLoggingPacket(NetworkComponent.of("Node-"), "Hello Test"));
+
                     thenExecute.accept(packet);
+                    remote.getClient().getPacketChannel().sendPacket(new DriverLoggingPacket(NetworkComponent.of("Node-"), "Hello Test"));
+
                     RemoteProxyAdapter proxy = Remote.getInstance().getProxyAdapterOrNull();
                     if (proxy != null) {
                         CloudDriver.getInstance().getLogger().info("Pre registered all services");
@@ -187,6 +191,9 @@ public class Remote extends CloudDriver {
 
     @Override
     public void shutdown() {
+        if (adapter != null) {
+
+        }
         // TODO: 11.04.2022
     }
 

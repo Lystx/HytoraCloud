@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
 
     //global values
-    private final ChannelWrapper wrapper;
+    private final PacketChannel wrapper;
     private final Class<R> returnTypeClass;
     private final String identifier;
 
@@ -35,7 +35,7 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
     private Document data;
     private PacketBuffer buffer;
 
-    public SimplePacketAction(ChannelWrapper wrapper, Class<R> returnTypeClass, String identifier) {
+    public SimplePacketAction(PacketChannel wrapper, Class<R> returnTypeClass, String identifier) {
         this.wrapper = wrapper;
         this.returnTypeClass = returnTypeClass;
         this.identifier = identifier;

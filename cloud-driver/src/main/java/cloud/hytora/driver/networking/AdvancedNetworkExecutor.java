@@ -1,9 +1,8 @@
 package cloud.hytora.driver.networking;
 
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
-import cloud.hytora.driver.networking.protocol.wrapped.ChannelWrapper;
+import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -11,7 +10,7 @@ import java.util.List;
 
 public interface AdvancedNetworkExecutor extends NetworkExecutor {
 
-    <T extends IPacket> void handlePacket(@Nullable ChannelWrapper wrapper, @Nonnull T packet);
+    <T extends IPacket> void handlePacket(@Nullable PacketChannel wrapper, @Nonnull T packet);
 
     <T extends IPacket> void registerChannelHandler(@Nonnull String channelName, @Nonnull PacketHandler<T> packetHandler);
 
@@ -24,7 +23,7 @@ public interface AdvancedNetworkExecutor extends NetworkExecutor {
 
     <T extends IPacket> void registerSelfDestructivePacketHandler(@Nonnull PacketHandler<T> packetHandler);
 
-    ChannelWrapper getWrapper();
+    PacketChannel getPacketChannel();
 
     @Nonnull
     List<PacketHandler<?>> getRegisteredPacketHandlers();

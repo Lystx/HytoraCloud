@@ -6,7 +6,7 @@ import cloud.hytora.driver.module.controller.base.ModuleCopyType;
 import cloud.hytora.driver.networking.packets.module.RemoteModuleExecutionPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
-import cloud.hytora.driver.networking.protocol.wrapped.ChannelWrapper;
+import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.networking.protocol.wrapped.ChanneledPacketAction;
 
 import java.io.IOException;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class NodeModulePacketHandler implements PacketHandler<RemoteModuleExecutionPacket> {
 
     @Override
-    public void handle(ChannelWrapper wrapper, RemoteModuleExecutionPacket packet) {
+    public void handle(PacketChannel wrapper, RemoteModuleExecutionPacket packet) {
         PacketBuffer buffer = packet.buffer();
         RemoteModuleExecutionPacket.PayLoad payLoad = buffer.readEnum(RemoteModuleExecutionPacket.PayLoad.class);
 

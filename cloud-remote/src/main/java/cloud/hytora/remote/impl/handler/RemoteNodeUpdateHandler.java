@@ -4,7 +4,7 @@ import cloud.hytora.common.logging.Logger;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.packets.node.NodeCycleDataPacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
-import cloud.hytora.driver.networking.protocol.wrapped.ChannelWrapper;
+import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.node.NodeCycleData;
 import cloud.hytora.driver.node.NodeManager;
@@ -12,7 +12,7 @@ import cloud.hytora.driver.node.NodeManager;
 public class RemoteNodeUpdateHandler implements PacketHandler<NodeCycleDataPacket> {
 
     @Override
-    public void handle(ChannelWrapper wrapper, NodeCycleDataPacket packet) {
+    public void handle(PacketChannel wrapper, NodeCycleDataPacket packet) {
 
         String name = packet.getNodeName();
         NodeCycleData data = packet.getData();

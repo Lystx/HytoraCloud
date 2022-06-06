@@ -48,6 +48,6 @@ public class RemoteDriverStorage implements DriverStorage {
 
     @Override
     public void fetch() {
-        this.rawData = client.getWrapper().prepareSingleQuery().execute(new StorageUpdatePacket(StorageUpdatePacket.StoragePayLoad.FETCH, rawData)).syncUninterruptedly().get().data();
+        this.rawData = client.getPacketChannel().prepareSingleQuery().execute(new StorageUpdatePacket(StorageUpdatePacket.StoragePayLoad.FETCH, rawData)).syncUninterruptedly().get().data();
     }
 }

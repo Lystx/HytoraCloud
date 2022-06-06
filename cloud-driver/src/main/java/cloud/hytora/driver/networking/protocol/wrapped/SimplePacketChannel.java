@@ -1,6 +1,9 @@
 package cloud.hytora.driver.networking.protocol.wrapped;
 
+import cloud.hytora.driver.networking.protocol.packets.IPacket;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelOutboundInvoker;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,7 +18,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @AllArgsConstructor @Getter @NoArgsConstructor @Setter
-public class SimpleChannelWrapper implements ChannelWrapper {
+public class SimplePacketChannel implements PacketChannel {
 
     /**
      * The wrapped context
@@ -58,7 +61,7 @@ public class SimpleChannelWrapper implements ChannelWrapper {
     }
 
     @Override
-    public ChannelWrapper overrideExecutor(NetworkExecutor executor) {
+    public PacketChannel overrideExecutor(NetworkExecutor executor) {
         participant = executor;
         return this;
     }
@@ -91,7 +94,8 @@ public class SimpleChannelWrapper implements ChannelWrapper {
 
     @Override
     public void flushPacket(Packet packet) {
-        this.wrapped.channel().writeAndFlush(packet);
+        ChannelOutboundInvoker invoker = this.wrapped.channel() == null ? this.wrapped : this.wrapped.channel();
+        invoker.writeAndFlush(packet).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
     }
 
     @Override
@@ -115,12 +119,12 @@ public class SimpleChannelWrapper implements ChannelWrapper {
     }
 
     @Override
-    public void sendPacket(Packet packet) {
-        this.wrapped.writeAndFlush(packet);
+    public String toString() {
+        return "[name=" + participant.getName() + ", type= " + participant.getType() + ", state=" + state + ", modificationTime=" + modificationTime + ", connected=" + everConnected + "]";
     }
 
     @Override
-    public String toString() {
-        return "[name=" + participant.getName() + ", type= " + participant.getType() + ", state=" + state + ", modificationTime=" + modificationTime + ", connected=" + everConnected + "]";
+    public void sendPacket(IPacket packet) {
+        this.flushPacket((Packet) packet);
     }
 }

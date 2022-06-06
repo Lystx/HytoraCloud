@@ -44,7 +44,8 @@ public class NodeServiceManager extends DefaultServiceManager {
 
 
         executor.registerPacketHandler((PacketHandler<CloudServerCacheUpdatePacket>) (ctx, packet) -> {
-            System.out.println();
+            CloudDriver.getInstance().getLogger().info("RECEIVED");
+            System.out.println(1);
             CloudServer packetService = packet.getService();
             CloudServer service = getServiceByNameOrNull(packetService.getName());
             if (service == null) {

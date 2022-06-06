@@ -5,12 +5,10 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.EventManager;
 import cloud.hytora.driver.event.defaults.player.CloudPlayerDisconnectEvent;
 import cloud.hytora.driver.event.defaults.player.CloudPlayerLoginEvent;
-import cloud.hytora.driver.networking.PacketProvider;
 import cloud.hytora.driver.networking.packets.player.CloudPlayerDisconnectPacket;
 import cloud.hytora.driver.networking.packets.player.CloudPlayerLoginPacket;
 import cloud.hytora.driver.networking.packets.player.CloudPlayerUpdatePacket;
 import cloud.hytora.driver.networking.packets.player.OfflinePlayerRequestPacket;
-import cloud.hytora.driver.networking.protocol.packets.QueryState;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.impl.DefaultCloudOfflinePlayer;
@@ -42,7 +40,7 @@ public class RemotePlayerManager extends DefaultPlayerManager {
             public Collection<CloudOfflinePlayer> call() throws Exception {
                 return CloudDriver.getInstance()
                         .getExecutor()
-                        .getWrapper()
+                        .getPacketChannel()
                         .prepareSingleQuery()
                         .execute(new OfflinePlayerRequestPacket())
                         .syncUninterruptedly()
@@ -63,7 +61,7 @@ public class RemotePlayerManager extends DefaultPlayerManager {
             public CloudOfflinePlayer call() throws Exception {
                 return Remote.getInstance()
                         .getClient()
-                        .getWrapper()
+                        .getPacketChannel()
                         .prepareSingleQuery()
                         .execute(new OfflinePlayerRequestPacket(uniqueId))
                         .syncUninterruptedly()
@@ -86,7 +84,7 @@ public class RemotePlayerManager extends DefaultPlayerManager {
             public CloudOfflinePlayer call() throws Exception {
                 return Remote.getInstance()
                         .getClient()
-                        .getWrapper()
+                        .getPacketChannel()
                         .prepareSingleQuery()
                         .execute(new OfflinePlayerRequestPacket(name))
                         .syncUninterruptedly()

@@ -2,15 +2,11 @@ package cloud.hytora.node.impl.module;
 
 
 import cloud.hytora.common.misc.FileUtils;
-import cloud.hytora.common.wrapper.Wrapper;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.ModuleManager;
-import cloud.hytora.driver.module.controller.base.ModuleConfig;
 import cloud.hytora.driver.networking.packets.module.RemoteModuleExecutionPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
-import cloud.hytora.driver.networking.protocol.packets.BufferedResponse;
-import cloud.hytora.driver.networking.protocol.wrapped.ChanneledPacketAction;
 import cloud.hytora.node.NodeDriver;
 
 import javax.annotation.Nonnull;
@@ -21,7 +17,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 
@@ -69,7 +64,7 @@ public class NodeModuleManager implements ModuleManager {
             PacketBuffer buffer = NodeDriver.getInstance()
                     .getExecutor()
                     .getNodeAsClient()
-                    .getWrapper()
+                    .getPacketChannel()
                     .prepareSingleQuery()
                     .execute(new RemoteModuleExecutionPacket(RemoteModuleExecutionPacket.PayLoad.TRANSFER_MODULES))
                     .syncUninterruptedly()

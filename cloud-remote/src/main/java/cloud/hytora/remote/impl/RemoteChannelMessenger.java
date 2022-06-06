@@ -6,7 +6,7 @@ import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.packets.message.ChannelMessageExecutePacket;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
-import cloud.hytora.driver.networking.protocol.wrapped.ChannelWrapper;
+import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.networking.protocol.wrapped.ChanneledPacketAction;
 
 import java.util.Arrays;
@@ -19,7 +19,7 @@ public class RemoteChannelMessenger extends DefaultChannelMessenger {
 
     @Override
     public void sendChannelMessage(ChannelMessage message, NetworkComponent[] receivers) {
-        ChannelWrapper wrapper = this.executor.getWrapper();
+        PacketChannel wrapper = this.executor.getPacketChannel();
 
         ChanneledPacketAction<Void> transfer = wrapper.prepareTransfer();
 

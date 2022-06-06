@@ -52,7 +52,7 @@ public class RemoteModuleManager implements ModuleManager {
     @NotNull
     @Override
     public List<ModuleController> getModules() {
-        return new ArrayList<>(Remote.getInstance().getClient().getWrapper().prepareSingleQuery()
+        return new ArrayList<>(Remote.getInstance().getClient().getPacketChannel().prepareSingleQuery()
                 .execute(new RemoteModuleExecutionPacket(RemoteModuleExecutionPacket.PayLoad.RETRIEVE_MODULES))
                 .syncUninterruptedly().get().buffer().readObjectCollection(RemoteModuleController.class));
     }

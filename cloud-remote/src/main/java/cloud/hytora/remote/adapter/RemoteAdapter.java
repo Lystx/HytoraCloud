@@ -5,4 +5,5 @@ import cloud.hytora.common.DriverUtility;
 public interface RemoteAdapter {
 
     void executeCommand(String command);
+
 }

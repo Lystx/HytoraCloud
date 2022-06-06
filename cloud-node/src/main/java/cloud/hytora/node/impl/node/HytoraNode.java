@@ -11,7 +11,7 @@ import cloud.hytora.driver.networking.packets.StorageUpdatePacket;
 import cloud.hytora.driver.networking.packets.node.NodeConnectionDataRequestPacket;
 import cloud.hytora.driver.networking.packets.node.NodeConnectionDataResponsePacket;
 import cloud.hytora.driver.networking.protocol.packets.*;
-import cloud.hytora.driver.networking.protocol.wrapped.ChannelWrapper;
+import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.node.NodeCycleData;
 import cloud.hytora.driver.node.NodeInfo;
@@ -28,7 +28,6 @@ import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -72,7 +71,7 @@ public class HytoraNode extends ClusterExecutor {
     }
 
     @Override
-    public void handleConnectionChange(ConnectionState state, ClusterClientExecutor executor, ChannelWrapper wrapper) {
+    public void handleConnectionChange(ConnectionState state, ClusterClientExecutor executor, PacketChannel wrapper) {
         ConnectionType type = executor.getType();
 
         if (type == ConnectionType.NODE) {
@@ -178,7 +177,7 @@ public class HytoraNode extends ClusterExecutor {
         ClusterParticipant client = new ClusterParticipant(authKey, name, ConnectionType.NODE, customData) {
 
             @Override
-            public void onAuthenticationChanged(ChannelWrapper wrapper) {
+            public void onAuthenticationChanged(PacketChannel wrapper) {
                 ChannelHandlerContext context = wrapper.context();
 
                 SimpleClusterClientExecutor connectedClient = (SimpleClusterClientExecutor) getConnectedClientByChannel(context.channel());
@@ -200,7 +199,7 @@ public class HytoraNode extends ClusterExecutor {
             }
 
             @Override
-            public <T extends IPacket> void handlePacket(ChannelWrapper wrapper, @NotNull T packet) {
+            public <T extends IPacket> void handlePacket(PacketChannel wrapper, @NotNull T packet) {
 
 
                 for (PacketHandler packetHandler : new ArrayList<>(HytoraNode.this.remoteHandlers)) {

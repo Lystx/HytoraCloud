@@ -4,9 +4,8 @@ import cloud.hytora.common.collection.ThreadRunnable;
 import cloud.hytora.driver.networking.protocol.SimpleNetworkComponent;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
-import cloud.hytora.driver.networking.protocol.wrapped.ChannelWrapper;
+import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
@@ -95,7 +94,7 @@ public abstract class AbstractNetworkComponent<T extends AbstractNetworkComponen
     }
 
     @Override
-    public <P extends IPacket> void handlePacket(ChannelWrapper wrapper, @NotNull P packet) {
+    public <P extends IPacket> void handlePacket(PacketChannel wrapper, @NotNull P packet) {
         ThreadRunnable runnable = new ThreadRunnable(() -> {
 
             List<PacketHandler<?>> packetHandlers = this.channelPacketHandlers.get(packet.getDestinationChannel());

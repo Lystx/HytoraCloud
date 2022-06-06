@@ -79,7 +79,7 @@ public class RemoteModuleController implements ModuleController {
     @Override
     public Path getJarFile() {
         if (jarFile == null) {
-            jarFile = Paths.get(CloudDriver.getInstance().getExecutor().getWrapper().prepareSingleQuery().execute(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.GET_JAR_FILE)).syncUninterruptedly().get().buffer().readString());
+            jarFile = Paths.get(CloudDriver.getInstance().getExecutor().getPacketChannel().prepareSingleQuery().execute(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.GET_JAR_FILE)).syncUninterruptedly().get().buffer().readString());
         }
         return jarFile;
     }
@@ -90,7 +90,7 @@ public class RemoteModuleController implements ModuleController {
     @Override
     public Path getDataFolder() {
         if (dataFolder == null) {
-            dataFolder = Paths.get(CloudDriver.getInstance().getExecutor().getWrapper().prepareSingleQuery().execute(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.GET_DATA_FOLDER)).syncUninterruptedly().get().buffer().readString());
+            dataFolder = Paths.get(CloudDriver.getInstance().getExecutor().getPacketChannel().prepareSingleQuery().execute(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.GET_DATA_FOLDER)).syncUninterruptedly().get().buffer().readString());
         }
         return dataFolder;
     }
@@ -98,7 +98,7 @@ public class RemoteModuleController implements ModuleController {
     @NotNull
     @Override
     public StorableDocument reloadConfig() {
-        return DocumentFactory.newStorableDocument(CloudDriver.getInstance().getExecutor().getWrapper().prepareSingleQuery().execute(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.RELOAD_CONFIG)).syncUninterruptedly().get().buffer().readDocument(), getJarFile());
+        return DocumentFactory.newStorableDocument(CloudDriver.getInstance().getExecutor().getPacketChannel().prepareSingleQuery().execute(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.RELOAD_CONFIG)).syncUninterruptedly().get().buffer().readDocument(), getJarFile());
     }
 
     @NotNull

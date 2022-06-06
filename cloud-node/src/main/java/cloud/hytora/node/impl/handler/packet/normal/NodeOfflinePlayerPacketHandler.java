@@ -3,7 +3,7 @@ package cloud.hytora.node.impl.handler.packet.normal;
 import cloud.hytora.driver.networking.packets.player.OfflinePlayerRequestPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
-import cloud.hytora.driver.networking.protocol.wrapped.ChannelWrapper;
+import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.player.impl.DefaultCloudOfflinePlayer;
 import cloud.hytora.node.NodeDriver;
 
@@ -13,7 +13,7 @@ public class NodeOfflinePlayerPacketHandler implements PacketHandler<OfflinePlay
 
 
     @Override
-    public void handle(ChannelWrapper wrapper, OfflinePlayerRequestPacket packet) {
+    public void handle(PacketChannel wrapper, OfflinePlayerRequestPacket packet) {
         PacketBuffer buffer = packet.buffer();
         OfflinePlayerRequestPacket.PayLoad payLoad = buffer.readEnum(OfflinePlayerRequestPacket.PayLoad.class);
 
