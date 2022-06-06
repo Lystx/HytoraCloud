@@ -1,5 +1,6 @@
 package cloud.hytora.driver.networking.packets;
 
+import cloud.hytora.driver.networking.PacketSender;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
@@ -24,7 +25,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
-@NoArgsConstructor
 @Getter
 @AllArgsConstructor
 public class DriverUpdatePacket extends Packet {
@@ -34,6 +34,21 @@ public class DriverUpdatePacket extends Packet {
     private Collection<CloudServer> allCachedServices;
     private Collection<CloudPlayer> cloudPlayers;
     private Collection<Node> connectedNodes;
+
+
+    public static void publishUpdate(PacketSender sender) {
+        sender.sendPacket(new DriverUpdatePacket());
+    }
+
+    public DriverUpdatePacket() {
+        this(
+                CloudDriver.getInstance().getConfigurationManager().getAllCachedConfigurations(),
+                CloudDriver.getInstance().getConfigurationManager().getAllParentConfigurations(),
+                CloudDriver.getInstance().getServiceManager().getAllCachedServices(),
+                CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers(),
+                CloudDriver.getInstance().getNodeManager().getAllNodes()
+        );
+    }
 
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {

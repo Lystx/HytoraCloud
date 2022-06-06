@@ -69,7 +69,6 @@ public interface ChannelWrapper {
      */
     InetSocketAddress getClientAddress();
 
-
     ChannelWrapper overrideExecutor(NetworkExecutor executor);
 
     ChanneledPacketAction<Set<BufferedResponse>> prepareMultiQuery();

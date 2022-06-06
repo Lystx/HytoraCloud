@@ -122,14 +122,7 @@ public class HytoraNode extends ClusterExecutor {
                 if (service == null) {
                     //other remote connection
 
-                    // update cache
-                    executor.sendPacket(new DriverUpdatePacket(
-                            NodeDriver.getInstance().getConfigurationManager().getAllCachedConfigurations(),
-                            NodeDriver.getInstance().getConfigurationManager().getAllParentConfigurations(),
-                            NodeDriver.getInstance().getServiceManager().getAllCachedServices(),
-                            NodeDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers(),
-                            CloudDriver.getInstance().getNodeManager().getAllNodes()
-                    ));
+                    DriverUpdatePacket.publishUpdate(executor);
 
                     executor.sendPacket(new StorageUpdatePacket(
                             StorageUpdatePacket.StoragePayLoad.UPDATE,
@@ -145,14 +138,8 @@ public class HytoraNode extends ClusterExecutor {
                 }
                 service.setServiceState(ServiceState.ONLINE);
 
+                DriverUpdatePacket.publishUpdate(service);
                 // update cache
-                service.sendPacket(new DriverUpdatePacket(
-                        NodeDriver.getInstance().getConfigurationManager().getAllCachedConfigurations(),
-                        NodeDriver.getInstance().getConfigurationManager().getAllParentConfigurations(),
-                        NodeDriver.getInstance().getServiceManager().getAllCachedServices(),
-                        NodeDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers(),
-                        CloudDriver.getInstance().getNodeManager().getAllNodes()
-                ));
 
                 service.sendPacket(new StorageUpdatePacket(
                         StorageUpdatePacket.StoragePayLoad.UPDATE,

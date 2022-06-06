@@ -5,6 +5,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.common.SelfCloneable;
 import cloud.hytora.driver.exception.IncompatibleDriverEnvironment;
 import cloud.hytora.driver.networking.NetworkComponent;
+import cloud.hytora.driver.networking.PacketSender;
 import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
@@ -17,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.function.Consumer;
 
-public interface CloudServer extends Bufferable, SelfCloneable<CloudServer>, NetworkComponent {
+public interface CloudServer extends Bufferable, SelfCloneable<CloudServer>, NetworkComponent, PacketSender {
 
     NodeCloudServer asCloudServer() throws IncompatibleDriverEnvironment;
 
@@ -51,7 +52,7 @@ public interface CloudServer extends Bufferable, SelfCloneable<CloudServer>, Net
     /**
      * @return the group of the service
      */
-    @NotNull ServerConfiguration getConfiguration();
+    ServerConfiguration getConfiguration();
 
     /**
      * @return the state of the service
@@ -119,8 +120,6 @@ public interface CloudServer extends Bufferable, SelfCloneable<CloudServer>, Net
     String getMotd();
 
     void setMotd(String motd);
-
-    void sendPacket(Packet packet);
 
     void executeCommand(@NotNull String commandLine);
 

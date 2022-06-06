@@ -22,7 +22,7 @@ public interface PluginBridge {
         service.setReady(true);
         service.update();
 
-        CloudDriver.getInstance().getLogger().info("Bridge recognised itself as '" + service.getName() + "'!");
+        CloudDriver.getInstance().getLogger().info("Service = CloudServer[name={}, port={}, state={}, visibility={}]", service.getName(), service.getPort(), service.getServiceState(), service.getServiceVisibility());
 
     }
 

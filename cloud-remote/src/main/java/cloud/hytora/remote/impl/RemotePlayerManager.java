@@ -31,12 +31,17 @@ public class RemotePlayerManager extends DefaultPlayerManager {
     }
 
     @Override
+    public CloudPlayer constructPlayer(@NotNull UUID uniqueId, @NotNull String name) {
+        return new DefaultCloudPlayer(uniqueId, name);
+    }
+
+    @Override
     public @NotNull Wrapper<Collection<CloudOfflinePlayer>> getAllOfflinePlayersAsync() {
         return Wrapper.callAsync(new Callable<Collection<CloudOfflinePlayer>>() {
             @Override
             public Collection<CloudOfflinePlayer> call() throws Exception {
-                return Remote.getInstance()
-                        .getClient()
+                return CloudDriver.getInstance()
+                        .getExecutor()
                         .getWrapper()
                         .prepareSingleQuery()
                         .execute(new OfflinePlayerRequestPacket())
@@ -94,7 +99,7 @@ public class RemotePlayerManager extends DefaultPlayerManager {
 
     @Override
     public void registerCloudPlayer(@NotNull UUID uniqueId, @NotNull String username) {
-        CloudPlayer cloudPlayer = new DefaultCloudPlayer(uniqueId, username);
+        CloudPlayer cloudPlayer = constructPlayer(uniqueId, username);
 
         this.cachedCloudPlayers.put(uniqueId, cloudPlayer);
         Remote.getInstance().getEventManager().callEvent(new CloudPlayerLoginEvent(cloudPlayer));

@@ -367,16 +367,7 @@ public class NodeDriver extends CloudDriver implements Node {
 
             for (ClusterClientExecutor client : this.executor.getAllCachedConnectedClients()) {
                 if (client.getName().equalsIgnoreCase("Application")) {
-
-                    // update cache
-                    client.sendPacket(new DriverUpdatePacket(
-                            NodeDriver.getInstance().getConfigurationManager().getAllCachedConfigurations(),
-                            NodeDriver.getInstance().getConfigurationManager().getAllParentConfigurations(),
-                            NodeDriver.getInstance().getServiceManager().getAllCachedServices(),
-                            NodeDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers(),
-                            CloudDriver.getInstance().getNodeManager().getAllNodes()
-                    ));
-
+                    DriverUpdatePacket.publishUpdate(client);
                 }
             }
         }, 1_000, 1, TimeUnit.SECONDS);

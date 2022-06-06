@@ -1,6 +1,6 @@
 package cloud.hytora.driver.services.utils;
 
-public enum WrapperEnvironment {
+public enum SpecificDriverEnvironment {
 
     @Deprecated
     UNKNOWN,

@@ -14,7 +14,7 @@ import cloud.hytora.driver.services.configuration.ConfigurationDownloadEntry;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
-import cloud.hytora.driver.services.utils.WrapperEnvironment;
+import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.driver.services.utils.ServiceState;
@@ -116,7 +116,7 @@ public class ProcessServiceStarter {
                                 .filter(
                                         s -> s.getConfiguration()
                                                 .getParent()
-                                                .getEnvironment() == WrapperEnvironment.MINECRAFT_SERVER
+                                                .getEnvironment() == SpecificDriverEnvironment.MINECRAFT_SERVER
                                 ).findFirst()
                                 .orElse(null)
                 );
@@ -225,7 +225,7 @@ public class ProcessServiceStarter {
             ex.printStackTrace();
         }
 
-        if (service.getConfiguration().getVersion().getWrapperEnvironment() == WrapperEnvironment.MINECRAFT_SERVER) {
+        if (service.getConfiguration().getVersion().getWrapperEnvironment() == SpecificDriverEnvironment.MINECRAFT_SERVER) {
             arguments.add("nogui");
         }
 

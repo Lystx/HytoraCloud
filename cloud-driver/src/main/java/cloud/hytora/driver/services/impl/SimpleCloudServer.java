@@ -11,6 +11,7 @@ import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
+import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.services.NodeCloudServer;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
@@ -129,8 +130,8 @@ public class SimpleCloudServer implements NodeCloudServer, Bufferable {
     }
 
     @Override
-    public void sendPacket(Packet packet) {
-        CloudDriver.getInstance().getServiceManager().sendPacketToService(this, packet);
+    public void sendPacket(IPacket packet) {
+        CloudDriver.getInstance().getServiceManager().sendPacketToService(this, (Packet) packet);
     }
 
     @Override

@@ -29,7 +29,6 @@ public interface IDatabase {
 
     Collection<Document> documents(String collection);
 
-
     Map<String, Document> entries(String collection);
 
     Map<String, Document> filter(String collection, BiPredicate<String, Document> predicate);

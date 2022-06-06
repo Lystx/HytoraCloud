@@ -8,7 +8,7 @@ import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.def.CloudTemplate;
 import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
-import cloud.hytora.driver.services.utils.WrapperEnvironment;
+import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 public class DefaultConfigurationParent implements ConfigurationParent {
 
     private String name;
-    private WrapperEnvironment environment;
+    private SpecificDriverEnvironment environment;
     private ServiceShutdownBehaviour shutdownBehaviour;
 
     private String[] javaArguments;
@@ -51,7 +51,7 @@ public class DefaultConfigurationParent implements ConfigurationParent {
 
             case READ:
                 name = buf.readString();
-                environment = buf.readEnum(WrapperEnvironment.class);
+                environment = buf.readEnum(SpecificDriverEnvironment.class);
                 shutdownBehaviour = buf.readEnum(ServiceShutdownBehaviour.class);
                 javaArguments = buf.readOptionalStringArray();
                 downloadEntries = buf.readObjectCollection(ConfigurationDownloadEntry.class);

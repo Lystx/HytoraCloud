@@ -4,6 +4,7 @@ import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.wrapper.Wrapper;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.defaults.server.CloudServerCacheUnregisterEvent;
+import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.packets.services.*;
 import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.node.config.ServiceCrashPrevention;
@@ -43,13 +44,15 @@ public class NodeServiceManager extends DefaultServiceManager {
 
 
         executor.registerPacketHandler((PacketHandler<CloudServerCacheUpdatePacket>) (ctx, packet) -> {
+            System.out.println();
             CloudServer packetService = packet.getService();
             CloudServer service = getServiceByNameOrNull(packetService.getName());
             if (service == null) {
+                System.out.println("Tried to update nulled service");
                 return;
             }
-            service.cloneInternally(packetService, service);
-            service.update();
+            packetService.update();
+            System.out.println("Updated " +  packetService.getName());
         });
     }
 
@@ -156,10 +159,13 @@ public class NodeServiceManager extends DefaultServiceManager {
 
     @Override
     public void updateService(@NotNull CloudServer service) {
-        this.getService(service.getName()).ifPresent(ser -> {
-            int i = allCachedServices.indexOf(ser);
+        Optional<CloudServer> server = this.getService(service.getName());
+        if (server.isPresent()) {
+            CloudServer cloudServer = server.get();
+            int i = allCachedServices.indexOf(cloudServer);
             allCachedServices.set(i, service);
-        });
+        }
+        DriverUpdatePacket.publishUpdate(NodeDriver.getInstance());
 
         CloudServerCacheUpdatePacket packet = new CloudServerCacheUpdatePacket(service);
         //update all other nodes and this connected services

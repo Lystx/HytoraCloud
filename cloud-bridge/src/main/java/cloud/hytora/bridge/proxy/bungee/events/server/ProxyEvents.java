@@ -49,6 +49,8 @@ public class ProxyEvents implements Listener {
             }
         }*/
         // TODO: 29.05.2022 whitelist
+        CloudDriver.getInstance().getLogger().info("Available Services : {}", CloudDriver.getInstance().getServiceManager().getAllCachedServices().size());
+
 
         Wrapper<CloudServer> fallback = CloudDriver.getInstance().getServiceManager().getFallbackOrNullAsService();
 
@@ -63,7 +65,6 @@ public class ProxyEvents implements Listener {
     public void handle(LoginEvent event) {
         PendingConnection c = event.getConnection();
         CloudDriver.getInstance().getLogger().info("Logging in Player[uuid={}, name={}]", c.getUniqueId(), c.getName());
-
         playerManager.registerCloudPlayer(c.getUniqueId(), c.getName());
     }
     

@@ -7,6 +7,7 @@ import cloud.hytora.driver.services.fallback.FallbackEntry;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.utils.ServiceState;
 
+import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -47,6 +48,10 @@ public interface ServiceManager {
      */
     default List<CloudServer> getAllServicesByState(@NotNull ServiceState serviceState) {
         return this.getAllCachedServices().stream().filter(it -> it.getServiceState() == serviceState).collect(Collectors.toList());
+    }
+
+    default List<CloudServer> getAllServicesByEnvironment(@NotNull SpecificDriverEnvironment environment) {
+        return this.getAllCachedServices().stream().filter(it -> it.getConfiguration() != null && it.getConfiguration().getParent() != null && it.getConfiguration().getParent().getEnvironment() == environment).collect(Collectors.toList());
     }
 
     /**

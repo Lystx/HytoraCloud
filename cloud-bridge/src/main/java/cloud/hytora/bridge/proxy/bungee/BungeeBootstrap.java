@@ -9,7 +9,7 @@ import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
 import cloud.hytora.bridge.PluginBridge;
 import cloud.hytora.bridge.proxy.bungee.events.server.ProxyEvents;
-import cloud.hytora.driver.services.utils.WrapperEnvironment;
+import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 import cloud.hytora.remote.Remote;
 import cloud.hytora.remote.adapter.proxy.RemoteProxyAdapter;
 import cloud.hytora.remote.adapter.proxy.LocalProxyPlayer;
@@ -69,7 +69,7 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
 
     @Override
     public void registerService(CloudServer server) {
-        if (server.getConfiguration().getParent().getEnvironment() == WrapperEnvironment.PROXY_SERVER) {
+        if (server.getConfiguration().getParent().getEnvironment() == SpecificDriverEnvironment.PROXY_SERVER) {
             return;
         }
         ProxyServer.getInstance().getServers().put(server.getName(), ProxyServer.getInstance().constructServerInfo(server.getName(), new InetSocketAddress(server.getHostName(), server.getPort()), server.getMotd(), false));
@@ -77,7 +77,7 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
 
     @Override
     public void unregisterService(CloudServer server) {
-        if (server.getConfiguration().getParent().getEnvironment() == WrapperEnvironment.PROXY_SERVER) {
+        if (server.getConfiguration().getParent().getEnvironment() == SpecificDriverEnvironment.PROXY_SERVER) {
             return;
         }
         ProxyServer.getInstance().getServers().remove(server.getName());

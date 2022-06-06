@@ -1,8 +1,16 @@
 package cloud.hytora.node.impl.player;
 
 import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.EventManager;
+import cloud.hytora.driver.event.defaults.player.CloudPlayerDisconnectEvent;
+import cloud.hytora.driver.event.defaults.player.CloudPlayerLoginEvent;
+import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
+import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
+import cloud.hytora.driver.networking.packets.player.CloudPlayerDisconnectPacket;
+import cloud.hytora.driver.networking.packets.player.CloudPlayerLoginPacket;
 import cloud.hytora.driver.networking.packets.player.CloudPlayerUpdatePacket;
+import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.networking.protocol.packets.QueryState;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.CloudPlayer;
@@ -22,6 +30,24 @@ public class NodePlayerManager extends DefaultPlayerManager {
 
     public NodePlayerManager(EventManager eventManager) {
         super(eventManager);
+
+        AdvancedNetworkExecutor executor = CloudDriver.getInstance().getExecutor();
+
+        executor.registerPacketHandler((PacketHandler<CloudPlayerLoginPacket>) (wrapper, packet) -> {
+            CloudPlayer cloudPlayer = constructPlayer(packet.getUuid(), packet.getUsername());
+            this.cachedCloudPlayers.put(packet.getUuid(), cloudPlayer);
+            eventManager.callEvent(new CloudPlayerLoginEvent(cloudPlayer));
+
+            DriverUpdatePacket.publishUpdate(NodeDriver.getInstance());
+        });
+
+        executor.registerPacketHandler((PacketHandler<CloudPlayerDisconnectPacket>) (wrapper, packet) -> {
+            this.getCloudPlayer(packet.getUuid()).ifPresent(cloudPlayer -> {
+                this.cachedCloudPlayers.remove(cloudPlayer.getUniqueId());
+                eventManager.callEvent(new CloudPlayerDisconnectEvent(cloudPlayer));
+                DriverUpdatePacket.publishUpdate(NodeDriver.getInstance());
+            });
+        });
     }
 
     @Override
@@ -72,7 +98,13 @@ public class NodePlayerManager extends DefaultPlayerManager {
 
     @Override
     public void registerCloudPlayer(@NotNull UUID uniqueID, @NotNull String username) {
-        this.cachedCloudPlayers.put(uniqueID, new DefaultCloudPlayer(uniqueID, username));
+        this.cachedCloudPlayers.put(uniqueID, constructPlayer(uniqueID, username));
+    }
+
+    @Override
+    public CloudPlayer constructPlayer(@NotNull UUID uniqueId, @NotNull String name) {
+        CloudOfflinePlayer offlinePlayer = getOfflinePlayerByUniqueIdBlockingOrNull(uniqueId);
+        return offlinePlayer == null ? new DefaultCloudPlayer(uniqueId, name) : new DefaultCloudPlayer(uniqueId, name, offlinePlayer.getLastConnection(), offlinePlayer.getFirstLogin(), offlinePlayer.getLastLogin(), offlinePlayer.getProperties(), null, null);
     }
 
     @Override

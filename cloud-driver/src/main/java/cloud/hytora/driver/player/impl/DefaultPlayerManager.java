@@ -21,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public abstract class DefaultPlayerManager implements PlayerManager {
 
@@ -55,18 +56,6 @@ public abstract class DefaultPlayerManager implements PlayerManager {
             });
         });
 
-        executor.registerPacketHandler((PacketHandler<CloudPlayerLoginPacket>) (wrapper, packet) -> {
-            CloudPlayer cloudPlayer = new DefaultCloudPlayer(packet.getUuid(), packet.getUsername());
-            this.cachedCloudPlayers.put(packet.getUuid(), cloudPlayer);
-            eventManager.callEvent(new CloudPlayerLoginEvent(cloudPlayer));
-        });
-
-        executor.registerPacketHandler((PacketHandler<CloudPlayerDisconnectPacket>) (wrapper, packet) -> {
-            this.getCloudPlayer(packet.getUuid()).ifPresent(cloudPlayer -> {
-                this.cachedCloudPlayers.remove(cloudPlayer.getUniqueId());
-                eventManager.callEvent(new CloudPlayerDisconnectEvent(cloudPlayer));
-            });
-        });
 
         eventManager.registerListener(this);
 
@@ -83,13 +72,13 @@ public abstract class DefaultPlayerManager implements PlayerManager {
     }
 
 
-    public void setCachedCloudPlayers(final Map<UUID, CloudPlayer> cachedCloudPlayers) {
+    public void setCachedCloudPlayers(Map<UUID, CloudPlayer> cachedCloudPlayers) {
         this.cachedCloudPlayers = cachedCloudPlayers;
     }
 
     @Override
     public @Nullable CloudOfflinePlayer getOfflinePlayerByUniqueIdBlockingOrNull(@NotNull UUID uniqueId) {
-        return getOfflinePlayerByUniqueIdAsync(uniqueId).syncUninterruptedly().orElse(null);
+        return getOfflinePlayerByUniqueIdAsync(uniqueId).timeOut(TimeUnit.SECONDS, 12).syncUninterruptedly().orElse(null);
     }
 
     @Override
@@ -107,6 +96,8 @@ public abstract class DefaultPlayerManager implements PlayerManager {
     public abstract void unregisterCloudPlayer(@NotNull UUID uuid, @NotNull String name);
 
     public abstract void updateCloudPlayer(@NotNull CloudPlayer cloudPlayer);
+
+    public abstract CloudPlayer constructPlayer(@NotNull UUID uniqueId, @NotNull String name);
 
     @Override
     public @NotNull List<CloudPlayer> getAllCachedCloudPlayers() {
