@@ -20,10 +20,7 @@ public class PacketEncoder extends MessageToByteEncoder<Packet> {
     private final NetworkExecutor participant;
 
     @Override
-    protected void encode(ChannelHandlerContext channelHandlerContext, Packet packet, ByteBuf output) throws Exception{
-        if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.SERVICE) {
-            System.out.println("Encoding " + packet.getClass().getSimpleName());
-        }
+    protected void encode(ChannelHandlerContext channelHandlerContext, Packet packet, ByteBuf output) throws Exception {
         PacketBuffer buf = new DefaultPacketBuffer(output, this.participant);
         try {
             buf.writePacket(packet);

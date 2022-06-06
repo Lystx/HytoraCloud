@@ -16,10 +16,9 @@ import java.util.List;
 @Getter @AllArgsConstructor
 public enum ServiceVersion {
 
-    BUNGEE("https://ci.md-5.net/job/BungeeCord/lastBuild/artifact/bootstrap/target/BungeeCord.jar", "BungeeCord", "latest", SpecificDriverEnvironment.PROXY_SERVER),
+    BUNGEE("https://ci.md-5.net/job/BungeeCord/lastSuccessfulBuild/artifact/bootstrap/target/BungeeCord.jar", "BungeeCord", "latest", SpecificDriverEnvironment.PROXY_SERVER),
     WATERFALL("waterfall", "latest", SpecificDriverEnvironment.PROXY_SERVER),
-    PAPER_1_18_1("paper", "1.18.1", SpecificDriverEnvironment.MINECRAFT_SERVER),
-    PAPER_1_1_8("paper", "1.8.8", SpecificDriverEnvironment.MINECRAFT_SERVER),
+    VELOCITY("https://versions.velocitypowered.com/download/3.0.1.jar", "Velocity", "3.0.1", SpecificDriverEnvironment.PROXY_SERVER),
 
     //Normal Spigot
     SPIGOT_1_18_1("https://download.getbukkit.org/spigot/spigot-1.18.1.jar", "Spigot", "1.18.1", SpecificDriverEnvironment.MINECRAFT_SERVER),

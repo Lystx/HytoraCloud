@@ -78,6 +78,7 @@ public abstract class DefaultServiceManager implements ServiceManager {
     @Override
     public List<FallbackEntry> getAvailableFallbacks() {
         return CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream()
+                .filter(CloudServer::isReady)
                 .filter(it -> it.getServiceState() == ServiceState.ONLINE)
                 .filter(it -> it.getServiceVisibility() == ServiceVisibility.VISIBLE)
                 .filter(it -> !it.getConfiguration().getVersion().isProxy())
@@ -90,6 +91,7 @@ public abstract class DefaultServiceManager implements ServiceManager {
     @Override
     public @NotNull List<CloudServer> getAvailableFallbacksAsServices() {
         return CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream()
+                .filter(CloudServer::isReady)
                 .filter(it -> it.getServiceState() == ServiceState.ONLINE)
                 .filter(it -> it.getServiceVisibility() == ServiceVisibility.VISIBLE)
                 .filter(it -> !it.getConfiguration().getVersion().isProxy())

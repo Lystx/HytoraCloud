@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -70,6 +71,9 @@ public class Remote extends CloudDriver {
 
     @Setter
     private RemoteAdapter adapter;
+
+    @Setter
+    private Thread applicationThread;
 
     private final RemoteNetworkClient client;
     private final RemoteIdentity property;
@@ -115,34 +119,40 @@ public class Remote extends CloudDriver {
         return logger;
     }
 
+
     public static Remote initFromOtherInstance(RemoteIdentity identity, Consumer<DriverUpdatePacket> thenExecute, Runnable... ifConnectionFailed) {
         Remote remote = new Remote(identity, init(), ifConnectionFailed);
         Thread thread = new Thread(() -> {
             try {
 
                 CloudDriver.getInstance().getLogger().info("Waiting for CacheUpdate to start Application...");
+                AtomicBoolean received = new AtomicBoolean(false);
                 CloudDriver.getInstance().getExecutor().registerSelfDestructivePacketHandler((PacketHandler<DriverUpdatePacket>) (wrapper1, packet) -> {
-                    CloudDriver.getInstance().getLogger().info("Received CacheUpdate!");
+                    if (!received.get()) {
+                        received.set(true);
+                        CloudDriver.getInstance().getLogger().info("Received CacheUpdate!");
 
-                    thenExecute.accept(packet);
+                        thenExecute.accept(packet);
 
-                    RemoteProxyAdapter proxy = Remote.getInstance().getProxyAdapterOrNull();
-                    if (proxy != null) {
-                        CloudDriver.getInstance().getLogger().info("Pre registered all services");
-                        proxy.clearServices();
-                        for (CloudServer allCachedService : packet.getAllCachedServices()) {
-                            proxy.registerService(allCachedService);
+                        RemoteProxyAdapter proxy = Remote.getInstance().getProxyAdapterOrNull();
+                        if (proxy != null) {
+                            CloudDriver.getInstance().getLogger().info("Pre registered all services");
+                            proxy.clearServices();
+                            for (CloudServer allCachedService : packet.getAllCachedServices()) {
+                                proxy.registerService(allCachedService);
+                            }
                         }
+                        remote.getStorage().fetch(); //fetching storage data
                     }
-                    remote.getStorage().fetch(); //fetching storage data
+
                 });
             } catch (Exception exception) {
                 exception.printStackTrace();
             }
-        }, "RemoteThread");
+        }, "ApplicationThread");
+        remote.setApplicationThread(thread);
         thread.setContextClassLoader(ClassLoader.getSystemClassLoader());
         thread.start();
-
         return remote;
     }
 
@@ -159,10 +169,14 @@ public class Remote extends CloudDriver {
                     CloudDriver.getInstance().getLogger().info("Launched '" + main.getName() + "'!");
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     e.printStackTrace();
+                    CloudServer cloudServer = Remote.getInstance().thisService();
+                    cloudServer.setReady(false);
+                    cloudServer.update();
                     CloudDriver.getInstance().getLogger().error("Couldn't launch '" + main.getName() + "'!");
+                    CloudDriver.getInstance().getScheduler().scheduleDelayedTask(() -> CloudDriver.getInstance().shutdown(), TimeUnit.SECONDS.toMillis(3));
+
                 }
             });
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -186,10 +200,14 @@ public class Remote extends CloudDriver {
 
     @Override
     public void shutdown() {
+        // TODO: 06.06.2022
         if (adapter != null) {
 
         }
-        // TODO: 11.04.2022
+        if (applicationThread != null) {
+            applicationThread.stop();
+        }
+        System.exit(0);
     }
 
     @Override

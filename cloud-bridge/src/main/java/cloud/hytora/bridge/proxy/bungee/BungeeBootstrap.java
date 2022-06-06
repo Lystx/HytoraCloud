@@ -47,10 +47,11 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
 
     @Override
     public void onDisable() {
-        Remote.getInstance().thisService().edit(service -> {
-            service.setServiceState(ServiceState.STOPPING);
-            service.setServiceVisibility(ServiceVisibility.INVISIBLE);
-        });
+        CloudServer cloudServer = Remote.getInstance().thisService();
+        cloudServer.setServiceState(ServiceState.STOPPING);
+        cloudServer.setReady(false);
+        cloudServer.setServiceVisibility(ServiceVisibility.INVISIBLE);
+        cloudServer.update();
     }
 
     @Override
@@ -87,6 +88,9 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
 
     @Override
     public void clearServices() {
+        if (ProxyServer.getInstance() == null || ProxyServer.getInstance().getServers() == null) {
+            return;
+        }
         ProxyServer.getInstance().getServers().clear();
     }
 }
