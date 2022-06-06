@@ -1,6 +1,6 @@
 package cloud.hytora.driver.node;
 
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
@@ -22,8 +22,8 @@ public abstract class DefaultNodeManager implements NodeManager {
     }
 
     @Override
-    public @NotNull Wrapper<Node> getNode(@NotNull String username) {
-        return Wrapper.build(getAllConnectedNodes().stream().filter(n -> n.getName().equalsIgnoreCase(username)).findFirst().orElse(null));
+    public @NotNull Task<Node> getNode(@NotNull String username) {
+        return Task.build(getAllConnectedNodes().stream().filter(n -> n.getName().equalsIgnoreCase(username)).findFirst().orElse(null));
     }
 
     @Override

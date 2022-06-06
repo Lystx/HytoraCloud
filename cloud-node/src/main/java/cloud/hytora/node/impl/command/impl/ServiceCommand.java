@@ -74,12 +74,11 @@ public class ServiceCommand {
     }
 
 
-    @SubCommand("screen <service> <join/leave>")
+    @SubCommand("screen <service>")
 
     public void onScreenCommand(
             CommandSender sender,
-            @CommandArgument(value = "service", completer = CloudServerCompleter.class) CloudServer service,
-            @CommandArgument("join/leave") String type
+            @CommandArgument(value = "service", completer = CloudServerCompleter.class) CloudServer service
     ) {
         if (service == null) {
             sender.sendMessage("§cThere is no such Server online!");
@@ -89,35 +88,27 @@ public class ServiceCommand {
         Console console = Objects.requireNonNull(CloudDriver.getInstance().getConsole());
         CommandManager commandManager = CloudDriver.getInstance().getCommandManager();
 
-        if (type.equalsIgnoreCase("join")) {
+        console.clearScreen();
+        List<String> cachedLines = service.queryServiceOutput();
+        sender.sendMessage("§8");
+        sender.sendMessage("§7Joining screen of §a" + service.getName() + "§8...");
+        sender.sendMessage("§7To exit the screen type §8'§cleave§8'");
+        sender.sendMessage("§8");
 
-            console.clearScreen();
-            List<String> cachedLines = service.queryServiceOutput();
-            sender.sendMessage("§8");
-            sender.sendMessage("§7Joining screen of §a" + service.getName() + "§8...");
-            sender.sendMessage("§7To exit the screen type §8'§cleave§8'");
-            sender.sendMessage("§8");
-
-            service.asCloudServer().setScreenServer(true);
-            console.setLineCaching(false);
-            commandManager.setActive(false);
-            commandManager.setInActiveHandler((commandSender, s) -> {
-                if (s.equalsIgnoreCase("leave") || s.equalsIgnoreCase("-l")) {
-                    this.leaveScreen(commandManager, console, sender, service);
-                } else {
-                    sender.sendMessage("§7Sending Command-Line §8'§e" + s + "§8' §7to service§8...");
-                    service.executeCommand(s);
-                }
-            });
-
-            for (String cachedLine : cachedLines) {
-                sender.sendMessage(cachedLine);
+        service.asCloudServer().setScreenServer(true);
+        console.setLineCaching(false);
+        commandManager.setActive(false);
+        commandManager.setInActiveHandler((commandSender, s) -> {
+            if (s.equalsIgnoreCase("leave") || s.equalsIgnoreCase("-l")) {
+                this.leaveScreen(commandManager, console, sender, service);
+            } else {
+                sender.sendMessage("§7Sending Command-Line §8'§e" + s + "§8' §7to service§8...");
+                service.executeCommand(s);
             }
+        });
 
-        } else if (type.equalsIgnoreCase("leave")) {
-            this.leaveScreen(commandManager, console, sender, service);
-        } else {
-            sender.sendMessage("§cscreen " + service.getName() + " <join/leave>");
+        for (String cachedLine : cachedLines) {
+            sender.sendMessage(cachedLine);
         }
     }
 

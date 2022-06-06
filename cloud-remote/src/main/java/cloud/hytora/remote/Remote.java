@@ -79,7 +79,7 @@ public class Remote extends CloudDriver {
 
         instance = this;
 
-        this.commandSender = new DefaultCommandSender("Wrapper", this.getConsole()).function(System.out::println);
+        this.commandSender = new DefaultCommandSender("Remote", this.getConsole()).function(System.out::println);
         this.property = identity;
 
         this.client = new RemoteNetworkClient(property.getAuthKey(), property.getName(), property.getHostname(), property.getPort(), DocumentFactory.emptyDocument(), ifConnectionFailed);
@@ -89,9 +89,6 @@ public class Remote extends CloudDriver {
         this.client.registerPacketHandler(new RemoteCommandHandler());
         this.client.registerPacketHandler(new RemoteCacheUpdateHandler());
         this.client.registerPacketHandler(new RemoteNodeUpdateHandler());
-
-        //registering event handlers
-        new InternalDriverEventAdapter(this.eventManager, client);
 
         this.configurationManager = new RemoteConfigurationManager();
         this.serviceManager = new RemoteServiceManager(property);
@@ -126,10 +123,8 @@ public class Remote extends CloudDriver {
                 CloudDriver.getInstance().getLogger().info("Waiting for CacheUpdate to start Application...");
                 CloudDriver.getInstance().getExecutor().registerSelfDestructivePacketHandler((PacketHandler<DriverUpdatePacket>) (wrapper1, packet) -> {
                     CloudDriver.getInstance().getLogger().info("Received CacheUpdate!");
-                    remote.getClient().getPacketChannel().sendPacket(new DriverLoggingPacket(NetworkComponent.of("Node-"), "Hello Test"));
 
                     thenExecute.accept(packet);
-                    remote.getClient().getPacketChannel().sendPacket(new DriverLoggingPacket(NetworkComponent.of("Node-"), "Hello Test"));
 
                     RemoteProxyAdapter proxy = Remote.getInstance().getProxyAdapterOrNull();
                     if (proxy != null) {
@@ -157,7 +152,7 @@ public class Remote extends CloudDriver {
             List<String> arguments = new ArrayList<>(Arrays.asList(args));
             Class<?> main = Class.forName(arguments.remove(0));
             Method method = main.getMethod("main", String[].class);
-            initFromOtherInstance(new RemoteIdentity().read(new File("property.json")), packet -> {
+            initFromOtherInstance(RemoteIdentity.read(new File("property.json")), packet -> {
                 CloudDriver.getInstance().getLogger().info("Launching '" + main.getName() + "' ...");
                 try {
                     method.invoke(null, (Object) arguments.toArray(new String[0]));

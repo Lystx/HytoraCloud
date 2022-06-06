@@ -1,7 +1,7 @@
 package cloud.hytora.driver.networking.protocol.codec;
 
 import cloud.hytora.driver.networking.protocol.packets.ConnectionState;
-import cloud.hytora.driver.networking.protocol.packets.IPacket;
+import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.networking.protocol.wrapped.SimplePacketChannel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -11,7 +11,7 @@ import cloud.hytora.driver.networking.AbstractNetworkComponent;
 import java.io.IOException;
 
 @Getter
-public class NetworkBossHandler extends SimpleChannelInboundHandler<IPacket> {
+public class NetworkBossHandler extends SimpleChannelInboundHandler<Packet> {
 
     /**
      * The parent participant for this handler
@@ -53,7 +53,7 @@ public class NetworkBossHandler extends SimpleChannelInboundHandler<IPacket> {
     }
 
     @Override
-    public void channelRead0(ChannelHandlerContext channelHandlerContext, IPacket packet)  {
+    public void channelRead0(ChannelHandlerContext channelHandlerContext, Packet packet)  {
         component.handlePacket(this.packetChannel, packet);
     }
 }

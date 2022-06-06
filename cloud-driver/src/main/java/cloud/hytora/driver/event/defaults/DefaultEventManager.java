@@ -2,7 +2,7 @@ package cloud.hytora.driver.event.defaults;
 
 import cloud.hytora.common.collection.ClassWalker;
 import cloud.hytora.common.misc.ReflectionUtils;
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.*;
@@ -152,8 +152,8 @@ public class DefaultEventManager implements EventManager {
 
 	@Nonnull
 	@Override
-	public <E extends CloudEvent> Wrapper<E> nextEvent(@Nonnull Class<E> eventClass) {
-		Wrapper<E> task = Wrapper.empty();
+	public <E extends CloudEvent> Task<E> nextEvent(@Nonnull Class<E> eventClass) {
+		Task<E> task = Task.empty();
 		RegisteredListener listener = new ActionRegisteredListener<>(eventClass, ((registeredListener, e) -> task.setResult(e)));
 		addListener(listener);
 		task.addUpdateListener(wrapper -> {

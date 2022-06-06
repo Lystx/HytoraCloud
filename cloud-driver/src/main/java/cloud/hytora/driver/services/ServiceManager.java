@@ -1,7 +1,7 @@
 package cloud.hytora.driver.services;
 
 
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
@@ -79,15 +79,15 @@ public interface ServiceManager {
      *
      * @param service the service to start
      */
-    Wrapper<CloudServer> startService(@NotNull CloudServer service);
+    Task<CloudServer> startService(@NotNull CloudServer service);
 
     @Nonnull
     @CheckReturnValue
-    Wrapper<CloudServer> getFallbackOrNullAsService();
+    Task<CloudServer> getFallbackOrNullAsService();
 
     @Nonnull
     @CheckReturnValue
-    Wrapper<FallbackEntry> getFallbackOrNull();
+    Task<FallbackEntry> getFallbackOrNull();
 
     @Nonnull
     @CheckReturnValue

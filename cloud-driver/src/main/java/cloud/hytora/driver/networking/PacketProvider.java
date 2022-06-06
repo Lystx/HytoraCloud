@@ -11,7 +11,6 @@ import cloud.hytora.driver.networking.packets.module.RemoteModuleExecutionPacket
 import cloud.hytora.driver.networking.packets.node.*;
 import cloud.hytora.driver.networking.packets.player.*;
 import cloud.hytora.driver.networking.packets.services.*;
-import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.networking.protocol.packets.defaults.HandshakePacket;
 import cloud.hytora.driver.networking.protocol.packets.defaults.ResponsePacket;
@@ -25,9 +24,9 @@ import java.util.Map;
 public class PacketProvider {
 
     @Getter
-    private static final Map<Integer, Class<? extends IPacket>> registeredPackets = Maps.newConcurrentMap();
+    private static final Map<Integer, Class<? extends Packet>> registeredPackets = Maps.newConcurrentMap();
 
-    public static int getPacketId(Class<? extends IPacket> clazz) {
+    public static int getPacketId(Class<? extends Packet> clazz) {
         return registeredPackets.keySet().stream().filter(id -> registeredPackets.get(id).equals(clazz)).findAny().orElse(-1);
 
     }
@@ -102,7 +101,7 @@ public class PacketProvider {
         return registeredPackets.keySet().size() + 1;
     }
 
-    public static Class<? extends IPacket> getPacketClass(int id) {
+    public static Class<? extends Packet> getPacketClass(int id) {
         if (!registeredPackets.containsKey(id)) {
             return null;
         }

@@ -1,8 +1,9 @@
 package cloud.hytora.driver.networking;
 
-import cloud.hytora.driver.networking.protocol.packets.IPacket;
+import cloud.hytora.driver.networking.protocol.packets.Packet;
 
 public interface PacketSender {
 
-    void sendPacket(IPacket packet);
+    void sendPacket(Packet packet);
+
 }

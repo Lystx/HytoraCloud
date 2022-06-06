@@ -1,8 +1,7 @@
 package cloud.hytora.driver.player;
 
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.networking.protocol.packets.QueryState;
 import cloud.hytora.driver.services.CloudServer;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 import org.jetbrains.annotations.NotNull;
@@ -33,16 +32,16 @@ public interface PlayerManager {
     CloudPlayer getCloudPlayerByNameOrNull(@NotNull String username);
 
     @NotNull
-    Wrapper<Collection<CloudOfflinePlayer>> getAllOfflinePlayersAsync();
+    Task<Collection<CloudOfflinePlayer>> getAllOfflinePlayersAsync();
 
     @NotNull
     Collection<CloudOfflinePlayer> getAllOfflinePlayersBlockingOrEmpty();
 
     @NotNull
-    Wrapper<CloudOfflinePlayer> getOfflinePlayerByUniqueIdAsync(@NotNull UUID uniqueId);
+    Task<CloudOfflinePlayer> getOfflinePlayerByUniqueIdAsync(@NotNull UUID uniqueId);
 
     @NotNull
-    Wrapper<CloudOfflinePlayer> getOfflinePlayerByNameAsync(@NotNull String name);
+    Task<CloudOfflinePlayer> getOfflinePlayerByNameAsync(@NotNull String name);
 
     @Nullable
     CloudOfflinePlayer getOfflinePlayerByUniqueIdBlockingOrNull(@NotNull UUID uniqueId);

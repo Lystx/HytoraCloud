@@ -414,7 +414,7 @@ public class DefaultPacketBuffer implements PacketBuffer {
 	}
 
 	@Override
-	public PacketBuffer writePacket(IPacket packet) throws IOException {
+	public PacketBuffer writePacket(Packet packet) throws IOException {
 		int id = PacketProvider.getPacketId(packet.getClass());
 
 		if (id == -1) {
@@ -452,7 +452,7 @@ public class DefaultPacketBuffer implements PacketBuffer {
 
 
 	@SuppressWarnings("unchecked")
-	public <T extends IPacket> T readPacket() throws IOException {
+	public <T extends Packet> T readPacket() throws IOException {
 
 		PacketBuffer buffer = this.readBuffer();
 
@@ -463,7 +463,7 @@ public class DefaultPacketBuffer implements PacketBuffer {
 		String name = this.readString();
 		ConnectionType type = this.readEnum(ConnectionType.class);
 
-		Class<? extends IPacket> packetClass = PacketProvider.getPacketClass(index);
+		Class<? extends Packet> packetClass = PacketProvider.getPacketClass(index);
 
 		if (packetClass == null) {
 			return null;

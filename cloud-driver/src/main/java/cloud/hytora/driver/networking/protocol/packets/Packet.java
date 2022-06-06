@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 @Setter
 @Getter
 @Accessors(fluent = true)
-public abstract class Packet implements IPacket {
+public abstract class Packet implements Bufferable {
 
     /**
      * The transfer info of this packet
@@ -48,12 +48,14 @@ public abstract class Packet implements IPacket {
         buffer.accept(this.buffer);
     }
 
-    @Override
+    public static String getName(Packet packet) {
+        return packet.getClass().getSimpleName();
+    }
+
     public String getDestinationChannel() {
         return destinationChannel;
     }
 
-    @Override
     public void setDestinationChannel(String destinationChannel) {
         this.destinationChannel = destinationChannel;
     }

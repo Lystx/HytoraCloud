@@ -1,7 +1,7 @@
 package cloud.hytora.driver.networking.cluster;
 
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.defaults.driver.DriverConnectEvent;
 import cloud.hytora.driver.event.defaults.driver.DriverDisconnectEvent;
@@ -14,7 +14,7 @@ import cloud.hytora.driver.networking.protocol.codec.prepender.NettyPacketLength
 import cloud.hytora.driver.networking.protocol.codec.prepender.NettyPacketLengthSerializer;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
-import cloud.hytora.driver.networking.protocol.packets.IPacket;
+
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.networking.protocol.packets.defaults.HandshakePacket;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
@@ -83,8 +83,8 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
         this.packetChannel.setWrapped(null);
     }
 
-    public Wrapper<ClusterExecutor> openConnection(String hostname, int port) {
-        Wrapper<ClusterExecutor> connectPromise = Wrapper.empty();
+    public Task<ClusterExecutor> openConnection(String hostname, int port) {
+        Task<ClusterExecutor> connectPromise = Task.empty();
         connectPromise.denyNull();
 
 
@@ -123,7 +123,8 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
                                              }
 
                                              @Override
-                                             public void channelRead0(ChannelHandlerContext channelHandlerContext, IPacket packet) {
+                                             public void channelRead0(ChannelHandlerContext channelHandlerContext, Packet packet) {
+
                                                  SimpleClusterClientExecutor client = (SimpleClusterClientExecutor) getConnectedClientByChannel(channelHandlerContext.channel());
 
                                                  if (client == null) {
@@ -132,8 +133,6 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
                                                  }
 
                                                  PacketChannel channel = cachedContexts.get(channelHandlerContext);
-                                                 System.out.println("==> " + channel.executor().getName() + " ==> " + packet.getClass().getSimpleName() + " [CH: " + packet.getDestinationChannel() + "]");
-
                                                  if (!client.isAuthenticated()) {
 
                                                      if (packet instanceof HandshakePacket) {
@@ -201,13 +200,13 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
         return connectPromise;
     }
 
-    public Wrapper<Boolean> shutdown() {
-        Wrapper<Boolean> shutdownBossPromise = Wrapper.empty();
-        Wrapper<Boolean> shutdownWorkerPromise = Wrapper.empty();
-        Wrapper<Boolean> executePromise = Wrapper.empty();
+    public Task<Boolean> shutdown() {
+        Task<Boolean> shutdownBossPromise = Task.empty();
+        Task<Boolean> shutdownWorkerPromise = Task.empty();
+        Task<Boolean> executePromise = Task.empty();
 
         CloudDriver.getInstance().getEventManager().callEvent(new DriverDisconnectEvent());
-        Wrapper<Boolean> promise = Wrapper.multiTasking(shutdownBossPromise, shutdownBossPromise, executePromise);
+        Task<Boolean> promise = Task.multiTasking(shutdownBossPromise, shutdownBossPromise, executePromise);
 
         this.bossGroup.shutdownGracefully(0, 1, TimeUnit.MINUTES).addListener(it -> shutdownBossPromise.setResult(true));
         this.workerGroup.shutdownGracefully(0, 1, TimeUnit.MINUTES).addListener(it -> shutdownWorkerPromise.setResult(true));
@@ -218,7 +217,7 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
 
 
     @Override
-    public void sendPacket(IPacket packet) {
+    public void sendPacket(Packet packet) {
         this.sendPacketToAll(packet);
     }
 
@@ -275,7 +274,7 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
 
 
 
-    public void sendPacketToAll(IPacket packet) {
+    public void sendPacketToAll(Packet packet) {
         allCachedConnectedClients.forEach(it -> it.sendPacket(packet));
     }
 

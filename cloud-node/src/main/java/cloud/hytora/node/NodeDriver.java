@@ -2,7 +2,7 @@ package cloud.hytora.node;
 
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
@@ -18,7 +18,7 @@ import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.http.impl.NettyHttpServer;
 import cloud.hytora.driver.message.ChannelMessenger;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
-import cloud.hytora.driver.networking.packets.StorageUpdatePacket;
+import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.node.impl.handler.packet.normal.*;
 import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteLoggingHandler;
 import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteServerStartHandler;
@@ -40,7 +40,7 @@ import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
-import cloud.hytora.driver.networking.protocol.packets.IPacket;
+
 import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.node.NodeCycleData;
 import cloud.hytora.driver.node.NodeManager;
@@ -437,7 +437,7 @@ public class NodeDriver extends CloudDriver implements Node {
             process.destroyForcibly();
         }
         //Shutting down networking and database
-        Wrapper.multiTasking(this.executor.shutdown(), this.databaseManager.shutdown()).addUpdateListener(wrapper -> {
+        Task.multiTasking(this.executor.shutdown(), this.databaseManager.shutdown()).addUpdateListener(wrapper -> {
 
 
             FileUtils.delete(NodeDriver.SERVICE_DIR_DYNAMIC.toPath());
@@ -585,11 +585,11 @@ public class NodeDriver extends CloudDriver implements Node {
 
     @Override
     public void startServer(CloudServer server) {
-        CloudDriver.getInstance().getServiceManager().startService(server).addUpdateListener(new Consumer<Wrapper<CloudServer>>() {
+        CloudDriver.getInstance().getServiceManager().startService(server).addUpdateListener(new Consumer<Task<CloudServer>>() {
             @Override
-            public void accept(Wrapper<CloudServer> iServiceWrapper) {
-                if (iServiceWrapper.isSuccess()) {
-                    CloudServer service = iServiceWrapper.get();
+            public void accept(Task<CloudServer> iServiceTask) {
+                if (iServiceTask.isSuccess()) {
+                    CloudServer service = iServiceTask.get();
 
                     ClusterClientExecutor nodeClient = NodeDriver.getInstance().getExecutor().getClient(service.getConfiguration().getNode()).orElse(null);
                     boolean thisSidesNode = service.getConfiguration().getNode().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName());
@@ -601,7 +601,7 @@ public class NodeDriver extends CloudDriver implements Node {
                     }
 
                 } else {
-                    iServiceWrapper.error().printStackTrace();
+                    iServiceTask.error().printStackTrace();
                 }
             }
         });
@@ -618,7 +618,7 @@ public class NodeDriver extends CloudDriver implements Node {
     }
 
     @Override
-    public void sendPacket(IPacket packet) {
+    public void sendPacket(Packet packet) {
         this.executor.sendPacketToAll(packet);
     }
 

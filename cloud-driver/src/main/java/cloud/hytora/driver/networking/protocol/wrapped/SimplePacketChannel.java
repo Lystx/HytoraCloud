@@ -1,6 +1,5 @@
 package cloud.hytora.driver.networking.protocol.wrapped;
 
-import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundInvoker;
@@ -124,7 +123,7 @@ public class SimplePacketChannel implements PacketChannel {
     }
 
     @Override
-    public void sendPacket(IPacket packet) {
-        this.flushPacket((Packet) packet);
+    public void sendPacket(Packet packet) {
+        this.flushPacket(packet);
     }
 }

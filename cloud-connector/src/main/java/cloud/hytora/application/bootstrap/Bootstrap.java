@@ -1,7 +1,6 @@
 
 package cloud.hytora.application.bootstrap;
 
-import java.awt.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -10,15 +9,15 @@ import javax.swing.*;
 import cloud.hytora.application.elements.data.ApplicationData;
 import cloud.hytora.application.elements.StartPanelInfoBox;
 import cloud.hytora.application.elements.event.CommitHistoryLoadedEvent;
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.remote.Remote;
 import com.formdev.flatlaf.*;
 import cloud.hytora.application.gui.Application;
 import cloud.hytora.application.elements.data.CloudTheme;
 import com.formdev.flatlaf.util.SystemInfo;
-import com.sun.glass.ui.Screen;
 import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
@@ -62,9 +61,9 @@ public class Bootstrap {
         }
 
         //connecting to cloud node
-        Remote.initFromOtherInstance(new RemoteIdentity(key, "", host, "Application", port), packet -> {
+        Remote.initFromOtherInstance(RemoteIdentity.forApplication(new ProtocolAddress(host, port, key)), packet -> {
 
-            Wrapper.runAsync(() -> {
+            Task.runAsync(() -> {
                 try {
                     GitHub github = GitHubBuilder.fromEnvironment().build();
                     GHRepository repository = github.getRepository("Lystx/HytoraCloud");

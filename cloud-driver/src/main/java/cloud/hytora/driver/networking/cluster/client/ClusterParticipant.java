@@ -1,7 +1,7 @@
 package cloud.hytora.driver.networking.cluster.client;
 
 import cloud.hytora.common.collection.ThreadRunnable;
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.defaults.driver.DriverConnectEvent;
@@ -11,7 +11,7 @@ import cloud.hytora.driver.networking.protocol.codec.PacketEncoder;
 import cloud.hytora.driver.networking.protocol.codec.prepender.NettyPacketLengthDeserializer;
 import cloud.hytora.driver.networking.protocol.codec.prepender.NettyPacketLengthSerializer;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
-import cloud.hytora.driver.networking.protocol.packets.IPacket;
+import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.networking.protocol.packets.defaults.HandshakePacket;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import io.netty.bootstrap.Bootstrap;
@@ -54,8 +54,8 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
     }
 
 
-    public Wrapper<Channel> openConnection(String hostname, int port) {
-        Wrapper<Channel> result = Wrapper.empty(Channel.class).denyNull();
+    public Task<Channel> openConnection(String hostname, int port) {
+        Task<Channel> result = Task.empty(Channel.class).denyNull();
 
         if (active) {
             result.setFailure(new AlreadyConnectedException());
@@ -85,12 +85,11 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
                                         public void channelActive(ChannelHandlerContext ctx) throws Exception {
                                             ClusterParticipant.this.onActivated(ctx);
                                             ClusterParticipant.this.sendPacket(new HandshakePacket(authKey, getName(), ClusterParticipant.this.type, customData));
-                                            result.setResult(ctx.channel());
 
                                             //fire connect event
                                             CloudDriver.getInstance().getEventManager().callEvent(new DriverConnectEvent());
-
                                             super.channelActive(ctx);
+
                                         }
 
                                         @Override
@@ -100,10 +99,6 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
                                             super.channelInactive(ctx);
                                         }
 
-                                        @Override
-                                        public void channelRead0(ChannelHandlerContext channelHandlerContext, IPacket packet) {
-                                            super.channelRead0(channelHandlerContext, packet);
-                                        }
                                     });
                         }
                     })
@@ -111,6 +106,7 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
                     .connect(hostname, port).addListener((ChannelFutureListener) future -> {
                         if (future.isSuccess()) {
                             channel = future.channel();
+                            result.setResult(channel);
                         } else {
                             result.setFailure(future.cause());
                             workerGroup.shutdownGracefully();
@@ -127,7 +123,7 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
     }
 
     @Override
-    public <T extends IPacket> void handlePacket(PacketChannel wrapper, @NotNull T packet) {
+    public <T extends Packet> void handlePacket(PacketChannel wrapper, @NotNull T packet) {
         if (packet instanceof HandshakePacket) {
             HandshakePacket handshake = (HandshakePacket) packet;
             connectedNodeName = handshake.getNodeName();
@@ -144,21 +140,33 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
     }
 
 
-    public Wrapper<Boolean> shutdown() {
-        Wrapper<Boolean> wrapper = Wrapper.empty();
+    public Task<Boolean> shutdown() {
+        Task<Boolean> task = Task.empty();
         this.workerGroup.shutdownGracefully().addListener(future -> {
             if (future.isSuccess()) {
-                wrapper.setResult(true);
+                task.setResult(true);
             } else {
-                wrapper.setFailure(future.cause());
+                task.setFailure(future.cause());
             }
         });
-        return wrapper;
+        return task;
     }
 
     @Override
-    public void sendPacket(IPacket packet) {
-        this.channel.writeAndFlush(packet).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+    public void sendPacket(Packet packet) {
+        System.out.println("About to send " + Packet.getName(packet));
+        this.channel.writeAndFlush(packet).addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+                System.out.println("Future returned");
+                if (!future.isSuccess()) {
+                    System.out.println("Error");
+                    future.cause().printStackTrace();
+                } else {
+                    System.out.println("Flushed => " + packet.getClass().getSimpleName());
+                }
+            }
+        });
     }
 
     public abstract void onAuthenticationChanged(PacketChannel wrapper);

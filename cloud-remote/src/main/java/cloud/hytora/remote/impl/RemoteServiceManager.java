@@ -1,5 +1,6 @@
 package cloud.hytora.remote.impl;
 
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.packets.RedirectPacket;
 import cloud.hytora.driver.networking.packets.services.CloudServerCacheRegisterPacket;
@@ -43,9 +44,9 @@ public class RemoteServiceManager extends DefaultServiceManager {
     }
 
     @Override
-    public cloud.hytora.common.wrapper.Wrapper<CloudServer> startService(@NotNull CloudServer service) {
+    public Task<CloudServer> startService(@NotNull CloudServer service) {
         //TODO SEND PACKET
-        return cloud.hytora.common.wrapper.Wrapper.empty();
+        return Task.empty();
     }
 
     @Override

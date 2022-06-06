@@ -1,10 +1,9 @@
 package cloud.hytora.node.service.helper;
 
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.CloudDriver;
 
 
-import cloud.hytora.driver.networking.packets.services.CloudServerCacheRegisterPacket;
 import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.services.CloudServer;
@@ -14,7 +13,6 @@ import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.config.MainConfiguration;
 import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
-import cloud.hytora.node.service.NodeServiceManager;
 import lombok.Getter;
 
 import java.net.InetSocketAddress;
@@ -23,8 +21,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 @Getter
 public class NodeServiceQueue {
@@ -57,7 +53,7 @@ public class NodeServiceQueue {
         }
         CloudServer cloudServer = services.get(0);
         NodeManager nodeManager = NodeDriver.getInstance().getNodeManager();
-        Wrapper<Node> node = nodeManager.getNode(cloudServer.getConfiguration().getNode());
+        Task<Node> node = nodeManager.getNode(cloudServer.getConfiguration().getNode());
 
         node.ifPresent(n -> n.startServer(cloudServer));
         node.ifEmpty(n -> CloudDriver.getInstance().getLogger().error("Tried to start {} but the Node {} for Servers of Configuration {} is not connected!", cloudServer.getName(), cloudServer.getConfiguration().getNode(), cloudServer.getConfiguration().getName()));

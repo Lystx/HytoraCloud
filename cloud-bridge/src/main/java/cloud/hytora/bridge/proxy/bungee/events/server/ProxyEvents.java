@@ -1,13 +1,11 @@
 package cloud.hytora.bridge.proxy.bungee.events.server;
 
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.driver.services.CloudServer;
-import cloud.hytora.driver.services.utils.ServiceState;
-import cloud.hytora.driver.services.utils.ServiceVisibility;
 import cloud.hytora.remote.Remote;
 import cloud.hytora.remote.impl.RemoteServiceManager;
 import net.md_5.bungee.api.ProxyServer;
@@ -20,8 +18,6 @@ import net.md_5.bungee.api.connection.Server;
 import net.md_5.bungee.api.event.*;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
-
-import java.util.*;
 
 public class ProxyEvents implements Listener {
 
@@ -52,7 +48,7 @@ public class ProxyEvents implements Listener {
         CloudDriver.getInstance().getLogger().info("Available Services : {}", CloudDriver.getInstance().getServiceManager().getAllCachedServices().size());
 
 
-        Wrapper<CloudServer> fallback = CloudDriver.getInstance().getServiceManager().getFallbackOrNullAsService();
+        Task<CloudServer> fallback = CloudDriver.getInstance().getServiceManager().getFallbackOrNullAsService();
 
         if (fallback.isNull()) {
             event.setCancelReason(new TextComponent("§cCould not find any fallback to connect you to..."));
@@ -85,7 +81,7 @@ public class ProxyEvents implements Listener {
         }
 
         if (event.getTarget().getName().equalsIgnoreCase("fallback")) {
-            Wrapper<CloudServer> fallback = serviceManager.getFallbackOrNullAsService();
+            Task<CloudServer> fallback = serviceManager.getFallbackOrNullAsService();
 
             if (fallback.isPresent()) {
                 event.setTarget(ProxyServer.getInstance().getServerInfo(fallback.get().getName()));

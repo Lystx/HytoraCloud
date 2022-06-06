@@ -1,6 +1,6 @@
 package cloud.hytora.node.impl.node;
 
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.node.DefaultNodeManager;
 import cloud.hytora.driver.node.Node;
@@ -50,9 +50,9 @@ public class NodeNodeManager extends DefaultNodeManager {
     }
 
     @Override
-    public @NotNull Wrapper<Node> getNode(@NotNull String username) {
+    public @NotNull Task<Node> getNode(@NotNull String username) {
         if (username.equalsIgnoreCase(NodeDriver.getInstance().getName())) {
-            return Wrapper.build(NodeDriver.getInstance());
+            return Task.build(NodeDriver.getInstance());
         }
         return super.getNode(username);
     }

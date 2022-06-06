@@ -1,8 +1,7 @@
 package cloud.hytora.common;
 
 import cloud.hytora.common.function.ExceptionallyRunnable;
-import cloud.hytora.common.wrapper.Wrapper;
-import lombok.experimental.UtilityClass;
+import cloud.hytora.common.wrapper.Task;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -70,8 +69,8 @@ public class DriverUtility {
         return iterator.stream().filter(predicate).findFirst().orElse(null);
     }
 
-    public static <T> Wrapper<T> find(Collection<T> iterator, Predicate<? super T> predicate) {
-        return Wrapper.build(findOrNull(iterator, predicate));
+    public static <T> Task<T> find(Collection<T> iterator, Predicate<? super T> predicate) {
+        return Task.build(findOrNull(iterator, predicate));
     }
 
     @SafeVarargs

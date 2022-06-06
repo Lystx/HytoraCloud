@@ -1,7 +1,7 @@
 package cloud.hytora.common.wrapper;
 
 import cloud.hytora.common.collection.NamedThreadFactory;
-import cloud.hytora.common.wrapper.def.SimpleWrapper;
+import cloud.hytora.common.wrapper.def.SimpleTask;
 import cloud.hytora.common.wrapper.exception.ValueHoldsNoObjectException;
 import cloud.hytora.common.wrapper.exception.ValueImmutableException;
 import cloud.hytora.common.function.ExceptionallyRunnable;
@@ -24,15 +24,15 @@ import java.util.function.Supplier;
  *
  * <br>
  * <br> There are multiple checks to get if there is a value being held
- * like {@link Wrapper#isNull()} or {@link Wrapper#isPresent()}
+ * like {@link Task#isNull()} or {@link Task#isPresent()}
  *
  * <br>
  * <br>Values may be immutable, so they can't be modified after they
  * have received a value or have been updated once
- * The immutable changed can be retrieved or change using {@link Wrapper#isImmutable()}
- * and {@link Wrapper#setImmutable(boolean)} at any time
+ * The immutable changed can be retrieved or change using {@link Task#isImmutable()}
+ * and {@link Task#setImmutable(boolean)} at any time
  */
-public interface Wrapper<T> extends Serializable {
+public interface Task<T> extends Serializable {
 
     /**
      * The static executor for async calls
@@ -40,36 +40,36 @@ public interface Wrapper<T> extends Serializable {
     ExecutorService SERVICE = Executors.newCachedThreadPool(new NamedThreadFactory("WrapperTaskPool"));
 
     /**
-     * Constructs a new empty {@link Wrapper} with no object being held
+     * Constructs a new empty {@link Task} with no object being held
      * The created value is not immutable, so it may be modified
      *
      * @param <T> the type of the object the new value should hold
      * @return the created value instance
      */
-    static <T> Wrapper<T> empty() {
+    static <T> Task<T> empty() {
         return build((T) null);
     }
 
     /**
-     * Constructs a new empty {@link Wrapper} with no object being held
+     * Constructs a new empty {@link Task} with no object being held
      * The created value is not immutable, so it may be modified
      *
      * @param <T> the type of the object the new value should hold
      * @return the created value instance
      */
-    static <T> Wrapper<T> empty(Class<T> typeClass) {
+    static <T> Task<T> empty(Class<T> typeClass) {
         return build((T) null);
     }
 
-    static <T> Wrapper<Boolean> multiTasking(Wrapper<?>... tasks) {
+    static <T> Task<Boolean> multiTasking(Task<?>... tasks) {
 
-        Wrapper<Boolean> unitPromise = empty();
+        Task<Boolean> unitPromise = empty();
         if (tasks.length == 0) {
             return unitPromise;
         }
-        for (Wrapper<?> promise : tasks) {
+        for (Task<?> promise : tasks) {
             promise.addSimpleUpdateListener(o -> {
-                if (Arrays.stream(tasks).allMatch(Wrapper::isPresent) && !unitPromise.isPresent()) {
+                if (Arrays.stream(tasks).allMatch(Task::isPresent) && !unitPromise.isPresent()) {
                     unitPromise.setResult(true);
                 }
             });
@@ -78,32 +78,32 @@ public interface Wrapper<T> extends Serializable {
     }
 
     /**
-     * Constructs a new pre-filled {@link Wrapper} with an object being held
+     * Constructs a new pre-filled {@link Task} with an object being held
      * The created value is not immutable, so it may be modified
      *
      * @param value the value that should be held
      * @param <T>   the type of the object the new value should hold
      * @return the created value instance
      */
-    static <T> Wrapper<T> build(T value) {
+    static <T> Task<T> build(T value) {
         return build(value, false);
     }
 
     /**
-     * Constructs a new pre-filled {@link Wrapper} with an object being held
+     * Constructs a new pre-filled {@link Task} with an object being held
      * The created value is not immutable, so it may be modified
      *
      * @param value the value that should be held
      * @param <T>   the type of the object the new value should hold
      * @return the created value instance
      */
-    static <T> Wrapper<T> build(Supplier<T> value) {
+    static <T> Task<T> build(Supplier<T> value) {
         return build(value.get());
     }
 
 
     /**
-     * Constructs a new pre-filled {@link Wrapper} with an object being held
+     * Constructs a new pre-filled {@link Task} with an object being held
      * The created value will be immutable depending on the value you provide
      * as a parameter
      *
@@ -112,11 +112,11 @@ public interface Wrapper<T> extends Serializable {
      * @param <T>       the type of the object the new value should hold
      * @return the created value instance
      */
-    static <T> Wrapper<T> build(T value, boolean immutable) {
-        return new SimpleWrapper<T>().setResult(value).setImmutable(immutable);
+    static <T> Task<T> build(T value, boolean immutable) {
+        return new SimpleTask<T>().setResult(value).setImmutable(immutable);
     }
 
-    static Wrapper<Void> runSync(@Nonnull Runnable runnable) {
+    static Task<Void> runSync(@Nonnull Runnable runnable) {
         return callSync(() -> {
             runnable.run();
             return null;
@@ -124,23 +124,23 @@ public interface Wrapper<T> extends Serializable {
     }
 
 
-    static Wrapper<Void> runAsync(@Nonnull Runnable runnable) {
+    static Task<Void> runAsync(@Nonnull Runnable runnable) {
         return callAsync(() -> {
             runnable.run();
             return null;
         });
     }
 
-    static Wrapper<Void> runExceptionally(@Nonnull ExceptionallyRunnable runnable) {
+    static Task<Void> runExceptionally(@Nonnull ExceptionallyRunnable runnable) {
         return runSync(runnable);
     }
 
-    static Wrapper<Void> runAsyncExceptionally(@Nonnull ExceptionallyRunnable runnable) {
+    static Task<Void> runAsyncExceptionally(@Nonnull ExceptionallyRunnable runnable) {
         return runAsync(runnable);
     }
 
-    static <V> Wrapper<V> callAsync(@Nonnull Callable<V> callable) {
-        Wrapper<V> task = empty();
+    static <V> Task<V> callAsync(@Nonnull Callable<V> callable) {
+        Task<V> task = empty();
         task.denyNull();
         SERVICE.execute(() -> {
             try {
@@ -153,8 +153,8 @@ public interface Wrapper<T> extends Serializable {
         return task;
     }
 
-    static <V> Wrapper<V> callSync(@Nonnull Callable<V> callable) {
-        Wrapper<V> task = empty();
+    static <V> Task<V> callSync(@Nonnull Callable<V> callable) {
+        Task<V> task = empty();
         task.denyNull();
         try {
             task.allowNull();
@@ -168,12 +168,12 @@ public interface Wrapper<T> extends Serializable {
     /**
      * Denies null values
      */
-    Wrapper<T> denyNull();
+    Task<T> denyNull();
 
     /**
      * Denies null values
      */
-    Wrapper<T> allowNull();
+    Task<T> allowNull();
 
     /**
      * Returns null if there is no provided value
@@ -183,7 +183,7 @@ public interface Wrapper<T> extends Serializable {
     /**
      * Retrieves the current held object if it is set
      * This is unsafe to use because of Exception-Throwing
-     * You should rather use {@link Wrapper#orElse(Object)} to avoid exceptions
+     * You should rather use {@link Task#orElse(Object)} to avoid exceptions
      * and provide your own custom value to return if nothing set
      * See why it throws {@link ValueHoldsNoObjectException} down below.
      * If there is no object being held right now and the value is immutable
@@ -212,11 +212,11 @@ public interface Wrapper<T> extends Serializable {
      *
      * @param ex the exception to set
      */
-    Wrapper<T> setFailure(Throwable ex);
+    Task<T> setFailure(Throwable ex);
 
     /**
      * Retrieves the {@link Throwable} that has been set
-     * via {@link Wrapper#setFailure(Throwable)}
+     * via {@link Task#setFailure(Throwable)}
      *
      * @return error (if set) or null
      */
@@ -227,27 +227,27 @@ public interface Wrapper<T> extends Serializable {
      *
      * @return current value
      */
-    Wrapper<T> syncUninterruptedly();
+    Task<T> syncUninterruptedly();
 
     default <V> V syncUninterruptedlyAndMap(Function<T, V> mapper) {
         return syncUninterruptedly().map(mapper).get();
     }
 
     /**
-     * Sets the time-out for {@link Wrapper#syncUninterruptedly()}
+     * Sets the time-out for {@link Task#syncUninterruptedly()}
      *
      * @param unit          the unit of the timeOut
      * @param timeOut       the value for the given unit
      * @param fallbackValue the value to fall back to if timed out
      * @return current value instance
      */
-    Wrapper<T> timeOut(TimeUnit unit, int timeOut, T fallbackValue);
+    Task<T> timeOut(TimeUnit unit, int timeOut, T fallbackValue);
 
-    default Wrapper<T> timeOut(int timeOut) {
+    default Task<T> timeOut(int timeOut) {
         return timeOut(TimeUnit.MILLISECONDS, timeOut, null);
     }
 
-    default Wrapper<T> timeOut(TimeUnit unit, int timeOut) {
+    default Task<T> timeOut(TimeUnit unit, int timeOut) {
         return timeOut(unit, timeOut, null);
     }
 
@@ -255,7 +255,7 @@ public interface Wrapper<T> extends Serializable {
      * Tries to retrieve the current held object if it is set
      * If there is no current object held, the provided value
      * will be returned.
-     * Unlike {@link Wrapper#get()} this method does not throw exceptions
+     * Unlike {@link Task#get()} this method does not throw exceptions
      *
      * @param value the optional value if no value is held
      * @return held value or provided parameter
@@ -302,18 +302,18 @@ public interface Wrapper<T> extends Serializable {
      */
     void orElseDo(Predicate<T> predicate, Runnable ifFalse, Consumer<T> or);
 
-    T getOrPerform(Predicate<Wrapper<T>> predicate, Consumer<Wrapper<T>> ifTrue, Consumer<Wrapper<T>> ifFalse);
+    T getOrPerform(Predicate<Task<T>> predicate, Consumer<Task<T>> ifTrue, Consumer<Task<T>> ifFalse);
 
     /**
      * If a value is present, apply the provided mapping function to it,
-     * and if the result is non-null, return a {@link Wrapper} describing the
-     * result. Otherwise, return an empty {@link Wrapper}
+     * and if the result is non-null, return a {@link Task} describing the
+     * result. Otherwise, return an empty {@link Task}
      *
      * @param <V>    The type of the result of the mapping function
      * @param mapper a mapping function to apply to the value, if present
      * @return a new value describing the result of applying a mapping
      */
-    <V> Wrapper<V> map(Function<T, V> mapper);
+    <V> Task<V> map(Function<T, V> mapper);
 
     /**
      * Maps this value thread-blocking
@@ -321,21 +321,21 @@ public interface Wrapper<T> extends Serializable {
      * @param <V>    The type of the result of the mapping function
      * @param mapper a mapping function to apply to the value, if present
      * @return a new value describing the result of applying a mapping
-     * @see Wrapper#map(Function)
+     * @see Task#map(Function)
      */
-    <V> Wrapper<V> mapBlocking(Function<T, V> mapper);
+    <V> Task<V> mapBlocking(Function<T, V> mapper);
 
-    <V> void executeMapper(Supplier<Wrapper<V>> wrapper, Function<V, T> mapper);
+    <V> void executeMapper(Supplier<Task<V>> wrapper, Function<V, T> mapper);
 
 
     /**
      * If a value is present, and the value matches the given predicate,
-     * return a {@link Wrapper} containing the value, otherwise returns an empty one
+     * return a {@link Task} containing the value, otherwise returns an empty one
      *
      * @param predicate a predicate to apply to the value, if present
-     * @return a new value containing the value of this current {@link Wrapper}
+     * @return a new value containing the value of this current {@link Task}
      */
-    Wrapper<T> filter(Predicate<? super T> predicate);
+    Task<T> filter(Predicate<? super T> predicate);
 
     /**
      * Updates the current object of this value reference
@@ -343,14 +343,14 @@ public interface Wrapper<T> extends Serializable {
      * @param value the value to set
      * @return current value
      */
-    Wrapper<T> setResult(T value) throws ValueImmutableException;
+    Task<T> setResult(T value) throws ValueImmutableException;
 
     /**
      * Sets the immutable state of this value
      *
      * @param immutable the state if it may be modified
      */
-    Wrapper<T> setImmutable(boolean immutable);
+    Task<T> setImmutable(boolean immutable);
 
     /**
      * Checks if this value is immutable
@@ -399,7 +399,7 @@ public interface Wrapper<T> extends Serializable {
      * @param listener the listener as consumer to add
      * @return current value instance
      */
-    Wrapper<T> addUpdateListener(Consumer<Wrapper<T>> listener);
+    Task<T> addUpdateListener(Consumer<Task<T>> listener);
 
     /**
      * Adds a simple updating listener as {@link Consumer} to this value
@@ -407,7 +407,7 @@ public interface Wrapper<T> extends Serializable {
      * @param listener the listener as consumer to add
      * @return current value instance
      */
-    Wrapper<T> addSimpleUpdateListener(Consumer<T> listener);
+    Task<T> addSimpleUpdateListener(Consumer<T> listener);
 
     /**
      * Waits until a value is provided in this value
@@ -422,6 +422,6 @@ public interface Wrapper<T> extends Serializable {
      *
      * @param consumer the action to perform
      */
-    void ifEmpty(Consumer<Wrapper<T>> consumer);
+    void ifEmpty(Consumer<Task<T>> consumer);
 
 }

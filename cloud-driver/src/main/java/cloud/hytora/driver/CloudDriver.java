@@ -91,6 +91,7 @@ public abstract class CloudDriver extends DriverUtility {
 
     public static final int SERVER_PUBLISH_INTERVAL = 90_000; // publish all 1.5 minutes
     public static final int SERVER_CYCLE_TIMEOUT = 2; // service times out after 3 minutes
+    public static final String APPLICATION_NAME = "Application"; //the name for the Dashboard
 
     public CloudDriver(Logger logger, DriverEnvironment environment) {
         instance = this;

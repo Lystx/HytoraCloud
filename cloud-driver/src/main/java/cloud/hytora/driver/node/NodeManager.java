@@ -1,13 +1,11 @@
 package cloud.hytora.driver.node;
 
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 public interface NodeManager {
 
@@ -23,7 +21,7 @@ public interface NodeManager {
 
     void setAllConnectedNodes(List<Node> nodes);
 
-    @NotNull Wrapper<Node> getNode(@NotNull String username);
+    @NotNull Task<Node> getNode(@NotNull String username);
 
     @Nullable Node getNodeByNameOrNull(@NotNull String username);
 

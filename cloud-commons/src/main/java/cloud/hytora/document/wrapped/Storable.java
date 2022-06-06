@@ -1,6 +1,6 @@
 package cloud.hytora.document.wrapped;
 
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -31,8 +31,8 @@ public interface Storable {
 	void saveExceptionally() throws Exception;
 
 	@Nonnull
-	default Wrapper<Void> saveAsync() {
-		return Wrapper.runAsyncExceptionally(this::saveExceptionally);
+	default Task<Void> saveAsync() {
+		return Task.runAsyncExceptionally(this::saveExceptionally);
 	}
 
 }

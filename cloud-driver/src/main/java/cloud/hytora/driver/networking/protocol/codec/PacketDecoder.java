@@ -27,6 +27,7 @@ public class PacketDecoder extends ByteToMessageDecoder {
             PacketBuffer buf = new DefaultPacketBuffer(byteBuf, this.participant);
             Packet packet = buf.readPacket();
             if (packet == null) {
+                System.out.println("Couldn't decode Packet");
                 return;
             }
             list.add(packet);

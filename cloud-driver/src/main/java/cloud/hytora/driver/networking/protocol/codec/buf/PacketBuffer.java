@@ -2,7 +2,7 @@ package cloud.hytora.driver.networking.protocol.codec.buf;
 
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
-import cloud.hytora.driver.networking.protocol.packets.IPacket;
+
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.NetworkExecutor;
@@ -69,9 +69,9 @@ public interface PacketBuffer {
 
 	void read(@Nonnull OutputStream out, int length) throws IOException;
 
-	<T extends IPacket> T readPacket() throws IOException;
+	<T extends Packet> T readPacket() throws IOException;
 
-	PacketBuffer writePacket(IPacket packet) throws IOException;
+	PacketBuffer writePacket(Packet packet) throws IOException;
 
 	@Nonnull
 	PacketBuffer write(@Nonnull byte[] bytes);

@@ -1,7 +1,7 @@
 
 package cloud.hytora.common.wrapper.def;
 
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.common.wrapper.WrapperListener;
 import cloud.hytora.common.wrapper.exception.ValueHoldsNoObjectException;
 import cloud.hytora.common.wrapper.exception.ValueImmutableException;
@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 
 @Getter
 @Setter
-public class SimpleWrapper<T> implements Wrapper<T> {
+public class SimpleTask<T> implements Task<T> {
 
     /**
      * The current value being held
@@ -54,9 +54,9 @@ public class SimpleWrapper<T> implements Wrapper<T> {
     /**
      * All update listeners
      */
-    private final Collection<Consumer<Wrapper<T>>> updateListeners;
+    private final Collection<Consumer<Task<T>>> updateListeners;
 
-    public SimpleWrapper() {
+    public SimpleTask() {
         this.heldValue = null;
         this.immutable = false;
         this.countDownLatches = new ArrayList<>();
@@ -69,13 +69,13 @@ public class SimpleWrapper<T> implements Wrapper<T> {
     }
 
     @Override
-    public Wrapper<T> denyNull() {
+    public Task<T> denyNull() {
         this.denyNull = true;
         return this;
     }
 
     @Override
-    public Wrapper<T> allowNull() {
+    public Task<T> allowNull() {
         this.denyNull = false;
         return this;
     }
@@ -103,20 +103,20 @@ public class SimpleWrapper<T> implements Wrapper<T> {
     }
 
     @Override
-    public Wrapper<T> setFailure(Throwable ex) {
+    public Task<T> setFailure(Throwable ex) {
         this.throwable = ex;
         this.releaseLocks();
         return this;
     }
 
     @Override
-    public Wrapper<T> setImmutable(boolean immutable) {
+    public Task<T> setImmutable(boolean immutable) {
         this.immutable = immutable;
         return this;
     }
 
     @Override
-    public Wrapper<T> setResult(T newValue) throws ValueImmutableException {
+    public Task<T> setResult(T newValue) throws ValueImmutableException {
         if (newValue == null && this.denyNull) {
             return this;
         }
@@ -155,7 +155,7 @@ public class SimpleWrapper<T> implements Wrapper<T> {
     private final Map<UUID, Boolean> pendingQueries = new ConcurrentHashMap<>();
 
     @Override
-    public <V> Wrapper<V> mapBlocking(Function<T, V> mapper) {
+    public <V> Task<V> mapBlocking(Function<T, V> mapper) {
         if (isPresent()) {
             return map(mapper);
         }
@@ -217,7 +217,7 @@ public class SimpleWrapper<T> implements Wrapper<T> {
     }
 
     @Override
-    public Wrapper<T> addUpdateListener(Consumer<Wrapper<T>> listener) {
+    public Task<T> addUpdateListener(Consumer<Task<T>> listener) {
         if (this.isDone()) {
             listener.accept(this);
             return this;
@@ -227,7 +227,7 @@ public class SimpleWrapper<T> implements Wrapper<T> {
     }
 
     @Override
-    public void ifEmpty(Consumer<Wrapper<T>> consumer) {
+    public void ifEmpty(Consumer<Task<T>> consumer) {
         if (isPresent()) {
             return;
         }
@@ -235,7 +235,7 @@ public class SimpleWrapper<T> implements Wrapper<T> {
     }
 
     @Override
-    public T getOrPerform(Predicate<Wrapper<T>> predicate, Consumer<Wrapper<T>> ifTrue, Consumer<Wrapper<T>> ifFalse) {
+    public T getOrPerform(Predicate<Task<T>> predicate, Consumer<Task<T>> ifTrue, Consumer<Task<T>> ifFalse) {
         if (isNull()) {
             if (predicate.test(this)) {
                 ifTrue.accept(this);
@@ -259,7 +259,7 @@ public class SimpleWrapper<T> implements Wrapper<T> {
 
 
     @Override
-    public Wrapper<T> timeOut(TimeUnit unit, int timeOut, T fallbackValue) {
+    public Task<T> timeOut(TimeUnit unit, int timeOut, T fallbackValue) {
         this.timeOutUnit = unit;
         this.timeOutValue = timeOut;
         this.fallbackValue = fallbackValue;
@@ -267,7 +267,7 @@ public class SimpleWrapper<T> implements Wrapper<T> {
     }
 
     @Override
-    public Wrapper<T> syncUninterruptedly() {
+    public Task<T> syncUninterruptedly() {
         if (isPresent() || isDone()) {
             return this;
         }
@@ -298,7 +298,7 @@ public class SimpleWrapper<T> implements Wrapper<T> {
     }
 
     @Override
-    public Wrapper<T> addSimpleUpdateListener(Consumer<T> listener) {
+    public Task<T> addSimpleUpdateListener(Consumer<T> listener) {
         return this.addUpdateListener(v -> {
             try {
                 listener.accept(v.get());
@@ -314,8 +314,8 @@ public class SimpleWrapper<T> implements Wrapper<T> {
     }
 
     @Override
-    public Wrapper<T> filter(Predicate<? super T> predicate) {
-        return isNull() ? this : predicate.test(heldValue) ? this : Wrapper.empty();
+    public Task<T> filter(Predicate<? super T> predicate) {
+        return isNull() ? this : predicate.test(heldValue) ? this : Task.empty();
     }
 
     @Override
@@ -357,16 +357,16 @@ public class SimpleWrapper<T> implements Wrapper<T> {
     }
 
     @Override
-    public <V> void executeMapper(Supplier<Wrapper<V>> wrapper, Function<V, T> mapper) {
-        Wrapper<V> wrapped = wrapper.get();
+    public <V> void executeMapper(Supplier<Task<V>> wrapper, Function<V, T> mapper) {
+        Task<V> wrapped = wrapper.get();
 
         if (this.denyNull) {
             wrapped.denyNull();
         }
 
-        wrapped.addUpdateListener(new Consumer<Wrapper<V>>() {
+        wrapped.addUpdateListener(new Consumer<Task<V>>() {
             @Override
-            public void accept(Wrapper<V> result) {
+            public void accept(Task<V> result) {
 
                 if (result.error() != null) {
                     setFailure(result.error());
@@ -383,24 +383,24 @@ public class SimpleWrapper<T> implements Wrapper<T> {
     }
 
     @Override
-    public <V> Wrapper<V> map(Function<T, V> mapper) {
-        Wrapper<V> wrapper = Wrapper.empty();
+    public <V> Task<V> map(Function<T, V> mapper) {
+        Task<V> task = Task.empty();
         if (this.isNull()) {
-            return wrapper;
+            return task;
         }
-        wrapper = Wrapper.build(mapper.apply(this.heldValue));
-        Wrapper<V> finalWrapper = wrapper;
-        this.addUpdateListener(new Consumer<Wrapper<T>>() {
+        task = Task.build(mapper.apply(this.heldValue));
+        Task<V> finalTask = task;
+        this.addUpdateListener(new Consumer<Task<T>>() {
             @Override
-            public void accept(Wrapper<T> tWrapper) {
-                if (tWrapper.isSuccess()) {
-                    finalWrapper.setResult((V) tWrapper.get());
+            public void accept(Task<T> tTask) {
+                if (tTask.isSuccess()) {
+                    finalTask.setResult((V) tTask.get());
                 } else {
-                    finalWrapper.setFailure(tWrapper.error());
+                    finalTask.setFailure(tTask.error());
                 }
             }
         });
-        return wrapper;
+        return task;
     }
 
     @Override

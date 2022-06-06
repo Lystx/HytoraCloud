@@ -1,5 +1,7 @@
 package cloud.hytora.driver.networking.protocol.codec;
 
+import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.networking.protocol.codec.buf.DefaultPacketBuffer;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
@@ -19,10 +21,14 @@ public class PacketEncoder extends MessageToByteEncoder<Packet> {
 
     @Override
     protected void encode(ChannelHandlerContext channelHandlerContext, Packet packet, ByteBuf output) throws Exception{
+        if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.SERVICE) {
+            System.out.println("Encoding " + packet.getClass().getSimpleName());
+        }
         PacketBuffer buf = new DefaultPacketBuffer(output, this.participant);
         try {
             buf.writePacket(packet);
         } catch (IOException e) {
+            System.out.println("Error");
             e.printStackTrace();
         }
     }

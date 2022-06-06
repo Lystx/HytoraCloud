@@ -1,7 +1,7 @@
 package cloud.hytora.driver.networking.protocol.wrapped;
 
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.networking.packets.RedirectPacket;
@@ -82,9 +82,9 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
     }
 
     @Override
-    public Wrapper<R> execute(Packet packet) {
-        Wrapper<R> wrapper = Wrapper.empty();
-        wrapper.denyNull();
+    public Task<R> execute(Packet packet) {
+        Task<R> task = Task.empty();
+        task.denyNull();
         NetworkExecutor executor = this.wrapper.executor();
 
         if (identifier.equalsIgnoreCase("multiQuery")) {
@@ -113,7 +113,7 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
 
                     //decreasing and checking if all collected
                     if (neededResponses.decrementAndGet() <= 0) {
-                        wrapper.setResult((R) responses);
+                        task.setResult((R) responses);
                     }
                 }
             });
@@ -127,7 +127,7 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
 
             ((AdvancedNetworkExecutor)executor).registerSelfDestructivePacketHandler((PacketHandler<ResponsePacket>) (wrap, packet1) -> {
                 if (packet1.transferInfo().getInternalQueryId().equals(packet.transferInfo().getInternalQueryId())) {
-                    wrapper.setResult((R) packet1);
+                    task.setResult((R) packet1);
                 }
             });
             this.sendPacket(packet);
@@ -142,7 +142,7 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
             this.sendPacket(packet);
         }
 
-        return wrapper;
+        return task;
     }
 
     private void sendPacket(Packet packet) {

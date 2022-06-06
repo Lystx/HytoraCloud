@@ -31,16 +31,18 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
 
     @Override
     public void onEnable() {
+        System.out.println("<=======[ BUNGEECORD ]=========>");
         ProxyServer.getInstance().getServers().clear();
         ProxyServer.getInstance().getConfigurationAdapter().getServers().clear();
         ProxyServer.getInstance().getConfigurationAdapter().getListeners().forEach(l -> l.getServerPriority().clear());
 
-        new ProxyRemoteHandler();
-        this.getProxy().getPluginManager().registerListener(this, new ProxyEvents());
-
         //update that the service is ready to use
         this.bootstrap();
 
+        new ProxyRemoteHandler();
+        this.getProxy().getPluginManager().registerListener(this, new ProxyEvents());
+
+        System.out.println("<=======[ BUNGEECORD ]=========>");
     }
 
     @Override

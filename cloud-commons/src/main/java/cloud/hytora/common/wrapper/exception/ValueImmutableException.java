@@ -1,11 +1,11 @@
 package cloud.hytora.common.wrapper.exception;
 
 
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 
 public class ValueImmutableException extends RuntimeException {
 
-    public ValueImmutableException(Wrapper<?> wrapper) {
-        super("Value holding " + (wrapper.isPresent() ? "value of type " + wrapper.get().getClass().getName() : "no value") + " is immutable!");
+    public ValueImmutableException(Task<?> task) {
+        super("Value holding " + (task.isPresent() ? "value of type " + task.get().getClass().getName() : "no value") + " is immutable!");
     }
 }

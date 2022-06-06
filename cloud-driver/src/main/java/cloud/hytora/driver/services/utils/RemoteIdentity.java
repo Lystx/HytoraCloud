@@ -2,6 +2,8 @@ package cloud.hytora.driver.services.utils;
 
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
+import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -47,19 +49,12 @@ public class RemoteIdentity {
         }
     }
 
-    public RemoteIdentity read(File file) {
-        try {
-            Document document = DocumentFactory.newJsonDocument(file);
-            RemoteIdentity identity = document.toInstance(RemoteIdentity.class);
 
-            this.authKey = identity.getAuthKey();
-            this.node = identity.getNode();
-            this.hostname = identity.getHostname();
-            this.name = identity.getName();
-            this.port = identity.getPort();
-        } catch (IOException e) {
-            return this;
-        }
-        return this;
+    public static RemoteIdentity forApplication(ProtocolAddress address) {
+        return new RemoteIdentity(address.getAuthKey(), "", address.getHost(), CloudDriver.APPLICATION_NAME, address.getPort());
+    }
+
+    public static RemoteIdentity read(File file) {
+        return DocumentFactory.newJsonDocumentUnchecked(file).toInstance(RemoteIdentity.class);
     }
 }

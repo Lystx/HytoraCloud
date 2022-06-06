@@ -1,6 +1,6 @@
 package cloud.hytora.driver.services.impl;
 
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
@@ -59,16 +59,16 @@ public abstract class DefaultServiceManager implements ServiceManager {
 
 
     @Override
-    public @NotNull Wrapper<CloudServer> getFallbackOrNullAsService() {
-        return Wrapper.build(
+    public @NotNull Task<CloudServer> getFallbackOrNullAsService() {
+        return Task.build(
                 getAvailableFallbacksAsServices()
                         .stream()
                         .min(Comparator.comparing(CloudServer::getOnlinePlayers)).orElse(null));
     }
 
     @Override
-    public @NotNull Wrapper<FallbackEntry> getFallbackOrNull() {
-        return Wrapper.build(
+    public @NotNull Task<FallbackEntry> getFallbackOrNull() {
+        return Task.build(
                 getAvailableFallbacks()
                         .stream()
                         .min(Comparator.comparing(FallbackEntry::getPriority)).orElse(null));

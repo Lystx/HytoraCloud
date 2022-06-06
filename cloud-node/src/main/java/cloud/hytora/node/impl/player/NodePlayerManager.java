@@ -1,6 +1,6 @@
 package cloud.hytora.node.impl.player;
 
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.EventManager;
 import cloud.hytora.driver.event.defaults.player.CloudPlayerDisconnectEvent;
@@ -11,7 +11,6 @@ import cloud.hytora.driver.networking.packets.player.CloudPlayerDisconnectPacket
 import cloud.hytora.driver.networking.packets.player.CloudPlayerLoginPacket;
 import cloud.hytora.driver.networking.packets.player.CloudPlayerUpdatePacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
-import cloud.hytora.driver.networking.protocol.packets.QueryState;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.impl.DefaultPlayerManager;
@@ -22,7 +21,6 @@ import cloud.hytora.node.impl.database.impl.section.DatabaseSection;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
@@ -51,8 +49,8 @@ public class NodePlayerManager extends DefaultPlayerManager {
     }
 
     @Override
-    public @NotNull Wrapper<Collection<CloudOfflinePlayer>> getAllOfflinePlayersAsync() {
-        return Wrapper.callAsync(new Callable<Collection<CloudOfflinePlayer>>() {
+    public @NotNull Task<Collection<CloudOfflinePlayer>> getAllOfflinePlayersAsync() {
+        return Task.callAsync(new Callable<Collection<CloudOfflinePlayer>>() {
             @Override
             public Collection<CloudOfflinePlayer> call() throws Exception {
                 SectionedDatabase database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
@@ -64,8 +62,8 @@ public class NodePlayerManager extends DefaultPlayerManager {
 
 
     @Override
-    public @NotNull Wrapper<CloudOfflinePlayer> getOfflinePlayerByUniqueIdAsync(@NotNull UUID uniqueId) {
-        return Wrapper.callAsync(new Callable<CloudOfflinePlayer>() {
+    public @NotNull Task<CloudOfflinePlayer> getOfflinePlayerByUniqueIdAsync(@NotNull UUID uniqueId) {
+        return Task.callAsync(new Callable<CloudOfflinePlayer>() {
             @Override
             public CloudOfflinePlayer call() throws Exception {
                 SectionedDatabase database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
@@ -76,8 +74,8 @@ public class NodePlayerManager extends DefaultPlayerManager {
     }
 
     @Override
-    public @NotNull Wrapper<CloudOfflinePlayer> getOfflinePlayerByNameAsync(@NotNull String name) {
-        return Wrapper.callAsync(new Callable<CloudOfflinePlayer>() {
+    public @NotNull Task<CloudOfflinePlayer> getOfflinePlayerByNameAsync(@NotNull String name) {
+        return Task.callAsync(new Callable<CloudOfflinePlayer>() {
             @Override
             public CloudOfflinePlayer call() throws Exception {
                 SectionedDatabase database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
@@ -89,7 +87,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
 
     @Override
     public void saveOfflinePlayerAsync(@NotNull CloudOfflinePlayer player) {
-        Wrapper.runAsync(() -> {
+        Task.runAsync(() -> {
             SectionedDatabase database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
             DatabaseSection<CloudOfflinePlayer> db = database.getSection(CloudOfflinePlayer.class);
             db.upsert(player);

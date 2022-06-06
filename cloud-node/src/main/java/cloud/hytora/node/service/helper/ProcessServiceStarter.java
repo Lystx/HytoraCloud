@@ -1,7 +1,7 @@
 package cloud.hytora.node.service.helper;
 
 import cloud.hytora.common.logging.LogLevel;
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.common.ConfigSplitSpacer;
 import cloud.hytora.driver.common.ConfigurationFileEditor;
@@ -132,8 +132,8 @@ public class ProcessServiceStarter {
     }
 
     @SneakyThrows
-    public Wrapper<CloudServer> start() {
-        Wrapper<CloudServer> wrapper = Wrapper.empty(CloudServer.class).denyNull();
+    public Task<CloudServer> start() {
+        Task<CloudServer> task = Task.empty(CloudServer.class).denyNull();
 
         File parent = (service.getConfiguration().getParent().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
         File folder = new File(parent, service.getName() + "/");
@@ -170,9 +170,9 @@ public class ProcessServiceStarter {
         Process process = result.getProcess();
         this.service.asCloudServer().setProcess(process);
         this.service.asCloudServer().setWorkingDirectory(folder);
-        wrapper.setResult(this.service);
+        task.setResult(this.service);
 
-        return wrapper;
+        return task;
     }
 
 

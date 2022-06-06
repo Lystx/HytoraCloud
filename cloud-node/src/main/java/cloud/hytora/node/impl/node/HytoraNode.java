@@ -1,6 +1,6 @@
 package cloud.hytora.node.impl.node;
 
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.NetworkComponent;
@@ -61,11 +61,11 @@ public class HytoraNode extends ClusterExecutor {
     }
 
 
-    public <T extends IPacket> void registerRemoteHandler(PacketHandler<T> handler) {
+    public <T extends Packet> void registerRemoteHandler(PacketHandler<T> handler) {
         this.remoteHandlers.add(handler);
     }
 
-    public <T extends IPacket> void registerUniversalHandler(PacketHandler<T> handler) {
+    public <T extends Packet> void registerUniversalHandler(PacketHandler<T> handler) {
         this.registerRemoteHandler(handler);
         this.registerPacketHandler(handler);
     }
@@ -111,7 +111,7 @@ public class HytoraNode extends ClusterExecutor {
                     }
                 });
             } else {
-                Wrapper<Node> node = CloudDriver.getInstance().getNodeManager().getNode(executor.getName());
+                Task<Node> node = CloudDriver.getInstance().getNodeManager().getNode(executor.getName());
                 node.ifPresent(CloudDriver.getInstance().getNodeManager()::unRegisterNode);
             }
         } else {
@@ -172,8 +172,8 @@ public class HytoraNode extends ClusterExecutor {
     private ClusterParticipant nodeAsClient;
 
 
-    public Wrapper<Boolean> connectToOtherNode(String authKey, String name, String hostname, int port, Document customData) {
-        Wrapper<Boolean> wrapper = Wrapper.empty();
+    public Task<Boolean> connectToOtherNode(String authKey, String name, String hostname, int port, Document customData) {
+        Task<Boolean> task = Task.empty();
         ClusterParticipant client = new ClusterParticipant(authKey, name, ConnectionType.NODE, customData) {
 
             @Override
@@ -199,7 +199,7 @@ public class HytoraNode extends ClusterExecutor {
             }
 
             @Override
-            public <T extends IPacket> void handlePacket(PacketChannel wrapper, @NotNull T packet) {
+            public <T extends Packet> void handlePacket(PacketChannel wrapper, @NotNull T packet) {
 
 
                 for (PacketHandler packetHandler : new ArrayList<>(HytoraNode.this.remoteHandlers)) {
@@ -241,17 +241,17 @@ public class HytoraNode extends ClusterExecutor {
         });
         client.openConnection(hostname, port).addUpdateListener(wrap -> {
             if (wrap.isSuccess()) {
-                wrapper.setResult(true);
+                task.setResult(true);
             } else {
-                wrapper.setFailure(wrap.error());
+                task.setFailure(wrap.error());
             }
         });
         nodeAsClient = client;
-        return wrapper;
+        return task;
     }
 
     @Override
-    public void sendPacketToAll(IPacket packet) {
+    public void sendPacketToAll(Packet packet) {
         if (NodeDriver.getInstance().getConfig().isRemote()) {
             nodeAsClient.sendPacket(packet);
         }
@@ -259,7 +259,7 @@ public class HytoraNode extends ClusterExecutor {
     }
 
     @Override
-    public void sendPacket(IPacket packet) {
+    public void sendPacket(Packet packet) {
         if (this.nodeAsClient != null) {
             this.nodeAsClient.sendPacket(packet);
             return;
@@ -278,7 +278,7 @@ public class HytoraNode extends ClusterExecutor {
     }
 
     @Override
-    public void sendPacket(IPacket packet, NetworkComponent component) {
+    public void sendPacket(Packet packet, NetworkComponent component) {
         this.getClient(component.getName()).ifPresent(c -> c.sendPacket(packet));
     }
 }

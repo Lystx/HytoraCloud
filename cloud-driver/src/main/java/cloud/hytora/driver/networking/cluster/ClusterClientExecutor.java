@@ -1,8 +1,7 @@
 package cloud.hytora.driver.networking.cluster;
 
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.document.Document;
-import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import io.netty.channel.ChannelFutureListener;
 import cloud.hytora.driver.networking.NetworkExecutor;
@@ -24,19 +23,19 @@ public interface ClusterClientExecutor extends NetworkExecutor {
 
     void setName(String name);
 
-    default Wrapper<Boolean> close() {
-        Wrapper<Boolean> wrapper = Wrapper.empty();
+    default Task<Boolean> close() {
+        Task<Boolean> task = Task.empty();
         getChannel().close().addListener(future -> {
             if (future.isSuccess()) {
-                wrapper.setResult(true);
+                task.setResult(true);
             } else {
-                wrapper.setFailure(future.cause());
+                task.setFailure(future.cause());
             }
         });
-        return wrapper;
+        return task;
     }
 
-    default void sendPacket(IPacket packet) {
+    default void sendPacket(Packet packet) {
         getChannel().writeAndFlush(packet).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
     }
 

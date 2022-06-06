@@ -1,11 +1,9 @@
 package cloud.hytora.remote.impl;
 
-import cloud.hytora.common.wrapper.Wrapper;
+import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.cluster.client.ClusterParticipant;
-import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -18,19 +16,12 @@ public class RemoteNetworkClient extends ClusterParticipant {
     public RemoteNetworkClient(String authKey, String clientName, String hostname, int port, Document customData, Runnable... connectionFailed) {
         super(authKey, clientName, ConnectionType.SERVICE, customData);
 
-        this.openConnection(hostname, port).addUpdateListener(new Consumer<Wrapper<Channel>>() {
-            @Override
-            public void accept(Wrapper<Channel> channelWrapper) {
-                if (channelWrapper.isPresent()) {
-                    CloudDriver.getInstance().getLogger().info("This service has connected to the Cluster!");
-                } else {
-                    CloudDriver.getInstance().getLogger().info("This service couldn't connect to the Cluster!");
-                    if (connectionFailed.length != 0) {
-                        for (Runnable runnable : connectionFailed) {
-                            runnable.run();
-                        }
-                    }
-                }
+        this.openConnection(hostname, port).addUpdateListener(channelTask -> {
+            if (channelTask.isPresent()) {
+                CloudDriver.getInstance().getLogger().info("This service has connected to the Cluster!");
+            } else {
+                CloudDriver.getInstance().getLogger().info("This service couldn't connect to the Cluster!");
+                for (Runnable runnable : connectionFailed) runnable.run();
             }
         });
     }

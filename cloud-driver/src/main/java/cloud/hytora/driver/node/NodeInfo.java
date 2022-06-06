@@ -12,7 +12,7 @@ import cloud.hytora.driver.networking.packets.node.NodeRequestShutdownPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
-import cloud.hytora.driver.networking.protocol.packets.IPacket;
+import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
 import cloud.hytora.driver.node.config.INodeConfig;
@@ -49,7 +49,7 @@ public class NodeInfo implements Node {
     }
 
     @Override
-    public void sendPacket(IPacket packet) {
+    public void sendPacket(Packet packet) {
         if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
             ((EndpointNetworkExecutor)CloudDriver.getInstance().getExecutor()).sendPacket(packet, this);
         } else {
