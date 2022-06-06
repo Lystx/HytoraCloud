@@ -73,8 +73,11 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements Clo
                 this.temporaryProperties = buf.readDocument();
                 this.connection = buf.readOptionalObject(DefaultPlayerConnection.class);
 
-                this.proxyServer = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(buf.readString());
-                this.server = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(buf.readString());
+                String proxyName = buf.readOptionalString();
+                String serverName = buf.readOptionalString();
+
+                this.proxyServer = proxyName == null ? null : CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(proxyName);
+                this.server = serverName == null ? null : CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(serverName);
                 break;
 
             case WRITE:
@@ -84,8 +87,8 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements Clo
                 buf.writeDocument(this.temporaryProperties);
                 buf.writeOptionalObject(this.connection);
 
-                buf.writeString(this.proxyServer.getName());
-                buf.writeString(this.server.getName());
+                buf.writeOptionalString(this.proxyServer == null ? null : this.proxyServer.getName());
+                buf.writeOptionalString(this.server == null ? null : this.server.getName());
                 break;
         }
     }

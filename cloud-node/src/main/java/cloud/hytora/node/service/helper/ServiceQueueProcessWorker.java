@@ -19,8 +19,6 @@ import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVersion;
 import cloud.hytora.node.impl.event.ServiceOutputLineAddEvent;
 import cloud.hytora.node.service.NodeServiceManager;
-import cloud.hytora.node.service.properties.BungeeProperties;
-import cloud.hytora.node.service.properties.SpigotProperties;
 import cloud.hytora.node.NodeDriver;
 
 
@@ -38,14 +36,14 @@ import java.util.*;
 import java.util.jar.JarInputStream;
 
 
-public class ProcessServiceStarter {
+public class ServiceQueueProcessWorker {
 
     private final CloudServer service;
     private final NodeServiceManager serviceManager;
 
 
     @SneakyThrows
-    public ProcessServiceStarter(NodeServiceManager serviceManager, CloudServer service) {
+    public ServiceQueueProcessWorker(NodeServiceManager serviceManager, CloudServer service) {
         this.serviceManager = serviceManager;
         this.service = service;
         this.service.setServiceState(ServiceState.STARTING);
@@ -213,15 +211,10 @@ public class ProcessServiceStarter {
                     "  - disabledcommandhere\n" +
                     "log_pings: false\n" +
                     "servers:\n" +
-                    "  lobby:\n" +
-                    "    motd: '&1Just another BungeeCord - Forced Host'\n" +
-                    "    address: localhost:25565\n" +
-                    "    restricted: false\n" +
                     "listeners:\n" +
                     "  - query_port: 25577\n" +
                     "    motd: \"HytoraCloud Proxy Service\"\n" +
                     "    priorities:\n" +
-                    "      - lobby\n" +
                     "    bind_local_address: true\n" +
                     "    tab_list: GLOBAL_PING\n" +
                     "    query_enabled: false\n" +
@@ -424,7 +417,7 @@ public class ProcessServiceStarter {
     }
 
     @SneakyThrows
-    public Task<CloudServer> start() {
+    public Task<CloudServer> processService() {
         Task<CloudServer> task = Task.empty(CloudServer.class).denyNull();
 
         File parent = (service.getConfiguration().getParent().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);

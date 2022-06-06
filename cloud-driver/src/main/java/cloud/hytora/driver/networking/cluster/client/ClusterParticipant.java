@@ -154,18 +154,8 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
 
     @Override
     public void sendPacket(Packet packet) {
-        System.out.println("About to send " + Packet.getName(packet));
-        this.channel.writeAndFlush(packet).addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture future) throws Exception {
-                System.out.println("Future returned");
-                if (!future.isSuccess()) {
-                    System.out.println("Error");
-                    future.cause().printStackTrace();
-                } else {
-                    System.out.println("Flushed => " + packet.getClass().getSimpleName());
-                }
-            }
+        this.channel.writeAndFlush(packet).addListener((ChannelFutureListener) future -> {
+            if (!future.isSuccess()) future.cause().printStackTrace();
         });
     }
 

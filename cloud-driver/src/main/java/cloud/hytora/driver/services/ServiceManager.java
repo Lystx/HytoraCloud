@@ -83,12 +83,21 @@ public interface ServiceManager {
 
     @Nonnull
     @CheckReturnValue
-    Task<CloudServer> getFallbackOrNullAsService();
+    Task<CloudServer> getFallbackAsService();
+
+    @Nullable
+    default CloudServer getFallbackAsServiceOrNull() {
+        return getFallbackAsService().get();
+    }
 
     @Nonnull
     @CheckReturnValue
-    Task<FallbackEntry> getFallbackOrNull();
+    Task<FallbackEntry> getFallbackAsEntry();
 
+    @Nullable
+    default FallbackEntry getFallbackAsEntryOrNull() {
+        return getFallbackAsEntry().get();
+    }
     @Nonnull
     @CheckReturnValue
     List<CloudServer> getAvailableFallbacksAsServices();

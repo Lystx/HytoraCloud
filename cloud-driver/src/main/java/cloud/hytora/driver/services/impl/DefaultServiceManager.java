@@ -59,7 +59,7 @@ public abstract class DefaultServiceManager implements ServiceManager {
 
 
     @Override
-    public @NotNull Task<CloudServer> getFallbackOrNullAsService() {
+    public @NotNull Task<CloudServer> getFallbackAsService() {
         return Task.build(
                 getAvailableFallbacksAsServices()
                         .stream()
@@ -67,7 +67,7 @@ public abstract class DefaultServiceManager implements ServiceManager {
     }
 
     @Override
-    public @NotNull Task<FallbackEntry> getFallbackOrNull() {
+    public @NotNull Task<FallbackEntry> getFallbackAsEntry() {
         return Task.build(
                 getAvailableFallbacks()
                         .stream()

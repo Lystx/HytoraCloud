@@ -15,7 +15,7 @@ import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 
-import cloud.hytora.node.service.helper.ProcessServiceStarter;
+import cloud.hytora.node.service.helper.ServiceQueueProcessWorker;
 import lombok.Getter;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
@@ -137,7 +137,7 @@ public class NodeServiceManager extends DefaultServiceManager {
     }
 
     public Task<CloudServer> startService(@NotNull CloudServer service) {
-        return new ProcessServiceStarter(this, service).start();
+        return new ServiceQueueProcessWorker(this, service).processService();
     }
 
     public void sendPacketToService(CloudServer service, Packet packet) {
