@@ -4,7 +4,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.node.NodeCycleData;
 import cloud.hytora.driver.services.ServiceInfo;
-import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.utils.ServiceState;
 
 import java.util.*;
@@ -28,8 +28,8 @@ public class TimeOutChecker implements Runnable {
 			}
 			CloudDriver.getInstance().getLogger().warn("{} has not sent the required info updates", service);
 
-			ServerConfiguration configuration = service.getConfiguration();
-			if (service.getServiceState() == ServiceState.ONLINE && (configuration == null || configuration.getParent().getShutdownBehaviour().isDynamic())) {
+			ServiceTask serviceTask = service.getTask();
+			if (service.getServiceState() == ServiceState.ONLINE && (serviceTask == null || serviceTask.getTaskGroup().getShutdownBehaviour().isDynamic())) {
 				CloudDriver.getInstance().getLogger().warn("=> Probably crashed -> Deleting..");
 				CloudDriver.getInstance().getServiceManager().shutdownService(service);
 				return;

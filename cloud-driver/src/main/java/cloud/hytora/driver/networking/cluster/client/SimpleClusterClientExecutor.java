@@ -5,8 +5,10 @@ import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.networking.protocol.SimpleNetworkComponent;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
+import cloud.hytora.driver.networking.protocol.packets.Packet;
 import io.netty.channel.Channel;
 
+import io.netty.channel.ChannelFutureListener;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,6 +27,12 @@ public class SimpleClusterClientExecutor extends SimpleNetworkComponent implemen
         this.authenticated = false;
         this.name = "UNKNOWN";
         this.data = DocumentFactory.newJsonDocument();
+    }
+
+    public void sendPacket(Packet packet) {
+        if (channel.isOpen()) {
+            channel.writeAndFlush(packet).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+        }
     }
 
 }

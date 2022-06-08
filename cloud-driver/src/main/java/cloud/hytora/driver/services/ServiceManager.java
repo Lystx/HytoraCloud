@@ -4,7 +4,7 @@ package cloud.hytora.driver.services;
 import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
-import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.utils.ServiceState;
 
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
@@ -36,8 +36,8 @@ public interface ServiceManager {
      * @param serviceGroup the group of the services
      * @return the services of a group
      */
-    default List<ServiceInfo> getAllServicesByGroup(@NotNull ServerConfiguration serviceGroup) {
-        return this.getAllCachedServices().stream().filter(it -> it.getConfiguration().equals(serviceGroup)).collect(Collectors.toList());
+    default List<ServiceInfo> getAllServicesByGroup(@NotNull ServiceTask serviceGroup) {
+        return this.getAllCachedServices().stream().filter(it -> it.getTask().equals(serviceGroup)).collect(Collectors.toList());
     }
 
     /**
@@ -51,7 +51,7 @@ public interface ServiceManager {
     }
 
     default List<ServiceInfo> getAllServicesByEnvironment(@NotNull SpecificDriverEnvironment environment) {
-        return this.getAllCachedServices().stream().filter(it -> it.getConfiguration() != null && it.getConfiguration().getParent() != null && it.getConfiguration().getParent().getEnvironment() == environment).collect(Collectors.toList());
+        return this.getAllCachedServices().stream().filter(it -> it.getTask() != null && it.getTask().getTaskGroup() != null && it.getTask().getTaskGroup().getEnvironment() == environment).collect(Collectors.toList());
     }
 
     /**

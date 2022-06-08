@@ -23,7 +23,7 @@ import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.ServiceManager;
-import cloud.hytora.driver.services.configuration.ConfigurationManager;
+import cloud.hytora.driver.services.task.ServiceTaskManager;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.driver.storage.DriverStorage;
 import cloud.hytora.driver.storage.RemoteDriverStorage;
@@ -58,7 +58,7 @@ import java.util.function.Supplier;
 public class Remote extends CloudDriver {
 
     private static Remote instance;
-    private final ConfigurationManager configurationManager;
+    private final ServiceTaskManager serviceTaskManager;
     private final ServiceManager serviceManager;
     private final PlayerManager playerManager;
     private final CommandManager commandManager;
@@ -93,7 +93,7 @@ public class Remote extends CloudDriver {
         this.client.registerPacketHandler(new RemoteCacheUpdateHandler());
         this.client.registerPacketHandler(new RemoteNodeUpdateHandler());
 
-        this.configurationManager = new RemoteConfigurationManager();
+        this.serviceTaskManager = new RemoteServiceTaskManager();
         this.serviceManager = new RemoteServiceManager(property);
         this.playerManager = new RemotePlayerManager(this.eventManager);
         this.commandManager = new RemoteCommandManager();

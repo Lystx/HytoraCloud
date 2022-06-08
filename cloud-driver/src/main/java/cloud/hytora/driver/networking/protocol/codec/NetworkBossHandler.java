@@ -9,6 +9,7 @@ import lombok.Getter;
 import cloud.hytora.driver.networking.AbstractNetworkComponent;
 
 import java.io.IOException;
+import java.nio.channels.ClosedChannelException;
 
 @Getter
 public class NetworkBossHandler extends SimpleChannelInboundHandler<Packet> {
@@ -46,7 +47,7 @@ public class NetworkBossHandler extends SimpleChannelInboundHandler<Packet> {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         //to avoid disconnecting exceptions
-        if (cause instanceof IOException) {
+        if (cause instanceof IOException || cause instanceof ClosedChannelException || cause.getClass().getSimpleName().equalsIgnoreCase("StacklessClosedChannelException")) {
             return;
         }
         cause.printStackTrace();

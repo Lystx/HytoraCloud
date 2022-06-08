@@ -7,7 +7,7 @@ import cloud.hytora.driver.exception.IncompatibleDriverEnvironment;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.PacketSender;
 import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
-import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
@@ -20,6 +20,10 @@ import java.util.function.Consumer;
 public interface ServiceInfo extends Bufferable, SelfCloneable<ServiceInfo>, NetworkComponent, PacketSender {
 
     NodeServiceInfo asCloudServer() throws IncompatibleDriverEnvironment;
+
+    ServicePingProperties getPingProperties();
+
+    void editPingProperties(Consumer<ServicePingProperties> ping);
 
     List<String> queryServiceOutput();
 
@@ -53,7 +57,7 @@ public interface ServiceInfo extends Bufferable, SelfCloneable<ServiceInfo>, Net
     /**
      * @return the group of the service
      */
-    ServerConfiguration getConfiguration();
+    ServiceTask getTask();
 
     /**
      * @return the state of the service
@@ -98,7 +102,7 @@ public interface ServiceInfo extends Bufferable, SelfCloneable<ServiceInfo>, Net
         return (int) CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()
                 .stream()
                 .filter(it -> {
-                    ServiceInfo service = getConfiguration().getVersion().isProxy() ? it.getProxyServer() : it.getServer();
+                    ServiceInfo service = getTask().getVersion().isProxy() ? it.getProxyServer() : it.getServer();
                     return service != null && service.equals(this);
                 }).count();
     }

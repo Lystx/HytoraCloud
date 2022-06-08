@@ -43,7 +43,7 @@ public class NodeInfo implements Node {
                 .stream()
                 .filter(it ->
                         it.getServiceState() == ServiceState.ONLINE &&
-                                it.getConfiguration().getNode().equalsIgnoreCase(this.name)
+                                it.getTask().getNode().equalsIgnoreCase(this.name)
                 ).collect(Collectors.toList());
     }
 

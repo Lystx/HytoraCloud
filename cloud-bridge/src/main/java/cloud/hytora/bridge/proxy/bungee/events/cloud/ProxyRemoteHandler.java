@@ -12,7 +12,7 @@ import cloud.hytora.driver.networking.packets.player.CloudPlayerPlainMessagePack
 import cloud.hytora.driver.networking.packets.player.CloudPlayerSendServicePacket;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.services.ServiceInfo;
-import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.remote.Remote;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -31,7 +31,7 @@ public class ProxyRemoteHandler {
 
         //load all current groups
         for (ServiceInfo allCachedService : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
-            ServerConfiguration serviceGroup = allCachedService.getConfiguration();
+            ServiceTask serviceGroup = allCachedService.getTask();
             if (!serviceGroup.getVersion().isProxy()) {
                 registerService(allCachedService);
             }
@@ -51,7 +51,7 @@ public class ProxyRemoteHandler {
     @EventListener
     public void handle(CloudServerCacheRegisterEvent event) {
         ServiceInfo serviceInfo = event.getServer();
-        if (!serviceInfo.getConfiguration().getVersion().isProxy()) {
+        if (!serviceInfo.getTask().getVersion().isProxy()) {
             this.registerService(serviceInfo);
         }
     }

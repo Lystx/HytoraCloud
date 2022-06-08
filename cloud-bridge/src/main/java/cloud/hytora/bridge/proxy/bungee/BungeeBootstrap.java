@@ -72,7 +72,7 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
 
     @Override
     public void registerService(ServiceInfo server) {
-        if (server.getConfiguration().getParent().getEnvironment() == SpecificDriverEnvironment.PROXY_SERVER) {
+        if (server.getTask().getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY_SERVER) {
             return;
         }
         ProxyServer.getInstance().getServers().put(server.getName(), ProxyServer.getInstance().constructServerInfo(server.getName(), new InetSocketAddress(server.getHostName(), server.getPort()), server.getMotd(), false));
@@ -80,7 +80,7 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
 
     @Override
     public void unregisterService(ServiceInfo server) {
-        if (server.getConfiguration().getParent().getEnvironment() == SpecificDriverEnvironment.PROXY_SERVER) {
+        if (server.getTask().getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY_SERVER) {
             return;
         }
         ProxyServer.getInstance().getServers().remove(server.getName());

@@ -25,8 +25,8 @@ public class DefaultScheduler implements Scheduler {
 	public static final DefaultScheduler INSTANCE = new DefaultScheduler();
 
 	public DefaultScheduler() {
-		this.tasks = new LinkedList<>();
-		this.timer = new Timer();
+		this.tasks = new ArrayList<>();
+		this.timer = new Timer("Scheduler");
 	}
 
 	@Override
@@ -43,7 +43,7 @@ public class DefaultScheduler implements Scheduler {
 	public void cancelTask(SchedulerFuture task) {
 		if (task != null) {
 			task.setCancelled(true);
-			this.tasks.removeIf(task1 -> task.getId() == task1.getId());
+			this.tasks.removeIf(task1 -> task1 != null && task.getId() == task1.getId());
 		}
 	}
 

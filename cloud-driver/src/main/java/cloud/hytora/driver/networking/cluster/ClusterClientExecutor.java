@@ -34,9 +34,4 @@ public interface ClusterClientExecutor extends NetworkExecutor {
         });
         return task;
     }
-
-    default void sendPacket(Packet packet) {
-        getChannel().writeAndFlush(packet).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
-    }
-
 }

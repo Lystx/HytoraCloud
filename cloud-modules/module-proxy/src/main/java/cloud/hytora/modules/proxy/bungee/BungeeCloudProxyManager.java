@@ -2,7 +2,7 @@ package cloud.hytora.modules.proxy.bungee;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.ServiceInfo;
-import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.modules.proxy.config.MotdLayOut;
 import cloud.hytora.modules.proxy.helper.AbstractCloudProxyManager;
 import cloud.hytora.remote.Remote;
@@ -51,9 +51,9 @@ public class BungeeCloudProxyManager extends AbstractCloudProxyManager {
 		MotdLayOut motd = getMotdEntry();
 
 		ServiceInfo server = Remote.getInstance().thisService();
-		ServerConfiguration configuration = server.getConfiguration();
+		ServiceTask serviceTask = server.getTask();
 
-		if (configuration == null || motd == null) {
+		if (serviceTask == null || motd == null) {
 			return original;
 		}
 
@@ -67,7 +67,7 @@ public class BungeeCloudProxyManager extends AbstractCloudProxyManager {
 
 		return new ServerPing(
 			new Protocol(protocolText == null ? original.getVersion().getName() : protocolText, protocolText == null ? original.getVersion().getProtocol() : 1),
-			new Players(configuration.getDefaultMaxPlayers(), CloudDriver.getInstance().getPlayerManager().getCloudPlayerOnlineAmount(), playerInfo),
+			new Players(serviceTask.getDefaultMaxPlayers(), CloudDriver.getInstance().getPlayerManager().getCloudPlayerOnlineAmount(), playerInfo),
 			new TextComponent(TextComponent.fromLegacyText(motdText)),
 			original.getFaviconObject()
 		);

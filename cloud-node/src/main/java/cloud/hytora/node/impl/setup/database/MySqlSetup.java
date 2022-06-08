@@ -46,7 +46,7 @@ public class MySqlSetup extends Setup<MySqlSetup> {
 
         @Override
         public Boolean supply(String name) {
-            return CloudDriver.getInstance().getConfigurationManager().getConfigurationByName(name).isPresent();
+            return CloudDriver.getInstance().getServiceTaskManager().getTaskByName(name).isPresent();
         }
     }
 }

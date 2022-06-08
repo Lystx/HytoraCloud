@@ -3,7 +3,7 @@ package cloud.hytora.node.service.template;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.NodeServiceInfo;
-import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
@@ -54,8 +54,8 @@ public class LocalTemplateStorage implements TemplateStorage {
     }
 
     private void checkIfTemplateFoldersNeeded() {
-        for (ServerConfiguration con : CloudDriver.getInstance().getConfigurationManager().getAllCachedConfigurations()) {
-            for (ServiceTemplate template : con.getParent().getTemplates()) {
+        for (ServiceTask con : CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks()) {
+            for (ServiceTemplate template : con.getTaskGroup().getTemplates()) {
                 this.createTemplate(template);
             }
             for (ServiceTemplate template : con.getTemplates()) {
@@ -72,7 +72,7 @@ public class LocalTemplateStorage implements TemplateStorage {
                 if (name.equalsIgnoreCase("GLOBAL") || name.equals("GLOBAL_SERVICE") || name.equals("GLOBAL_PROXY")) {
                     continue;
                 }
-                ServerConfiguration con = CloudDriver.getInstance().getConfigurationManager().getConfigurationByNameOrNull(name);
+                ServiceTask con = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
                 if (con == null) {
                     FileUtils.deleteDirectory(file);
                 }
@@ -82,18 +82,18 @@ public class LocalTemplateStorage implements TemplateStorage {
 
     @Override
     public void copyTemplate(@NotNull ServiceInfo server, @NotNull ServiceTemplate template, @NotNull File directory) throws Exception {
-        ServerConfiguration configuration = server.getConfiguration();
+        ServiceTask serviceTask = server.getTask();
 
         //do not perform if wrong node
-        if (!configuration.getNode().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName())) {
+        if (!serviceTask.getNode().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName())) {
             return;
         }
 
         FileUtils.copyDirectory(GLOBAL_FOLDER, directory);
-        FileUtils.copyDirectory(configuration.getVersion().isProxy() ? GLOBAL_PROXY_FOLDER : GLOBAL_SERVICE_FOLDER, directory);
+        FileUtils.copyDirectory(serviceTask.getVersion().isProxy() ? GLOBAL_PROXY_FOLDER : GLOBAL_SERVICE_FOLDER, directory);
 
         File templateDir = new File(NodeDriver.TEMPLATES_DIR, template.buildTemplatePath());
-        if (configuration.getParent().getShutdownBehaviour() == ServiceShutdownBehaviour.KEEP && !template.shouldCopyToStatic()) {
+        if (serviceTask.getTaskGroup().getShutdownBehaviour() == ServiceShutdownBehaviour.KEEP && !template.shouldCopyToStatic()) {
             //static but template does not allow copying to static
             return;
         }
@@ -107,7 +107,7 @@ public class LocalTemplateStorage implements TemplateStorage {
     public void deployService(@NotNull ServiceInfo server, @NotNull ServiceDeployment deployment) {
 
         //do not perform if wrong node
-        if (!server.getConfiguration().getNode().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName())) {
+        if (!server.getTask().getNode().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName())) {
             return;
         }
 

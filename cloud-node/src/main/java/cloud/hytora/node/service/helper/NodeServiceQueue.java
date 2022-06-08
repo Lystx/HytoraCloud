@@ -8,7 +8,7 @@ import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.impl.SimpleServiceInfo;
-import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.config.MainConfiguration;
@@ -53,18 +53,18 @@ public class NodeServiceQueue {
         }
         ServiceInfo serviceInfo = services.get(0);
         NodeManager nodeManager = NodeDriver.getInstance().getNodeManager();
-        Task<Node> node = nodeManager.getNode(serviceInfo.getConfiguration().getNode());
+        Task<Node> node = nodeManager.getNode(serviceInfo.getTask().getNode());
 
         node.ifPresent(n -> n.startServer(serviceInfo));
-        node.ifEmpty(n -> CloudDriver.getInstance().getLogger().error("Tried to start {} but the Node {} for Servers of Configuration {} is not connected!", serviceInfo.getName(), serviceInfo.getConfiguration().getNode(), serviceInfo.getConfiguration().getName()));
+        node.ifEmpty(n -> CloudDriver.getInstance().getLogger().error("Tried to start {} but the Node {} for Servers of Configuration {} is not connected!", serviceInfo.getName(), serviceInfo.getTask().getNode(), serviceInfo.getTask().getName()));
 
     }
 
     private void queue() {
-        CloudDriver.getInstance().getConfigurationManager().getAllCachedConfigurations().stream()
+        CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks().stream()
                 .filter(con -> this.getAmountOfGroupServices(con) < con.getMinOnlineService())
                 .filter(con -> !pausedGroups.contains(con.getName()))
-                .sorted(Comparator.comparingInt(ServerConfiguration::getStartOrder))
+                .sorted(Comparator.comparingInt(ServiceTask::getStartOrder))
                 .forEach(con -> {
 
                     ClusterClientExecutor nodeClient = NodeDriver.getInstance().getExecutor().getClient(con.getNode()).orElse(null);
@@ -86,9 +86,9 @@ public class NodeServiceQueue {
                     CloudDriver.getInstance().getServiceManager().registerService(service);
 
                     if (thisSidesNode) {
-                        CloudDriver.getInstance().getLogger().info("This Node queued §a" + service.getName() + " §8| §bPort " + service.getPort() + "§8| §bCapacity " + service.getMaxPlayers() + " §8| §bType " + (service.getConfiguration().getVersion().isProxy() ? "Proxy" : "Spigot") + " §8| §bState " + service.getServiceState().getName());
+                        CloudDriver.getInstance().getLogger().info("This Node queued §a" + service.getName() + " §8| §bPort " + service.getPort() + "§8| §bCapacity " + service.getMaxPlayers() + " §8| §bType " + (service.getTask().getVersion().isProxy() ? "Proxy" : "Spigot") + " §8| §bState " + service.getServiceState().getName());
                     } else {
-                        CloudDriver.getInstance().getLogger().info("Node '" + nodeClient.getName() + "' §8(§b" + nodeClient.getChannel() + "§8) §7queued §a" + service.getName() + " §8| §bPort " + service.getPort() + "§8| §bCapacity " + service.getMaxPlayers() + " §8| §bType " + (service.getConfiguration().getVersion().isProxy() ? "Proxy" : "Spigot") + " §8| §bState " + service.getServiceState().getName());
+                        CloudDriver.getInstance().getLogger().info("Node '" + nodeClient.getName() + "' §8(§b" + nodeClient.getChannel() + "§8) §7queued §a" + service.getName() + " §8| §bPort " + service.getPort() + "§8| §bCapacity " + service.getMaxPlayers() + " §8| §bType " + (service.getTask().getVersion().isProxy() ? "Proxy" : "Spigot") + " §8| §bState " + service.getServiceState().getName());
                     }
                 });
     }
@@ -101,24 +101,24 @@ public class NodeServiceQueue {
         return CloudDriver.getInstance().getServiceManager().getAllServicesByState(ServiceState.STARTING).size();
     }
 
-    public int getAmountOfGroupServices(ServerConfiguration serviceGroup) {
+    public int getAmountOfGroupServices(ServiceTask serviceGroup) {
         return (int) CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream()
-                .filter(it -> it.getConfiguration().equals(serviceGroup)).count();
+                .filter(it -> it.getTask().equals(serviceGroup)).count();
     }
 
-    private int getPossibleServiceIDByGroup(ServerConfiguration serviceGroup) {
+    private int getPossibleServiceIDByGroup(ServiceTask serviceGroup) {
         int id = 1;
         while (this.isServiceIDAlreadyExists(serviceGroup, id)) id++;
         return id;
     }
 
-    private boolean isServiceIDAlreadyExists(ServerConfiguration serviceGroup, int id) {
+    private boolean isServiceIDAlreadyExists(ServiceTask serviceGroup, int id) {
         return CloudDriver.getInstance().getServiceManager().getAllServicesByGroup(serviceGroup).stream().anyMatch(it -> id == it.getServiceID());
     }
 
     private boolean isPortUsed(int port) {
         for (ServiceInfo service : NodeDriver.getInstance().getServiceManager().getAllCachedServices()) {
-            if (service.getConfiguration().getNode().equals(NodeDriver.getInstance().getExecutor().getNodeName())) {
+            if (service.getTask().getNode().equals(NodeDriver.getInstance().getExecutor().getNodeName())) {
                 if (service.getPort() == port) {
                     return true;
                 }

@@ -4,7 +4,7 @@ package cloud.hytora.modules.proxy.velocity;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.component.ChatColor;
 import cloud.hytora.driver.services.ServiceInfo;
-import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.modules.proxy.config.MotdLayOut;
 import cloud.hytora.modules.proxy.helper.AbstractCloudProxyManager;
 import cloud.hytora.remote.Remote;
@@ -58,10 +58,10 @@ public class VelocityCloudProxyManager extends AbstractCloudProxyManager {
 		MotdLayOut motd = getMotdEntry();
 
 		ServiceInfo server = Remote.getInstance().thisService();
-		ServerConfiguration configuration = server.getConfiguration();
+		ServiceTask task = server.getTask();
 
 
-		if (configuration == null || motd == null) {
+		if (task == null || motd == null) {
 			return original;
 		}
 
@@ -75,7 +75,7 @@ public class VelocityCloudProxyManager extends AbstractCloudProxyManager {
 
 		return new ServerPing(
 			new Version(protocolText == null ? original.getVersion().getProtocol() : 1, ChatColor.translateAlternateColorCodes('&', protocolText == null ? original.getVersion().getName() : protocolText)),
-			new Players(configuration.getDefaultMaxPlayers(), CloudDriver.getInstance().getPlayerManager().getCloudPlayerOnlineAmount(), Arrays.asList(playerInfo)),
+			new Players(task.getDefaultMaxPlayers(), CloudDriver.getInstance().getPlayerManager().getCloudPlayerOnlineAmount(), Arrays.asList(playerInfo)),
 			TextComponent.of(motdText),
 			original.getFavicon().orElse(null)
 		);

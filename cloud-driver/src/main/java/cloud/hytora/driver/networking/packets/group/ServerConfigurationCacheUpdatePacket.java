@@ -3,8 +3,8 @@ package cloud.hytora.driver.networking.packets.group;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
-import cloud.hytora.driver.services.configuration.ServerConfiguration;
-import cloud.hytora.driver.services.configuration.DefaultServerConfiguration;
+import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.DefaultServiceTask;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,7 +18,7 @@ import java.io.IOException;
 @AllArgsConstructor
 public class ServerConfigurationCacheUpdatePacket extends Packet {
 
-    private ServerConfiguration configuration;
+    private ServiceTask serviceTask;
 
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
@@ -26,11 +26,11 @@ public class ServerConfigurationCacheUpdatePacket extends Packet {
         switch (state) {
 
             case READ:
-                configuration = buf.readObject(DefaultServerConfiguration.class);
+                serviceTask = buf.readObject(DefaultServiceTask.class);
                 break;
 
             case WRITE:
-                buf.writeObject(configuration);
+                buf.writeObject(serviceTask);
                 break;
         }
     }

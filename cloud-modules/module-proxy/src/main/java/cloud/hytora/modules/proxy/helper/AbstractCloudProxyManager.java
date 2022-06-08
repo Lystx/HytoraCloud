@@ -6,7 +6,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.driver.DriverStorageUpdateEvent;
 import cloud.hytora.driver.services.ServiceInfo;
-import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.modules.proxy.config.MotdLayOut;
 import cloud.hytora.modules.proxy.config.ProxyConfig;
 import cloud.hytora.modules.proxy.config.TabListFrame;
@@ -79,17 +79,17 @@ public abstract class AbstractCloudProxyManager {
 		content = content.replaceAll("&", "§");
 
 		ServiceInfo server = Remote.getInstance().thisService();
-		ServerConfiguration configuration = server.getConfiguration();
+		ServiceTask task = server.getTask();
 
 		int maxPlayers = -1;
-		if (configuration != null) {
-			maxPlayers = configuration.getDefaultMaxPlayers();
+		if (task != null) {
+			maxPlayers = task.getDefaultMaxPlayers();
 		}
 
 
 		return content
 			.replace("{proxy}", server.getName())
-			.replace("{node}", configuration.getNode())
+			.replace("{node}", task.getNode())
 			.replace("{players.online}", CloudDriver.getInstance().getPlayerManager().getCloudPlayerOnlineAmount() + "")
 			.replace("{players.max}", maxPlayers + "")
 		;
@@ -98,7 +98,7 @@ public abstract class AbstractCloudProxyManager {
 	@Nullable
 	public MotdLayOut getMotdEntry() {
 		ServiceInfo serviceInfo = Remote.getInstance().thisService();
-		ServerConfiguration task = serviceInfo.getConfiguration();
+		ServiceTask task = serviceInfo.getTask();
 
 		if (task == null) {
 			return null;

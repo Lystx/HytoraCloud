@@ -81,9 +81,9 @@ public abstract class DefaultServiceManager implements ServiceManager {
                 .filter(ServiceInfo::isReady)
                 .filter(it -> it.getServiceState() == ServiceState.ONLINE)
                 .filter(it -> it.getServiceVisibility() == ServiceVisibility.VISIBLE)
-                .filter(it -> !it.getConfiguration().getVersion().isProxy())
-                .filter(it -> it.getConfiguration().getFallback().isEnabled())
-                .map(it -> it.getConfiguration().getFallback())
+                .filter(it -> !it.getTask().getVersion().isProxy())
+                .filter(it -> it.getTask().getFallback().isEnabled())
+                .map(it -> it.getTask().getFallback())
                 .sorted(Comparator.comparingInt(FallbackEntry::getPriority))
                 .collect(Collectors.toList());
     }
@@ -94,9 +94,9 @@ public abstract class DefaultServiceManager implements ServiceManager {
                 .filter(ServiceInfo::isReady)
                 .filter(it -> it.getServiceState() == ServiceState.ONLINE)
                 .filter(it -> it.getServiceVisibility() == ServiceVisibility.VISIBLE)
-                .filter(it -> !it.getConfiguration().getVersion().isProxy())
-                .filter(it -> it.getConfiguration().getFallback().isEnabled())
-                .sorted(Comparator.comparingInt(it -> it.getConfiguration().getFallback().getPriority()))
+                .filter(it -> !it.getTask().getVersion().isProxy())
+                .filter(it -> it.getTask().getFallback().isEnabled())
+                .sorted(Comparator.comparingInt(it -> it.getTask().getFallback().getPriority()))
                 .collect(Collectors.toList());
     }
 }

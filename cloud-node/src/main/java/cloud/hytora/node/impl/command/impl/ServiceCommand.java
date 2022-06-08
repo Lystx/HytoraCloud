@@ -62,7 +62,7 @@ public class ServiceCommand {
             return;
         }
 
-        ServiceTemplate serviceTemplate = service.getConfiguration().getParent().getTemplates().stream().filter(t -> t.getPrefix().equalsIgnoreCase(templateName)).findFirst().orElse(null);
+        ServiceTemplate serviceTemplate = service.getTask().getTaskGroup().getTemplates().stream().filter(t -> t.getPrefix().equalsIgnoreCase(templateName)).findFirst().orElse(null);
         if (serviceTemplate == null) {
             sender.sendMessage("§cThere is no template with name '" + templateName + "' for server " + service.getName() + "!");
             return;
@@ -163,7 +163,7 @@ public class ServiceCommand {
 
         sender.sendMessage("§8");
         sender.sendMessage("Service information:");
-        sender.sendMessage("§bName: §7" + service.getName() + " §8[§3" + service.getConfiguration().getName() + " §8| §3" + service.getConfiguration().getVersion().name() + "§8]");
+        sender.sendMessage("§bName: §7" + service.getName() + " §8[§3" + service.getTask().getName() + " §8| §3" + service.getTask().getVersion().name() + "§8]");
         sender.sendMessage("§bAddress: §7" + service.getHostName() + ":" + service.getPort());
         sender.sendMessage("§bState: " + service.getServiceState().getName());
         sender.sendMessage("§bVisibility: §7" + service.getServiceVisibility());

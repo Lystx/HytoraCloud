@@ -10,8 +10,8 @@ import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.controller.base.ModuleConfig;
 import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.node.config.JavaVersion;
-import cloud.hytora.driver.services.configuration.ConfigurationDownloadEntry;
-import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.task.TaskDownloadEntry;
+import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
@@ -53,20 +53,20 @@ public class ServiceQueueProcessWorker {
         // add statistic to service
         NodeDriver.getInstance().getExecutor().registerStats(this.service);
 
-        this.downloadServiceVersion(this.service.getConfiguration().getVersion());
+        this.downloadServiceVersion(this.service.getTask().getVersion());
 
         // create server dir
-        File parent = (service.getConfiguration().getParent().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
+        File parent = (service.getTask().getTaskGroup().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
         File serverDir = new File(parent, service.getName() + "/");
 
         FileUtils.forceMkdir(serverDir);
 
-        // load all current configuration templates
-        ServerConfiguration configuration = service.getConfiguration();
+        // load all current task templates
+        ServiceTask serviceTask = service.getTask();
 
         //all templates for this service
-        Collection<ServiceTemplate> templates = configuration.getParent().getTemplates(); //parent templates
-        templates.addAll(configuration.getTemplates()); //configuration templates
+        Collection<ServiceTemplate> templates = serviceTask.getTaskGroup().getTemplates(); //parent templates
+        templates.addAll(serviceTask.getTemplates()); //task templates
 
         for (ServiceTemplate template : templates) {
             TemplateStorage storage = template.getStorage();
@@ -75,20 +75,20 @@ public class ServiceQueueProcessWorker {
             }
         }
 
-        String jar = service.getConfiguration().getVersion().getJar();
+        String jar = service.getTask().getVersion().getJar();
         FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, jar), new File(serverDir, jar));
 
         // copy plugin
         FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "plugin.jar"), new File(serverDir, "plugins/plugin.jar"));
 
         // TODO: 11.04.2022 change address if other node
-        RemoteIdentity identity = new RemoteIdentity(NodeDriver.getInstance().getConfig().getAuthKey(), service.getConfiguration().getNode(), NodeDriver.getInstance().getExecutor().getHostName(), service.getName(), NodeDriver.getInstance().getExecutor().getPort());
+        RemoteIdentity identity = new RemoteIdentity(NodeDriver.getInstance().getConfig().getAuthKey(), service.getTask().getNode(), NodeDriver.getInstance().getExecutor().getHostName(), service.getName(), NodeDriver.getInstance().getExecutor().getPort());
 
         // write property for identify service
         identity.save(new File(serverDir, "property.json"));
 
         //copy extra downloads
-        for (ConfigurationDownloadEntry entry : service.getConfiguration().getParent().getDownloadEntries()) {
+        for (TaskDownloadEntry entry : service.getTask().getTaskGroup().getDownloadEntries()) {
             CloudDriver.getInstance().getLogger().log(LogLevel.INFO, "Downloading entry for '{}' [url={}, dest={}]", service.getName(), entry.getUrl(), entry.getDestination());
             String url = entry.getUrl();
             FileUtils.copyURLToFile(new URL(url), new File(serverDir, entry.getDestination()));
@@ -97,17 +97,21 @@ public class ServiceQueueProcessWorker {
         //copying modules
         for (ModuleController module : CloudDriver.getInstance().getModuleManager().getModules()) {
             ModuleConfig config = module.getModuleConfig();
-            if (config.getCopyType().applies(configuration.getParent().getEnvironment())) {
+            if (config.getCopyType().applies(serviceTask.getTaskGroup().getEnvironment())) {
                 Path jarFile = module.getJarFile();
                 FileUtils.copyFile(jarFile.toFile(), new File(new File(serverDir, "plugins/"), jarFile.toFile().getName()));
             }
         }
 
-        ServiceVersion version = service.getConfiguration().getVersion();
+        ServiceVersion version = service.getTask().getVersion();
 
-        Boolean onlineMode = service.getConfiguration().getProperty("onlineMode", Boolean.class);
-        Boolean proxyProtocol = service.getConfiguration().getProperty("proxyProtocol", Boolean.class);
-        Boolean gameServer = service.getConfiguration().getProperty("gameServer", Boolean.class);
+        Boolean onlineMode = service.getTask().getProperty("onlineMode", Boolean.class);
+        Boolean proxyProtocol = service.getTask().getProperty("proxyProtocol", Boolean.class);
+        Boolean gameServer = service.getTask().getProperty("gameServer", Boolean.class);
+
+        if (onlineMode == null) onlineMode = true;
+        if (proxyProtocol == null) proxyProtocol = false;
+        if (gameServer == null) gameServer = true;
 
         if (version == ServiceVersion.VELOCITY) {
 
@@ -123,7 +127,7 @@ public class ServiceQueueProcessWorker {
                     "\n" +
                     "# What should we display for the maximum number of players? (Velocity does not support a cap\n" +
                     "# on the number of players online.)\n" +
-                    "show-max-players = " + service.getConfiguration().getDefaultMaxPlayers() + "\n" +
+                    "show-max-players = " + service.getTask().getDefaultMaxPlayers() + "\n" +
                     "\n" +
                     "# Should we authenticate players with Mojang? By default, this is on.\n" +
                     "online-mode = " + onlineMode + "\n" +
@@ -203,7 +207,7 @@ public class ServiceQueueProcessWorker {
 
         } else if (version == ServiceVersion.BUNGEE || version == ServiceVersion.WATERFALL) {
 
-            cloud.hytora.common.misc.FileUtils.writeToFile(new File(serverDir, "config.yml"), "player_limit: " + service.getConfiguration().getDefaultMaxPlayers() + "\n" +
+            cloud.hytora.common.misc.FileUtils.writeToFile(new File(serverDir, "config.yml"), "player_limit: " + service.getTask().getDefaultMaxPlayers() + "\n" +
                     "permissions:\n" +
                     "  default: []\n" +
                     "  admin:\n" +
@@ -279,7 +283,7 @@ public class ServiceQueueProcessWorker {
                     "enable-command-block=false\n" +
                     "gamemode=0\n" +
                     "player-idle-timeout=0\n" +
-                    "max-players=" + service.getConfiguration().getDefaultMaxPlayers() + "\n" +
+                    "max-players=" + service.getTask().getDefaultMaxPlayers() + "\n" +
                     "spawn-monsters=true\n" +
                     "generate-structures=true\n" +
                     "view-distance=8\n" +
@@ -300,7 +304,7 @@ public class ServiceQueueProcessWorker {
                     "  name: " + service.getName() + "\n" +
                     "  log-file: logs/log-%D.txt\n" +
                     "  online-mode: " + false + "\n" +
-                    "  max-players: " + service.getConfiguration().getDefaultMaxPlayers() + "\n" +
+                    "  max-players: " + service.getTask().getDefaultMaxPlayers() + "\n" +
                     "  whitelisted: false\n" +
                     "  motd: 'HytoraCloud Minecraft Service'\n" +
                     "  shutdown-message: Server shutting down..\n" +
@@ -389,7 +393,7 @@ public class ServiceQueueProcessWorker {
     public Task<ServiceInfo> processService() {
         Task<ServiceInfo> task = Task.empty(ServiceInfo.class).denyNull();
 
-        File parent = (service.getConfiguration().getParent().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
+        File parent = (service.getTask().getTaskGroup().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
         File folder = new File(parent, service.getName() + "/");
 
         StartedProcess result = new ProcessExecutor()
@@ -431,9 +435,9 @@ public class ServiceQueueProcessWorker {
 
 
     private String[] args(ServiceInfo service) {
-        ServerConfiguration configuration = service.getConfiguration();
+        ServiceTask task = service.getTask();
         List<String> arguments = new ArrayList<>(Arrays.asList("java"));
-        int javaVersion = configuration.getJavaVersion();
+        int javaVersion = task.getJavaVersion();
 
 
         if (javaVersion != -1) {
@@ -450,19 +454,19 @@ public class ServiceQueueProcessWorker {
         arguments.addAll(Arrays.asList(
                 "-DIReallyKnowWhatIAmDoingISwear",
                 "-Dcom.mojang.eula.agree=true",
-                "-Xms" + service.getConfiguration().getMemory() + "M",
-                "-Xmx" + service.getConfiguration().getMemory() + "M")
+                "-Xms" + service.getTask().getMemory() + "M",
+                "-Xmx" + service.getTask().getMemory() + "M")
         );
 
-        //adding custom configuration arguments
-        if (configuration.getParent().getJavaArguments() != null && configuration.getParent().getJavaArguments().length > 0) {
-            arguments.addAll(Arrays.asList(configuration.getParent().getJavaArguments()));
+        //adding custom task arguments
+        if (task.getTaskGroup().getJavaArguments() != null && task.getTaskGroup().getJavaArguments().length > 0) {
+            arguments.addAll(Arrays.asList(task.getTaskGroup().getJavaArguments()));
         }
 
         Path remoteFile = new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "remote.jar").toPath();
 
-        File parent = (service.getConfiguration().getParent().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
-        File applicationFile = new File(parent, service.getName() + "/" + service.getConfiguration().getVersion().getJar());
+        File parent = (service.getTask().getTaskGroup().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
+        File applicationFile = new File(parent, service.getName() + "/" + service.getTask().getVersion().getJar());
 
 
         arguments.addAll(Arrays.asList(
@@ -480,7 +484,7 @@ public class ServiceQueueProcessWorker {
             ex.printStackTrace();
         }
 
-        if (service.getConfiguration().getVersion().getWrapperEnvironment() == SpecificDriverEnvironment.MINECRAFT_SERVER) {
+        if (service.getTask().getVersion().getWrapperEnvironment() == SpecificDriverEnvironment.MINECRAFT_SERVER) {
             arguments.add("nogui");
         }
 

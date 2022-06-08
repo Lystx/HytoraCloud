@@ -13,7 +13,8 @@ import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.services.NodeServiceInfo;
-import cloud.hytora.driver.services.configuration.ServerConfiguration;
+import cloud.hytora.driver.services.ServicePingProperties;
+import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
@@ -36,7 +37,7 @@ import java.util.function.Consumer;
 @Setter
 public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
 
-    private ServerConfiguration configuration;
+    private ServiceTask task;
     private int serviceID;
 
     private int port;
@@ -51,29 +52,38 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
     private ServiceState serviceState = ServiceState.PREPARED;
     private ServiceVisibility serviceVisibility = ServiceVisibility.NONE;
 
+
     private long creationTimestamp; // the timestamp this ServiceInfo was created (changing any property will not influence this timestamp)
     private boolean screenServer;
     private boolean ready;
     private Document properties; // custom properties, which are not used internally
+    private DefaultPingProperties pingProperties;
 
     public SimpleServiceInfo(String group, int id, int port, String hostname) {
-        this.configuration = CloudDriver.getInstance().getConfigurationManager().getConfigurationByNameOrNull(group);
+        this.task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(group);
         this.serviceID = id;
         this.port = port;
         this.hostName = hostname;
-        this.motd = configuration == null ? "Default Motd" : configuration.getMotd();
-        this.maxPlayers = configuration == null ? 10 : configuration.getDefaultMaxPlayers();
+        this.motd = task == null ? "Default Motd" : task.getMotd();
+        this.maxPlayers = task == null ? 10 : task.getDefaultMaxPlayers();
 
         this.creationTimestamp = System.currentTimeMillis();
         this.properties = DocumentFactory.newJsonDocument();
+
+        this.pingProperties = new DefaultPingProperties();
+        this.pingProperties.setMotd(task.getMotd());
+        this.pingProperties.setUsePlayerPropertiesOfService(true);
+        this.pingProperties.setCombineAllProxiesIfProxyService(true);
+        this.pingProperties.setPlayerInfo(new String[0]);
+        this.pingProperties.setVersionText(null);
     }
 
     @Override
     public @NotNull String getName() {
-        if (this.configuration == null) {
+        if (this.task == null) {
             return "UNKNOWN" + "-" + this.serviceID;
         }
-        return this.configuration.getName() + "-" + this.serviceID;
+        return this.task.getName() + "-" + this.serviceID;
     }
 
     @Override
@@ -114,6 +124,12 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
     }
 
     @Override
+    public void editPingProperties(Consumer<ServicePingProperties> ping) {
+        ping.accept(this.pingProperties);
+        this.update();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -126,7 +142,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
         if (this.serviceID != that.serviceID || this.port != that.port) {
             return false;
         }
-        return this.configuration.equals(that.configuration);
+        return this.task.equals(that.task);
     }
 
     public void update() {
@@ -163,6 +179,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
         to.setMotd(from.getMotd());
         to.setReady(from.isReady());
         ((SimpleServiceInfo)to).setCreationTimeStamp(from.getCreationTimestamp());
+        ((SimpleServiceInfo)to).setPingProperties((DefaultPingProperties) from.getPingProperties());
         to.setProperties(from.getProperties());
     }
 
@@ -177,7 +194,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
         switch (state) {
 
             case READ:
-                this.configuration = CloudDriver.getInstance().getConfigurationManager().getConfigurationByNameOrNull(buf.readString());
+                this.task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(buf.readString());
                 this.hostName = buf.readString();
                 this.motd = buf.readString();
 
@@ -192,11 +209,12 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
 
                 this.creationTimestamp = buf.readLong();
                 this.properties = buf.readDocument();
+                this.pingProperties = buf.readObject(DefaultPingProperties.class);
                 break;
 
             case WRITE:
 
-                buf.writeString(this.getConfiguration().getName());
+                buf.writeString(this.getTask().getName());
                 buf.writeString(this.getHostName());
                 buf.writeString(this.getMotd());
 
@@ -210,7 +228,8 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
                 buf.writeEnum(this.getServiceVisibility());
 
                 buf.writeLong(this.getCreationTimestamp());
-                buf.writeDocument(this.properties);
+                buf.writeDocument(this.getProperties());
+                buf.writeObject(this.getPingProperties());
                 break;
         }
     }

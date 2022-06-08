@@ -3,7 +3,6 @@ package cloud.hytora.driver;
 import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.collection.NamedThreadFactory;
 import cloud.hytora.common.logging.Logger;
-import cloud.hytora.document.gson.GsonHelper;
 import cloud.hytora.driver.command.CommandManager;
 import cloud.hytora.driver.command.Console;
 import cloud.hytora.driver.event.EventManager;
@@ -16,9 +15,8 @@ import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.common.scheduler.Scheduler;
-import cloud.hytora.common.scheduler.def.DefaultScheduler;
 import cloud.hytora.driver.services.ServiceManager;
-import cloud.hytora.driver.services.configuration.ConfigurationManager;
+import cloud.hytora.driver.services.task.ServiceTaskManager;
 import cloud.hytora.driver.services.template.TemplateManager;
 import cloud.hytora.driver.services.template.def.DefaultTemplateManager;
 import cloud.hytora.driver.storage.DriverStorage;
@@ -194,7 +192,7 @@ public abstract class CloudDriver extends DriverUtility {
     public abstract ModuleManager getModuleManager();
 
     @Nonnull
-    public abstract ConfigurationManager getConfigurationManager();
+    public abstract ServiceTaskManager getServiceTaskManager();
 
     public abstract AdvancedNetworkExecutor getExecutor();
 

@@ -6,8 +6,9 @@ import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ServicePingProperties;
 import cloud.hytora.remote.Remote;
-import cloud.hytora.remote.impl.RemoteServiceManager;
+import net.md_5.bungee.api.Favicon;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -20,6 +21,7 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class ProxyEvents implements Listener {
@@ -103,7 +105,7 @@ public class ProxyEvents implements Listener {
         ServiceManager serviceManager = CloudDriver.getInstance().getServiceManager();
         ServiceInfo server = serviceManager.getServiceByNameOrNull(target.getName());
 
-        if (server != null && !(server.getConfiguration().getPermission() == null || player.hasPermission(server.getConfiguration().getPermission()))) {
+        if (server != null && !(server.getTask().getPermission() == null || player.hasPermission(server.getTask().getPermission()))) {
             //kick player
             event.setCancelled(true);
             player.sendMessage("§cThis server has a specific permission to join it"); // TODO: 15.05.2022 customizable 
@@ -141,9 +143,49 @@ public class ProxyEvents implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void handle(ProxyPingEvent event) {
         ServerPing response = event.getResponse();
-        ServerPing.Players players = response.getPlayers();
 
-        response.setPlayers(new ServerPing.Players(((RemoteServiceManager) CloudDriver.getInstance().getServiceManager()).thisService().getMaxPlayers(), playerManager.getCloudPlayerOnlineAmount(), players.getSample()));
+        ServiceInfo serviceInfo = Remote.getInstance().thisService();
+        ServicePingProperties pingProperties = serviceInfo.getPingProperties();
+
+        int maxPlayers, onlinePlayers;
+        if (pingProperties.isUsePlayerPropertiesOfService()) {
+            maxPlayers = serviceInfo.getMaxPlayers();
+            onlinePlayers = pingProperties.isCombineAllProxiesIfProxyService() ? CloudDriver.getInstance().getPlayerManager().getCloudPlayerOnlineAmount() : serviceInfo.getOnlinePlayers();
+        } else {
+            maxPlayers = pingProperties.getCustomMaxPlayers();
+            onlinePlayers = pingProperties.getCustomOnlinePlayers();
+        }
+
+        //player info
+        String[] playerInfo = pingProperties.getPlayerInfo();
+        ServerPing.PlayerInfo[] info = new ServerPing.PlayerInfo[playerInfo.length];
+        for (int i = 0; i < playerInfo.length; i++) {
+            info[i] = new ServerPing.PlayerInfo(playerInfo[i], UUID.randomUUID());
+        }
+
+        //player values
+        ServerPing.Players pp = response.getPlayers();
+
+        pp.setSample(info);
+        pp.setOnline(onlinePlayers);
+        pp.setMax(maxPlayers);
+
+
+        //server icon
+        String serverIconUrl = pingProperties.getServerIconUrl();
+        if (serverIconUrl != null) {
+            response.setFavicon(Favicon.create(serverIconUrl));
+        }
+
+        //motd
+        response.setDescriptionComponent(new TextComponent(pingProperties.getMotd()));
+
+        //protocol text
+        String versionText = pingProperties.getVersionText();
+        if (versionText != null) {
+            response.setVersion(new ServerPing.Protocol(versionText, -1));
+        }
+
         event.setResponse(response);
     }
 

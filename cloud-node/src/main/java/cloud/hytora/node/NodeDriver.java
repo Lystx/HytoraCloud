@@ -1,6 +1,5 @@
 package cloud.hytora.node;
 
-import cloud.hytora.common.collection.ThreadRunnable;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.wrapper.Task;
@@ -54,11 +53,11 @@ import cloud.hytora.driver.player.impl.DefaultCloudOfflinePlayer;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.NodeServiceInfo;
 import cloud.hytora.driver.services.ServiceManager;
-import cloud.hytora.driver.services.configuration.ConfigurationManager;
-import cloud.hytora.driver.services.configuration.ServerConfiguration;
-import cloud.hytora.driver.services.configuration.DefaultServerConfiguration;
-import cloud.hytora.driver.services.configuration.bundle.ConfigurationParent;
-import cloud.hytora.driver.services.configuration.bundle.DefaultConfigurationParent;
+import cloud.hytora.driver.services.task.ServiceTaskManager;
+import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.DefaultServiceTask;
+import cloud.hytora.driver.services.task.bundle.TaskGroup;
+import cloud.hytora.driver.services.task.bundle.DefaultTaskGroup;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.node.impl.database.impl.SectionedDatabase;
@@ -85,7 +84,7 @@ import cloud.hytora.node.impl.config.NodeDriverStorage;
 import cloud.hytora.node.impl.database.config.DatabaseConfiguration;
 import cloud.hytora.node.impl.database.IDatabaseManager;
 import cloud.hytora.node.impl.database.def.DefaultDatabaseManager;
-import cloud.hytora.node.service.NodeConfigurationManager;
+import cloud.hytora.node.service.NodeServiceTaskManager;
 import cloud.hytora.node.impl.node.HytoraNode;
 import cloud.hytora.node.impl.player.NodePlayerManager;
 import cloud.hytora.node.service.helper.NodeServiceQueue;
@@ -123,7 +122,7 @@ public class NodeDriver extends CloudDriver implements Node {
     private INodeConfig config;
 
     private IDatabaseManager databaseManager;
-    private ConfigurationManager configurationManager;
+    private ServiceTaskManager serviceTaskManager;
     private ServiceManager serviceManager;
     private PlayerManager playerManager;
     private ModuleManager moduleManager;
@@ -262,10 +261,10 @@ public class NodeDriver extends CloudDriver implements Node {
 
         SectionedDatabase database = this.databaseManager.getDatabase();
         database.registerSection("players", DefaultCloudOfflinePlayer.class);
-        database.registerSection("configurations", DefaultServerConfiguration.class);
-        database.registerSection("groups", DefaultConfigurationParent.class);
+        database.registerSection("configurations", DefaultServiceTask.class);
+        database.registerSection("groups", DefaultTaskGroup.class);
 
-        this.configurationManager = new NodeConfigurationManager();
+        this.serviceTaskManager = new NodeServiceTaskManager();
         this.serviceManager = new NodeServiceManager();
         this.playerManager = new NodePlayerManager(this.eventManager);
         this.channelMessenger = new NodeChannelMessenger(executor);
@@ -279,7 +278,7 @@ public class NodeDriver extends CloudDriver implements Node {
         moduleManager.loadModules();
 
         //checking if directories got deleted meanwhile
-        for (ConfigurationParent parent : this.configurationManager.getAllParentConfigurations()) {
+        for (TaskGroup parent : this.serviceTaskManager.getAllTaskGroups()) {
 
             //creating templates
             for (ServiceTemplate template : parent.getTemplates()) {
@@ -305,7 +304,7 @@ public class NodeDriver extends CloudDriver implements Node {
         this.commandManager.registerCommand(new ShutdownCommand());
         this.commandManager.registerCommand(new HelpCommand());
         this.commandManager.registerCommand(new NodeCommand());
-        this.commandManager.registerCommand(new ConfigurationCommand());
+        this.commandManager.registerCommand(new TaskCommand());
         this.commandManager.registerCommand(new ClearCommand());
         this.commandManager.registerCommand(new ServiceCommand());
         this.commandManager.registerCommand(new PlayerCommand());
@@ -315,7 +314,7 @@ public class NodeDriver extends CloudDriver implements Node {
         //registering command argument parsers
         this.commandManager.registerParser(ServiceVersion.class, ServiceVersion::valueOf);
         this.commandManager.registerParser(ServiceInfo.class, this.serviceManager::getServiceByNameOrNull);
-        this.commandManager.registerParser(ServerConfiguration.class, this.configurationManager::getConfigurationByNameOrNull);
+        this.commandManager.registerParser(ServiceTask.class, this.serviceTaskManager::getTaskByNameOrNull);
         this.commandManager.registerParser(CloudPlayer.class, this.playerManager::getCloudPlayerByNameOrNull);
         this.commandManager.registerParser(Node.class, this.nodeManager::getNodeByNameOrNull);
 
@@ -512,8 +511,8 @@ public class NodeDriver extends CloudDriver implements Node {
     @Override
     public List<ServiceInfo> getRunningServers() {
         return CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream().filter(s -> {
-            s.getConfiguration();
-            return s.getConfiguration().getNode().equalsIgnoreCase(this.config.getNodeName());
+            s.getTask();
+            return s.getTask().getNode().equalsIgnoreCase(this.config.getNodeName());
         }).collect(Collectors.toList());
     }
 
@@ -557,8 +556,8 @@ public class NodeDriver extends CloudDriver implements Node {
                 if (iServiceTask.isSuccess()) {
                     ServiceInfo service = iServiceTask.get();
 
-                    ClusterClientExecutor nodeClient = NodeDriver.getInstance().getExecutor().getClient(service.getConfiguration().getNode()).orElse(null);
-                    boolean thisSidesNode = service.getConfiguration().getNode().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName());
+                    ClusterClientExecutor nodeClient = NodeDriver.getInstance().getExecutor().getClient(service.getTask().getNode()).orElse(null);
+                    boolean thisSidesNode = service.getTask().getNode().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName());
 
                     if (thisSidesNode) {
                         CloudDriver.getInstance().getLogger().info("§6==> §7This Node started §b" + service.getName());

@@ -4,8 +4,8 @@ package cloud.hytora.driver.networking.packets.group;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
-import cloud.hytora.driver.services.configuration.ServerConfiguration;
-import cloud.hytora.driver.services.configuration.DefaultServerConfiguration;
+import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.DefaultServiceTask;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,7 +19,7 @@ import java.io.IOException;
 @AllArgsConstructor
 public class ServiceConfigurationExecutePacket extends Packet {
 
-    private ServerConfiguration configuration;
+    private ServiceTask serviceTask;
     private ExecutionPayLoad payLoad;
 
     @Override
@@ -28,12 +28,12 @@ public class ServiceConfigurationExecutePacket extends Packet {
         switch (state) {
 
             case READ:
-                this.configuration = buf.readObject(DefaultServerConfiguration.class);
+                this.serviceTask = buf.readObject(DefaultServiceTask.class);
                 this.payLoad = buf.readEnum(ExecutionPayLoad.class);
                 break;
 
             case WRITE:
-                buf.writeObject(configuration);
+                buf.writeObject(serviceTask);
                 buf.writeEnum(payLoad);
                 break;
         }

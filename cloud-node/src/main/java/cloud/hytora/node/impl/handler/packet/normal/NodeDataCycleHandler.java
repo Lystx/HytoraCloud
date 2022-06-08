@@ -26,7 +26,7 @@ public class NodeDataCycleHandler implements PacketHandler<NodeCycleDataPacket> 
 			logger.warn("Tried updating non-existent node {}! Data: {}", name, data);
 			return;
 		}
-		logger.debug("{} -> {}", node, data);
+		logger.trace("Updated Node {} => {}", node.getName(), data);
 		node.setLastCycleData(data);
 	}
 }
