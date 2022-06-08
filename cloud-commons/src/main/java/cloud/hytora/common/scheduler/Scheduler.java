@@ -1,8 +1,14 @@
-package cloud.hytora.driver.scheduler;
+package cloud.hytora.common.scheduler;
+
+import cloud.hytora.common.scheduler.def.DefaultScheduler;
 
 import java.util.List;
 
 public interface Scheduler {
+
+    static Scheduler runTimeScheduler() {
+        return DefaultScheduler.INSTANCE;
+    }
 
     /**
      * Gets a {@link SchedulerFuture} by its id

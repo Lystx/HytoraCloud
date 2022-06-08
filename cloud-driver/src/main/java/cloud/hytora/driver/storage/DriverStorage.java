@@ -25,6 +25,10 @@ public interface DriverStorage {
 		return getRawData().getInstance(path, classOfT);
 	}
 
+	default <T> T get(@Nonnull String path, @Nonnull Class<T> classOfT, T defaultValue) {
+		return getRawData().fallbackValue(defaultValue).getInstance(path, classOfT);
+	}
+
 	/**
 	 * Synchronizes all global config instances with the properties of this instance
 	 */

@@ -2,8 +2,9 @@ package cloud.hytora.driver.services.configuration;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
 import cloud.hytora.driver.common.SelfCloneable;
+import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.property.PropertyHolder;
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.configuration.bundle.ConfigurationParent;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
 import cloud.hytora.driver.services.template.ServiceTemplate;
@@ -39,6 +40,8 @@ public interface ServerConfiguration extends Bufferable, PropertyHolder, SelfClo
      * @return the node of the group
      */
     @NotNull String getNode();
+
+    Node findNode();
 
     /**
      * sets the node of the group
@@ -115,7 +118,7 @@ public interface ServerConfiguration extends Bufferable, PropertyHolder, SelfClo
 
     void setMotd(String motd);
 
-    java.util.List<CloudServer> getOnlineServices();
+    java.util.List<ServiceInfo> getOnlineServices();
 
     /**
      * updates the properties of the group

@@ -2,7 +2,7 @@ package cloud.hytora.driver.player.executor;
 
 import cloud.hytora.driver.component.ChatComponent;
 import cloud.hytora.driver.player.CloudPlayer;
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 
 import java.util.UUID;
 
@@ -27,6 +27,6 @@ public interface PlayerExecutor {
 
     void disconnect(String reason);
 
-    void connect(CloudServer server);
+    void connect(ServiceInfo server);
 
 }

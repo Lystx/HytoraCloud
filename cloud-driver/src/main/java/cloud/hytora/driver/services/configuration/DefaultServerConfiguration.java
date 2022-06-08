@@ -4,8 +4,9 @@ import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
+import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.property.ProtocolPropertyHolder;
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.configuration.bundle.ConfigurationParent;
 import cloud.hytora.driver.services.fallback.SimpleFallback;
 import cloud.hytora.driver.services.template.ServiceTemplate;
@@ -48,6 +49,11 @@ public class DefaultServerConfiguration extends ProtocolPropertyHolder implement
         return new ArrayList<>(templates);
     }
 
+    @Override
+    public Node findNode() {
+        return CloudDriver.getInstance().getNodeManager().getNodeByNameOrNull(this.node);
+    }
+
     public ConfigurationParent getParent() {
         return CloudDriver
                 .getInstance()
@@ -57,7 +63,7 @@ public class DefaultServerConfiguration extends ProtocolPropertyHolder implement
     }
 
     @Override
-    public List<CloudServer> getOnlineServices() {
+    public List<ServiceInfo> getOnlineServices() {
         return CloudDriver.getInstance().getServiceManager().getAllServicesByGroup(this);
     }
 

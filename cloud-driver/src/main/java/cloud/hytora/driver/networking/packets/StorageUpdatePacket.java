@@ -1,5 +1,7 @@
 package cloud.hytora.driver.networking.packets;
 
+import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.event.defaults.driver.DriverStorageUpdateEvent;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
@@ -27,6 +29,8 @@ public class StorageUpdatePacket extends Packet {
             case READ:
                 payLoad = buf.readEnum(StoragePayLoad.class);
                 storage = buf.readDocument();
+
+                CloudDriver.getInstance().getEventManager().callEvent(new DriverStorageUpdateEvent());
                 break;
 
             case WRITE:

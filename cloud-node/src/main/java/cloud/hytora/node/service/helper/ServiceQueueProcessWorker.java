@@ -6,6 +6,8 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.DestructiveListener;
 import cloud.hytora.driver.event.defaults.server.CloudServerCacheUnregisterEvent;
 import cloud.hytora.driver.event.defaults.server.CloudServerRequestScreenLeaveEvent;
+import cloud.hytora.driver.module.ModuleController;
+import cloud.hytora.driver.module.controller.base.ModuleConfig;
 import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.node.config.JavaVersion;
 import cloud.hytora.driver.services.configuration.ConfigurationDownloadEntry;
@@ -13,7 +15,7 @@ import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVersion;
@@ -38,12 +40,12 @@ import java.util.jar.JarInputStream;
 
 public class ServiceQueueProcessWorker {
 
-    private final CloudServer service;
+    private final ServiceInfo service;
     private final NodeServiceManager serviceManager;
 
 
     @SneakyThrows
-    public ServiceQueueProcessWorker(NodeServiceManager serviceManager, CloudServer service) {
+    public ServiceQueueProcessWorker(NodeServiceManager serviceManager, ServiceInfo service) {
         this.serviceManager = serviceManager;
         this.service = service;
         this.service.setServiceState(ServiceState.STARTING);
@@ -91,7 +93,6 @@ public class ServiceQueueProcessWorker {
             String url = entry.getUrl();
             FileUtils.copyURLToFile(new URL(url), new File(serverDir, entry.getDestination()));
         }
-
 
         ServiceVersion version = service.getConfiguration().getVersion();
 
@@ -414,11 +415,21 @@ public class ServiceQueueProcessWorker {
 
         }
 
+        //copying modules
+        for (ModuleController module : CloudDriver.getInstance().getModuleManager().getModules()) {
+            ModuleConfig config = module.getModuleConfig();
+            if (config.getCopyType().applies(configuration.getParent().getEnvironment())) {
+                Path jarFile = module.getJarFile();
+                FileUtils.copyFile(jarFile.toFile(), new File(new File(serverDir, "plugins/"), jarFile.toFile().getName()));
+            }
+        }
+
+
     }
 
     @SneakyThrows
-    public Task<CloudServer> processService() {
-        Task<CloudServer> task = Task.empty(CloudServer.class).denyNull();
+    public Task<ServiceInfo> processService() {
+        Task<ServiceInfo> task = Task.empty(ServiceInfo.class).denyNull();
 
         File parent = (service.getConfiguration().getParent().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
         File folder = new File(parent, service.getName() + "/");
@@ -461,7 +472,7 @@ public class ServiceQueueProcessWorker {
     }
 
 
-    private String[] args(CloudServer service) {
+    private String[] args(ServiceInfo service) {
         ServerConfiguration configuration = service.getConfiguration();
         List<String> arguments = new ArrayList<>(Arrays.asList("java"));
         int javaVersion = configuration.getJavaVersion();

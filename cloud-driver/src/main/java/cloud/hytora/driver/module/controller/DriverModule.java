@@ -1,5 +1,6 @@
 package cloud.hytora.driver.module.controller;
 
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.module.Module;
 import cloud.hytora.driver.module.ModuleController;
 import lombok.Getter;
@@ -15,6 +16,18 @@ public abstract class DriverModule implements Module {
 	 */
 	@Setter
 	protected ModuleController controller;
+
+	public void registerTasks(Object moduleTasksClassInstance) {
+		controller.registerModuleTasks(moduleTasksClassInstance);
+	}
+
+	public void registerEvent(Object eventClassInstance) {
+		CloudDriver.getInstance().getEventManager().registerListener(eventClassInstance);
+	}
+
+	public void registerCommand(Object commandClassInstance) {
+		CloudDriver.getInstance().getCommandManager().registerCommand(commandClassInstance);
+	}
 
 	@Override
 	public String toString() {

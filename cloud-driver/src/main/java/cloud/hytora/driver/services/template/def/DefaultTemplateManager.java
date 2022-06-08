@@ -1,6 +1,6 @@
 package cloud.hytora.driver.services.template.def;
 
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateManager;
@@ -27,7 +27,7 @@ public class DefaultTemplateManager implements TemplateManager {
     }
 
     @Override
-    public void deployService(@NotNull CloudServer server, @NotNull ServiceDeployment... deployments) {
+    public void deployService(@NotNull ServiceInfo server, @NotNull ServiceDeployment... deployments) {
         for (ServiceDeployment deployment : deployments) {
             ServiceTemplate template = deployment.getTemplate();
             TemplateStorage storage = template.getStorage();

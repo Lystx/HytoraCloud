@@ -4,7 +4,7 @@ import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import java.io.File;
 
-public interface NodeCloudServer extends CloudServer {
+public interface NodeServiceInfo extends ServiceInfo {
 
     @Nonnull
     @CheckReturnValue

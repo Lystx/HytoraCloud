@@ -1,8 +1,8 @@
-package cloud.hytora.driver.scheduler.def;
+package cloud.hytora.common.scheduler.def;
 
 
-import cloud.hytora.driver.scheduler.Scheduler;
-import cloud.hytora.driver.scheduler.SchedulerFuture;
+import cloud.hytora.common.scheduler.Scheduler;
+import cloud.hytora.common.scheduler.SchedulerFuture;
 import lombok.Getter;
 
 import java.util.*;
@@ -21,6 +21,8 @@ public class DefaultScheduler implements Scheduler {
 	 * The java timer util
 	 */
 	private final Timer timer;
+
+	public static final DefaultScheduler INSTANCE = new DefaultScheduler();
 
 	public DefaultScheduler() {
 		this.tasks = new LinkedList<>();

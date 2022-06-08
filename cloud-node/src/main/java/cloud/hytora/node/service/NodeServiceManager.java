@@ -5,9 +5,10 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.defaults.server.CloudServerCacheUnregisterEvent;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.packets.services.*;
+import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.node.config.ServiceCrashPrevention;
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.impl.DefaultServiceManager;
 import cloud.hytora.node.NodeDriver;
@@ -39,8 +40,8 @@ public class NodeServiceManager extends DefaultServiceManager {
 
 
         executor.registerPacketHandler((PacketHandler<CloudServerCacheUpdatePacket>) (ctx, packet) -> {
-            CloudServer packetService = packet.getService();
-            CloudServer service = getServiceByNameOrNull(packetService.getName());
+            ServiceInfo packetService = packet.getService();
+            ServiceInfo service = getServiceByNameOrNull(packetService.getName());
             if (service == null) {
                 System.out.println("Tried to update nulled service");
                 return;
@@ -50,19 +51,19 @@ public class NodeServiceManager extends DefaultServiceManager {
     }
 
     @Override
-    public List<String> queryServiceOutput(CloudServer service) {
+    public List<String> queryServiceOutput(ServiceInfo service) {
         return cachedServiceOutputs.getOrDefault(service.getName(), new ArrayList<>());
     }
 
     @Override
-    public void registerService(CloudServer service) {
+    public void registerService(ServiceInfo service) {
         super.registerService(service);
         this.cachedServiceOutputs.put(service.getName(), new ArrayList<>());
         NodeDriver.getInstance().getExecutor().sendPacketToAll(new CloudServerCacheRegisterPacket(service));
     }
 
     @Override
-    public void unregisterService(CloudServer service) {
+    public void unregisterService(ServiceInfo service) {
         super.unregisterService(service);
 
         ServerConfiguration con = service.getConfiguration();
@@ -136,26 +137,27 @@ public class NodeServiceManager extends DefaultServiceManager {
         NodeDriver.getInstance().getLogger().info("§c==> §7Channel §8[§b" + service.getName() + "@" + service.getHostName() + ":" + service.getPort() + "§8] §7disconnected §8[§eUptime: " +  service.getReadableUptime() + "§8]");
     }
 
-    public Task<CloudServer> startService(@NotNull CloudServer service) {
+    public Task<ServiceInfo> startService(@NotNull ServiceInfo service) {
         return new ServiceQueueProcessWorker(this, service).processService();
     }
 
-    public void sendPacketToService(CloudServer service, Packet packet) {
+    public void sendPacketToService(ServiceInfo service, Packet packet) {
         NodeDriver.getInstance().getExecutor().getAllCachedConnectedClients().stream().filter(it -> it.getName().equals(service.getName())).findAny().ifPresent(it -> it.sendPacket(packet));
     }
 
     @Override
-    public void shutdownService(CloudServer service) {
-        this.sendPacketToService(service, new ServiceShutdownPacket(service.getName()));
+    public void shutdownService(ServiceInfo service) {
+        Node node = service.getConfiguration().findNode();
+        node.stopServer(service);
     }
 
 
     @Override
-    public void updateService(@NotNull CloudServer service) {
-        Optional<CloudServer> server = this.getService(service.getName());
+    public void updateService(@NotNull ServiceInfo service) {
+        Optional<ServiceInfo> server = this.getService(service.getName());
         if (server.isPresent()) {
-            CloudServer cloudServer = server.get();
-            int i = allCachedServices.indexOf(cloudServer);
+            ServiceInfo serviceInfo = server.get();
+            int i = allCachedServices.indexOf(serviceInfo);
             allCachedServices.set(i, service);
         }
         DriverUpdatePacket.publishUpdate(NodeDriver.getInstance());

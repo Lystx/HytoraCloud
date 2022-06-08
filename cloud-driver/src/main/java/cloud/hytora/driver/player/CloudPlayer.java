@@ -2,17 +2,12 @@ package cloud.hytora.driver.player;
 
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.common.SelfCloneable;
-import cloud.hytora.driver.networking.packets.player.CloudPlayerKickPacket;
-import cloud.hytora.driver.networking.packets.player.CloudPlayerSendServicePacket;
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
 import cloud.hytora.driver.player.connection.PlayerConnection;
-import cloud.hytora.driver.player.executor.PlayerExecutor;
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.UUID;
 
 public interface CloudPlayer extends CloudOfflinePlayer, SelfCloneable<CloudPlayer> {
 
@@ -24,7 +19,7 @@ public interface CloudPlayer extends CloudOfflinePlayer, SelfCloneable<CloudPlay
      * @return server instance
      */
     @Nonnull
-    CloudServer getProxyServer();
+    ServiceInfo getProxyServer();
 
     /**
      * The current Sub-Server this player is currently on
@@ -34,21 +29,21 @@ public interface CloudPlayer extends CloudOfflinePlayer, SelfCloneable<CloudPlay
      * @return server instance or null
      */
     @Nullable
-    CloudServer getServer();
+    ServiceInfo getServer();
 
     /**
      * Public method to override the proxy server of this player
      *
      * @param service the service to set
      */
-    void setProxyServer(@NotNull CloudServer service);
+    void setProxyServer(@NotNull ServiceInfo service);
 
     /**
      * Public method to override the sub server of this player
      *
      * @param service the service to set
      */
-    void setServer(@NotNull CloudServer service);
+    void setServer(@NotNull ServiceInfo service);
 
     /**
      * The current {@link PlayerConnection} of this player

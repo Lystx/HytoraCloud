@@ -13,18 +13,15 @@ import cloud.hytora.driver.module.controller.task.ModuleTask;
 import cloud.hytora.driver.module.controller.task.ScheduledModuleTask;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.scheduler.Scheduler;
+import cloud.hytora.common.scheduler.Scheduler;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,8 +32,6 @@ import java.util.jar.JarFile;
 
 
 public class DefaultModuleController implements ModuleController {
-
-    protected static final String CONFIG_RESOURCE = "module.json";
 
     private final ModuleManager manager;
     private final Path jarFile, selfJar;
@@ -150,6 +145,7 @@ public class DefaultModuleController implements ModuleController {
         config.saveToFile(dataFolder.resolve("config.json"));
     }
 
+    @Override
     public void registerModuleTasks(Object objectClass) {
         List<HandlerMethod<ModuleTask>> moduleTasks = new ArrayList<>();
 

@@ -1,10 +1,12 @@
 package cloud.hytora.common.wrapper;
 
 import cloud.hytora.common.collection.NamedThreadFactory;
+import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.common.wrapper.def.SimpleTask;
 import cloud.hytora.common.wrapper.exception.ValueHoldsNoObjectException;
 import cloud.hytora.common.wrapper.exception.ValueImmutableException;
 import cloud.hytora.common.function.ExceptionallyRunnable;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.io.Serializable;
@@ -123,6 +125,15 @@ public interface Task<T> extends Serializable {
         });
     }
 
+
+    static Task<TaskHolder> runTaskLater(@NotNull Runnable runnable, TimeUnit unit, long delay) {
+        Task<TaskHolder> task = Task.empty();
+        Scheduler.runTimeScheduler().scheduleDelayedTask(() -> {
+            runnable.run();
+            task.setResult(TaskHolder.INSTANCE);
+        }, unit.toMillis(delay));
+        return task;
+    }
 
     static Task<Void> runAsync(@Nonnull Runnable runnable) {
         return callAsync(() -> {

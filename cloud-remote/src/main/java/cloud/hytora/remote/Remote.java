@@ -12,7 +12,6 @@ import cloud.hytora.driver.command.CommandManager;
 import cloud.hytora.driver.command.DefaultCommandSender;
 import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.command.Console;
-import cloud.hytora.driver.InternalDriverEventAdapter;
 import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
 import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.message.ChannelMessenger;
@@ -22,7 +21,7 @@ import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.player.PlayerManager;
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.configuration.ConfigurationManager;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
@@ -105,8 +104,8 @@ public class Remote extends CloudDriver {
         this.storage = new RemoteDriverStorage(this.client);
 
         this.scheduledExecutor.scheduleAtFixedRate(() -> {
-            CloudServer cloudServer = thisService();
-            perform(cloudServer != null, cloudServer::update);
+            ServiceInfo serviceInfo = thisService();
+            perform(serviceInfo != null, serviceInfo::update);
         }, 0, SERVER_PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
     }
 
@@ -138,7 +137,7 @@ public class Remote extends CloudDriver {
                         if (proxy != null) {
                             CloudDriver.getInstance().getLogger().info("Pre registered all services");
                             proxy.clearServices();
-                            for (CloudServer allCachedService : packet.getAllCachedServices()) {
+                            for (ServiceInfo allCachedService : packet.getAllCachedServices()) {
                                 proxy.registerService(allCachedService);
                             }
                         }
@@ -169,9 +168,9 @@ public class Remote extends CloudDriver {
                     CloudDriver.getInstance().getLogger().info("Launched '" + main.getName() + "'!");
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     e.printStackTrace();
-                    CloudServer cloudServer = Remote.getInstance().thisService();
-                    cloudServer.setReady(false);
-                    cloudServer.update();
+                    ServiceInfo serviceInfo = Remote.getInstance().thisService();
+                    serviceInfo.setReady(false);
+                    serviceInfo.update();
                     CloudDriver.getInstance().getLogger().error("Couldn't launch '" + main.getName() + "'!");
                     CloudDriver.getInstance().getScheduler().scheduleDelayedTask(() -> CloudDriver.getInstance().shutdown(), TimeUnit.SECONDS.toMillis(3));
 
@@ -194,7 +193,7 @@ public class Remote extends CloudDriver {
         return perform(adapter instanceof RemoteProxyAdapter, () -> cast(adapter), (Supplier<RemoteProxyAdapter>) () -> null);
     }
 
-    public CloudServer thisService() {
+    public ServiceInfo thisService() {
         return this.serviceManager.getAllCachedServices().stream().filter(it -> it.getName().equalsIgnoreCase(this.property.getName())).findAny().orElse(null);
     }
 
@@ -202,10 +201,11 @@ public class Remote extends CloudDriver {
     public void shutdown() {
         // TODO: 06.06.2022
         if (adapter != null) {
-
+            adapter.shutdown();
         }
+
         if (applicationThread != null) {
-            applicationThread.stop();
+            //applicationThread.destroy();
         }
         System.exit(0);
     }

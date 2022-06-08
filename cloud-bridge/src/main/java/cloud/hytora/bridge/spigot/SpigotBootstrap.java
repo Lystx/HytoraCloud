@@ -1,6 +1,6 @@
 package cloud.hytora.bridge.spigot;
 
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
 import cloud.hytora.bridge.PluginBridge;
@@ -23,10 +23,10 @@ public class SpigotBootstrap extends JavaPlugin implements PluginBridge, RemoteA
 
     @Override
     public void onDisable() {
-        CloudServer cloudServer = Remote.getInstance().thisService();
-        cloudServer.setServiceState(ServiceState.STOPPING);
-        cloudServer.setServiceVisibility(ServiceVisibility.INVISIBLE);
-        cloudServer.update();
+        ServiceInfo serviceInfo = Remote.getInstance().thisService();
+        serviceInfo.setServiceState(ServiceState.STOPPING);
+        serviceInfo.setServiceVisibility(ServiceVisibility.INVISIBLE);
+        serviceInfo.update();
     }
 
     @Override

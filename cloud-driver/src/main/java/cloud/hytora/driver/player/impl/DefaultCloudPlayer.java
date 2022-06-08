@@ -9,7 +9,7 @@ import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.connection.DefaultPlayerConnection;
 import cloud.hytora.driver.player.connection.PlayerConnection;
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import lombok.*;
@@ -23,8 +23,8 @@ import java.util.UUID;
 @Setter
 public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements CloudPlayer {
 
-    private CloudServer server;
-    private CloudServer proxyServer;
+    private ServiceInfo server;
+    private ServiceInfo proxyServer;
     private PlayerConnection connection;
     private Document temporaryProperties;
 
@@ -32,11 +32,11 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements Clo
         this(uuid, name, null, null);
     }
 
-    public DefaultCloudPlayer(UUID uniqueId, String name, CloudServer server, CloudServer proxyServer) {
+    public DefaultCloudPlayer(UUID uniqueId, String name, ServiceInfo server, ServiceInfo proxyServer) {
         this(uniqueId, name, null, System.currentTimeMillis(), System.currentTimeMillis(), DocumentFactory.newJsonDocument(), server, proxyServer);
     }
 
-    public DefaultCloudPlayer(UUID uniqueId, String name, PlayerConnection lastConnection, long firstLogin, long lastLogin, Document properties, CloudServer server, CloudServer proxyServer) {
+    public DefaultCloudPlayer(UUID uniqueId, String name, PlayerConnection lastConnection, long firstLogin, long lastLogin, Document properties, ServiceInfo server, ServiceInfo proxyServer) {
         super(uniqueId, name, (DefaultPlayerConnection) lastConnection, firstLogin, lastLogin, properties);
         this.server = server;
         this.proxyServer = proxyServer;

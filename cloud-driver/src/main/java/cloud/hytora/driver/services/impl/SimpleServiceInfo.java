@@ -12,13 +12,13 @@ import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
-import cloud.hytora.driver.services.NodeCloudServer;
+import cloud.hytora.driver.services.NodeServiceInfo;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
 
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 import lombok.NoArgsConstructor;
 
 import lombok.Getter;
@@ -34,7 +34,7 @@ import java.util.function.Consumer;
 @Getter
 @NoArgsConstructor
 @Setter
-public class SimpleCloudServer implements NodeCloudServer, Bufferable {
+public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
 
     private ServerConfiguration configuration;
     private int serviceID;
@@ -56,7 +56,7 @@ public class SimpleCloudServer implements NodeCloudServer, Bufferable {
     private boolean ready;
     private Document properties; // custom properties, which are not used internally
 
-    public SimpleCloudServer(String group, int id, int port, String hostname) {
+    public SimpleServiceInfo(String group, int id, int port, String hostname) {
         this.configuration = CloudDriver.getInstance().getConfigurationManager().getConfigurationByNameOrNull(group);
         this.serviceID = id;
         this.port = port;
@@ -77,7 +77,7 @@ public class SimpleCloudServer implements NodeCloudServer, Bufferable {
     }
 
     @Override
-    public NodeCloudServer asCloudServer() throws IncompatibleDriverEnvironment {
+    public NodeServiceInfo asCloudServer() throws IncompatibleDriverEnvironment {
         IncompatibleDriverEnvironment.throwIfNeeded(DriverEnvironment.NODE);
         return this;
     }
@@ -103,7 +103,12 @@ public class SimpleCloudServer implements NodeCloudServer, Bufferable {
     }
 
     @Override
-    public void edit(@NotNull Consumer<CloudServer> serviceConsumer) {
+    public void shutdown() {
+        CloudDriver.getInstance().getServiceManager().shutdownService(this);
+    }
+
+    @Override
+    public void edit(@NotNull Consumer<ServiceInfo> serviceConsumer) {
         serviceConsumer.accept(this);
         this.update();
     }
@@ -116,7 +121,7 @@ public class SimpleCloudServer implements NodeCloudServer, Bufferable {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        SimpleCloudServer that = (SimpleCloudServer) o;
+        SimpleServiceInfo that = (SimpleServiceInfo) o;
 
         if (this.serviceID != that.serviceID || this.port != that.port) {
             return false;
@@ -149,7 +154,7 @@ public class SimpleCloudServer implements NodeCloudServer, Bufferable {
     }
 
     @Override
-    public void cloneInternally(CloudServer from, CloudServer to) {
+    public void cloneInternally(ServiceInfo from, ServiceInfo to) {
 
         to.setServiceState(from.getServiceState());
         to.setServiceVisibility(from.getServiceVisibility());
@@ -157,7 +162,7 @@ public class SimpleCloudServer implements NodeCloudServer, Bufferable {
         to.setMaxPlayers(from.getMaxPlayers());
         to.setMotd(from.getMotd());
         to.setReady(from.isReady());
-        ((SimpleCloudServer)to).setCreationTimeStamp(from.getCreationTimestamp());
+        ((SimpleServiceInfo)to).setCreationTimeStamp(from.getCreationTimestamp());
         to.setProperties(from.getProperties());
     }
 

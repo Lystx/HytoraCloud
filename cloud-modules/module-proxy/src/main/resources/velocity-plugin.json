@@ -1,0 +1,8 @@
+{
+	"id": "cloud-proxy",
+	"name": "Cloud-Proxy",
+	"version": "1.0",
+	"description": "Runtime module to enable the use of proxy systems & configs",
+	"authors": [ "Lystx" ],
+	"main": "cloud.hytora.modules.proxy.velocity.VelocityCloudProxyPlugin"
+}

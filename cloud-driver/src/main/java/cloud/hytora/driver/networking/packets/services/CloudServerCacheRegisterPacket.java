@@ -3,8 +3,8 @@ package cloud.hytora.driver.networking.packets.services;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
-import cloud.hytora.driver.services.CloudServer;
-import cloud.hytora.driver.services.impl.SimpleCloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.impl.SimpleServiceInfo;
 import lombok.AllArgsConstructor;
 
 import lombok.Getter;
@@ -18,7 +18,7 @@ import java.io.IOException;
 @NoArgsConstructor
 public class CloudServerCacheRegisterPacket extends Packet {
 
-    private CloudServer service;
+    private ServiceInfo service;
 
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
@@ -26,7 +26,7 @@ public class CloudServerCacheRegisterPacket extends Packet {
         switch (state) {
 
             case READ:
-                service = buf.readObject(SimpleCloudServer.class);
+                service = buf.readObject(SimpleServiceInfo.class);
                 break;
 
             case WRITE:

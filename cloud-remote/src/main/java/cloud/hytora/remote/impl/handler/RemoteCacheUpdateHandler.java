@@ -3,7 +3,7 @@ package cloud.hytora.remote.impl.handler;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.remote.Remote;
 import cloud.hytora.remote.adapter.proxy.RemoteProxyAdapter;
 
@@ -18,7 +18,7 @@ public class RemoteCacheUpdateHandler implements PacketHandler<DriverUpdatePacke
         }
 
         proxy.clearServices();
-        for (CloudServer allCachedService : packet.getAllCachedServices()) {
+        for (ServiceInfo allCachedService : packet.getAllCachedServices()) {
             proxy.registerService(allCachedService);
         }
 

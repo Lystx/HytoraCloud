@@ -1,8 +1,8 @@
 package cloud.hytora.node.service.template;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.services.CloudServer;
-import cloud.hytora.driver.services.NodeCloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.NodeServiceInfo;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.template.ServiceTemplate;
@@ -81,7 +81,7 @@ public class LocalTemplateStorage implements TemplateStorage {
     }
 
     @Override
-    public void copyTemplate(@NotNull CloudServer server, @NotNull ServiceTemplate template, @NotNull File directory) throws Exception {
+    public void copyTemplate(@NotNull ServiceInfo server, @NotNull ServiceTemplate template, @NotNull File directory) throws Exception {
         ServerConfiguration configuration = server.getConfiguration();
 
         //do not perform if wrong node
@@ -104,14 +104,14 @@ public class LocalTemplateStorage implements TemplateStorage {
     }
 
     @Override
-    public void deployService(@NotNull CloudServer server, @NotNull ServiceDeployment deployment) {
+    public void deployService(@NotNull ServiceInfo server, @NotNull ServiceDeployment deployment) {
 
         //do not perform if wrong node
         if (!server.getConfiguration().getNode().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName())) {
             return;
         }
 
-        NodeCloudServer nodeCloudServer = server.asCloudServer();
+        NodeServiceInfo nodeCloudServer = server.asCloudServer();
         ServiceTemplate template = deployment.getTemplate();
 
         if (template != null && template.getStorage() != null && template.getPrefix() != null && template.getName() != null) {

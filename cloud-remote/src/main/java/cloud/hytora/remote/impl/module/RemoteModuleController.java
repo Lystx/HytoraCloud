@@ -108,6 +108,11 @@ public class RemoteModuleController implements ModuleController {
     }
 
     @Override
+    public void registerModuleTasks(Object classHolder) {
+
+    }
+
+    @Override
     public void applyBuffer(BufferState s, @NotNull PacketBuffer buf) throws IOException {
         if (s == BufferState.READ) {
             enabled = buf.readBoolean();

@@ -22,13 +22,13 @@ public interface ServiceManager {
     /**
      * @return all cached service
      */
-    @NotNull List<CloudServer> getAllCachedServices();
+    @NotNull List<ServiceInfo> getAllCachedServices();
 
-    void setAllCachedServices(List<CloudServer> allCachedServices);
+    void setAllCachedServices(List<ServiceInfo> allCachedServices);
 
-    void registerService(CloudServer service);
+    void registerService(ServiceInfo service);
 
-    void unregisterService(CloudServer service);
+    void unregisterService(ServiceInfo service);
 
     /**
      * gets all services by a group
@@ -36,7 +36,7 @@ public interface ServiceManager {
      * @param serviceGroup the group of the services
      * @return the services of a group
      */
-    default List<CloudServer> getAllServicesByGroup(@NotNull ServerConfiguration serviceGroup) {
+    default List<ServiceInfo> getAllServicesByGroup(@NotNull ServerConfiguration serviceGroup) {
         return this.getAllCachedServices().stream().filter(it -> it.getConfiguration().equals(serviceGroup)).collect(Collectors.toList());
     }
 
@@ -46,11 +46,11 @@ public interface ServiceManager {
      * @param serviceState the state of the services
      * @return the services of a state
      */
-    default List<CloudServer> getAllServicesByState(@NotNull ServiceState serviceState) {
+    default List<ServiceInfo> getAllServicesByState(@NotNull ServiceState serviceState) {
         return this.getAllCachedServices().stream().filter(it -> it.getServiceState() == serviceState).collect(Collectors.toList());
     }
 
-    default List<CloudServer> getAllServicesByEnvironment(@NotNull SpecificDriverEnvironment environment) {
+    default List<ServiceInfo> getAllServicesByEnvironment(@NotNull SpecificDriverEnvironment environment) {
         return this.getAllCachedServices().stream().filter(it -> it.getConfiguration() != null && it.getConfiguration().getParent() != null && it.getConfiguration().getParent().getEnvironment() == environment).collect(Collectors.toList());
     }
 
@@ -60,7 +60,7 @@ public interface ServiceManager {
      * @param name the name of the service
      * @return the service or null when the service does not exist
      */
-    @NotNull Optional<CloudServer> getService(@NotNull String name);
+    @NotNull Optional<ServiceInfo> getService(@NotNull String name);
 
     /**
      * gets a service
@@ -68,25 +68,25 @@ public interface ServiceManager {
      * @param name the name of the service
      * @return the service or null when the service does not exist
      */
-    default @Nullable CloudServer getServiceByNameOrNull(@NotNull String name) {
+    default @Nullable ServiceInfo getServiceByNameOrNull(@NotNull String name) {
         return this.getService(name).orElse(null);
     }
 
-    List<String> queryServiceOutput(CloudServer service);
+    List<String> queryServiceOutput(ServiceInfo service);
 
     /**
      * starts a service
      *
      * @param service the service to start
      */
-    Task<CloudServer> startService(@NotNull CloudServer service);
+    Task<ServiceInfo> startService(@NotNull ServiceInfo service);
 
     @Nonnull
     @CheckReturnValue
-    Task<CloudServer> getFallbackAsService();
+    Task<ServiceInfo> getFallbackAsService();
 
     @Nullable
-    default CloudServer getFallbackAsServiceOrNull() {
+    default ServiceInfo getFallbackAsServiceOrNull() {
         return getFallbackAsService().get();
     }
 
@@ -100,7 +100,7 @@ public interface ServiceManager {
     }
     @Nonnull
     @CheckReturnValue
-    List<CloudServer> getAvailableFallbacksAsServices();
+    List<ServiceInfo> getAvailableFallbacksAsServices();
 
 
     @Nonnull
@@ -113,9 +113,9 @@ public interface ServiceManager {
      *
      * @param service the service to start
      */
-    void updateService(CloudServer service);
+    void updateService(ServiceInfo service);
 
-    void shutdownService(CloudServer service);
+    void shutdownService(ServiceInfo service);
 
     /**
      * send a service a packet
@@ -123,6 +123,6 @@ public interface ServiceManager {
      * @param service the service to start
      * @param packet  the packet to send
      */
-    void sendPacketToService(CloudServer service, Packet packet);
+    void sendPacketToService(ServiceInfo service, Packet packet);
 
 }

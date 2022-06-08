@@ -7,7 +7,6 @@ import cloud.hytora.driver.exception.IncompatibleDriverEnvironment;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.PacketSender;
 import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.utils.ServiceState;
@@ -18,9 +17,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.function.Consumer;
 
-public interface CloudServer extends Bufferable, SelfCloneable<CloudServer>, NetworkComponent, PacketSender {
+public interface ServiceInfo extends Bufferable, SelfCloneable<ServiceInfo>, NetworkComponent, PacketSender {
 
-    NodeCloudServer asCloudServer() throws IncompatibleDriverEnvironment;
+    NodeServiceInfo asCloudServer() throws IncompatibleDriverEnvironment;
 
     List<String> queryServiceOutput();
 
@@ -29,6 +28,8 @@ public interface CloudServer extends Bufferable, SelfCloneable<CloudServer>, Net
     boolean isTimedOut();
 
     boolean isReady();
+
+    void shutdown();
 
     void setReady(boolean ready);
 
@@ -97,7 +98,7 @@ public interface CloudServer extends Bufferable, SelfCloneable<CloudServer>, Net
         return (int) CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()
                 .stream()
                 .filter(it -> {
-                    CloudServer service = getConfiguration().getVersion().isProxy() ? it.getProxyServer() : it.getServer();
+                    ServiceInfo service = getConfiguration().getVersion().isProxy() ? it.getProxyServer() : it.getServer();
                     return service != null && service.equals(this);
                 }).count();
     }
@@ -115,7 +116,7 @@ public interface CloudServer extends Bufferable, SelfCloneable<CloudServer>, Net
      *
      * @param serviceConsumer the consumer to change the properties
      */
-    void edit(@NotNull Consumer<CloudServer> serviceConsumer);
+    void edit(@NotNull Consumer<ServiceInfo> serviceConsumer);
 
     String getMotd();
 

@@ -6,4 +6,5 @@ public interface RemoteAdapter {
 
     void executeCommand(String command);
 
+    void shutdown();
 }

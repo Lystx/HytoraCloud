@@ -3,11 +3,10 @@ package cloud.hytora.node;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.node.NodeCycleData;
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.utils.ServiceState;
 
-import javax.annotation.Nonnull;
 import java.util.*;
 
 
@@ -23,7 +22,7 @@ public class TimeOutChecker implements Runnable {
 	}
 
 	private void checkServiceTimeout() {
-		for (CloudServer service : NodeDriver.getInstance().getServiceManager().getAllCachedServices()) {
+		for (ServiceInfo service : NodeDriver.getInstance().getServiceManager().getAllCachedServices()) {
 			if (!service.isTimedOut()) {
 				continue; //if not timed out ignoring
 			}

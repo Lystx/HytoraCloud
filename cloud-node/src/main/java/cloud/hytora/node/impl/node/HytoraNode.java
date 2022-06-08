@@ -16,7 +16,7 @@ import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.node.NodeCycleData;
 import cloud.hytora.driver.node.NodeInfo;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.config.MainConfiguration;
@@ -37,7 +37,7 @@ import java.util.function.Consumer;
 @Getter
 public class HytoraNode extends ClusterExecutor {
 
-    private final Map<CloudServer, Long> bootUpStatistics;
+    private final Map<ServiceInfo, Long> bootUpStatistics;
     private final String hostName;
     private final int port;
     private final List<PacketHandler<?>> remoteHandlers;
@@ -117,7 +117,7 @@ public class HytoraNode extends ClusterExecutor {
         } else {
             if (state == ConnectionState.CONNECTED) {
                 // set online
-                CloudServer service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(executor.getName());
+                ServiceInfo service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(executor.getName());
                 if (service == null) {
                     //other remote connection
 
@@ -157,9 +157,9 @@ public class HytoraNode extends ClusterExecutor {
                     return;
                 }
                 NodeDriver base = NodeDriver.getInstance();
-                CloudServer cloudServer = base.getServiceManager().getServiceByNameOrNull(service);
-                if (cloudServer != null) {
-                    CloudDriver.getInstance().getServiceManager().unregisterService(cloudServer);
+                ServiceInfo serviceInfo = base.getServiceManager().getServiceByNameOrNull(service);
+                if (serviceInfo != null) {
+                    CloudDriver.getInstance().getServiceManager().unregisterService(serviceInfo);
                 } else {
                     NodeDriver.getInstance().getLogger().warn("§a==> Channel §e{} - {} tried to disconnect but no matching Service was found!", executor.getName(), executor.getChannel());
                 }
@@ -267,11 +267,11 @@ public class HytoraNode extends ClusterExecutor {
         super.sendPacket(packet);
     }
 
-    public void registerStats(CloudServer service) {
+    public void registerStats(ServiceInfo service) {
         bootUpStatistics.put(service, System.currentTimeMillis());
     }
 
-    public long getStats(CloudServer service) {
+    public long getStats(ServiceInfo service) {
         long time = System.currentTimeMillis() - bootUpStatistics.getOrDefault(service, (System.currentTimeMillis() - 1));
         bootUpStatistics.remove(service);
         return time;

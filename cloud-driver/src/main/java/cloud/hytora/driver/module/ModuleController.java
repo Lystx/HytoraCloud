@@ -53,4 +53,6 @@ public interface ModuleController extends Bufferable {
 	@Nonnull
     ModuleClassLoader getClassLoader();
 
+	void registerModuleTasks(Object classHolder);
+
 }

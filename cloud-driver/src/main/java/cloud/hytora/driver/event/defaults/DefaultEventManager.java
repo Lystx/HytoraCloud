@@ -23,7 +23,11 @@ public class DefaultEventManager implements EventManager {
 	@Nonnull
 	@Override
 	public EventManager removeListener(@Nonnull RegisteredListener listener) {
-		listeners.forEach((clazz, listeners) -> listeners.removeIf(current -> current == listener));
+		for (Class<? extends CloudEvent> aClass : listeners.keySet()) {
+			List<RegisteredListener> registeredListeners = new ArrayList<>(listeners.get(aClass));
+			registeredListeners.removeIf(current -> current == listener);
+			listeners.put(aClass, registeredListeners);
+		}
 		return this;
 	}
 
@@ -37,7 +41,7 @@ public class DefaultEventManager implements EventManager {
 	@Override
 	public EventManager addListeners(@Nonnull Collection<? extends RegisteredListener> listeners) {
 		for (RegisteredListener listener : listeners) {
-			List<RegisteredListener> registeredListeners = this.listeners.computeIfAbsent(listener.getEventClass(), key -> new LinkedList<>());
+			List<RegisteredListener> registeredListeners = this.listeners.computeIfAbsent(listener.getEventClass(), key -> new ArrayList<>());
 			registeredListeners.add(listener);
 			registeredListeners.sort(Comparator.comparingInt(value -> value.getOrder().ordinal()));
 		}
@@ -103,14 +107,22 @@ public class DefaultEventManager implements EventManager {
 	@Nonnull
 	@Override
 	public EventManager unregisterListener(@Nonnull Class<?> listenerClass) {
-		listeners.forEach((eventClass, listeners) -> listeners.removeIf(listener -> listener.getHolder().getClass() == listenerClass));
+		for (Class<? extends CloudEvent> aClass : listeners.keySet()) {
+			List<RegisteredListener> registeredListeners = new ArrayList<>(listeners.get(aClass));
+			registeredListeners.removeIf(current -> current.getHolder().getClass() == listenerClass);
+			listeners.put(aClass, registeredListeners);
+		}
 		return this;
 	}
 
 	@Nonnull
 	@Override
 	public EventManager unregisterListeners(@Nonnull ClassLoader loader) {
-		listeners.forEach((eventClass, listeners) -> listeners.removeIf(listener -> listener.getHolder().getClass().getClassLoader().equals(loader)));
+		for (Class<? extends CloudEvent> aClass : listeners.keySet()) {
+			List<RegisteredListener> registeredListeners = new ArrayList<>(listeners.get(aClass));
+			registeredListeners.removeIf(listener -> listener.getHolder().getClass().getClassLoader().equals(loader));
+			listeners.put(aClass, registeredListeners);
+		}
 		return this;
 	}
 

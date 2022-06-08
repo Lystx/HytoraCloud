@@ -1,4 +1,4 @@
-package cloud.hytora.driver.scheduler;
+package cloud.hytora.common.scheduler;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;

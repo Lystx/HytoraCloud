@@ -7,7 +7,7 @@ import cloud.hytora.driver.networking.packets.player.CloudPlayerPlainMessagePack
 import cloud.hytora.driver.networking.packets.player.CloudPlayerSendServicePacket;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.player.CloudPlayer;
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 import lombok.AllArgsConstructor;
 
 import java.util.UUID;
@@ -38,12 +38,12 @@ public class CloudPlayerExecutor implements PlayerExecutor {
     }
 
     @Override
-    public void connect(CloudServer server) {
+    public void connect(ServiceInfo server) {
         this.sendPacketToProxy(new CloudPlayerSendServicePacket(getExecutorUniqueId(), server.getName()));
     }
 
     private void sendPacketToProxy(Packet packet) {
-        CloudServer proxyServer = player.getProxyServer();
+        ServiceInfo proxyServer = player.getProxyServer();
         if (proxyServer != null) {
             proxyServer.sendPacket(packet);
         }

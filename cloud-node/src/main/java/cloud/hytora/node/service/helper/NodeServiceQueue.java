@@ -6,8 +6,8 @@ import cloud.hytora.driver.CloudDriver;
 
 import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.node.NodeManager;
-import cloud.hytora.driver.services.CloudServer;
-import cloud.hytora.driver.services.impl.SimpleCloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.impl.SimpleServiceInfo;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.node.NodeDriver;
@@ -45,18 +45,18 @@ public class NodeServiceQueue {
             return;
         }
 
-        List<CloudServer> services = CloudDriver.getInstance().getServiceManager().getAllServicesByState(ServiceState.PREPARED);
+        List<ServiceInfo> services = CloudDriver.getInstance().getServiceManager().getAllServicesByState(ServiceState.PREPARED);
 
         if (services.isEmpty()) {
             CloudDriver.getInstance().getLogger().info("§6There are no more prepared services to start!");
             return;
         }
-        CloudServer cloudServer = services.get(0);
+        ServiceInfo serviceInfo = services.get(0);
         NodeManager nodeManager = NodeDriver.getInstance().getNodeManager();
-        Task<Node> node = nodeManager.getNode(cloudServer.getConfiguration().getNode());
+        Task<Node> node = nodeManager.getNode(serviceInfo.getConfiguration().getNode());
 
-        node.ifPresent(n -> n.startServer(cloudServer));
-        node.ifEmpty(n -> CloudDriver.getInstance().getLogger().error("Tried to start {} but the Node {} for Servers of Configuration {} is not connected!", cloudServer.getName(), cloudServer.getConfiguration().getNode(), cloudServer.getConfiguration().getName()));
+        node.ifPresent(n -> n.startServer(serviceInfo));
+        node.ifEmpty(n -> CloudDriver.getInstance().getLogger().error("Tried to start {} but the Node {} for Servers of Configuration {} is not connected!", serviceInfo.getName(), serviceInfo.getConfiguration().getNode(), serviceInfo.getConfiguration().getName()));
 
     }
 
@@ -82,7 +82,7 @@ public class NodeServiceQueue {
                         port++;
                     }
 
-                    CloudServer service = new SimpleCloudServer(con.getName(), this.getPossibleServiceIDByGroup(con), port, address);
+                    ServiceInfo service = new SimpleServiceInfo(con.getName(), this.getPossibleServiceIDByGroup(con), port, address);
                     CloudDriver.getInstance().getServiceManager().registerService(service);
 
                     if (thisSidesNode) {
@@ -117,7 +117,7 @@ public class NodeServiceQueue {
     }
 
     private boolean isPortUsed(int port) {
-        for (CloudServer service : NodeDriver.getInstance().getServiceManager().getAllCachedServices()) {
+        for (ServiceInfo service : NodeDriver.getInstance().getServiceManager().getAllCachedServices()) {
             if (service.getConfiguration().getNode().equals(NodeDriver.getInstance().getExecutor().getNodeName())) {
                 if (service.getPort() == port) {
                     return true;

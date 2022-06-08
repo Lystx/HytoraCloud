@@ -9,7 +9,7 @@ import cloud.hytora.driver.command.completer.CloudServerCompleter;
 import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.server.CloudServerRequestScreenLeaveEvent;
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.deployment.CloudDeployment;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.template.ServiceTemplate;
@@ -42,7 +42,7 @@ public class ServiceCommand {
     @CommandDescription("Lists all online services")
     public void onListCommand(CommandSender sender) {
         sender.sendMessage("§8");
-        for (CloudServer service : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
+        for (ServiceInfo service : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
             sender.sendMessage("§b" + service.getName() + " §8[" + service.getServiceState().getName() + " §8/ §7" + service.getServiceVisibility().toString() + "§8] §bSlots §7" + service.getOnlinePlayers() + "§8/§7" + service.getMaxPlayers());
         }
         sender.sendMessage("§8");
@@ -52,7 +52,7 @@ public class ServiceCommand {
     @CommandDescription("Copies a service into its template (exclusions are split by ';', use '#' to include all)")
     public void onDeployCommand(
             CommandSender sender,
-            @CommandArgument(value = "service", completer = CloudServerCompleter.class) CloudServer service,
+            @CommandArgument(value = "service", completer = CloudServerCompleter.class) ServiceInfo service,
             @CommandArgument("templateName") String templateName,
             @CommandArgument("excludes") String excludes
     ) {
@@ -78,7 +78,7 @@ public class ServiceCommand {
 
     public void onScreenCommand(
             CommandSender sender,
-            @CommandArgument(value = "service", completer = CloudServerCompleter.class) CloudServer service
+            @CommandArgument(value = "service", completer = CloudServerCompleter.class) ServiceInfo service
     ) {
         if (service == null) {
             sender.sendMessage("§cThere is no such Server online!");
@@ -112,7 +112,7 @@ public class ServiceCommand {
         }
     }
 
-    private void leaveScreen(CommandManager commandManager, Console console, CommandSender sender, CloudServer service) {
+    private void leaveScreen(CommandManager commandManager, Console console, CommandSender sender, ServiceInfo service) {
 
         console.clearScreen();
         for (String allWroteLine : console.getAllWroteLines()) {
@@ -133,7 +133,7 @@ public class ServiceCommand {
     @CommandDescription("Stops a service")
     public void onStopCommand(
             CommandSender sender,
-            @CommandArgument(value = "name", completer = CloudServerCompleter.class) CloudServer service
+            @CommandArgument(value = "name", completer = CloudServerCompleter.class) ServiceInfo service
     ) {
         if (service == null) {
             sender.sendMessage("§cThere is no online service matching this name!");
@@ -154,7 +154,7 @@ public class ServiceCommand {
     @CommandDescription("Shows info about a service")
     public void onInfoCommand(
             CommandSender sender,
-            @CommandArgument(value = "name", completer = CloudServerCompleter.class) CloudServer service
+            @CommandArgument(value = "name", completer = CloudServerCompleter.class) ServiceInfo service
     ) {
         if (service == null) {
             sender.sendMessage("§cThere is no online service matching this name!");

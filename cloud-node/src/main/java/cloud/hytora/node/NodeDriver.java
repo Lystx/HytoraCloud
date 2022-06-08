@@ -1,5 +1,6 @@
 package cloud.hytora.node;
 
+import cloud.hytora.common.collection.ThreadRunnable;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.wrapper.Task;
@@ -18,6 +19,7 @@ import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.http.impl.NettyHttpServer;
 import cloud.hytora.driver.message.ChannelMessenger;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
+import cloud.hytora.driver.networking.packets.services.ServiceShutdownPacket;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.node.impl.handler.packet.normal.*;
 import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteLoggingHandler;
@@ -49,8 +51,8 @@ import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.driver.player.impl.DefaultCloudOfflinePlayer;
-import cloud.hytora.driver.services.CloudServer;
-import cloud.hytora.driver.services.NodeCloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.NodeServiceInfo;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.configuration.ConfigurationManager;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
@@ -312,7 +314,7 @@ public class NodeDriver extends CloudDriver implements Node {
 
         //registering command argument parsers
         this.commandManager.registerParser(ServiceVersion.class, ServiceVersion::valueOf);
-        this.commandManager.registerParser(CloudServer.class, this.serviceManager::getServiceByNameOrNull);
+        this.commandManager.registerParser(ServiceInfo.class, this.serviceManager::getServiceByNameOrNull);
         this.commandManager.registerParser(ServerConfiguration.class, this.configurationManager::getConfigurationByNameOrNull);
         this.commandManager.registerParser(CloudPlayer.class, this.playerManager::getCloudPlayerByNameOrNull);
         this.commandManager.registerParser(Node.class, this.nodeManager::getNodeByNameOrNull);
@@ -403,49 +405,6 @@ public class NodeDriver extends CloudDriver implements Node {
         moduleManager.enableModules();
 
         logger.info("Reloading complete");
-    }
-
-    @Override
-    public void shutdown() {
-        if (!this.running) {
-            return;
-        }
-        // TODO: 03.05.2022  migrating of head node
-        if (this.nodeManager.isHeadNode() && this.nodeManager.getAllConnectedNodes().size() > 0) {
-            this.logger.warn("§eThis Node is the §cHeadNode §eright now and it's not possible for HeadNodes to shutdown because the migration of SubNodes to HeadNodes is not finished yet!");
-            this.logger.warn("Make sure to shutdown every other Node first and then shutdown this Node!");
-            return;
-        }
-
-        this.running = false;
-
-
-        this.logger.info("§7Trying to terminate the §cCloudsystem§8...");
-
-        this.moduleManager.disableModules();
-        this.moduleManager.unregisterModules();
-
-        this.webServer.shutdown();
-
-        //shutting down servers
-        for (CloudServer service : this.serviceManager.getAllCachedServices()) {
-            NodeCloudServer cloudServer = service.asCloudServer();
-            Process process = cloudServer.getProcess();
-            if (process == null) {
-                continue;
-            }
-            process.destroyForcibly();
-        }
-        //Shutting down networking and database
-        Task.multiTasking(this.executor.shutdown(), this.databaseManager.shutdown()).addUpdateListener(wrapper -> {
-
-
-            FileUtils.delete(NodeDriver.SERVICE_DIR_DYNAMIC.toPath());
-            FileUtils.delete(NodeDriver.STORAGE_TEMP_FOLDER.toPath());
-
-            logger.info("§aSuccessfully exited the CloudSystem§8!");
-            System.exit(0);
-        });
     }
 
     private void startSetup() {
@@ -551,7 +510,7 @@ public class NodeDriver extends CloudDriver implements Node {
     }
 
     @Override
-    public List<CloudServer> getRunningServers() {
+    public List<ServiceInfo> getRunningServers() {
         return CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream().filter(s -> {
             s.getConfiguration();
             return s.getConfiguration().getNode().equalsIgnoreCase(this.config.getNodeName());
@@ -573,8 +532,15 @@ public class NodeDriver extends CloudDriver implements Node {
     }
 
     @Override
-    public void stopServer(CloudServer server) {
-        CloudDriver.getInstance().getServiceManager().shutdownService(server);
+    public void stopServer(ServiceInfo server) {
+        server.sendPacket(new ServiceShutdownPacket(server.getName()));
+        Task.runTaskLater(() -> {
+            Process process = server.asCloudServer().getProcess();
+            if (process == null) {
+                return;
+            }
+            process.destroyForcibly();
+        }, TimeUnit.MILLISECONDS, 500);
     }
 
     @Nullable
@@ -584,12 +550,12 @@ public class NodeDriver extends CloudDriver implements Node {
     }
 
     @Override
-    public void startServer(CloudServer server) {
-        CloudDriver.getInstance().getServiceManager().startService(server).addUpdateListener(new Consumer<Task<CloudServer>>() {
+    public void startServer(ServiceInfo server) {
+        CloudDriver.getInstance().getServiceManager().startService(server).addUpdateListener(new Consumer<Task<ServiceInfo>>() {
             @Override
-            public void accept(Task<CloudServer> iServiceTask) {
+            public void accept(Task<ServiceInfo> iServiceTask) {
                 if (iServiceTask.isSuccess()) {
-                    CloudServer service = iServiceTask.get();
+                    ServiceInfo service = iServiceTask.get();
 
                     ClusterClientExecutor nodeClient = NodeDriver.getInstance().getExecutor().getClient(service.getConfiguration().getNode()).orElse(null);
                     boolean thisSidesNode = service.getConfiguration().getNode().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName());
@@ -641,6 +607,45 @@ public class NodeDriver extends CloudDriver implements Node {
                 break;
         }
 
+    }
+
+
+    @Override
+    public void shutdown() {
+        if (!this.running) {
+            return;
+        }
+        // TODO: 03.05.2022  migrating of head node
+        if (this.nodeManager.isHeadNode() && this.nodeManager.getAllConnectedNodes().size() > 0) {
+            this.logger.warn("§eThis Node is the §cHeadNode §eright now and it's not possible for HeadNodes to shutdown because the migration of SubNodes to HeadNodes is not finished yet!");
+            this.logger.warn("Make sure to shutdown every other Node first and then shutdown this Node!");
+            return;
+        }
+
+        this.running = false;
+
+
+        this.logger.info("§7Trying to terminate the §cCloudsystem§8...");
+
+        this.moduleManager.disableModules();
+        this.moduleManager.unregisterModules();
+
+        this.webServer.shutdown();
+
+        //shutting down servers
+        for (ServiceInfo service : this.serviceManager.getAllCachedServices()) {
+            NodeServiceInfo cloudServer = service.asCloudServer();
+            cloudServer.shutdown();
+        }
+        //Shutting down networking and database
+        Task.multiTasking(this.executor.shutdown(), this.databaseManager.shutdown()).addUpdateListener(wrapper -> {
+
+            FileUtils.delete(NodeDriver.SERVICE_DIR_DYNAMIC.toPath());
+            FileUtils.delete(NodeDriver.STORAGE_TEMP_FOLDER.toPath());
+
+            logger.info("§aSuccessfully exited the CloudSystem§8!");
+            System.exit(0);
+        });
     }
 
 }

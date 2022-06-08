@@ -12,13 +12,12 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.configuration.ServerConfiguration;
 import cloud.hytora.driver.services.configuration.DefaultServerConfiguration;
 import cloud.hytora.driver.player.CloudPlayer;
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.configuration.bundle.ConfigurationParent;
 import cloud.hytora.driver.services.configuration.bundle.DefaultConfigurationParent;
-import cloud.hytora.driver.services.impl.SimpleCloudServer;
+import cloud.hytora.driver.services.impl.SimpleServiceInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -31,7 +30,7 @@ public class DriverUpdatePacket extends Packet {
 
     private Collection<ServerConfiguration> groups;
     private Collection<ConfigurationParent> parentGroups;
-    private Collection<CloudServer> allCachedServices;
+    private Collection<ServiceInfo> allCachedServices;
     private Collection<CloudPlayer> cloudPlayers;
     private Collection<Node> connectedNodes;
 
@@ -65,8 +64,8 @@ public class DriverUpdatePacket extends Packet {
                 groups = buf.readWrapperObjectCollection(DefaultServerConfiguration.class);
                 CloudDriver.getInstance().getConfigurationManager().setAllCachedConfigurations(groups);
 
-                allCachedServices = buf.readWrapperObjectCollection(SimpleCloudServer.class);
-                CloudDriver.getInstance().getServiceManager().setAllCachedServices((List<CloudServer>) allCachedServices);
+                allCachedServices = buf.readWrapperObjectCollection(SimpleServiceInfo.class);
+                CloudDriver.getInstance().getServiceManager().setAllCachedServices((List<ServiceInfo>) allCachedServices);
 
                 cloudPlayers = buf.readWrapperObjectCollection(DefaultCloudPlayer.class);
                 CloudDriver.getInstance().getPlayerManager().setAllCachedCloudPlayers((List<CloudPlayer>) cloudPlayers);

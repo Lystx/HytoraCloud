@@ -13,10 +13,9 @@ import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
 import cloud.hytora.driver.node.config.INodeConfig;
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.utils.ServiceState;
 import lombok.*;
 import org.jetbrains.annotations.NotNull;
@@ -37,7 +36,7 @@ public class NodeInfo implements Node {
     private NodeCycleData lastCycleData;
 
     @Override
-    public List<CloudServer> getRunningServers() {
+    public List<ServiceInfo> getRunningServers() {
         return CloudDriver.getInstance()
                 .getServiceManager()
                 .getAllCachedServices()
@@ -69,12 +68,12 @@ public class NodeInfo implements Node {
     }
 
     @Override
-    public void stopServer(CloudServer server) {
+    public void stopServer(ServiceInfo server) {
         this.sendPacket(new NodeRequestServerStopPacket(server.getName()));
     }
 
     @Override
-    public void startServer(CloudServer server) {
+    public void startServer(ServiceInfo server) {
         this.sendPacket(new NodeRequestServerStartPacket(server));
     }
 

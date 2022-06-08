@@ -1,6 +1,6 @@
-package cloud.hytora.driver.scheduler.def;
+package cloud.hytora.common.scheduler.def;
 
-import cloud.hytora.driver.scheduler.SchedulerFuture;
+import cloud.hytora.common.scheduler.SchedulerFuture;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;

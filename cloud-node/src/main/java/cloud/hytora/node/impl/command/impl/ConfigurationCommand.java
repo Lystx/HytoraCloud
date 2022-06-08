@@ -169,6 +169,21 @@ public class ConfigurationCommand {
         sender.sendMessage("§7The configuration §b" + configuration.getName() + " §7was deleted§8!");
     }
 
+    @SubCommand("toggleMaintenance <name>")
+    @CommandDescription("Toggles maintenance mode for a configuration")
+    public void executeToggleMaintenance(CommandSender sender, @CommandArgument("name") String name) {
+        ServerConfiguration configuration = CloudDriver.getInstance().getConfigurationManager().getConfigurationByNameOrNull(name);
+        if (configuration == null) {
+            sender.sendMessage("§cThere is no existing configuration with the name §e" + name + "§c!");
+            return;
+        }
+        boolean maintenance = !configuration.isMaintenance();
+        configuration.setMaintenance(maintenance);
+        configuration.update();
+
+        sender.sendMessage("§7The maintenance state of configuration §b" + configuration.getName() + " §7is now " + (maintenance ? "§aEnabled": "§cDisabled") + "§8!");
+    }
+
     @SubCommand("list")
     @CommandDescription("Lists all configurations")
     public void executeList(CommandSender sender) {

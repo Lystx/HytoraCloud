@@ -7,7 +7,7 @@ import cloud.hytora.driver.networking.packets.services.CloudServerCacheRegisterP
 import cloud.hytora.driver.networking.packets.services.CloudServerCacheUnregisterPacket;
 import cloud.hytora.driver.networking.packets.services.ServiceShutdownPacket;
 import cloud.hytora.driver.networking.packets.services.CloudServerCacheUpdatePacket;
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.impl.DefaultServiceManager;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
@@ -24,13 +24,13 @@ public class RemoteServiceManager extends DefaultServiceManager {
     public RemoteServiceManager(RemoteIdentity property) {
         this.property = property;
         AdvancedNetworkExecutor executor = CloudDriver.getInstance().getExecutor();
-        executor.registerPacketHandler((PacketHandler<ServiceShutdownPacket>) (ctx, packet) -> System.exit(0) /*TODO better*/);
+        executor.registerPacketHandler((PacketHandler<ServiceShutdownPacket>) (ctx, packet) -> Remote.getInstance().shutdown());
         executor.registerPacketHandler((PacketHandler<CloudServerCacheUnregisterPacket>) (ctx, packet) -> this.getAllCachedServices().remove(getServiceByNameOrNull(packet.getService())));
         executor.registerPacketHandler((PacketHandler<CloudServerCacheRegisterPacket>) (ctx, packet) -> this.getAllCachedServices().add(packet.getService()));
 
         executor.registerPacketHandler((PacketHandler<CloudServerCacheUpdatePacket>) (ctx, packet) -> {
-            CloudServer packetService = packet.getService();
-            CloudServer service = getServiceByNameOrNull(packetService.getName());
+            ServiceInfo packetService = packet.getService();
+            ServiceInfo service = getServiceByNameOrNull(packetService.getName());
             if (service == null) {
                 return;
             }
@@ -44,27 +44,27 @@ public class RemoteServiceManager extends DefaultServiceManager {
     }
 
     @Override
-    public Task<CloudServer> startService(@NotNull CloudServer service) {
+    public Task<ServiceInfo> startService(@NotNull ServiceInfo service) {
         //TODO SEND PACKET
         return Task.empty();
     }
 
     @Override
-    public void shutdownService(CloudServer service) {
+    public void shutdownService(ServiceInfo service) {
         // TODO: 11.04.2022
     }
 
-    public CloudServer thisService() {
+    public ServiceInfo thisService() {
         return this.getAllCachedServices().stream().filter(it -> it.getName().equalsIgnoreCase(this.property.getName())).findAny().orElse(null);
     }
 
     @Override
-    public void updateService(@NotNull CloudServer service) {
+    public void updateService(@NotNull ServiceInfo service) {
         Remote.getInstance().getClient().sendPacket(new CloudServerCacheUpdatePacket(service));
     }
 
     @Override
-    public void sendPacketToService(CloudServer service, Packet packet) {
+    public void sendPacketToService(ServiceInfo service, Packet packet) {
         if (service.getName().equalsIgnoreCase(Remote.getInstance().thisService().getName())) {
             CloudDriver.getInstance().getExecutor().handlePacket(null, packet);
             return;

@@ -12,11 +12,10 @@ import cloud.hytora.driver.message.ChannelMessenger;
 import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
-import cloud.hytora.driver.networking.protocol.SimpleNetworkComponent;
 import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.player.PlayerManager;
-import cloud.hytora.driver.scheduler.Scheduler;
-import cloud.hytora.driver.scheduler.def.DefaultScheduler;
+import cloud.hytora.common.scheduler.Scheduler;
+import cloud.hytora.common.scheduler.def.DefaultScheduler;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.configuration.ConfigurationManager;
 import cloud.hytora.driver.services.template.TemplateManager;
@@ -101,7 +100,7 @@ public abstract class CloudDriver extends DriverUtility {
         this.eventManager = new DefaultEventManager();
         this.templateManager = new DefaultTemplateManager();
         this.tickWorker = new DefaultTickWorker(20);
-        this.scheduler = new DefaultScheduler();
+        this.scheduler = Scheduler.runTimeScheduler();
         this.scheduledExecutor = Executors.newScheduledThreadPool(4, new NamedThreadFactory("Scheduler"));
 
         // use jdk logger to prevent issues with older slf4j versions

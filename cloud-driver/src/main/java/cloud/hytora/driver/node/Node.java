@@ -1,16 +1,14 @@
 package cloud.hytora.driver.node;
 
-import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.NetworkExecutor;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.node.config.INodeConfig;
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 
 import java.util.List;
 
 public interface Node extends NetworkExecutor {
 
-    List<CloudServer> getRunningServers();
+    List<ServiceInfo> getRunningServers();
 
     NodeCycleData getLastCycleData();
 
@@ -22,7 +20,7 @@ public interface Node extends NetworkExecutor {
 
     void log(String message, Object... args);
 
-    void stopServer(CloudServer server);
+    void stopServer(ServiceInfo server);
 
-    void startServer(CloudServer server);
+    void startServer(ServiceInfo server);
 }

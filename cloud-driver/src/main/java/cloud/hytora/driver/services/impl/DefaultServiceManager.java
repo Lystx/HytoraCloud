@@ -6,7 +6,7 @@ import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
-import cloud.hytora.driver.services.CloudServer;
+import cloud.hytora.driver.services.ServiceInfo;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -22,15 +22,15 @@ import java.util.stream.Collectors;
 @Setter
 public abstract class DefaultServiceManager implements ServiceManager {
 
-    protected List<CloudServer> allCachedServices = new ArrayList<>();
+    protected List<ServiceInfo> allCachedServices = new ArrayList<>();
 
-    public void setAllCachedServices(List<CloudServer> allCachedServices) {
+    public void setAllCachedServices(List<ServiceInfo> allCachedServices) {
         this.allCachedServices = new ArrayList<>(allCachedServices);
     }
 
     @Override
-    public void registerService(CloudServer service) {
-        CloudServer uniqueService = this.getServiceByNameOrNull(service.getName());
+    public void registerService(ServiceInfo service) {
+        ServiceInfo uniqueService = this.getServiceByNameOrNull(service.getName());
         if (uniqueService != null) {
             //already added
             return;
@@ -39,8 +39,8 @@ public abstract class DefaultServiceManager implements ServiceManager {
     }
 
     @Override
-    public void unregisterService(CloudServer service) {
-        CloudServer uniqueService = this.getServiceByNameOrNull(service.getName());
+    public void unregisterService(ServiceInfo service) {
+        ServiceInfo uniqueService = this.getServiceByNameOrNull(service.getName());
         if (uniqueService == null) {
             return;
         }
@@ -48,22 +48,22 @@ public abstract class DefaultServiceManager implements ServiceManager {
     }
 
     @Override
-    public List<String> queryServiceOutput(CloudServer service) {
+    public List<String> queryServiceOutput(ServiceInfo service) {
         return new ArrayList<>();
     }
 
     @Override
-    public @NotNull Optional<CloudServer> getService(@NotNull String name) {
+    public @NotNull Optional<ServiceInfo> getService(@NotNull String name) {
         return this.getAllCachedServices().stream().filter(it -> it.getName().equals(name)).findAny();
     }
 
 
     @Override
-    public @NotNull Task<CloudServer> getFallbackAsService() {
+    public @NotNull Task<ServiceInfo> getFallbackAsService() {
         return Task.build(
                 getAvailableFallbacksAsServices()
                         .stream()
-                        .min(Comparator.comparing(CloudServer::getOnlinePlayers)).orElse(null));
+                        .min(Comparator.comparing(ServiceInfo::getOnlinePlayers)).orElse(null));
     }
 
     @Override
@@ -78,7 +78,7 @@ public abstract class DefaultServiceManager implements ServiceManager {
     @Override
     public List<FallbackEntry> getAvailableFallbacks() {
         return CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream()
-                .filter(CloudServer::isReady)
+                .filter(ServiceInfo::isReady)
                 .filter(it -> it.getServiceState() == ServiceState.ONLINE)
                 .filter(it -> it.getServiceVisibility() == ServiceVisibility.VISIBLE)
                 .filter(it -> !it.getConfiguration().getVersion().isProxy())
@@ -89,9 +89,9 @@ public abstract class DefaultServiceManager implements ServiceManager {
     }
 
     @Override
-    public @NotNull List<CloudServer> getAvailableFallbacksAsServices() {
+    public @NotNull List<ServiceInfo> getAvailableFallbacksAsServices() {
         return CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream()
-                .filter(CloudServer::isReady)
+                .filter(ServiceInfo::isReady)
                 .filter(it -> it.getServiceState() == ServiceState.ONLINE)
                 .filter(it -> it.getServiceVisibility() == ServiceVisibility.VISIBLE)
                 .filter(it -> !it.getConfiguration().getVersion().isProxy())
