@@ -13,6 +13,7 @@ import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.driver.services.template.def.CloudTemplate;
 import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
 import cloud.hytora.driver.services.utils.ServiceVersion;
+import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 import cloud.hytora.driver.setup.SetupControlState;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.setup.ConfigurationSetup;
@@ -114,9 +115,15 @@ public class ConfigurationCommand {
                 configuration.setParent(parentName);
                 configuration.setMaintenance(maintenance);
                 configuration.setPermission(null);
-                configuration.setProperty("example_property", "value");
                 configuration.setJavaVersion(javaVersion);
                 configuration.setMotd("Default HytoraCloud Service.");
+
+                if (configuration.getParent().getEnvironment() == SpecificDriverEnvironment.PROXY_SERVER) {
+                    configuration.setProperty("onlineMode", true);
+                    configuration.setProperty("proxyProtocol", false);
+                } else {
+                    configuration.setProperty("gameServer", true);
+                }
 
                 SimpleFallback fallback = new SimpleFallback();
                 fallback.setEnabled(setup.isFallback());

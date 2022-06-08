@@ -94,11 +94,20 @@ public class ServiceQueueProcessWorker {
             FileUtils.copyURLToFile(new URL(url), new File(serverDir, entry.getDestination()));
         }
 
+        //copying modules
+        for (ModuleController module : CloudDriver.getInstance().getModuleManager().getModules()) {
+            ModuleConfig config = module.getModuleConfig();
+            if (config.getCopyType().applies(configuration.getParent().getEnvironment())) {
+                Path jarFile = module.getJarFile();
+                FileUtils.copyFile(jarFile.toFile(), new File(new File(serverDir, "plugins/"), jarFile.toFile().getName()));
+            }
+        }
+
         ServiceVersion version = service.getConfiguration().getVersion();
 
-        boolean onlineMode = true;
-        boolean proxyProtocol = false; // TODO: 06.06.2022 configurable in proxy configuration
-        boolean gameServer = true;
+        Boolean onlineMode = service.getConfiguration().getProperty("onlineMode", Boolean.class);
+        Boolean proxyProtocol = service.getConfiguration().getProperty("proxyProtocol", Boolean.class);
+        Boolean gameServer = service.getConfiguration().getProperty("gameServer", Boolean.class);
 
         if (version == ServiceVersion.VELOCITY) {
 
@@ -235,6 +244,10 @@ public class ServiceQueueProcessWorker {
                     "prevent_proxy_connections: false");
         } else if (!version.isProxy()) {// is spigot
 
+            //copy spigot und bukkit yml
+            cloud.hytora.common.misc.FileUtils.copyResource("/impl/files/spigot.yml", new File(serverDir, "spigot.yml").toString(), getClass());
+            cloud.hytora.common.misc.FileUtils.copyResource("/impl/files/bukkit.yml", new File(serverDir, "bukkit.yml").toString(), getClass());
+
             cloud.hytora.common.misc.FileUtils.writeToFile(new File(serverDir, "server.properties"), "#Minecraft server properties\n" +
                     "#Tue Aug 22 15:33:36 CEST 2017\n" +
                     "generator-settings=\n" +
@@ -272,156 +285,101 @@ public class ServiceQueueProcessWorker {
                     "view-distance=8\n" +
                     "spawn-protection=0\n" +
                     "motd=HytoraCloud Minecraft Service\n");
-
-
-            if (version.name().startsWith("GLOWSTONE")) { // TODO: 06.06.2022 add glowstone support
-
-                cloud.hytora.common.misc.FileUtils.writeToFile(new File(serverDir, "glowstone.yml"), "# glowstone.yml is the main configuration file for a Glowstone++ server\n" +
-                        "# It contains everything from server.properties and bukkit.yml in a\n" +
-                        "# normal CraftBukkit installation.\n" +
-                        "# \n" +
-                        "# For help, join us on Gitter: https://gitter.im/GlowstonePlusPlus/GlowstonePlusPlus\n" +
-                        "server:\n" +
-                        "  ip: ''\n" +
-                        "  port: " + service.getPort() + "\n" +
-                        "  name: " + service.getName() + "\n" +
-                        "  log-file: logs/log-%D.txt\n" +
-                        "  online-mode: " + false + "\n" +
-                        "  max-players: " + service.getConfiguration().getDefaultMaxPlayers() + "\n" +
-                        "  whitelisted: false\n" +
-                        "  motd: 'HytoraCloud Minecraft Service'\n" +
-                        "  shutdown-message: Server shutting down..\n" +
-                        "  allow-client-mods: true\n" +
-                        "  snooper-enabled: false\n" +
-                        "console:\n" +
-                        "  use-jline: false\n" +
-                        "  prompt: ''\n" +
-                        "  date-format: HH:mm:ss\n" +
-                        "  log-date-format: yyyy/MM/dd HH:mm:ss\n" +
-                        "game:\n" +
-                        "  gamemode: SURVIVAL\n" +
-                        "  gamemode-force: 'false'\n" +
-                        "  difficulty: NORMAL\n" +
-                        "  hardcore: false\n" +
-                        "  pvp: true\n" +
-                        "  max-build-height: 256\n" +
-                        "  announce-achievements: true\n" +
-                        "  allow-flight: false\n" +
-                        "  command-blocks: false\n" +
-                        "  resource-pack: ''\n" +
-                        "  resource-pack-hash: ''\n" +
-                        "creatures:\n" +
-                        "  enable:\n" +
-                        "    monsters: true\n" +
-                        "    animals: true\n" +
-                        "    npcs: true\n" +
-                        "  limit:\n" +
-                        "    monsters: 70\n" +
-                        "    animals: 15\n" +
-                        "    water: 5\n" +
-                        "    ambient: 15\n" +
-                        "  ticks:\n" +
-                        "    monsters: 1\n" +
-                        "    animal: 400\n" +
-                        "folders:\n" +
-                        "  plugins: plugins\n" +
-                        "  update: update\n" +
-                        "  worlds: worlds\n" +
-                        "files:\n" +
-                        "  permissions: permissions.yml\n" +
-                        "  commands: commands.yml\n" +
-                        "  help: help.yml\n" +
-                        "advanced:\n" +
-                        "  connection-throttle: 0\n" +
-                        "  idle-timeout: 0\n" +
-                        "  warn-on-overload: true\n" +
-                        "  exact-login-location: false\n" +
-                        "  plugin-profiling: false\n" +
-                        "  deprecated-verbose: 'false'\n" +
-                        "  compression-threshold: 256\n" +
-                        "  proxy-support: true\n" +
-                        "  player-sample-count: 12\n" +
-                        "extras:\n" +
-                        "  query-enabled: false\n" +
-                        "  query-port: 25614\n" +
-                        "  query-plugins: true\n" +
-                        "  rcon-enabled: false\n" +
-                        "  rcon-password: glowstone\n" +
-                        "  rcon-port: 25575\n" +
-                        "  rcon-colors: true\n" +
-                        "world:\n" +
-                        "  name: world\n" +
-                        "  seed: ''\n" +
-                        "  level-type: MINECRAFT_SERVER\n" +
-                        "  spawn-radius: 16\n" +
-                        "  view-distance: 8\n" +
-                        "  gen-structures: true\n" +
-                        "  gen-settings: ''\n" +
-                        "  allow-nether: " + !gameServer + "\n" +
-                        "  allow-end: " + !gameServer + "\n" +
-                        "  keep-spawn-loaded: true\n" +
-                        "  populate-anchored-chunks: true\n" +
-                        "database:\n" +
-                        "  driver: org.sqlite.JDBC\n" +
-                        "  url: jdbc:sqlite:config/database.db\n" +
-                        "  username: glowstone\n" +
-                        "  password: nether\n" +
-                        "  isolation: SERIALIZABLE\n");
-            }
-
-            cloud.hytora.common.misc.FileUtils.writeToFile(new File(serverDir, "bukkit.yml"), "# This is the main configuration file for Bukkit.\n" +
-                    "# As you can see, there's actually not that much to configure without any plugins.\n" +
-                    "# For a reference for any variable inside this file, check out the Bukkit Wiki at\n" +
-                    "# http://wiki.bukkit.org/Bukkit.yml\n" +
-                    "# \n" +
-                    "# If you need help on this file, feel free to join us on irc or leave a message\n" +
-                    "# on the forums asking for advice.\n" +
-                    "# \n" +
-                    "# IRC: #spigot @ irc.spi.gt\n" +
-                    "#    (If this means nothing to you, just go to http://www.spigotmc.org/pages/irc/ )\n" +
-                    "# Forums: http://www.spigotmc.org/\n" +
-                    "# Bug tracker: http://www.spigotmc.org/go/bugs\n" +
-                    "\n" +
-                    "\n" +
-                    "settings:\n" +
-                    "  allow-end: " + !gameServer + "\n" +
-                    "  warn-on-overload: true\n" +
-                    "  permissions-file: permissions.yml\n" +
-                    "  update-folder: update\n" +
-                    "  plugin-profiling: false\n" +
-                    "  connection-throttle: 0\n" +
-                    "  query-plugins: true\n" +
-                    "  deprecated-verbose: default\n" +
-                    "  shutdown-message: CloudService was shut down!\n" +
-                    "spawn-limits:\n" +
-                    "  monsters: 70\n" +
-                    "  animals: 15\n" +
-                    "  water-animals: 5\n" +
-                    "  ambient: 15\n" +
-                    "chunk-gc:\n" +
-                    "  period-in-ticks: 600\n" +
-                    "  load-threshold: 0\n" +
-                    "ticks-per:\n" +
-                    "  animal-spawns: 400\n" +
-                    "  monster-spawns: 1\n" +
-                    "  autosave: 6000\n" +
-                    "aliases: now-in-command.yml\n" +
-                    "database:\n" +
-                    "  username: bukkit\n" +
-                    "  isolation: SERIALIZABLE\n" +
-                    "  driver: org.sqlite.JDBC\n" +
-                    "  password: walrus\n" +
-                    "  url: jdbc:sqlite:{DIR}{NAME}.db\n");
-
         }
 
-        //copying modules
-        for (ModuleController module : CloudDriver.getInstance().getModuleManager().getModules()) {
-            ModuleConfig config = module.getModuleConfig();
-            if (config.getCopyType().applies(configuration.getParent().getEnvironment())) {
-                Path jarFile = module.getJarFile();
-                FileUtils.copyFile(jarFile.toFile(), new File(new File(serverDir, "plugins/"), jarFile.toFile().getName()));
-            }
+        if (version.name().startsWith("GLOWSTONE")) { // TODO: 06.06.2022 add glowstone support
+
+            cloud.hytora.common.misc.FileUtils.writeToFile(new File(serverDir, "glowstone.yml"), "# glowstone.yml is the main configuration file for a Glowstone++ server\n" +
+                    "# It contains everything from server.properties and bukkit.yml in a\n" +
+                    "# normal CraftBukkit installation.\n" +
+                    "# \n" +
+                    "# For help, join us on Gitter: https://gitter.im/GlowstonePlusPlus/GlowstonePlusPlus\n" +
+                    "server:\n" +
+                    "  ip: ''\n" +
+                    "  port: " + service.getPort() + "\n" +
+                    "  name: " + service.getName() + "\n" +
+                    "  log-file: logs/log-%D.txt\n" +
+                    "  online-mode: " + false + "\n" +
+                    "  max-players: " + service.getConfiguration().getDefaultMaxPlayers() + "\n" +
+                    "  whitelisted: false\n" +
+                    "  motd: 'HytoraCloud Minecraft Service'\n" +
+                    "  shutdown-message: Server shutting down..\n" +
+                    "  allow-client-mods: true\n" +
+                    "  snooper-enabled: false\n" +
+                    "console:\n" +
+                    "  use-jline: false\n" +
+                    "  prompt: ''\n" +
+                    "  date-format: HH:mm:ss\n" +
+                    "  log-date-format: yyyy/MM/dd HH:mm:ss\n" +
+                    "game:\n" +
+                    "  gamemode: SURVIVAL\n" +
+                    "  gamemode-force: 'false'\n" +
+                    "  difficulty: NORMAL\n" +
+                    "  hardcore: false\n" +
+                    "  pvp: true\n" +
+                    "  max-build-height: 256\n" +
+                    "  announce-achievements: true\n" +
+                    "  allow-flight: false\n" +
+                    "  command-blocks: false\n" +
+                    "  resource-pack: ''\n" +
+                    "  resource-pack-hash: ''\n" +
+                    "creatures:\n" +
+                    "  enable:\n" +
+                    "    monsters: true\n" +
+                    "    animals: true\n" +
+                    "    npcs: true\n" +
+                    "  limit:\n" +
+                    "    monsters: 70\n" +
+                    "    animals: 15\n" +
+                    "    water: 5\n" +
+                    "    ambient: 15\n" +
+                    "  ticks:\n" +
+                    "    monsters: 1\n" +
+                    "    animal: 400\n" +
+                    "folders:\n" +
+                    "  plugins: plugins\n" +
+                    "  update: update\n" +
+                    "  worlds: worlds\n" +
+                    "files:\n" +
+                    "  permissions: permissions.yml\n" +
+                    "  commands: commands.yml\n" +
+                    "  help: help.yml\n" +
+                    "advanced:\n" +
+                    "  connection-throttle: 0\n" +
+                    "  idle-timeout: 0\n" +
+                    "  warn-on-overload: true\n" +
+                    "  exact-login-location: false\n" +
+                    "  plugin-profiling: false\n" +
+                    "  deprecated-verbose: 'false'\n" +
+                    "  compression-threshold: 256\n" +
+                    "  proxy-support: true\n" +
+                    "  player-sample-count: 12\n" +
+                    "extras:\n" +
+                    "  query-enabled: false\n" +
+                    "  query-port: 25614\n" +
+                    "  query-plugins: true\n" +
+                    "  rcon-enabled: false\n" +
+                    "  rcon-password: glowstone\n" +
+                    "  rcon-port: 25575\n" +
+                    "  rcon-colors: true\n" +
+                    "world:\n" +
+                    "  name: world\n" +
+                    "  seed: ''\n" +
+                    "  level-type: MINECRAFT_SERVER\n" +
+                    "  spawn-radius: 16\n" +
+                    "  view-distance: 8\n" +
+                    "  gen-structures: true\n" +
+                    "  gen-settings: ''\n" +
+                    "  allow-nether: " + !gameServer + "\n" +
+                    "  allow-end: " + !gameServer + "\n" +
+                    "  keep-spawn-loaded: true\n" +
+                    "  populate-anchored-chunks: true\n" +
+                    "database:\n" +
+                    "  driver: org.sqlite.JDBC\n" +
+                    "  url: jdbc:sqlite:config/database.db\n" +
+                    "  username: glowstone\n" +
+                    "  password: nether\n" +
+                    "  isolation: SERIALIZABLE\n");
         }
 
 

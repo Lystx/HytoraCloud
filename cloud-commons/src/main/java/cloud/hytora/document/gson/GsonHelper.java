@@ -26,6 +26,17 @@ public final class GsonHelper {
         GsonBuilder builder = new GsonBuilder()
                 .serializeNulls()
                 .disableHtmlEscaping()
+                .setExclusionStrategies(new ExclusionStrategy() {
+                    @Override
+                    public boolean shouldSkipField(FieldAttributes fieldAttributes) {
+                        return fieldAttributes.getAnnotation(ExcludeJsonField.class) != null;
+                    }
+
+                    @Override
+                    public boolean shouldSkipClass(Class<?> aClass) {
+                        return aClass.getAnnotation(ExcludeJsonField.class) != null;
+                    }
+                })
                 .registerTypeAdapterFactory(GsonTypeAdapter.newPredictableFactory(BukkitReflectionSerializationUtils::isSerializable, new BukkitReflectionSerializableTypeAdapter()))
                 .registerTypeAdapterFactory(GsonTypeAdapter.newTypeHierarchyFactory(Document.class, new DocumentTypeAdapter()))
                 .registerTypeAdapterFactory(GsonTypeAdapter.newTypeHierarchyFactory(Bundle.class, new BundleTypeAdapter()))
@@ -50,15 +61,6 @@ public final class GsonHelper {
                 return reader.nextDouble();
             }
         }.toTypeAdapter(DEFAULT_GSON);
-    }
-
-    public static boolean isJsonValid(String input) {
-        try {
-            new JsonParser().parse(input);
-            return true;
-        } catch (JsonSyntaxException e) {
-            return false;
-        }
     }
 
     @Nonnull

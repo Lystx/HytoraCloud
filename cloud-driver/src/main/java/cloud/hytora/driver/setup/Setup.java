@@ -354,13 +354,7 @@ public abstract class Setup<T extends Setup<?>> {
             this.printHeader(getClass().getSimpleName() + " at " + new SimpleDateFormat("HH:mm:ss").format(System.currentTimeMillis()));
         }
 
-        if (entry.getSuggestedAnswer() != null) {
-            String value = entry.getSuggestedAnswer().value();
-            this.console.setCommandInputValue(value);
-        }
-
         //Sending first question without any input
-        //this.console.setPrompt("");
 
         StringBuilder sb = new StringBuilder(entry.getQuestion().question() + (entry.getQuestionTip() == null ? "" : " (Tip: " + entry.getQuestionTip().value() + ")"));
         if (entry.getAnswers() != null) {
@@ -371,8 +365,11 @@ public abstract class Setup<T extends Setup<?>> {
         if (entry.getRequiresEnum() != null) {
             this.logger.translateColors().info("§7Possible Answers§8: §b" + Arrays.toString(entry.getRequiresEnum().value().getEnumConstants()).replace("]", "§8)").replace("[", "§8(§b").replace(",", "§8, §b"));
         }
-        //this.console.setPrompt("");
 
+        if (entry.getSuggestedAnswer() != null) {
+            String value = entry.getSuggestedAnswer().value();
+            this.console.setCommandInputValue(value);
+        }
 
     }
 

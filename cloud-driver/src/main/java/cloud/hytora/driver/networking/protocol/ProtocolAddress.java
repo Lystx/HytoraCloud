@@ -1,8 +1,10 @@
 package cloud.hytora.driver.networking.protocol;
 
+import cloud.hytora.document.gson.adapter.ExcludeJsonField;
 import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
+import com.google.gson.annotations.JsonAdapter;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,6 +21,8 @@ public class ProtocolAddress implements Bufferable {
 
     private String host;
     private int port;
+
+    @ExcludeJsonField
     private String authKey;
 
     public ProtocolAddress(String host, int port) {

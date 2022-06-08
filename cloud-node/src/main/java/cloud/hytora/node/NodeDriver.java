@@ -637,14 +637,16 @@ public class NodeDriver extends CloudDriver implements Node {
             NodeServiceInfo cloudServer = service.asCloudServer();
             cloudServer.shutdown();
         }
+
         //Shutting down networking and database
         Task.multiTasking(this.executor.shutdown(), this.databaseManager.shutdown()).addUpdateListener(wrapper -> {
+            Task.runTaskLater(() -> {
+                FileUtils.delete(NodeDriver.SERVICE_DIR_DYNAMIC.toPath());
+                FileUtils.delete(NodeDriver.STORAGE_TEMP_FOLDER.toPath());
 
-            FileUtils.delete(NodeDriver.SERVICE_DIR_DYNAMIC.toPath());
-            FileUtils.delete(NodeDriver.STORAGE_TEMP_FOLDER.toPath());
-
-            logger.info("§aSuccessfully exited the CloudSystem§8!");
-            System.exit(0);
+                logger.info("§aSuccessfully exited the CloudSystem§8!");
+                System.exit(0);
+            }, TimeUnit.SECONDS, 2);
         });
     }
 

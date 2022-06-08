@@ -60,12 +60,12 @@ public class ProxyEvents implements Listener {
         }
 
     }
+
     @EventHandler
     public void handle(PostLoginEvent event) {
         System.out.println("POST");
         ProxiedPlayer player = event.getPlayer();
 
-        sendToFallback(player);
     }
 
     @EventHandler
@@ -81,8 +81,13 @@ public class ProxyEvents implements Listener {
         Task<ServiceInfo> fallback = CloudDriver.getInstance().getServiceManager().getFallbackAsService();
         if (fallback.isPresent()) {
             System.out.println(ProxyServer.getInstance().getServers().values().stream().map(ServerInfo::getName).collect(Collectors.toList()));
-            player.connect(ProxyServer.getInstance().getServerInfo(fallback.get().getName()));
-            System.out.println("Changed fallback to => " + fallback.get().getName()); // TODO: 06.06.2022 fix double process starting of proxy
+            ServerInfo serverInfo = ProxyServer.getInstance().getServerInfo(fallback.get().getName());
+            if (serverInfo == null) {
+                System.out.println("Server info is null");
+            } else {
+                player.connect(serverInfo);
+                System.out.println("Changed fallback to => " + fallback.get().getName() + " [" + serverInfo.getAddress().toString() + "]"); // TODO: 06.06.2022 fix double process starting of proxy
+            }
         } else {
             System.out.println("Couldn't find any fallback");
             player.sendMessage(new TextComponent("§cCould not find any available fallback..."));
