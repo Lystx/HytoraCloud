@@ -6,15 +6,13 @@ import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.server.CloudServerCacheRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.CloudServerCacheUnregisterEvent;
 
-import cloud.hytora.driver.networking.packets.player.CloudPlayerComponentMessagePacket;
-import cloud.hytora.driver.networking.packets.player.CloudPlayerKickPacket;
-import cloud.hytora.driver.networking.packets.player.CloudPlayerPlainMessagePacket;
-import cloud.hytora.driver.networking.packets.player.CloudPlayerSendServicePacket;
+import cloud.hytora.driver.networking.packets.player.*;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.remote.Remote;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
@@ -45,6 +43,7 @@ public class ProxyRemoteHandler {
         Remote.getInstance().getExecutor().registerPacketHandler(new SendHandler());
         Remote.getInstance().getExecutor().registerPacketHandler(new MessageHandler());
         Remote.getInstance().getExecutor().registerPacketHandler(new ComponentHandler());
+        Remote.getInstance().getExecutor().registerPacketHandler(new TabHandler());
     }
 
 
@@ -68,6 +67,25 @@ public class ProxyRemoteHandler {
 
     private void registerService(ServiceInfo service) {
         this.registerService(service.getName(), new InetSocketAddress(service.getHostName(), service.getPort()));
+    }
+
+    private static class TabHandler implements PacketHandler<CloudPlayerTabListPacket> {
+
+        @Override
+        public void handle(PacketChannel wrapper, CloudPlayerTabListPacket packet) {
+            ProxiedPlayer player = ProxyServer.getInstance().getPlayer(packet.getUuid());
+            if (player == null) {
+                return;
+            }
+
+            ChatComponent header = packet.getHeader();
+            ChatComponent footer = packet.getFooter();
+
+            player.setTabHeader(
+                    ComponentSerializer.parse(header.toString()),
+                    ComponentSerializer.parse(footer.toString())
+            );
+        }
     }
 
     private static class KickHandler implements PacketHandler<CloudPlayerKickPacket> {

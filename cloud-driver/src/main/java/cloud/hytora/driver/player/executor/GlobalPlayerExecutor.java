@@ -39,6 +39,13 @@ public class GlobalPlayerExecutor implements PlayerExecutor {
     }
 
     @Override
+    public void setTabList(ChatComponent header, ChatComponent footer) {
+        for (CloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
+            PlayerExecutor.forPlayer(player).setTabList(header, footer);
+        }
+    }
+
+    @Override
     public void connect(ServiceInfo server) {
         for (CloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
             PlayerExecutor.forPlayer(player).connect(server);

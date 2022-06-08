@@ -1,10 +1,7 @@
 package cloud.hytora.driver.player.executor;
 
 import cloud.hytora.driver.component.ChatComponent;
-import cloud.hytora.driver.networking.packets.player.CloudPlayerComponentMessagePacket;
-import cloud.hytora.driver.networking.packets.player.CloudPlayerKickPacket;
-import cloud.hytora.driver.networking.packets.player.CloudPlayerPlainMessagePacket;
-import cloud.hytora.driver.networking.packets.player.CloudPlayerSendServicePacket;
+import cloud.hytora.driver.networking.packets.player.*;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.services.ServiceInfo;
@@ -30,6 +27,11 @@ public class CloudPlayerExecutor implements PlayerExecutor {
     @Override
     public void sendMessage(ChatComponent component) {
         this.sendPacketToProxy(new CloudPlayerComponentMessagePacket(getExecutorUniqueId(), component));
+    }
+
+    @Override
+    public void setTabList(ChatComponent header, ChatComponent footer) {
+        this.sendPacketToProxy(new CloudPlayerTabListPacket(getExecutorUniqueId(), header, footer));
     }
 
     @Override

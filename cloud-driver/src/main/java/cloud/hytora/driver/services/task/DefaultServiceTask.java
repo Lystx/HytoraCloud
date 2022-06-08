@@ -1,5 +1,6 @@
 package cloud.hytora.driver.services.task;
 
+import cloud.hytora.driver.event.defaults.task.TaskMaintenanceChangeEvent;
 import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.CloudDriver;
@@ -121,6 +122,15 @@ public class DefaultServiceTask extends ProtocolPropertyHolder implements Servic
                 break;
         }
     }
+
+    public void setMaintenance(boolean maintenance) {
+        if (this.maintenance != maintenance) {
+            //change incoming
+            CloudDriver.getInstance().getEventManager().callEvent(new TaskMaintenanceChangeEvent(this, maintenance));
+        }
+        this.maintenance = maintenance;
+    }
+
     @Override
     public void cloneInternally(ServiceTask from, ServiceTask t) {
         DefaultServiceTask to = (DefaultServiceTask) t;

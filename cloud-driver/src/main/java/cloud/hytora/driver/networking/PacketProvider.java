@@ -76,6 +76,7 @@ public class PacketProvider {
         PacketProvider.autoRegister(CloudPlayerSendServicePacket.class);
         PacketProvider.autoRegister(CloudPlayerPlainMessagePacket.class);
         PacketProvider.autoRegister(CloudPlayerComponentMessagePacket.class);
+        PacketProvider.autoRegister(CloudPlayerTabListPacket.class);
         PacketProvider.autoRegister(OfflinePlayerRequestPacket.class);
 
         //util packets

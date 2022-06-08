@@ -53,11 +53,11 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager {
         CloudDriver.getInstance().getEventManager().registerListener(this);
 
         if (this.getAllCachedTasks().isEmpty()) {
-            CloudDriver.getInstance().getLogger().warn("There are no ServiceConfigurations loaded!");
+            CloudDriver.getInstance().getLogger().warn("There are no ServiceTasks loaded!");
             CloudDriver.getInstance().getLogger().warn("Maybe you want to create some?");
         } else {
-            CloudDriver.getInstance().getLogger().info("§7Cached following groups: §b" + this.getAllTaskGroups().stream().map(TaskGroup::getName).collect(Collectors.joining("§8, §b")));
-            CloudDriver.getInstance().getLogger().info("§7Cached following configurations: §b" + this.getAllCachedTasks().stream().map(ServiceTask::getName).collect(Collectors.joining("§8, §b")));
+            CloudDriver.getInstance().getLogger().info("§7Cached following TaskGroups: §b" + this.getAllTaskGroups().stream().map(TaskGroup::getName).collect(Collectors.joining("§8, §b")));
+            CloudDriver.getInstance().getLogger().info("§7Cached following ServiceTasks: §b" + this.getAllCachedTasks().stream().map(ServiceTask::getName).collect(Collectors.joining("§8, §b")));
         }
 
     }

@@ -25,6 +25,8 @@ public interface PlayerExecutor {
 
     void sendMessage(ChatComponent component);
 
+    void setTabList(ChatComponent header, ChatComponent footer);
+
     void disconnect(String reason);
 
     void connect(ServiceInfo server);

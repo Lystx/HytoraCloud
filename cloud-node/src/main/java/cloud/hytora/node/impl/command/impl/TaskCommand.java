@@ -21,6 +21,7 @@ import cloud.hytora.node.impl.setup.TaskSetup;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 @Command(
         name = {"task", "tasks", "t"},
@@ -46,7 +47,7 @@ public class TaskCommand {
         sender.sendMessage("§8");
         sender.sendMessage("§bInformation§8: ");
         sender.sendMessage("§bName: §f" + task.getName());
-        sender.sendMessage("§bTemplates: §f" + task.getTaskGroup().getTemplates().toString());
+        sender.sendMessage("§bTemplates: §f" + task.getTaskGroup().getTemplates().stream().map(ServiceTemplate::getPrefix).collect(Collectors.toList()));
         sender.sendMessage("§bNode: §f" + task.getNode());
         sender.sendMessage("§bMemory: §f" + task.getMemory() + "MB");
         sender.sendMessage("§bMin online services: §f" + task.getMinOnlineService());
