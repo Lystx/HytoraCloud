@@ -5,6 +5,7 @@ import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.task.TaskUpdateEvent;
 
+import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.services.task.DefaultServiceTaskManager;
 import cloud.hytora.driver.networking.packets.group.ServiceTaskExecutePacket;
 import cloud.hytora.driver.services.task.ServiceTask;
@@ -19,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.stream.Collectors;
 
 
-public class NodeServiceTaskManager extends DefaultServiceTaskManager {
+public class NodeServiceTaskManager extends DefaultServiceTaskManager implements PacketHandler<ServiceTaskExecutePacket> {
 
     private final SectionedDatabase database;
 
@@ -30,23 +31,8 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager {
         this.getAllTaskGroups().addAll(this.database.getSection(TaskGroup.class).getAll());
         this.getAllCachedTasks().addAll(this.database.getSection(ServiceTask.class).getAll());
 
-        CloudDriver.getInstance().getExecutor().registerPacketHandler((PacketHandler<ServiceTaskExecutePacket>) (ctx, packet) -> {
-            if (packet.getPayLoad().equals(ServiceTaskExecutePacket.ExecutionPayLoad.CREATE)) {
-                this.getAllCachedTasks().add(packet.getServiceTask());
-
-                //creating templates
-                for (ServiceTemplate template : packet.getServiceTask().getTaskGroup().getTemplates()) {
-                    TemplateStorage storage = template.getStorage();
-                    if (storage != null) {
-                        storage.createTemplate(template);
-                    }
-                }
-
-                NodeDriver.getInstance().getServiceQueue().dequeue();
-            } else {
-                this.getAllCachedTasks().remove(packet.getServiceTask());
-            }
-        });
+        //registering packet handler
+        CloudDriver.getInstance().getExecutor().registerPacketHandler(this);
 
         //registering events
         CloudDriver.getInstance().getEventManager().registerListener(this);
@@ -64,7 +50,6 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager {
 
     @EventListener
     public void handle(TaskUpdateEvent event) {
-        NodeDriver.getInstance().getServiceQueue().dequeue();
         ServiceTask packetTask = event.getTask();
         ServiceTask task = getTaskByNameOrNull(packetTask.getName());
 
@@ -75,6 +60,8 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager {
         CloudDriver.getInstance().getLogger().trace("Updated Task {}", task.getName());
         task.cloneInternally(packetTask, task);
         CloudDriver.getInstance().getEventManager().callEventOnlyPacketBased(new TaskUpdateEvent(task));
+
+        NodeDriver.getInstance().getServiceQueue().dequeue();
     }
 
     @Override
@@ -109,4 +96,23 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager {
         CloudDriver.getInstance().getEventManager().callEventGlobally(new TaskUpdateEvent(task));
     }
 
+    @Override
+    public void handle(PacketChannel wrapper, ServiceTaskExecutePacket packet) {
+
+        if (packet.getPayLoad().equals(ServiceTaskExecutePacket.ExecutionPayLoad.CREATE)) {
+            this.getAllCachedTasks().add(packet.getServiceTask());
+
+            //creating templates
+            for (ServiceTemplate template : packet.getServiceTask().getTaskGroup().getTemplates()) {
+                TemplateStorage storage = template.getStorage();
+                if (storage != null) {
+                    storage.createTemplate(template);
+                }
+            }
+
+            NodeDriver.getInstance().getServiceQueue().dequeue();
+        } else {
+            this.getAllCachedTasks().remove(packet.getServiceTask());
+        }
+    }
 }

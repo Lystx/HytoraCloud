@@ -159,7 +159,6 @@ public class TaskCommand {
                 }
 
                 sender.sendMessage("§7The ServiceTask §b" + name + " §7was created§8!");
-
                 NodeDriver.getInstance().getServiceQueue().dequeue();
 
             } else {
