@@ -268,7 +268,7 @@ public class ServiceQueueProcessWorker {
                     "enable-rcon=false\n" +
                     "level-seed=\n" +
                     "force-gamemode=false\n" +
-                    "server-ip=0.0.0.0\n" +
+                    "server-ip=0\n" +
                     "network-compression-threshold=256\n" +
                     "max-build-height=256\n" +
                     "spawn-npcs=false\n" +

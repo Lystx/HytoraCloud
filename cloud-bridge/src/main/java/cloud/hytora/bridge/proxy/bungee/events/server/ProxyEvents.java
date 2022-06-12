@@ -54,7 +54,6 @@ public class ProxyEvents implements Listener {
         // TODO: 29.05.2022 whitelist
         CloudDriver.getInstance().getLogger().info("Available Services : {}", CloudDriver.getInstance().getServiceManager().getAllCachedServices().size());
 
-
         Task<ServiceInfo> fallback = CloudDriver.getInstance().getServiceManager().getFallbackAsService();
 
         if (fallback.isNull()) {

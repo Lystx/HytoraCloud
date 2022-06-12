@@ -82,23 +82,23 @@ public class ProxyModule extends DriverModule {
     protected int tablistAnimationIndex = 0;
 
     public String[] selectTabList() {
-        if (proxyConfig == null) {
+
+        try {
+            if (proxyConfig.getTablist().getFrames().size() >= tablistAnimationIndex++) {
+                tablistAnimationIndex = 0;
+            }
+            TabListFrame frame = proxyConfig.getTablist().getFrames().get(tablistAnimationIndex);
+            String header = frame.getHeader();
+            String footer = frame.getFooter();
+
+            header = header.replaceAll("&", "§");
+            footer = footer.replaceAll("&", "§");
+
+            return new String[]{header, footer};
+
+        } catch (Exception e) {
             return new String[]{"", ""};
         }
-
-        if (proxyConfig.getTablist().getFrames().size() >= tablistAnimationIndex++) {
-            tablistAnimationIndex = 0;
-        }
-
-        TabListFrame frame = proxyConfig.getTablist().getFrames().get(tablistAnimationIndex);
-
-        String header = frame.getHeader();
-        String footer = frame.getFooter();
-
-        header = header.replaceAll("&", "§");
-        footer = footer.replaceAll("&", "§");
-
-        return new String[]{header, footer};
     }
 
     public void updateTabList() {

@@ -123,7 +123,7 @@ public class DefaultEventManager implements EventManager {
 	public EventManager unregisterListeners(@Nonnull ClassLoader loader) {
 		for (Class<? extends CloudEvent> aClass : listeners.keySet()) {
 			List<RegisteredListener> registeredListeners = new CopyOnWriteArrayList<>(listeners.get(aClass));
-			registeredListeners.removeIf(listener -> listener.getHolder().getClass().getClassLoader().equals(loader));
+			registeredListeners.removeIf(listener -> listener != null && listener.getHolder() != null && loader != null && listener.getHolder().getClass().getClassLoader().equals(loader));
 			listeners.put(aClass, registeredListeners);
 		}
 		return this;
