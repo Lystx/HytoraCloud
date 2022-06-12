@@ -6,6 +6,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.DestructiveListener;
 import cloud.hytora.driver.event.defaults.server.CloudServerCacheUnregisterEvent;
 import cloud.hytora.driver.event.defaults.server.CloudServerRequestScreenLeaveEvent;
+import cloud.hytora.driver.exception.CloudException;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.controller.base.ModuleConfig;
 import cloud.hytora.driver.node.config.INodeConfig;
@@ -19,6 +20,7 @@ import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVersion;
+import cloud.hytora.node.impl.config.MainConfiguration;
 import cloud.hytora.node.impl.event.ServiceOutputLineAddEvent;
 import cloud.hytora.node.service.NodeServiceManager;
 import cloud.hytora.node.NodeDriver;
@@ -113,9 +115,17 @@ public class ServiceQueueProcessWorker {
         if (proxyProtocol == null) proxyProtocol = false;
         if (gameServer == null) gameServer = true;
 
+
+        File serverIcon = new File(serverDir, "server-icon.png");
+        if (!serverIcon.exists()) {
+            copyFileWithURL("/impl/files/server-icon.png", new File(serverDir, "server-icon.png")); //copying server icon if none already provided
+        }
+
         if (version == ServiceVersion.VELOCITY) {
 
-            cloud.hytora.common.misc.FileUtils.writeToFile(new File(serverDir, "velocity.toml"), "# Config version. Do not change this\n" +
+            FileWriter writer = new FileWriter(new File(serverDir, "velocity.toml"));
+
+            writer.write("# Config version. Do not change this\n" +
                     "config-version = \"1.0\"\n" +
                     "\n" +
                     "# What port should the proxy be bound to? By default, we'll bind to all addresses on port 25577.\n" +
@@ -123,11 +133,11 @@ public class ServiceQueueProcessWorker {
                     "\n" +
                     "# What should be the MOTD? This gets displayed when the player adds your server to\n" +
                     "# their server list. Legacy color codes and JSON are accepted.\n" +
-                    "motd = \"HytoraCloud Proxy Service\"\n" +
+                    "motd = \"&3A Velocity Server\"\n" +
                     "\n" +
                     "# What should we display for the maximum number of players? (Velocity does not support a cap\n" +
                     "# on the number of players online.)\n" +
-                    "show-max-players = " + service.getTask().getDefaultMaxPlayers() + "\n" +
+                    "show-max-players = " + service.getMaxPlayers() + "\n" +
                     "\n" +
                     "# Should we authenticate players with Mojang? By default, this is on.\n" +
                     "online-mode = " + onlineMode + "\n" +
@@ -205,9 +215,14 @@ public class ServiceQueueProcessWorker {
                     "\n" +
                     "log-failure = false");
 
+            writer.flush();
+            writer.close();
+
         } else if (version == ServiceVersion.BUNGEE || version == ServiceVersion.WATERFALL) {
 
-            cloud.hytora.common.misc.FileUtils.writeToFile(new File(serverDir, "config.yml"), "player_limit: " + service.getTask().getDefaultMaxPlayers() + "\n" +
+            FileWriter writer = new FileWriter(new File(serverDir, "config.yml"));
+
+            writer.write("player_limit: " + service.getMaxPlayers() + "\n" +
                     "permissions:\n" +
                     "  default: []\n" +
                     "  admin:\n" +
@@ -225,10 +240,15 @@ public class ServiceQueueProcessWorker {
                     "  - disabledcommandhere\n" +
                     "log_pings: false\n" +
                     "servers:\n" +
+                    "  Lobby-1:\n" +
+                    "    motd: '" + "MOTD" + "'\n" +
+                    "    address: '127.0.0.1:" + MainConfiguration.getInstance().getSpigotStartPort() + "'\n" +
+                    "    restricted: false\n" +
                     "listeners:\n" +
                     "  - query_port: 25577\n" +
-                    "    motd: \"HytoraCloud Proxy Service\"\n" +
+                    "    motd: \"&bHytoraCloud &7Default Motd &7by Lystx\"\n" +
                     "    priorities:\n" +
+                    "      - Lobby-1\n" +
                     "    bind_local_address: true\n" +
                     "    tab_list: GLOBAL_PING\n" +
                     "    query_enabled: false\n" +
@@ -246,49 +266,43 @@ public class ServiceQueueProcessWorker {
                     "connection_throttle: -1\n" +
                     "stats: 13be5ac9-5731-4502-9ccc-c4a80163f14a\n" +
                     "prevent_proxy_connections: false");
+
+            writer.flush();
+            writer.close();
+
         } else if (!version.isProxy()) {// is spigot
 
-            //copy spigot und bukkit yml
-            cloud.hytora.common.misc.FileUtils.copyResource("/impl/files/spigot.yml", new File(serverDir, "spigot.yml").toString(), getClass());
-            cloud.hytora.common.misc.FileUtils.copyResource("/impl/files/bukkit.yml", new File(serverDir, "bukkit.yml").toString(), getClass());
+            //copying spigot.yml
+            copyFileWithURL("/impl/files/spigot.yml", new File(serverDir, "spigot.yml"));
 
-            cloud.hytora.common.misc.FileUtils.writeToFile(new File(serverDir, "server.properties"), "#Minecraft server properties\n" +
-                    "#Tue Aug 22 15:33:36 CEST 2017\n" +
-                    "generator-settings=\n" +
-                    "op-permission-level=4\n" +
-                    "allow-nether=" + !gameServer + "\n" +
-                    "resource-pack-hash=\n" +
-                    "level-name=world\n" +
-                    "enable-query=false\n" +
-                    "allow-flight=false\n" +
-                    "announce-player-achievements=false\n" +
-                    "server-port=" + service.getPort() + "\n" +
-                    "max-world-size=29999984\n" +
-                    "level-type=DEFAULT\n" +
-                    "enable-rcon=false\n" +
-                    "level-seed=\n" +
-                    "force-gamemode=false\n" +
-                    "server-ip=0\n" +
-                    "network-compression-threshold=256\n" +
-                    "max-build-height=256\n" +
-                    "spawn-npcs=false\n" +
-                    "white-list=false\n" +
-                    "spawn-animals=true\n" +
-                    "hardcore=false\n" +
-                    "snooper-enabled=true\n" +
-                    "online-mode=false\n" +
-                    "resource-pack=\n" +
-                    "pvp=true\n" +
-                    "difficulty=1\n" +
-                    "enable-command-block=false\n" +
-                    "gamemode=0\n" +
-                    "player-idle-timeout=0\n" +
-                    "max-players=" + service.getTask().getDefaultMaxPlayers() + "\n" +
-                    "spawn-monsters=true\n" +
-                    "generate-structures=true\n" +
-                    "view-distance=8\n" +
-                    "spawn-protection=0\n" +
-                    "motd=HytoraCloud Minecraft Service\n");
+            //copying bukkit.yml
+            copyFileWithURL("/impl/files/bukkit.yml", new File(serverDir, "bukkit.yml"));
+
+            //managing server.properties
+            File pp = new File(serverDir, "server.properties");
+            if (!pp.exists())
+                copyFileWithURL("/impl/files/server.properties", pp);
+
+
+            try {
+                FileInputStream stream = new FileInputStream(pp);
+                Properties properties = new Properties();
+                properties.load(stream);
+                properties.setProperty("server-port", service.getPort() + "");
+                properties.setProperty("server-ip", "0");
+                properties.setProperty("max-players", String.valueOf(service.getMaxPlayers()));
+                properties.setProperty("allow-nether", String.valueOf(!gameServer));
+                properties.setProperty("server-name", service.getName());
+                properties.setProperty("online-mode", "false");
+                properties.setProperty("motd", service.getMotd());
+                FileOutputStream fileOutputStream = new FileOutputStream(pp);
+                properties.save(fileOutputStream, "Edit by Cloud");
+                fileOutputStream.close();
+                stream.close();
+
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
         }
 
         if (version.name().startsWith("GLOWSTONE")) { // TODO: 06.06.2022 add glowstone support
@@ -489,6 +503,26 @@ public class ServiceQueueProcessWorker {
         }
 
         return arguments.toArray(new String[]{});
+    }
+
+
+    private void copyFileWithURL(String filename, File location) {
+        try {
+            URL inputUrl = getClass().getResource(filename);
+            if (location.exists()) {
+                return;
+            }
+            if (inputUrl == null) {
+                throw new CloudException("Couldn't copy " + filename + " to Location: " + location.toString());
+            }
+            try {
+                FileUtils.copyURLToFile(inputUrl, location);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
     }
 
 
