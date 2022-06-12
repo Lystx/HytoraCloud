@@ -112,7 +112,7 @@ public class Remote extends CloudDriver {
     private static Logger init() {
         HandledLogger logger = new HandledAsyncLogger(LogLevel.TRACE);
         logger.addHandler(new DefaultLogHandler());
-        logger.addHandler(entry -> CloudDriver.getInstance().getEventManager().callEvent(new DriverLogEvent(entry)));
+        logger.addHandler(entry -> CloudDriver.getInstance().getEventManager().callEventGlobally(new DriverLogEvent(entry)));
         Logger.setFactory(logger);
 
         return logger;

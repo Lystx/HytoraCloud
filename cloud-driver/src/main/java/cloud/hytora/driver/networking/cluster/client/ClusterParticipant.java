@@ -87,14 +87,14 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
                                             ClusterParticipant.this.sendPacket(new HandshakePacket(authKey, getName(), ClusterParticipant.this.type, customData));
 
                                             //fire connect event
-                                            CloudDriver.getInstance().getEventManager().callEvent(new DriverConnectEvent());
+                                            CloudDriver.getInstance().getEventManager().callEventGlobally(new DriverConnectEvent());
                                             super.channelActive(ctx);
 
                                         }
 
                                         @Override
                                         public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-                                            CloudDriver.getInstance().getEventManager().callEvent(new DriverConnectEvent());
+                                            CloudDriver.getInstance().getEventManager().callEventGlobally(new DriverConnectEvent());
                                             onClose(ctx);
                                             super.channelInactive(ctx);
                                         }

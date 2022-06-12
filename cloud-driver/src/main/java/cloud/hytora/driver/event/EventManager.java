@@ -48,7 +48,13 @@ public interface EventManager {
 	EventManager unregisterAll();
 
 	@Nonnull
-	<E extends CloudEvent> E callEvent(@Nonnull E event);
+	<E extends CloudEvent> E callEventGlobally(@Nonnull E event);
+
+	@Nonnull
+	<E extends ProtocolTansferableEvent> E callEventOnlyPacketBased(@Nonnull E event);
+
+	@Nonnull
+	<E extends CloudEvent> E callEventOnlyLocally(@Nonnull E event);
 
 	@Nonnull
 	<E extends CloudEvent> Task<E> nextEvent(@Nonnull Class<E> eventClass);

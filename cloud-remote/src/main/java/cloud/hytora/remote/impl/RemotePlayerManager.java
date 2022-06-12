@@ -100,7 +100,7 @@ public class RemotePlayerManager extends DefaultPlayerManager {
         CloudPlayer cloudPlayer = constructPlayer(uniqueId, username);
 
         this.cachedCloudPlayers.put(uniqueId, cloudPlayer);
-        Remote.getInstance().getEventManager().callEvent(new CloudPlayerLoginEvent(cloudPlayer));
+        Remote.getInstance().getEventManager().callEventGlobally(new CloudPlayerLoginEvent(cloudPlayer));
         Remote.getInstance().getClient().sendPacket(new CloudPlayerLoginPacket(username, uniqueId));
     }
 
@@ -109,7 +109,7 @@ public class RemotePlayerManager extends DefaultPlayerManager {
         if (this.getCloudPlayerByUniqueIdOrNull(uuid) == null) {
             return;
         }
-        Remote.getInstance().getEventManager().callEvent(new CloudPlayerDisconnectEvent(this.cachedCloudPlayers.remove(uuid)));
+        Remote.getInstance().getEventManager().callEventGlobally(new CloudPlayerDisconnectEvent(this.cachedCloudPlayers.remove(uuid)));
         Remote.getInstance().getClient().sendPacket(new CloudPlayerDisconnectPacket(uuid, username));
     }
 

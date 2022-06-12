@@ -37,8 +37,8 @@ import java.util.stream.Collectors;
         description = "Manages the Proxy servers",
         version = "SNAPSHOT-1.0",
         website = "https://github.com/Lystx/HytoraCloud/tree/master/cloud-modules/module-proxy",
-        copyType = ModuleCopyType.PROXY,
-        environment = ModuleEnvironment.ALL
+        copyType = ModuleCopyType.NONE,
+        environment = ModuleEnvironment.NODE
 )
 public class ProxyModule extends DriverModule {
 
@@ -131,7 +131,10 @@ public class ProxyModule extends DriverModule {
         }
     }
 
-    protected String replaceDefault(ServiceInfo info, @Nonnull String content) {
+    protected String replaceDefault(ServiceInfo info, String content) {
+        if (content == null) {
+            return "";
+        }
         content = content.replaceAll("&", "§");
 
         int maxPlayers = -1;

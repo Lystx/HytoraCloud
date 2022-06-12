@@ -1,9 +1,6 @@
 package cloud.hytora.driver.networking;
 
-import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
-import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
-import cloud.hytora.driver.networking.packets.RedirectPacket;
-import cloud.hytora.driver.networking.packets.StorageUpdatePacket;
+import cloud.hytora.driver.networking.packets.*;
 import cloud.hytora.driver.networking.packets.group.ServiceConfigurationExecutePacket;
 import cloud.hytora.driver.networking.packets.group.ServerConfigurationCacheUpdatePacket;
 import cloud.hytora.driver.networking.packets.module.RemoteModuleControllerPacket;
@@ -50,7 +47,6 @@ public class PacketProvider {
 
         //Service packets
         PacketProvider.autoRegister(ServiceShutdownPacket.class);
-        PacketProvider.autoRegister(CloudServerCacheRegisterPacket.class);
         PacketProvider.autoRegister(CloudServerCacheUnregisterPacket.class);
         PacketProvider.autoRegister(CloudServerCacheUpdatePacket.class);
         PacketProvider.autoRegister(ServiceRequestShutdownPacket.class);
@@ -84,6 +80,7 @@ public class PacketProvider {
         PacketProvider.autoRegister(ResponsePacket.class);
         PacketProvider.autoRegister(SimplePacket.class);
         PacketProvider.autoRegister(DriverLoggingPacket.class);
+        PacketProvider.autoRegister(DriverCallEventPacket.class);
     }
 
     public static void autoRegister(Class<? extends Packet> packetClass) {

@@ -11,7 +11,6 @@ import cloud.hytora.driver.DriverStatus;
 import cloud.hytora.driver.command.CommandManager;
 import cloud.hytora.driver.command.DefaultCommandSender;
 import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.InternalDriverEventAdapter;
 
 
 import cloud.hytora.driver.http.api.HttpServer;
@@ -27,7 +26,6 @@ import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteServerStopHandler;
 import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteShutdownHandler;
 import cloud.hytora.node.impl.handler.packet.normal.NodeDataCycleHandler;
 import cloud.hytora.node.impl.handler.packet.normal.NodeLoggingPacketHandler;
-import cloud.hytora.node.impl.handler.packet.universal.NodeServiceAddPacketHandler;
 import cloud.hytora.node.impl.handler.packet.universal.NodeServiceRemovePacketHandler;
 import cloud.hytora.node.impl.handler.packet.normal.NodeStoragePacketHandler;
 import cloud.hytora.node.impl.module.NodeModuleManager;
@@ -255,8 +253,6 @@ public class NodeDriver extends CloudDriver implements Node {
         NodeDriver.SERVICE_DIR_STATIC.mkdirs();
         NodeDriver.SERVICE_DIR_DYNAMIC.mkdirs();
 
-        //initializing managers
-        new InternalDriverEventAdapter(this.eventManager, executor);
         this.databaseManager = new DefaultDatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType());
 
         SectionedDatabase database = this.databaseManager.getDatabase();
@@ -339,7 +335,6 @@ public class NodeDriver extends CloudDriver implements Node {
 
         //remote and commander packet handlers
         this.executor.registerUniversalHandler(new NodeServiceRemovePacketHandler());
-        this.executor.registerUniversalHandler(new NodeServiceAddPacketHandler());
 
         this.logger.info("§a=> Registered §a" + PacketProvider.getRegisteredPackets().size() + " Packets §8& §a" + this.executor.getRegisteredPacketHandlers().size() + " Handlers§8.");
         this.logger.info("§8");

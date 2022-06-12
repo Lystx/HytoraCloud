@@ -7,6 +7,8 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.*;
 import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
+import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
+import cloud.hytora.driver.networking.packets.DriverCallEventPacket;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -135,7 +137,26 @@ public class DefaultEventManager implements EventManager {
 
 	@Nonnull
 	@Override
-	public <E extends CloudEvent> E callEvent(@Nonnull E event) {
+	public <E extends CloudEvent> E callEventGlobally(@Nonnull E event) {
+		this.callEventOnlyLocally(event); //calling locally
+		if (event instanceof ProtocolTansferableEvent) {
+			ProtocolTansferableEvent pEvent = (ProtocolTansferableEvent)event;
+			this.callEventOnlyPacketBased(pEvent); //calling packet if protocol event
+		}
+		return event;
+	}
+
+	@NotNull
+	@Override
+	public <E extends ProtocolTansferableEvent> E callEventOnlyPacketBased(@NotNull E event) {
+		AdvancedNetworkExecutor executor = CloudDriver.getInstance().getExecutor();
+		executor.sendPacket(new DriverCallEventPacket(event));
+		return event;
+	}
+
+	@NotNull
+	@Override
+	public <E extends CloudEvent> E callEventOnlyLocally(@NotNull E event) {
 		if (!(event instanceof DriverLogEvent)) {
 			CloudDriver.getInstance().getLogger().trace("Calling event {} | {}", event.getClass().getSimpleName(), event);
 		}
@@ -156,9 +177,9 @@ public class DefaultEventManager implements EventManager {
 			}
 		}
 
-		if (event instanceof Cancelable)
-			CloudDriver.getInstance().getLogger().trace("=> {}: cancelled={}", event.getClass().getSimpleName(), ((Cancelable)event).isCancelled());
-
+		if (event instanceof Cancelable) {
+			CloudDriver.getInstance().getLogger().trace("=> {}: cancelled={}", event.getClass().getSimpleName(), ((Cancelable) event).isCancelled());
+		}
 		return event;
 	}
 

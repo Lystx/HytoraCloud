@@ -2,8 +2,9 @@ package cloud.hytora.remote.impl;
 
 import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.event.EventListener;
+import cloud.hytora.driver.event.defaults.server.CloudServerCacheRegisterEvent;
 import cloud.hytora.driver.networking.packets.RedirectPacket;
-import cloud.hytora.driver.networking.packets.services.CloudServerCacheRegisterPacket;
 import cloud.hytora.driver.networking.packets.services.CloudServerCacheUnregisterPacket;
 import cloud.hytora.driver.networking.packets.services.ServiceShutdownPacket;
 import cloud.hytora.driver.networking.packets.services.CloudServerCacheUpdatePacket;
@@ -26,7 +27,6 @@ public class RemoteServiceManager extends DefaultServiceManager {
         AdvancedNetworkExecutor executor = CloudDriver.getInstance().getExecutor();
         executor.registerPacketHandler((PacketHandler<ServiceShutdownPacket>) (ctx, packet) -> Remote.getInstance().shutdown());
         executor.registerPacketHandler((PacketHandler<CloudServerCacheUnregisterPacket>) (ctx, packet) -> this.getAllCachedServices().remove(getServiceByNameOrNull(packet.getService())));
-        executor.registerPacketHandler((PacketHandler<CloudServerCacheRegisterPacket>) (ctx, packet) -> this.getAllCachedServices().add(packet.getService()));
 
         executor.registerPacketHandler((PacketHandler<CloudServerCacheUpdatePacket>) (ctx, packet) -> {
             ServiceInfo packetService = packet.getService();
@@ -41,6 +41,14 @@ public class RemoteServiceManager extends DefaultServiceManager {
                 allCachedServices.add(service);
             }
         });
+
+        CloudDriver.getInstance().getEventManager().registerListener(this);
+    }
+
+    @EventListener
+    public void handleAdd(CloudServerCacheRegisterEvent event) {
+        ServiceInfo server = event.getServer();
+        this.registerService(server);
     }
 
     @Override

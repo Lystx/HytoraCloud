@@ -32,7 +32,7 @@ public class CloudBootstrap {
             logger.addHandler(new LogHandler() {
                 @Override
                 public void handle(@NotNull LogEntry entry) throws Exception {
-                    driver.getEventManager().callEvent(new DriverLogEvent(entry));
+                    driver.getEventManager().callEventGlobally(new DriverLogEvent(entry));
                 }
             });
         } catch (Exception e) {

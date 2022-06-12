@@ -2,6 +2,7 @@ package cloud.hytora.bridge.proxy.bungee.events.server;
 
 import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.component.ChatColor;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.player.PlayerManager;
@@ -160,7 +161,7 @@ public class ProxyEvents implements Listener {
         String[] playerInfo = pingProperties.getPlayerInfo();
         ServerPing.PlayerInfo[] info = new ServerPing.PlayerInfo[playerInfo.length];
         for (int i = 0; i < playerInfo.length; i++) {
-            info[i] = new ServerPing.PlayerInfo(playerInfo[i], UUID.randomUUID());
+            info[i] = new ServerPing.PlayerInfo(ChatColor.translateAlternateColorCodes('&', playerInfo[i]), UUID.randomUUID());
         }
 
         //player values
@@ -178,12 +179,12 @@ public class ProxyEvents implements Listener {
         }
 
         //motd
-        response.setDescriptionComponent(new TextComponent(pingProperties.getMotd()));
+        response.setDescriptionComponent(new TextComponent(ChatColor.translateAlternateColorCodes('&', pingProperties.getMotd())));
 
         //protocol text
         String versionText = pingProperties.getVersionText();
         if (versionText != null) {
-            response.setVersion(new ServerPing.Protocol(versionText, -1));
+            response.setVersion(new ServerPing.Protocol(ChatColor.translateAlternateColorCodes('&', versionText), -1));
         }
 
         event.setResponse(response);

@@ -4,12 +4,8 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.EventManager;
-import cloud.hytora.driver.event.defaults.player.CloudPlayerDisconnectEvent;
-import cloud.hytora.driver.event.defaults.player.CloudPlayerLoginEvent;
 import cloud.hytora.driver.event.defaults.player.CloudPlayerUpdateEvent;
 import cloud.hytora.driver.event.defaults.server.CloudServerCacheUnregisterEvent;
-import cloud.hytora.driver.networking.packets.player.CloudPlayerDisconnectPacket;
-import cloud.hytora.driver.networking.packets.player.CloudPlayerLoginPacket;
 import cloud.hytora.driver.networking.packets.player.CloudPlayerUpdatePacket;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.CloudPlayer;
@@ -52,7 +48,7 @@ public abstract class DefaultPlayerManager implements PlayerManager {
                 if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
                     cp.update();
                 }
-                eventManager.callEvent(new CloudPlayerUpdateEvent(cp));
+                eventManager.callEventGlobally(new CloudPlayerUpdateEvent(cp));
             });
         });
 

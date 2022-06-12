@@ -3,6 +3,7 @@ package cloud.hytora.node.service;
 import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.event.defaults.server.CloudServerCacheRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.CloudServerCacheUnregisterEvent;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.packets.services.*;
@@ -26,7 +27,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystemException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 @Getter
 public class NodeServiceManager extends DefaultServiceManager {
@@ -62,7 +62,7 @@ public class NodeServiceManager extends DefaultServiceManager {
     public void registerService(ServiceInfo service) {
         super.registerService(service);
         this.cachedServiceOutputs.put(service.getName(), new ArrayList<>());
-        NodeDriver.getInstance().getExecutor().sendPacketToAll(new CloudServerCacheRegisterPacket(service));
+        CloudDriver.getInstance().getEventManager().callEventGlobally(new CloudServerCacheRegisterEvent(service));
     }
 
     @Override
@@ -78,7 +78,7 @@ public class NodeServiceManager extends DefaultServiceManager {
         //removing cached screen
         this.cachedServiceOutputs.remove(service.getName());
 
-        CloudDriver.getInstance().getEventManager().callEvent(new CloudServerCacheUnregisterEvent(service.getName()));
+        CloudDriver.getInstance().getEventManager().callEventGlobally(new CloudServerCacheUnregisterEvent(service.getName()));
         NodeDriver.getInstance().getExecutor().sendPacketToAll(new CloudServerCacheUnregisterPacket(service.getName()));
 
         NodeDriver.getInstance().getLogger().info("§c==> §7Channel §8[§b" + service.getName() + "@" + service.getHostName() + ":" + service.getPort() + "§8] §7disconnected §8[§eUptime: " + service.getReadableUptime() + "§8]");

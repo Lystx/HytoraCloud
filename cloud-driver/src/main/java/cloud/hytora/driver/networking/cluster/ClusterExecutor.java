@@ -39,6 +39,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -73,7 +74,7 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
 
         this.authKey = authKey;
         this.nodeName = nodeName;
-        this.allCachedConnectedClients = new ArrayList<>();
+        this.allCachedConnectedClients = new CopyOnWriteArrayList<>();
 
         this.packetChannel = new SimplePacketChannel();
         this.packetChannel.setState(ConnectionState.DISCONNECTED);
@@ -189,7 +190,7 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
                 .bind(hostname, port).addListener(future -> {
                     this.packetChannel.setEverConnected(true);
                     this.packetChannel.setState(ConnectionState.CONNECTED);
-                    CloudDriver.getInstance().getEventManager().callEvent(new DriverConnectEvent());
+                    CloudDriver.getInstance().getEventManager().callEventGlobally(new DriverConnectEvent());
                     if (future.isSuccess()) {
                         connectPromise.setResult(this);
                     } else {
@@ -205,7 +206,7 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
         Task<Boolean> shutdownWorkerPromise = Task.empty();
         Task<Boolean> executePromise = Task.empty();
 
-        CloudDriver.getInstance().getEventManager().callEvent(new DriverDisconnectEvent());
+        CloudDriver.getInstance().getEventManager().callEventGlobally(new DriverDisconnectEvent());
         Task<Boolean> promise = Task.multiTasking(shutdownBossPromise, shutdownBossPromise, executePromise);
 
         this.bossGroup.shutdownGracefully(0, 1, TimeUnit.MINUTES).addListener(it -> shutdownBossPromise.setResult(true));

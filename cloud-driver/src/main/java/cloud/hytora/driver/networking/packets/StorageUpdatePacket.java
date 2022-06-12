@@ -30,7 +30,7 @@ public class StorageUpdatePacket extends Packet {
                 payLoad = buf.readEnum(StoragePayLoad.class);
                 storage = buf.readDocument();
 
-                CloudDriver.getInstance().getEventManager().callEvent(new DriverStorageUpdateEvent());
+                CloudDriver.getInstance().getEventManager().callEventGlobally(new DriverStorageUpdateEvent());
                 break;
 
             case WRITE:

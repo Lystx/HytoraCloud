@@ -34,7 +34,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
         executor.registerPacketHandler((PacketHandler<CloudPlayerLoginPacket>) (wrapper, packet) -> {
             CloudPlayer cloudPlayer = constructPlayer(packet.getUuid(), packet.getUsername());
             this.cachedCloudPlayers.put(packet.getUuid(), cloudPlayer);
-            eventManager.callEvent(new CloudPlayerLoginEvent(cloudPlayer));
+            eventManager.callEventGlobally(new CloudPlayerLoginEvent(cloudPlayer));
 
             DriverUpdatePacket.publishUpdate(NodeDriver.getInstance());
         });
@@ -42,7 +42,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
         executor.registerPacketHandler((PacketHandler<CloudPlayerDisconnectPacket>) (wrapper, packet) -> {
             this.getCloudPlayer(packet.getUuid()).ifPresent(cloudPlayer -> {
                 this.cachedCloudPlayers.remove(cloudPlayer.getUniqueId());
-                eventManager.callEvent(new CloudPlayerDisconnectEvent(cloudPlayer));
+                eventManager.callEventGlobally(new CloudPlayerDisconnectEvent(cloudPlayer));
                 DriverUpdatePacket.publishUpdate(NodeDriver.getInstance());
             });
         });

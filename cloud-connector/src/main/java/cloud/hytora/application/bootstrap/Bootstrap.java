@@ -68,7 +68,7 @@ public class Bootstrap {
                     GitHub github = GitHubBuilder.fromEnvironment().build();
                     GHRepository repository = github.getRepository("Lystx/HytoraCloud");
                     Collection<GHCommit> cachedCommits = repository.listCommits().toList();
-                    CloudDriver.getInstance().getEventManager().callEvent(new CommitHistoryLoadedEvent(cachedCommits));
+                    CloudDriver.getInstance().getEventManager().callEventGlobally(new CommitHistoryLoadedEvent(cachedCommits));
                     CloudDriver.getInstance().getLogger().info("Loaded GitHub data");
                 } catch (Exception e) {
                     CloudDriver.getInstance().getLogger().info("Couldn't load GitHub data");
