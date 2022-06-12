@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-public class ConfigurationCompleter implements CommandCompleter {
+public class TaskCompleter implements CommandCompleter {
 
     @NotNull
     @Override

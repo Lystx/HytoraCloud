@@ -183,7 +183,7 @@ public class ProxyEvents implements Listener {
 
         //protocol text
         String versionText = pingProperties.getVersionText();
-        if (versionText != null) {
+        if (versionText != null && !versionText.trim().isEmpty()) {
             response.setVersion(new ServerPing.Protocol(ChatColor.translateAlternateColorCodes('&', versionText), -1));
         }
 

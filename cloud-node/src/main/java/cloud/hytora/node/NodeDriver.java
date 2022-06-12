@@ -257,7 +257,7 @@ public class NodeDriver extends CloudDriver implements Node {
 
         SectionedDatabase database = this.databaseManager.getDatabase();
         database.registerSection("players", DefaultCloudOfflinePlayer.class);
-        database.registerSection("configurations", DefaultServiceTask.class);
+        database.registerSection("tasks", DefaultServiceTask.class);
         database.registerSection("groups", DefaultTaskGroup.class);
 
         this.serviceTaskManager = new NodeServiceTaskManager();

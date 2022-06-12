@@ -15,6 +15,7 @@ import javax.annotation.Nonnull;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 
@@ -121,7 +122,7 @@ public class DefaultEventManager implements EventManager {
 	@Override
 	public EventManager unregisterListeners(@Nonnull ClassLoader loader) {
 		for (Class<? extends CloudEvent> aClass : listeners.keySet()) {
-			List<RegisteredListener> registeredListeners = new ArrayList<>(listeners.get(aClass));
+			List<RegisteredListener> registeredListeners = new CopyOnWriteArrayList<>(listeners.get(aClass));
 			registeredListeners.removeIf(listener -> listener.getHolder().getClass().getClassLoader().equals(loader));
 			listeners.put(aClass, registeredListeners);
 		}

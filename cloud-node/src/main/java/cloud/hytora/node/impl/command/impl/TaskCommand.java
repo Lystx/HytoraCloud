@@ -3,6 +3,7 @@ package cloud.hytora.node.impl.command.impl;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
+import cloud.hytora.driver.command.completer.TaskCompleter;
 import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.task.bundle.DefaultTaskGroup;
@@ -35,7 +36,7 @@ public class TaskCommand {
     
     @SubCommand("info <name>")
     @CommandDescription("Shows info about a task")
-    public void execute(CommandSender sender, @CommandArgument("name") String name) {
+    public void execute(CommandSender sender, @CommandArgument(value = "name", completer = TaskCompleter.class) String name) {
 
         ServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
 
@@ -50,8 +51,13 @@ public class TaskCommand {
         sender.sendMessage("§bTemplates: §f" + task.getTaskGroup().getTemplates().stream().map(ServiceTemplate::getPrefix).collect(Collectors.toList()));
         sender.sendMessage("§bNode: §f" + task.getNode());
         sender.sendMessage("§bMemory: §f" + task.getMemory() + "MB");
+        sender.sendMessage("§bStartOrder: §f" + task.getStartOrder());
+        sender.sendMessage("§bJava: §f" + task.getJavaVersion());
+        sender.sendMessage("§bPermission: §f" + task.getPermission());
+        sender.sendMessage("§bProperties: §f" + task.getProperties().asRawJsonString());
+        sender.sendMessage("§bMaintenance: §f" + (task.isMaintenance() ? "§aYes" : "§cNo"));
         sender.sendMessage("§bMin online services: §f" + task.getMinOnlineService());
-        sender.sendMessage("§bServices: §f" + task.getOnlineServices().size() + "/" + (task.getMaxOnlineService() == -1 ? "Unlimited" : String.valueOf(task.getMaxOnlineService())));
+        sender.sendMessage("§bServices: §f" + task.getOnlineServices().size() + "/" + (task.getMaxOnlineService() == -1 ? "XXX" : String.valueOf(task.getMaxOnlineService())));
         sender.sendMessage("§bBehaviour: §f" + task.getTaskGroup().getShutdownBehaviour());
         sender.sendMessage("§bVersion: §f" + task.getVersion().getTitle());
         sender.sendMessage("§8");
@@ -164,22 +170,21 @@ public class TaskCommand {
 
     @SubCommand("delete <name>")
     @CommandDescription("Deletes a task")
-    public void executeDelete(CommandSender sender, @CommandArgument("name") String name) {
+    public void executeDelete(CommandSender sender, @CommandArgument(value = "name", completer = TaskCompleter.class) String name) {
         ServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
         if (task == null) {
             sender.sendMessage("§cThere is no existing ServiceTask with the name §e" + name + "§c!");
             return;
         }
         CloudDriver.getInstance().getServiceTaskManager().removeTask(task);
-        CloudDriver.getInstance().getServiceManager().getAllServicesByGroup(task)
-                .forEach(it -> CloudDriver.getInstance().getServiceManager().shutdownService(it));
+        CloudDriver.getInstance().getServiceManager().getAllServicesByGroup(task).forEach(ser -> CloudDriver.getInstance().getServiceManager().shutdownService(ser));
 
         sender.sendMessage("§7The ServiceTask §b" + task.getName() + " §7was deleted§8!");
     }
 
     @SubCommand("toggleMaintenance <name>")
     @CommandDescription("Toggles maintenance mode for a task")
-    public void executeToggleMaintenance(CommandSender sender, @CommandArgument("name") String name) {
+    public void executeToggleMaintenance(CommandSender sender, @CommandArgument(value = "name", completer = TaskCompleter.class) String name) {
         ServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
         if (task == null) {
             sender.sendMessage("§cThere is no existing ServiceTask with the name §e" + name + "§c!");

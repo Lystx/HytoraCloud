@@ -85,15 +85,15 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager {
     }
 
     @Override
-    public void addTaskGroup(@NotNull TaskGroup taskGroup) {
-        this.database.getSection(TaskGroup.class).insert(taskGroup.getName(), taskGroup);
-        super.addTaskGroup(taskGroup);
+    public void addTaskGroup(@NotNull TaskGroup task) {
+        this.database.getSection(TaskGroup.class).insert(task.getName(), task);
+        super.addTaskGroup(task);
     }
 
     @Override
-    public void removeTaskGroup(@NotNull TaskGroup taskGroup) {
-        this.database.getSection(TaskGroup.class).delete(taskGroup.getName());
-        super.removeTaskGroup(taskGroup);
+    public void removeTaskGroup(@NotNull TaskGroup task) {
+        this.database.getSection(TaskGroup.class).delete(task.getName());
+        super.removeTaskGroup(task);
     }
 
     @Override
@@ -105,7 +105,7 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager {
 
     @Override
     public void update(@NotNull ServiceTask task) {
-
+        this.database.getSection(ServiceTask.class).update(task.getName(), task);
         CloudDriver.getInstance().getEventManager().callEventGlobally(new TaskUpdateEvent(task));
     }
 
