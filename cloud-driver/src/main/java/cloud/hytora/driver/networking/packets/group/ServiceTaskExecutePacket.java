@@ -17,7 +17,7 @@ import java.io.IOException;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ServiceConfigurationExecutePacket extends Packet {
+public class ServiceTaskExecutePacket extends Packet {
 
     private ServiceTask serviceTask;
     private ExecutionPayLoad payLoad;

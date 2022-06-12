@@ -14,16 +14,13 @@ import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 
-import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.remote.Remote;
 import org.jetbrains.annotations.NotNull;
 
 public class RemoteServiceManager extends DefaultServiceManager {
 
-    private final RemoteIdentity property;
 
-    public RemoteServiceManager(RemoteIdentity property) {
-        this.property = property;
+    public RemoteServiceManager() {
         AdvancedNetworkExecutor executor = CloudDriver.getInstance().getExecutor();
         executor.registerPacketHandler((PacketHandler<ServiceShutdownPacket>) (ctx, packet) -> Remote.getInstance().shutdown());
         executor.registerPacketHandler((PacketHandler<CloudServerCacheUnregisterPacket>) (ctx, packet) -> this.getAllCachedServices().remove(getServiceByNameOrNull(packet.getService())));
@@ -62,9 +59,6 @@ public class RemoteServiceManager extends DefaultServiceManager {
         // TODO: 11.04.2022
     }
 
-    public ServiceInfo thisService() {
-        return this.getAllCachedServices().stream().filter(it -> it.getName().equalsIgnoreCase(this.property.getName())).findAny().orElse(null);
-    }
 
     @Override
     public void updateService(@NotNull ServiceInfo service) {

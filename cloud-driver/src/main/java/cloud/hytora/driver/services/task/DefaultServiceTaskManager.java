@@ -1,7 +1,9 @@
 package cloud.hytora.driver.services.task;
 
 import cloud.hytora.driver.DriverEnvironment;
-import cloud.hytora.driver.networking.packets.group.ServerConfigurationCacheUpdatePacket;
+import cloud.hytora.driver.event.EventListener;
+import cloud.hytora.driver.event.defaults.task.TaskUpdateEvent;
+
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.CloudDriver;
 
@@ -21,15 +23,7 @@ public abstract class DefaultServiceTaskManager implements ServiceTaskManager {
     protected Collection<TaskGroup> allTaskGroups = new ArrayList<>();
 
     public DefaultServiceTaskManager() {
-        CloudDriver.getInstance().getExecutor().registerPacketHandler((PacketHandler<ServerConfigurationCacheUpdatePacket>) (wrapper, packet) -> {
-            ServiceTask packetGroup = packet.getServiceTask();
-            ServiceTask preset = getTaskByNameOrNull(packetGroup.getName());
-
-            preset.cloneInternally(packetGroup, preset);
-            if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
-                preset.update();
-            }
-        });
+        CloudDriver.getInstance().getEventManager().registerListener(this);
     }
 
     @Override

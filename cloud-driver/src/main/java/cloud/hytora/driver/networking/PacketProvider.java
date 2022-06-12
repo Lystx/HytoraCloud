@@ -1,8 +1,8 @@
 package cloud.hytora.driver.networking;
 
 import cloud.hytora.driver.networking.packets.*;
-import cloud.hytora.driver.networking.packets.group.ServiceConfigurationExecutePacket;
-import cloud.hytora.driver.networking.packets.group.ServerConfigurationCacheUpdatePacket;
+import cloud.hytora.driver.networking.packets.group.ServiceTaskExecutePacket;
+
 import cloud.hytora.driver.networking.packets.module.RemoteModuleControllerPacket;
 import cloud.hytora.driver.networking.packets.module.RemoteModuleExecutionPacket;
 import cloud.hytora.driver.networking.packets.node.*;
@@ -61,8 +61,7 @@ public class PacketProvider {
         PacketProvider.autoRegister(RemoteModuleControllerPacket.class);
 
         //service group packets
-        PacketProvider.autoRegister(ServiceConfigurationExecutePacket.class);
-        PacketProvider.autoRegister(ServerConfigurationCacheUpdatePacket.class);
+        PacketProvider.autoRegister(ServiceTaskExecutePacket.class);
 
         //cloud player packets
         PacketProvider.autoRegister(CloudPlayerLoginPacket.class);

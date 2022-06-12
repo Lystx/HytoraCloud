@@ -34,6 +34,8 @@ public class NodeServiceQueue {
     public NodeServiceQueue() {
         MAX_BOOTABLE_SERVICES = NodeDriver.getInstance().getConfig().getMaxBootableServicesAtSameTime();
         this.pausedGroups = new ArrayList<>();
+
+        this.dequeue();
     }
 
     public void dequeue() {

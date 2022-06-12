@@ -123,9 +123,11 @@ public class DefaultServiceTask extends ProtocolPropertyHolder implements Servic
         }
     }
 
+    @Override
     public void setMaintenance(boolean maintenance) {
         if (this.maintenance != maintenance) {
             //change incoming
+            System.out.println(true);
             CloudDriver.getInstance().getEventManager().callEventGlobally(new TaskMaintenanceChangeEvent(this, maintenance));
         }
         this.maintenance = maintenance;

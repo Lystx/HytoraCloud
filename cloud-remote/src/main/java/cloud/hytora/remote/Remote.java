@@ -94,7 +94,7 @@ public class Remote extends CloudDriver {
         this.client.registerPacketHandler(new RemoteNodeUpdateHandler());
 
         this.serviceTaskManager = new RemoteServiceTaskManager();
-        this.serviceManager = new RemoteServiceManager(property);
+        this.serviceManager = new RemoteServiceManager();
         this.playerManager = new RemotePlayerManager(this.eventManager);
         this.commandManager = new RemoteCommandManager();
         this.channelMessenger = new RemoteChannelMessenger(this.client);

@@ -1,19 +1,18 @@
 package cloud.hytora.node.service;
 
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.task.TaskUpdateEvent;
 
 import cloud.hytora.driver.services.task.DefaultServiceTaskManager;
-import cloud.hytora.driver.networking.packets.group.ServiceConfigurationExecutePacket;
-import cloud.hytora.driver.networking.packets.group.ServerConfigurationCacheUpdatePacket;
+import cloud.hytora.driver.networking.packets.group.ServiceTaskExecutePacket;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.database.impl.SectionedDatabase;
-import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,8 +30,8 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager {
         this.getAllTaskGroups().addAll(this.database.getSection(TaskGroup.class).getAll());
         this.getAllCachedTasks().addAll(this.database.getSection(ServiceTask.class).getAll());
 
-        CloudDriver.getInstance().getExecutor().registerPacketHandler((PacketHandler<ServiceConfigurationExecutePacket>) (ctx, packet) -> {
-            if (packet.getPayLoad().equals(ServiceConfigurationExecutePacket.ExecutionPayLoad.CREATE)) {
+        CloudDriver.getInstance().getExecutor().registerPacketHandler((PacketHandler<ServiceTaskExecutePacket>) (ctx, packet) -> {
+            if (packet.getPayLoad().equals(ServiceTaskExecutePacket.ExecutionPayLoad.CREATE)) {
                 this.getAllCachedTasks().add(packet.getServiceTask());
 
                 //creating templates
@@ -62,15 +61,26 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager {
 
     }
 
+
     @EventListener
     public void handle(TaskUpdateEvent event) {
         NodeDriver.getInstance().getServiceQueue().dequeue();
+        ServiceTask packetTask = event.getTask();
+        ServiceTask task = getTaskByNameOrNull(packetTask.getName());
+
+        if (task == null) {
+            return;
+        }
+
+        CloudDriver.getInstance().getLogger().trace("Updated Task {}", task.getName());
+        task.cloneInternally(packetTask, task);
+        CloudDriver.getInstance().getEventManager().callEventOnlyPacketBased(new TaskUpdateEvent(task));
     }
 
     @Override
     public void addTask(@NotNull ServiceTask task) {
         this.database.getSection(ServiceTask.class).insert(task.getName(), task);
-        NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceConfigurationExecutePacket(task, ServiceConfigurationExecutePacket.ExecutionPayLoad.CREATE));
+        NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceTaskExecutePacket(task, ServiceTaskExecutePacket.ExecutionPayLoad.CREATE));
         super.addTask(task);
     }
 
@@ -89,19 +99,14 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager {
     @Override
     public void removeTask(@NotNull ServiceTask task) {
         this.database.getSection(ServiceTask.class).delete(task.getName());
-        NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceConfigurationExecutePacket(task, ServiceConfigurationExecutePacket.ExecutionPayLoad.REMOVE));
+        NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceTaskExecutePacket(task, ServiceTaskExecutePacket.ExecutionPayLoad.REMOVE));
         super.removeTask(task);
     }
 
     @Override
     public void update(@NotNull ServiceTask task) {
-        ServerConfigurationCacheUpdatePacket packet = new ServerConfigurationCacheUpdatePacket(task);
-        // update all other nodes and this service groups
-        NodeDriver.getInstance().getExecutor().sendPacketToType(packet, ConnectionType.NODE);
-        // update own service group caches
-        NodeDriver.getInstance().getExecutor().sendPacketToType(packet, ConnectionType.SERVICE);
 
-        NodeDriver.getInstance().getServiceQueue().dequeue();
+        CloudDriver.getInstance().getEventManager().callEventGlobally(new TaskUpdateEvent(task));
     }
 
 }

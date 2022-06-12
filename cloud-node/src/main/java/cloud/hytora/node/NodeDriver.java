@@ -355,7 +355,6 @@ public class NodeDriver extends CloudDriver implements Node {
 
         //starting service queue
         this.serviceQueue = new NodeServiceQueue();
-        this.serviceQueue.dequeue();
 
         //add node cycle data
         scheduledExecutor.scheduleAtFixedRate(() -> executor.sendPacketToAll(new NodeCycleDataPacket(this.config.getNodeName(), getLastCycleData())), 1_000, NodeCycleData.PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
