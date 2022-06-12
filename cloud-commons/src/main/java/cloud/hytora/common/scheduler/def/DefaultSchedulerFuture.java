@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -27,6 +28,13 @@ public class DefaultSchedulerFuture implements SchedulerFuture {
 
 	private List<Consumer<SchedulerFuture>> taskConsumers = new ArrayList<>();
 	private List<Supplier<Boolean>> cancelWhens = new ArrayList<>();
+	private List<Class<?>> ignoreExceptions = new ArrayList<>();
+
+	@SafeVarargs
+	@Override
+	public final <T extends Throwable> void addIgnoreExceptionClass(Class<T>... exceptionClass) {
+		ignoreExceptions.addAll(Arrays.asList(exceptionClass));
+	}
 
 	@Override
 	public SchedulerFuture addListener(Consumer<SchedulerFuture> consumer) {
@@ -60,7 +68,9 @@ public class DefaultSchedulerFuture implements SchedulerFuture {
 			}
 		} catch (Exception e) {
 			this.error = true;
-			e.printStackTrace();
+			if (!this.ignoreExceptions.contains(e.getClass()) && this.ignoreExceptions.stream().noneMatch(c -> c.getClass().isAssignableFrom(e.getClass()))) {
+				e.printStackTrace();
+			}
 		}
 	}
 

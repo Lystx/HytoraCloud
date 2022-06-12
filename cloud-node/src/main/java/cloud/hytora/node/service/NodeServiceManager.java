@@ -1,5 +1,6 @@
 package cloud.hytora.node.service;
 
+import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.defaults.server.CloudServerCacheUnregisterEvent;
@@ -23,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystemException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -64,6 +66,7 @@ public class NodeServiceManager extends DefaultServiceManager {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void unregisterService(ServiceInfo service) {
         super.unregisterService(service);
 
@@ -81,7 +84,7 @@ public class NodeServiceManager extends DefaultServiceManager {
         NodeDriver.getInstance().getLogger().info("§c==> §7Channel §8[§b" + service.getName() + "@" + service.getHostName() + ":" + service.getPort() + "§8] §7disconnected §8[§eUptime: " + service.getReadableUptime() + "§8]");
 
 
-        Task.runTaskLater(() -> {
+        Scheduler.runTimeScheduler().scheduleDelayedTask(() -> {
             if (!service.isReady() && CloudDriver.getInstance().isRunning()) {
                 NodeDriver.getInstance().getLogger().warn("Service {} probably crashed during startup because it was not authenticated when it stopped", service.getName());
 
@@ -137,7 +140,7 @@ public class NodeServiceManager extends DefaultServiceManager {
                     }
                 }
             }
-        }, TimeUnit.MILLISECONDS, 500);
+        }, 500).addIgnoreExceptionClass(FileSystemException.class);
 
     }
 

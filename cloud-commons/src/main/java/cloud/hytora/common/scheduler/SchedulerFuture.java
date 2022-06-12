@@ -41,6 +41,15 @@ public interface SchedulerFuture extends Runnable {
     boolean isError();
 
     /**
+     * Adds an Exception that is going to be ignored when being thrown
+     *
+     * @param exceptionClass the class to ignore
+     * @param <T> the generic that has to extend {@link Throwable}
+     */
+    @SuppressWarnings("unchecked")
+    <T extends Throwable> void addIgnoreExceptionClass(Class<T>... exceptionClass);
+
+    /**
      * Adds a listener to this future
      *
      * @param listener the listener
