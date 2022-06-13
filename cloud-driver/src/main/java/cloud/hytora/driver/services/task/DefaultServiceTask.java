@@ -12,7 +12,7 @@ import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.fallback.SimpleFallback;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.def.CloudTemplate;
-import cloud.hytora.driver.services.utils.version.SpecificServiceVersion;
+import cloud.hytora.driver.services.utils.version.ServiceVersion;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
@@ -39,7 +39,7 @@ public class DefaultServiceTask extends ProtocolPropertyHolder implements Servic
     private int javaVersion;
 
     private SimpleFallback fallback = new SimpleFallback();
-    private SpecificServiceVersion version;
+    private ServiceVersion version;
     private Collection<CloudTemplate> templates = new ArrayList<>();
 
     public void setTemplates(Collection<ServiceTemplate> templates) {
@@ -96,7 +96,7 @@ public class DefaultServiceTask extends ProtocolPropertyHolder implements Servic
                 this.fallback = buf.readObject(SimpleFallback.class);
                 this.maintenance = buf.readBoolean();
 
-                this.version = buf.readEnum(SpecificServiceVersion.class);
+                this.version = buf.readEnum(ServiceVersion.class);
                 this.templates = buf.readObjectCollection(CloudTemplate.class);
                 break;
 

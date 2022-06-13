@@ -2,7 +2,7 @@ package cloud.hytora.node.impl.setup;
 
 import cloud.hytora.common.function.BiSupplier;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.services.utils.version.SpecificServiceVersion;
+import cloud.hytora.driver.services.utils.version.ServiceVersion;
 import cloud.hytora.driver.setup.Setup;
 import cloud.hytora.driver.setup.SetupHeaderBehaviour;
 import cloud.hytora.driver.setup.annotations.*;
@@ -22,9 +22,9 @@ public class TaskSetup extends Setup<TaskSetup> {
     private String parentName;
 
     @Question(id = 3, question = "What serversoftware should this task use?")
-    @RequiresEnum(SpecificServiceVersion.class)
+    @RequiresEnum(ServiceVersion.class)
     @AnswerCompleter(EnumSuggester.class)
-    private SpecificServiceVersion version;
+    private ServiceVersion version;
 
     @Question(id = 4, question = "Should services of this task be dynamic?")
     @QuestionTip("Dynamic means that the service and all its data will be deleted on shutdown")

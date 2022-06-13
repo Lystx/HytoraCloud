@@ -13,7 +13,7 @@ import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.driver.services.template.def.CloudTemplate;
 import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
-import cloud.hytora.driver.services.utils.version.SpecificServiceVersion;
+import cloud.hytora.driver.services.utils.version.ServiceVersion;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 import cloud.hytora.driver.setup.SetupControlState;
 import cloud.hytora.node.NodeDriver;
@@ -73,7 +73,7 @@ public class TaskCommand {
                 int maxPlayers = setup.getMaxPlayers();
                 int maxServers = setup.getMaxServers();
                 boolean dynamic = setup.isDynamic();
-                SpecificServiceVersion version = setup.getVersion();
+                ServiceVersion version = setup.getVersion();
                 int minServers = setup.getMinServers();
                 String node = setup.getNode();
                 boolean maintenance = setup.isMaintenance();

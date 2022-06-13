@@ -20,9 +20,7 @@ import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
-import cloud.hytora.driver.services.utils.version.SpecificServiceVersion;
 import cloud.hytora.driver.services.utils.version.VersionFile;
-import cloud.hytora.node.impl.config.MainConfiguration;
 import cloud.hytora.node.impl.event.ServiceOutputLineAddEvent;
 import cloud.hytora.node.service.NodeServiceManager;
 import cloud.hytora.node.NodeDriver;
@@ -110,7 +108,7 @@ public class ServiceQueueProcessWorker {
             }
         }
 
-        SpecificServiceVersion version = service.getTask().getVersion();
+        ServiceVersion version = service.getTask().getVersion();
 
         File serverIcon = new File(serverDir, "server-icon.png");
         if (!serverIcon.exists()) {
@@ -248,7 +246,7 @@ public class ServiceQueueProcessWorker {
     }
 
 
-    private void downloadServiceVersion(SpecificServiceVersion version) {
+    private void downloadServiceVersion(ServiceVersion version) {
         File file = new File(NodeDriver.STORAGE_VERSIONS_FOLDER, version.getJar());
 
         if (file.exists()) {
