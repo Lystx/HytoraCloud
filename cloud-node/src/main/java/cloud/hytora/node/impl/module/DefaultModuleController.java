@@ -14,6 +14,7 @@ import cloud.hytora.driver.module.controller.task.ScheduledModuleTask;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.common.scheduler.Scheduler;
+import cloud.hytora.node.NodeDriver;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -218,6 +219,7 @@ public class DefaultModuleController implements ModuleController {
 
         module = (DriverModule) instance;
         module.setController(this);
+        module.setHttpServer(NodeDriver.getInstance().getWebServer());
         this.registerModuleTasks(module);
 
         classLoader.setModule(module);

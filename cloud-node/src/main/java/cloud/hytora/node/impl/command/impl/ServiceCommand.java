@@ -14,6 +14,7 @@ import cloud.hytora.driver.services.deployment.CloudDeployment;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.utils.ServiceState;
+import cloud.hytora.node.NodeDriver;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,7 +86,7 @@ public class ServiceCommand {
             return;
         }
 
-        Console console = Objects.requireNonNull(CloudDriver.getInstance().getConsole());
+        Console console = Objects.requireNonNull(NodeDriver.getInstance().getConsole());
         CommandManager commandManager = CloudDriver.getInstance().getCommandManager();
 
         console.clearScreen();

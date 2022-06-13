@@ -401,7 +401,7 @@ public class NodeDriver extends CloudDriver implements Node {
     }
 
     private void startSetup() {
-        new NodeSetup().start((setup, setupControlState) -> {
+        new NodeSetup(NodeDriver.getInstance().getConsole()).start((setup, setupControlState) -> {
 
             if (setupControlState != SetupControlState.FINISHED) return;
 
@@ -410,13 +410,13 @@ public class NodeDriver extends CloudDriver implements Node {
                     initConfigs(setup, null, null);
                     break;
                 case MYSQL:
-                    new MySqlSetup().start((mySqlSetup, setupControlState1) -> {
+                    new MySqlSetup(NodeDriver.getInstance().getConsole()).start((mySqlSetup, setupControlState1) -> {
                         if (setupControlState1 != SetupControlState.FINISHED) return;
                         initConfigs(setup, mySqlSetup, null);
                     });
                     break;
                 case MONGODB:
-                    new MongoDBSetup().start((mongoDBSetup, setupControlState1) -> {
+                    new MongoDBSetup(NodeDriver.getInstance().getConsole()).start((mongoDBSetup, setupControlState1) -> {
                         if (setupControlState1 != SetupControlState.FINISHED) return;
                         initConfigs(setup, null, mongoDBSetup);
                     });
@@ -437,7 +437,7 @@ public class NodeDriver extends CloudDriver implements Node {
         boolean remote = setup.isRemote();
 
         if (remote) {
-            new NodeRemoteSetup().start((setup1, state) -> {
+            new NodeRemoteSetup(NodeDriver.getInstance().getConsole()).start((setup1, state) -> {
                 if (state == SetupControlState.FINISHED) {
                     String host1 = setup1.getHost();
                     int port1 = setup1.getPort();
@@ -532,12 +532,6 @@ public class NodeDriver extends CloudDriver implements Node {
             }
             process.destroyForcibly();
         }, TimeUnit.MILLISECONDS, 500);
-    }
-
-    @Nullable
-    @Override
-    public HttpServer getHttpServer() {
-        return webServer;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package cloud.hytora.node.impl.setup;
 
+import cloud.hytora.driver.command.Console;
 import cloud.hytora.driver.setup.Setup;
 import cloud.hytora.driver.setup.annotations.*;
 import cloud.hytora.driver.setup.suggesters.BooleanSuggester;
@@ -32,6 +33,10 @@ public class NodeSetup extends Setup<NodeSetup> {
     @QuestionTip("When using multiple Nodes, you should use an online database!")
     @RequiresEnum(DatabaseType.class)
     private DatabaseType databaseType;
+
+    public NodeSetup(Console console) {
+        super(console);
+    }
 
     @Override
     public boolean isCancellable() {

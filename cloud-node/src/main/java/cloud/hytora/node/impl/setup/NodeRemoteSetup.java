@@ -1,5 +1,6 @@
 package cloud.hytora.node.impl.setup;
 
+import cloud.hytora.driver.command.Console;
 import cloud.hytora.driver.setup.Setup;
 import cloud.hytora.driver.setup.annotations.Question;
 import cloud.hytora.driver.setup.annotations.QuestionTip;
@@ -17,6 +18,10 @@ public class NodeRemoteSetup extends Setup<NodeRemoteSetup> {
     @Question(id = 3, question = "What is the auth key of the Node you want this Node to connect to?")
     @QuestionTip("Look in the config.json!")
     private String authKey;
+
+    public NodeRemoteSetup(Console console) {
+        super(console);
+    }
 
     @Override
     public boolean isCancellable() {

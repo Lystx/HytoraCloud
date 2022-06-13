@@ -6,6 +6,7 @@ import cloud.hytora.driver.command.annotation.Command;
 import cloud.hytora.driver.command.annotation.CommandDescription;
 import cloud.hytora.driver.command.annotation.SubCommand;
 import cloud.hytora.driver.command.sender.CommandSender;
+import cloud.hytora.node.NodeDriver;
 
 @Command(
         name = {"clear", "cls"},
@@ -16,6 +17,6 @@ public class ClearCommand {
 
     @SubCommand
     public void executeClear(CommandSender sender) {
-        CloudDriver.getInstance().getConsole().clearScreen();
+        NodeDriver.getInstance().getConsole().clearScreen();
     }
 }

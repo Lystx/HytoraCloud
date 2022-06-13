@@ -283,17 +283,19 @@ public enum ServiceVersion {
     )
     ;
 
-    private final VersionType serviceVersion;
+    private final VersionType type;
     private final SpecificDriverEnvironment environment;
     private final String url;
     private final String title;
     private final String version;
     private final Class<? extends VersionFile>[] versionFiles;
 
+    private VersionFile[] cachedInstantiatedVersionFiles;
+
     @SafeVarargs
-    ServiceVersion(VersionType serviceVersion, String url, String title, String version, Class<? extends VersionFile>... versionFiles) {
-        this.serviceVersion = serviceVersion;
-        this.environment = serviceVersion.getEnvironment();
+    ServiceVersion(VersionType type, String url, String title, String version, Class<? extends VersionFile>... versionFiles) {
+        this.type = type;
+        this.environment = type.getEnvironment();
         this.title = title;
         this.version = version;
         this.versionFiles = versionFiles;
@@ -312,7 +314,6 @@ public enum ServiceVersion {
         this.url = finalUrl;
     }
 
-    private VersionFile[] cachedInstantiatedVersionFiles;
 
     public VersionFile[] instantiateVersionFiles() {
         if (cachedInstantiatedVersionFiles == null) {

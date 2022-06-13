@@ -2,6 +2,7 @@ package cloud.hytora.node.impl.setup.database;
 
 import cloud.hytora.common.function.BiSupplier;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.command.Console;
 import cloud.hytora.driver.setup.Setup;
 import cloud.hytora.driver.setup.SetupHeaderBehaviour;
 import cloud.hytora.driver.setup.annotations.Question;
@@ -27,6 +28,10 @@ public class MongoDBSetup extends Setup<MongoDBSetup> {
 
     @Question(id = 6, question = "What's the name of your auth database?")
     private String authDatabase;
+
+    public MongoDBSetup(Console console) {
+        super(console);
+    }
 
 
     @Override

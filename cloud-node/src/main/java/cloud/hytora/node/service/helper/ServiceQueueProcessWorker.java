@@ -149,7 +149,7 @@ public class ServiceQueueProcessWorker {
                         });
                         CloudDriver.getInstance().getEventManager().registerSelfDestructiveHandler(CloudServerCacheUnregisterEvent.class, e -> {
                             if (service.asCloudServer().isScreenServer()) {
-                                CloudDriver.getInstance().getEventManager().callEventGlobally(new CloudServerRequestScreenLeaveEvent(CloudDriver.getInstance().getCommandManager(), CloudDriver.getInstance().getConsole(), CloudDriver.getInstance().getCommandSender(), service));
+                                CloudDriver.getInstance().getEventManager().callEventGlobally(new CloudServerRequestScreenLeaveEvent(CloudDriver.getInstance().getCommandManager(), NodeDriver.getInstance().getConsole(), CloudDriver.getInstance().getCommandSender(), service));
                             }
                             listener.destroy();
                         });

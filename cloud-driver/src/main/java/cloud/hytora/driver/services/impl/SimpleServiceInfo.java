@@ -109,7 +109,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
         if (lostCycles > 0) {
             CloudDriver.getInstance().getLogger().warn("Service timeout " + this.getName() + ": lost {} cycles ({}ms)", lostCycles, lastCycleDelay);
         }
-        return lostCycles >= CloudDriver.SERVER_CYCLE_TIMEOUT;
+        return lostCycles >= CloudDriver.SERVER_MAX_LOST_CYCLES;
     }
 
     @Override

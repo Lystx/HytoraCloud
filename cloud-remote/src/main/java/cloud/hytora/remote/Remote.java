@@ -82,7 +82,7 @@ public class Remote extends CloudDriver {
 
         instance = this;
 
-        this.commandSender = new DefaultCommandSender("Remote", this.getConsole()).function(System.out::println);
+        this.commandSender = new DefaultCommandSender("Remote", null).function(System.out::println);
         this.property = identity;
 
         this.client = new RemoteNetworkClient(property.getAuthKey(), property.getName(), property.getHostname(), property.getPort(), DocumentFactory.emptyDocument(), ifConnectionFailed);
@@ -223,16 +223,5 @@ public class Remote extends CloudDriver {
         return client;
     }
 
-    @Nullable
-    @Override
-    public HttpServer getHttpServer() {
-        return null;
-    }
-
-    @Nullable
-    @Override
-    public Console getConsole() {
-        return null;
-    }
 
 }

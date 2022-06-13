@@ -66,7 +66,7 @@ public class TaskCommand {
     @CommandDescription("Creates a new task")
     public void executeCreate(CommandSender sender) {
 
-        new TaskSetup().start((setup, state) -> {
+        new TaskSetup(NodeDriver.getInstance().getConsole()).start((setup, state) -> {
             if (state == SetupControlState.FINISHED) {
                 String name = setup.getName();
                 int memory = setup.getMemory();

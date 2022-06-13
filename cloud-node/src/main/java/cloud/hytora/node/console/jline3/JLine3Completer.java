@@ -5,6 +5,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.setup.Setup;
 import cloud.hytora.driver.setup.SetupEntry;
 import cloud.hytora.driver.setup.SetupSuggester;
+import cloud.hytora.node.NodeDriver;
 import org.jline.reader.Candidate;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
@@ -18,7 +19,7 @@ public class JLine3Completer implements Completer {
 	@Override
 	public void complete(LineReader reader, ParsedLine line, List<Candidate> candidates) {
 		String buffer = line.line();
-		Setup<?> currentSetup = CloudDriver.getInstance().getConsole().getCurrentSetup();
+		Setup<?> currentSetup = NodeDriver.getInstance().getConsole().getCurrentSetup();
 		if (currentSetup != null) {
 
 			SetupEntry value = currentSetup.getSetup().getValue();

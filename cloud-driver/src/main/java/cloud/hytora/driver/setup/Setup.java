@@ -118,9 +118,9 @@ public abstract class Setup<T extends Setup<?>> {
         return SetupHeaderBehaviour.CLEAR_SCREEN_AFTER;
     }
 
-    public Setup() {
+    public Setup(Console console) {
 
-        this.console = CloudDriver.getInstance().getConsole();
+        this.console = console;
         this.logger = CloudDriver.getInstance().getLogger();
 
         this.cancelled = false;

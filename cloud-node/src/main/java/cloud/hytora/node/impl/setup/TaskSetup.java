@@ -2,6 +2,7 @@ package cloud.hytora.node.impl.setup;
 
 import cloud.hytora.common.function.BiSupplier;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.command.Console;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 import cloud.hytora.driver.setup.Setup;
 import cloud.hytora.driver.setup.SetupHeaderBehaviour;
@@ -73,6 +74,10 @@ public class TaskSetup extends Setup<TaskSetup> {
     @QuestionTip("Use 'none' for no permission")
     @SuggestedAnswer("none")
     private String fallbackPermission;
+
+    public TaskSetup(Console console) {
+        super(console);
+    }
 
     @Override
     public boolean isCancellable() {
