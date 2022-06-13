@@ -61,7 +61,7 @@ public class ConfigManager {
                                     "/etc/ssl/certificate.pem",
                                     "/etc/ssl/privateKey.key"
                             )
-                    ),25565, 30000, new ArrayList<>());
+                    ),25565, 40000, new ArrayList<>());
         }
 
         if (this.config.getNodeConfig().getClusterAddresses().length > 0) {

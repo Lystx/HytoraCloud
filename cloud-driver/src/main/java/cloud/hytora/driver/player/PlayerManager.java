@@ -60,7 +60,7 @@ public interface PlayerManager {
 
     default int countPlayerCapacity() {
         int capacity = 0;
-        for (ServiceInfo allCachedService : CloudDriver.getInstance().getServiceManager().getAllServicesByEnvironment(SpecificDriverEnvironment.PROXY_SERVER)) {
+        for (ServiceInfo allCachedService : CloudDriver.getInstance().getServiceManager().getAllServicesByEnvironment(SpecificDriverEnvironment.PROXY)) {
             capacity += allCachedService.getMaxPlayers();
         }
         return capacity;

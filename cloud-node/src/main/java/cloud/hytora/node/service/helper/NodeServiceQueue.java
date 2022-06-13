@@ -69,24 +69,24 @@ public class NodeServiceQueue {
                 .filter(con -> this.getAmountOfGroupServices(con) < con.getMinOnlineService())
                 .filter(con -> !pausedGroups.contains(con.getName()))
                 .sorted(Comparator.comparingInt(ServiceTask::getStartOrder))
-                .forEach(con -> {
+                .forEach(task -> {
 
-                    ClusterClientExecutor nodeClient = NodeDriver.getInstance().getExecutor().getClient(con.getNode()).orElse(null);
-                    boolean thisSidesNode = con.getNode().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName());
+                    ClusterClientExecutor nodeClient = NodeDriver.getInstance().getExecutor().getClient(task.getNode()).orElse(null);
+                    boolean thisSidesNode = task.getNode().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName());
 
                     if (nodeClient == null && !thisSidesNode) {
-                        CloudDriver.getInstance().getLogger().info("Tried to start a Service of Group '" + con.getName() + "' but no Node with name '" + con.getNode() + "' is connected!");
+                        CloudDriver.getInstance().getLogger().info("Tried to start a Service of Group '" + task.getName() + "' but no Node with name '" + task.getNode() + "' is connected!");
                         return;
                    }
 
                     String address = thisSidesNode ? "127.0.0.1" : ((InetSocketAddress)nodeClient.getChannel().remoteAddress()).getAddress().getHostAddress();
 
-                    int port = con.getVersion().isProxy() ? MainConfiguration.getInstance().getProxyStartPort() : MainConfiguration.getInstance().getSpigotStartPort();
+                    int port = task.getVersion().isProxy() ? MainConfiguration.getInstance().getProxyStartPort() : MainConfiguration.getInstance().getSpigotStartPort();
                     while (isPortUsed(port)) {
                         port++;
                     }
 
-                    ServiceInfo service = new SimpleServiceInfo(con.getName(), this.getPossibleServiceIDByGroup(con), port, address);
+                    ServiceInfo service = new SimpleServiceInfo(task.getName(), this.getPossibleServiceIDByGroup(task), port, address);
                     CloudDriver.getInstance().getServiceManager().registerService(service);
 
                     if (thisSidesNode) {

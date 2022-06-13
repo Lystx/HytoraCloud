@@ -17,8 +17,8 @@ public enum ModuleCopyType {
 	public boolean applies(@Nonnull SpecificDriverEnvironment type) {
 		switch (this) {
 			case ALL:       return true;
-			case PROXY:     return type == SpecificDriverEnvironment.PROXY_SERVER;
-			case SERVER:    return type == SpecificDriverEnvironment.MINECRAFT_SERVER;
+			case PROXY:     return type == SpecificDriverEnvironment.PROXY;
+			case SERVER:    return type == SpecificDriverEnvironment.MINECRAFT;
 			case NONE:
 			default:        return false;
 		}

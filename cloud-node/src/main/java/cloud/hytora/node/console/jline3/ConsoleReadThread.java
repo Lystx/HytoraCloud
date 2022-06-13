@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 public class ConsoleReadThread extends Thread {
 
 	private final JLine3Console console;
-	private CompletableFuture<String> currentTask;
 
 	@Getter
 	private String lastLine;
@@ -26,11 +25,6 @@ public class ConsoleReadThread extends Thread {
 		String line;
 		while (!Thread.interrupted() && (line = readLineOrNull()) != null) {
 			lastLine = line;
-			if (currentTask != null) {
-				currentTask.complete(line);
-				currentTask = null;
-			}
-
 			for (Consumer<? super String> handler : console.getInputHandlers()) {
 				handler.accept(line);
 			}
@@ -41,20 +35,9 @@ public class ConsoleReadThread extends Thread {
 	public String readLineOrNull() {
 		try {
 			return console.getLineReader().readLine(console.getPrompt());
-		} catch (UserInterruptException ex) {
-			System.exit(-1);
 		} catch (Exception ex) {
 			return null;
 		}
-		return null;
 	}
 
-	@Nonnull
-	protected CompletableFuture<String> getCurrentTask() {
-		if (currentTask == null) {
-			currentTask = new CompletableFuture<>();
-		}
-
-		return currentTask;
-	}
 }

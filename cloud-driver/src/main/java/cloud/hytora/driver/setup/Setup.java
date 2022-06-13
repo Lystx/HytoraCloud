@@ -146,11 +146,9 @@ public abstract class Setup<T extends Setup<?>> {
 
         //While current id is in range of map-cache
         while (this.current < this.map.size() + 1) {
-
             //Reading input and executing Setup#next(String)
             String line = this.console.readLineOrNull();
             if (line != null) {
-                //this.console.setPrompt("");
                 executeInput(line);
             }
         }

@@ -5,8 +5,8 @@ public enum SpecificDriverEnvironment {
     @Deprecated
     UNKNOWN,
 
-    PROXY_SERVER,
+    PROXY,
 
-    MINECRAFT_SERVER
+    MINECRAFT
 
 }

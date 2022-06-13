@@ -8,7 +8,7 @@ import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
 import cloud.hytora.driver.services.template.ServiceTemplate;
-import cloud.hytora.driver.services.utils.ServiceVersion;
+import cloud.hytora.driver.services.utils.version.SpecificServiceVersion;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -105,14 +105,14 @@ public interface ServiceTask extends Bufferable, PropertyHolder, SelfCloneable<S
     /**
      * @return the game server version of the group
      */
-    @NotNull ServiceVersion getVersion();
+    @NotNull SpecificServiceVersion getVersion();
 
     /**
      * sets the game server version of the group
      *
      * @param gameServerVersion the game server version to set
      */
-    void setVersion(@NotNull ServiceVersion gameServerVersion);
+    void setVersion(@NotNull SpecificServiceVersion gameServerVersion);
 
     String getMotd();
 

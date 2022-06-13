@@ -12,7 +12,7 @@ import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.fallback.SimpleFallback;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.def.CloudTemplate;
-import cloud.hytora.driver.services.utils.ServiceVersion;
+import cloud.hytora.driver.services.utils.version.SpecificServiceVersion;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
@@ -39,7 +39,7 @@ public class DefaultServiceTask extends ProtocolPropertyHolder implements Servic
     private int javaVersion;
 
     private SimpleFallback fallback = new SimpleFallback();
-    private ServiceVersion version;
+    private SpecificServiceVersion version;
     private Collection<CloudTemplate> templates = new ArrayList<>();
 
     public void setTemplates(Collection<ServiceTemplate> templates) {
@@ -96,7 +96,7 @@ public class DefaultServiceTask extends ProtocolPropertyHolder implements Servic
                 this.fallback = buf.readObject(SimpleFallback.class);
                 this.maintenance = buf.readBoolean();
 
-                this.version = buf.readEnum(ServiceVersion.class);
+                this.version = buf.readEnum(SpecificServiceVersion.class);
                 this.templates = buf.readObjectCollection(CloudTemplate.class);
                 break;
 
@@ -127,7 +127,6 @@ public class DefaultServiceTask extends ProtocolPropertyHolder implements Servic
     public void setMaintenance(boolean maintenance) {
         if (this.maintenance != maintenance) {
             //change incoming
-            System.out.println(true);
             CloudDriver.getInstance().getEventManager().callEventGlobally(new TaskMaintenanceChangeEvent(this, maintenance));
         }
         this.maintenance = maintenance;

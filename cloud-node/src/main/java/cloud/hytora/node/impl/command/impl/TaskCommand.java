@@ -13,7 +13,7 @@ import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.driver.services.template.def.CloudTemplate;
 import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
-import cloud.hytora.driver.services.utils.ServiceVersion;
+import cloud.hytora.driver.services.utils.version.SpecificServiceVersion;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 import cloud.hytora.driver.setup.SetupControlState;
 import cloud.hytora.node.NodeDriver;
@@ -73,7 +73,7 @@ public class TaskCommand {
                 int maxPlayers = setup.getMaxPlayers();
                 int maxServers = setup.getMaxServers();
                 boolean dynamic = setup.isDynamic();
-                ServiceVersion version = setup.getVersion();
+                SpecificServiceVersion version = setup.getVersion();
                 int minServers = setup.getMinServers();
                 String node = setup.getNode();
                 boolean maintenance = setup.isMaintenance();
@@ -85,7 +85,7 @@ public class TaskCommand {
                 DefaultServiceTask serviceTask = new DefaultServiceTask();
 
                 if (!CloudDriver.getInstance().getServiceTaskManager().getTaskGroupByName(parentName).isPresent()) {
-                    DefaultTaskGroup parent = new DefaultTaskGroup(name, version.getWrapperEnvironment(), shutdownBehaviour, new String[]{
+                    DefaultTaskGroup parent = new DefaultTaskGroup(name, version.getEnvironment(), shutdownBehaviour, new String[]{
                             "-XX:+UseG1GC",
                             "-XX:+ParallelRefProcEnabled",
                             "-XX:MaxGCPauseMillis=200",
@@ -125,7 +125,7 @@ public class TaskCommand {
                 serviceTask.setJavaVersion(javaVersion);
                 serviceTask.setMotd("Default HytoraCloud Service.");
 
-                if (serviceTask.getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY_SERVER) {
+                if (serviceTask.getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY) {
                     serviceTask.setProperty("onlineMode", true);
                     serviceTask.setProperty("proxyProtocol", false);
                 } else {
@@ -206,7 +206,7 @@ public class TaskCommand {
         }
         sender.sendMessage("§8");
         for (ServiceTask g : cachedTasks) {
-            sender.sendMessage("§8=> §b" + g.getName() + " §8(§b" + (g.getVersion().isProxy() ? "PROXY_SERVER" : "MINECRAFT_SERVER") + "§8)");
+            sender.sendMessage("§8=> §b" + g.getName() + " §8(§b" + (g.getVersion().isProxy() ? "PROXY" : "MINECRAFT") + "§8)");
         }
         sender.sendMessage("§8");
     }

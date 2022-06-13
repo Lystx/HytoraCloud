@@ -65,7 +65,7 @@ import cloud.hytora.node.impl.setup.NodeRemoteSetup;
 import cloud.hytora.node.service.template.LocalTemplateStorage;
 import cloud.hytora.driver.setup.SetupControlState;
 import cloud.hytora.driver.storage.DriverStorage;
-import cloud.hytora.driver.services.utils.ServiceVersion;
+import cloud.hytora.driver.services.utils.version.SpecificServiceVersion;
 import cloud.hytora.node.impl.command.*;
 import cloud.hytora.node.impl.command.impl.*;
 import cloud.hytora.node.impl.database.config.DatabaseType;
@@ -308,7 +308,7 @@ public class NodeDriver extends CloudDriver implements Node {
         this.commandManager.registerCommand(new ClusterCommand());
 
         //registering command argument parsers
-        this.commandManager.registerParser(ServiceVersion.class, ServiceVersion::valueOf);
+        this.commandManager.registerParser(SpecificServiceVersion.class, SpecificServiceVersion::valueOf);
         this.commandManager.registerParser(ServiceInfo.class, this.serviceManager::getServiceByNameOrNull);
         this.commandManager.registerParser(ServiceTask.class, this.serviceTaskManager::getTaskByNameOrNull);
         this.commandManager.registerParser(CloudPlayer.class, this.playerManager::getCloudPlayerByNameOrNull);
@@ -434,7 +434,6 @@ public class NodeDriver extends CloudDriver implements Node {
         String nodeName = setup.getName();
         String host = setup.getHost();
         int port = setup.getPort();
-        int serviceStartPort = setup.getServiceStartPort();
         boolean remote = setup.isRemote();
 
         if (remote) {
@@ -456,7 +455,6 @@ public class NodeDriver extends CloudDriver implements Node {
         nodeConfig.setBindPort(port);
         nodeConfig.setRemote(false);
 
-        config.setSpigotStartPort(serviceStartPort);
         config.setNodeConfig(nodeConfig);
 
         DatabaseType databaseType = setup.getDatabaseType();

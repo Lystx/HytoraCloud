@@ -234,9 +234,17 @@ public final class FileUtils {
 		return null;
 	}
 
-	public static void copyResource(String res, String dest, Class c) throws IOException {
+	public static void copyResource(String res, String dest, Class<?> c) throws IOException {
 		InputStream src = c.getResourceAsStream(res);
 		Files.copy(src, Paths.get(dest), StandardCopyOption.REPLACE_EXISTING);
+	}
+
+	public static void copyResource(String res, File dest, Class<?> c) throws IOException {
+		copyResource(res, dest.toString(), c);
+	}
+
+	public static void copyResource(String res, File dest) throws IOException {
+		copyResource(res, dest.toString(), FileUtils.class);
 	}
 
 	public static void openZipFileSystem(@Nonnull Path path, @Nonnull ExceptionallyConsumer<? super FileSystem> consumer) {

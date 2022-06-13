@@ -3,7 +3,6 @@ package cloud.hytora.modules.proxy;
 import cloud.hytora.common.collection.IRandom;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.scheduler.Scheduler;
-import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.component.ChatComponent;
 import cloud.hytora.driver.module.controller.DriverModule;
@@ -19,15 +18,10 @@ import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 import cloud.hytora.modules.proxy.command.ProxyCommand;
 import cloud.hytora.modules.proxy.config.*;
 import cloud.hytora.modules.proxy.listener.ModuleListener;
-import cloud.hytora.remote.Remote;
 import lombok.Getter;
-import lombok.SneakyThrows;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.File;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @ModuleConfiguration(
@@ -113,13 +107,13 @@ public class ProxyModule extends DriverModule {
     }
 
     public void updateMotd() {
-        for (ServiceTask serviceTask : CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks().stream().filter(t -> t.getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY_SERVER).collect(Collectors.toList())) {
+        for (ServiceTask serviceTask : CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks().stream().filter(t -> t.getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY).collect(Collectors.toList())) {
 
             MotdLayOut motd = selectMotd(serviceTask);
             if (motd == null) {
                 continue;
             }
-            for (ServiceInfo serviceInfo : CloudDriver.getInstance().getServiceManager().getAllServicesByEnvironment(SpecificDriverEnvironment.PROXY_SERVER)) {
+            for (ServiceInfo serviceInfo : CloudDriver.getInstance().getServiceManager().getAllServicesByEnvironment(SpecificDriverEnvironment.PROXY)) {
                 serviceInfo.editPingProperties(ping -> {
                     ping.setMotd(replaceDefault(serviceInfo, (motd.getFirstLine() + "\n" + motd.getSecondLine())));
                     ping.setVersionText(replaceDefault(serviceInfo, motd.getProtocolText()));

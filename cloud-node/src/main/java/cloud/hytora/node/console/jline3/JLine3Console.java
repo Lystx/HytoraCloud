@@ -50,6 +50,7 @@ public class JLine3Console implements Console {
 		}
 
 		this.terminal = TerminalBuilder.builder().system(true).encoding(StandardCharsets.UTF_8).build();
+
 		this.lineReader = new InternalLineReaderBuilder(terminal).completer(new JLine3Completer()).option(Option.DISABLE_EVENT_EXPANSION, true).variable(LineReader.BELL_STYLE, "off").build();
 
 		this.resetPrompt();
@@ -71,11 +72,6 @@ public class JLine3Console implements Console {
 		lineReader.getBuffer().write(commandInputValue);
 	}
 
-	@Nonnull
-	@Override
-	public CompletableFuture<String> readLine() {
-		return consoleReadThread.getCurrentTask();
-	}
 
 	@Override
 	public String readLineOrNull() {

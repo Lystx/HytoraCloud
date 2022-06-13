@@ -36,9 +36,6 @@ public interface Console {
 
 	void setScreenName(@Nonnull String screen);
 
-	@Nonnull
-	CompletableFuture<String> readLine();
-
 	String readLineOrNull();
 
 	@Nonnull
