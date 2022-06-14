@@ -136,8 +136,6 @@ public class NodeDriver extends CloudDriver implements Node {
     public static final File MODULE_FOLDER = new File(NODE_FOLDER, "modules/");
 
     public static final File STORAGE_FOLDER = new File(NODE_FOLDER, "storage/");
-    public static final File CONFIGURATIONS_FOLDER = new File(STORAGE_FOLDER, "configurations/");
-    public static final File CONFIGURATIONS_PARENTS_FOLDER = new File(STORAGE_FOLDER, "groups/");
     public static final File STORAGE_VERSIONS_FOLDER = new File(STORAGE_FOLDER, "versions/");
     public static final File STORAGE_TEMP_FOLDER = new File(STORAGE_FOLDER, "tmp-" + UUID.randomUUID().toString().substring(0, 5) + "/");
     public static final File TEMPLATES_DIR = new File(STORAGE_FOLDER, "templates/");
@@ -242,7 +240,6 @@ public class NodeDriver extends CloudDriver implements Node {
 
         //creating needed files
         NodeDriver.NODE_FOLDER.mkdirs();
-        NodeDriver.CONFIGURATIONS_FOLDER.mkdirs();
 
         NodeDriver.STORAGE_FOLDER.mkdirs();
         NodeDriver.STORAGE_VERSIONS_FOLDER.mkdirs();

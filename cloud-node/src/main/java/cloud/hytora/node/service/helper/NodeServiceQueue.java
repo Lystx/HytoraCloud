@@ -75,9 +75,9 @@ public class NodeServiceQueue {
                     if (nodeClient == null && !thisSidesNode) {
                         CloudDriver.getInstance().getLogger().info("Tried to start a Service of Group '" + task.getName() + "' but no Node with name '" + task.getNode() + "' is connected!");
                         return;
-                   }
+                    }
 
-                    String address = thisSidesNode ? "127.0.0.1" : ((InetSocketAddress)nodeClient.getChannel().remoteAddress()).getAddress().getHostAddress();
+                    String address = thisSidesNode ? "127.0.0.1" : ((InetSocketAddress) nodeClient.getChannel().remoteAddress()).getAddress().getHostAddress();
 
                     int port = task.getVersion().isProxy() ? MainConfiguration.getInstance().getProxyStartPort() : MainConfiguration.getInstance().getSpigotStartPort();
                     while (isPortUsed(port)) {

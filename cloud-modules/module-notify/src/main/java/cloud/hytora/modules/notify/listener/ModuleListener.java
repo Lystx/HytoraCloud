@@ -13,7 +13,6 @@ import cloud.hytora.modules.notify.config.NotifyConfiguration;
 
 public class ModuleListener {
 
-
     @EventListener
     public void handleAdd(ServiceRegisterEvent event) {
         ServiceInfo serviceInfo = event.getServiceInfo();

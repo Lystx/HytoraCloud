@@ -1,5 +1,6 @@
 package cloud.hytora.driver.networking.packets;
 
+import cloud.hytora.driver.event.defaults.driver.DriverCacheUpdateEvent;
 import cloud.hytora.driver.networking.PacketSender;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
@@ -73,6 +74,7 @@ public class DriverUpdatePacket extends Packet {
                 connectedNodes = buf.readWrapperObjectCollection(NodeInfo.class);
                 CloudDriver.getInstance().getNodeManager().setAllConnectedNodes((List<Node>) connectedNodes);
 
+                CloudDriver.getInstance().getEventManager().callEventOnlyLocally(new DriverCacheUpdateEvent());
                 break;
 
             case WRITE:

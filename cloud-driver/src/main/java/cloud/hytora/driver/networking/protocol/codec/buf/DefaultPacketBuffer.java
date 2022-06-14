@@ -744,7 +744,7 @@ public class DefaultPacketBuffer implements PacketBuffer {
 	@Nonnull
 	public <T> PacketBuffer writeCollection(@Nonnull Collection<? extends T> collection, @Nonnull Consumer<T> writer) {
 		writeVarInt(collection.size());
-		for (T object : collection) {
+		for (T object : new ArrayList<>(collection)) {
 			writer.accept(object);
 		}
 		return this;

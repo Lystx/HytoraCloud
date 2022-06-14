@@ -3,6 +3,7 @@ package cloud.hytora.bridge.proxy.bungee.events.cloud;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.component.ChatComponent;
 import cloud.hytora.driver.event.EventListener;
+import cloud.hytora.driver.event.defaults.driver.DriverCacheUpdateEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 
@@ -22,9 +23,6 @@ import java.net.InetSocketAddress;
 public class ProxyRemoteHandler {
 
     public ProxyRemoteHandler() {
-
-        //register fallback
-        this.registerService("fallback", new InetSocketAddress("127.0.0.1", 0));
 
         //load all current groups
         for (ServiceInfo allCachedService : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
@@ -59,7 +57,19 @@ public class ProxyRemoteHandler {
         ProxyServer.getInstance().getServers().remove(event.getService());
     }
 
+    @EventListener
+    public void handle(DriverCacheUpdateEvent event) {
+        ProxyServer.getInstance().getServers().clear();
+        for (ServiceInfo service : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
+            if (!service.getTask().getVersion().isProxy()) {
+                this.registerService(service);
+            }
+        }
+    }
     private void registerService(String name, InetSocketAddress socketAddress) {
+        if (ProxyServer.getInstance().getServerInfo(name) != null) {
+            return;
+        }
         ProxyServer.getInstance().getServers().put(name, ProxyServer.getInstance().constructServerInfo(name, socketAddress, "CloudServer", false));
     }
 
@@ -107,7 +117,7 @@ public class ProxyRemoteHandler {
             if (player == null) {
                 return;
             }
-            player.disconnect(new TextComponent(packet.getMessage()));
+            player.sendMessage(packet.getMessage());
         }
     }
 

@@ -21,6 +21,7 @@ import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 import cloud.hytora.driver.services.utils.version.VersionFile;
+import cloud.hytora.driver.services.utils.version.VersionType;
 import cloud.hytora.node.impl.event.ServiceOutputLineAddEvent;
 import cloud.hytora.node.service.NodeServiceManager;
 import cloud.hytora.node.NodeDriver;
@@ -37,8 +38,9 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
-
 
 
 public class CloudServerProcessWorker {
@@ -46,7 +48,6 @@ public class CloudServerProcessWorker {
     @SneakyThrows
     public Task<ServiceInfo> processService(ServiceInfo service) {
         Task<ServiceInfo> task = Task.empty(ServiceInfo.class).denyNull();
-
 
 
         service.setServiceState(ServiceState.STARTING);
@@ -123,7 +124,7 @@ public class CloudServerProcessWorker {
         File folder = new File(parent, service.getName() + "/");
 
         StartedProcess result = new ProcessExecutor()
-                .command(args(service))
+                .command(this.args(service))
                 .directory(folder)
                 .redirectOutput(new LogOutputStream() {
                     @Override
@@ -131,10 +132,10 @@ public class CloudServerProcessWorker {
 
                         DestructiveListener listener = CloudDriver.getInstance().getEventManager().registerSelfDestructiveHandler(ServiceOutputLineAddEvent.class, event -> {
                             String line1 = event.getLine();
-                            if (((NodeServiceManager)CloudDriver.getInstance().getServiceManager()).getCachedServiceOutputs().get(service.getName()) == null) {
+                            if (((NodeServiceManager) CloudDriver.getInstance().getServiceManager()).getCachedServiceOutputs().get(service.getName()) == null) {
                                 return;
                             }
-                            ((NodeServiceManager)CloudDriver.getInstance().getServiceManager()).getCachedServiceOutputs().get(service.getName()).add(line1);
+                            ((NodeServiceManager) CloudDriver.getInstance().getServiceManager()).getCachedServiceOutputs().get(service.getName()).add(line1);
                             if (service.asCloudServer().isScreenServer()) {
                                 CloudDriver.getInstance().getCommandSender().sendMessage(line1);
                             }
@@ -159,12 +160,36 @@ public class CloudServerProcessWorker {
         return task;
     }
 
+    public boolean shouldPreloadClassesBeforeStartup(Path applicationFile) {
+        try (JarFile file = new JarFile(applicationFile.toFile())) {
+            return file.getEntry("META-INF/versions.list") != null;
+        } catch (IOException exception) {
+            // wtf?
+            return false;
+        }
+    }
+
+    public String getMainClass(Path applicationFile) {
+        try (JarInputStream jarInputStream = new JarInputStream(Files.newInputStream(applicationFile))) {
+            return jarInputStream.getManifest().getMainAttributes().getValue("Main-Class");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
 
     private String[] args(ServiceInfo service) {
+
+        File parent = (service.getTask().getTaskGroup().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
+
+        Path remoteFile = new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "remote.jar").toPath();
+        File applicationFile = new File(parent, service.getName() + "/" + service.getTask().getVersion().getJar());
+
         ServiceTask task = service.getTask();
-        List<String> arguments = new ArrayList<>(Arrays.asList("java"));
         int javaVersion = task.getJavaVersion();
 
+
+        List<String> arguments = new ArrayList<>(Collections.singletonList("java"));
 
         if (javaVersion != -1) {
 
@@ -177,44 +202,48 @@ public class CloudServerProcessWorker {
         }
 
         //adding pre defined arguments
-        arguments.addAll(Arrays.asList(
-                "-DIReallyKnowWhatIAmDoingISwear",
-                "-Dcom.mojang.eula.agree=true",
-                "-Xms" + service.getTask().getMemory() + "M",
-                "-Xmx" + service.getTask().getMemory() + "M")
+        arguments.addAll(
+                Arrays.asList(
+                        "-DIReallyKnowWhatIAmDoingISwear",
+                        "-Dcom.mojang.eula.agree=true",
+                        "-Xms" + service.getTask().getMemory() + "M",
+                        "-Xmx" + service.getTask().getMemory() + "M"
+                )
         );
+
+        if (task.getJavaVersion() >= 9) {
+            arguments.addAll(Arrays.asList(
+                    // was earlier needed to be able to access the private ucp field of the builtin classloader in java9+
+                    // we leave it in for the case we or some plugins want to do some pre-java9-like reflections
+                    "--add-opens", "java.base/jdk.internal.loader=ALL-UNNAMED"
+            ));
+        }
 
         //adding custom task arguments
         if (task.getTaskGroup().getJavaArguments() != null && task.getTaskGroup().getJavaArguments().length > 0) {
             arguments.addAll(Arrays.asList(task.getTaskGroup().getJavaArguments()));
         }
 
-        Path remoteFile = new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "remote.jar").toPath();
-
-        File parent = (service.getTask().getTaskGroup().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
-        File applicationFile = new File(parent, service.getName() + "/" + service.getTask().getVersion().getJar());
-
-
         arguments.addAll(Arrays.asList(
                 "-cp", remoteFile.toAbsolutePath() + File.pathSeparator + applicationFile.toPath().toAbsolutePath()));
 
-        try (JarInputStream jarInputStream = new JarInputStream(Files.newInputStream(remoteFile))) {
-            arguments.add(jarInputStream.getManifest().getMainAttributes().getValue("Main-Class"));
-        } catch (IOException e) {
-            e.printStackTrace();
+        String mainClass = getMainClass(applicationFile.toPath());
+        String remoteMainClass = getMainClass(remoteFile);
+
+        if (mainClass == null || remoteMainClass == null) {
+            System.out.println("MASSIVE ERROR");
+            return null;
         }
 
-        try (JarInputStream jarInputStream = new JarInputStream(Files.newInputStream(applicationFile.toPath()))) {
-            arguments.add(jarInputStream.getManifest().getMainAttributes().getValue("Main-Class"));
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+        arguments.add(remoteMainClass);
+        arguments.add(mainClass);
 
-        if (service.getTask().getVersion().getEnvironment() == SpecificDriverEnvironment.MINECRAFT) {
+        if (service.getTask().getVersion().getType() == VersionType.SPIGOT) {
             arguments.add("nogui");
         }
 
-        return arguments.toArray(new String[]{});
+
+        return arguments.toArray(new String[0]);
     }
 
 

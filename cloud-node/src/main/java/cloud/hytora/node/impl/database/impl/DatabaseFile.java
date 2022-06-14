@@ -21,7 +21,6 @@ public class DatabaseFile implements IDatabase {
     private final String fileExtension = ".json";
 
     public DatabaseFile() {
-        NodeDriver.CONFIGURATIONS_FOLDER.mkdirs();
     }
 
     @Override

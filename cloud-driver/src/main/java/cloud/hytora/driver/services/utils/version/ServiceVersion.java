@@ -265,7 +265,7 @@ public enum ServiceVersion {
             BukkitConfiguration.class, SpigotConfiguration.class, MinecraftProperties.class //configurations
     ),
 
-    //<======================== CUT GLOWSTONE & SPIGOT ============================>
+    //<======================== CUT GLOWSTONE & SPIGIOT ============================>
 
     GLOWSTONE_1_16_5(
             VersionType.GLOWSTONE,
@@ -280,8 +280,14 @@ public enum ServiceVersion {
             "Glowstone",
             "1.12.2",
             BukkitConfiguration.class, SpigotConfiguration.class, MinecraftProperties.class, GlowstoneConfiguration.class //configurations
-    )
-    ;
+    ),
+    GLOWSTONE_1_8_8(
+            VersionType.GLOWSTONE,
+            "https://github.com/GlowstoneMC/Glowstone/releases/download/2021.8.0/glowstone.jar",
+            "Glowstone",
+            "1.8.8",
+            BukkitConfiguration.class, SpigotConfiguration.class, MinecraftProperties.class, GlowstoneConfiguration.class //configurations
+    );
 
     private final VersionType type;
     private final SpecificDriverEnvironment environment;

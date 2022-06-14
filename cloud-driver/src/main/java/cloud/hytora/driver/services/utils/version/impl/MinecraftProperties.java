@@ -28,7 +28,7 @@ public class MinecraftProperties extends VersionFile {
             Properties properties = new Properties();
             properties.load(stream);
             properties.setProperty("server-port", serviceInfo.getPort() + "");
-            properties.setProperty("server-ip", "0");
+            properties.setProperty("server-ip", "127.0.0.1");
             properties.setProperty("max-players", String.valueOf(serviceInfo.getMaxPlayers()));
             properties.setProperty("allow-nether", String.valueOf(!serviceInfo.getProperties().fallbackValue(true).getBoolean("gameServer")));
             properties.setProperty("server-name", serviceInfo.getName());
