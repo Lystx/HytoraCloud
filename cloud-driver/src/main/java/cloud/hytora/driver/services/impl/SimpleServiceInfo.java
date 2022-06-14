@@ -5,6 +5,7 @@ import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
+import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
 import cloud.hytora.driver.exception.IncompatibleDriverEnvironment;
 import cloud.hytora.driver.networking.packets.services.CloudServerCommandPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
@@ -94,7 +95,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
 
     @Override
     public List<String> queryServiceOutput() {
-        return CloudDriver.getInstance().getServiceManager().queryServiceOutput(this);
+        return CloudDriver.getInstance().getServiceManager().getScreenOutput(this);
     }
 
     @Override
@@ -155,6 +156,14 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
     }
 
     @Override
+    public void setReady(boolean ready) {
+        if (!this.ready && ready) { //if not ready yet but parameter is true
+            CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceReadyEvent(this));
+        }
+        this.ready = ready;
+    }
+
+    @Override
     public void executeCommand(@NotNull String commandLine) {
         this.sendPacket(new CloudServerCommandPacket(commandLine));
     }
@@ -167,6 +176,22 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
     @Override
     public void log(String message, Object... args) {
         CloudDriver.getInstance().logToExecutor(this, message, args);
+    }
+
+    @Override
+    public void setCreationTimeStamp(long creationTime) {
+        this.creationTimestamp = creationTime;
+    }
+
+
+    @Override
+    public String getReadableUptime() {
+        return StringUtils.getReadableMillisDifference(this.getCreationTimestamp(), System.currentTimeMillis());
+    }
+
+    @Override
+    public String toString() {
+        return getName();
     }
 
     @Override
@@ -184,8 +209,23 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
     }
 
     @Override
-    public String getReadableUptime() {
-        return StringUtils.getReadableMillisDifference(this.getCreationTimestamp(), System.currentTimeMillis());
+    public void replacePlaceHolders(String input) {
+        input = input.replace("{server.name}", this.getName());
+        input = input.replace("{server.motd}", this.getMotd());
+        input = input.replace("{server.host}", this.getHostName());
+
+        input = input.replace("{server.ready}", this.isReady() ? "§aYes" : "§cNo");
+
+
+        input = input.replace("{server.id}", String.valueOf(this.getServiceID()));
+        input = input.replace("{server.port}", String.valueOf(this.getPort()));
+        input = input.replace("{server.maxPlayers}", String.valueOf(this.getMaxPlayers()));
+
+
+        input = input.replace("{server.state}", this.getServiceState().getName());
+        input = input.replace("{server.visibility}", this.getServiceVisibility().name());
+        input = input.replace("{server.creationTime}", String.valueOf(this.getCreationTimestamp()));
+        input = input.replace("{server.properties}", this.getProperties().asRawJsonString());
     }
 
     @Override
@@ -234,13 +274,4 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
         }
     }
 
-    @Override
-    public String toString() {
-        return getName();
-    }
-
-    @Override
-    public void setCreationTimeStamp(long creationTime) {
-        this.creationTimestamp = creationTime;
-    }
 }

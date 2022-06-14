@@ -17,7 +17,7 @@ import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.http.impl.NettyHttpServer;
 import cloud.hytora.driver.message.ChannelMessenger;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
-import cloud.hytora.driver.networking.packets.services.ServiceShutdownPacket;
+import cloud.hytora.driver.networking.packets.services.ServiceForceShutdownPacket;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.node.impl.handler.packet.normal.*;
 import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteLoggingHandler;
@@ -26,7 +26,6 @@ import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteServerStopHandler;
 import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteShutdownHandler;
 import cloud.hytora.node.impl.handler.packet.normal.NodeDataCycleHandler;
 import cloud.hytora.node.impl.handler.packet.normal.NodeLoggingPacketHandler;
-import cloud.hytora.node.impl.handler.packet.universal.NodeServiceRemovePacketHandler;
 import cloud.hytora.node.impl.handler.packet.normal.NodeStoragePacketHandler;
 import cloud.hytora.node.impl.module.NodeModuleManager;
 import cloud.hytora.driver.module.ModuleManager;
@@ -93,7 +92,6 @@ import lombok.Setter;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.spi.LoggingEvent;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -326,15 +324,13 @@ public class NodeDriver extends CloudDriver implements Node {
         this.executor.registerPacketHandler(new NodeModuleControllerPacketHandler());
         this.executor.registerPacketHandler(new NodeStoragePacketHandler());
         this.executor.registerPacketHandler(new NodeLoggingPacketHandler());
+        this.executor.registerPacketHandler(new NodeServiceShutdownHandler());
 
         //remote packet handlers
         this.executor.registerRemoteHandler(new NodeRemoteShutdownHandler());
         this.executor.registerRemoteHandler(new NodeRemoteServerStartHandler());
         this.executor.registerRemoteHandler(new NodeRemoteServerStopHandler());
         this.executor.registerRemoteHandler(new NodeRemoteLoggingHandler());
-
-        //remote and commander packet handlers
-        this.executor.registerUniversalHandler(new NodeServiceRemovePacketHandler());
 
         this.logger.info("§a=> Registered §a" + PacketProvider.getRegisteredPackets().size() + " Packets §8& §a" + this.executor.getRegisteredPacketHandlers().size() + " Handlers§8.");
         this.logger.info("§8");
@@ -524,7 +520,7 @@ public class NodeDriver extends CloudDriver implements Node {
 
     @Override
     public void stopServer(ServiceInfo server) {
-        server.sendPacket(new ServiceShutdownPacket(server.getName()));
+        server.sendPacket(new ServiceForceShutdownPacket(server.getName()));
         Task.runTaskLater(() -> {
             Process process = server.asCloudServer().getProcess();
             if (process == null) {
@@ -538,9 +534,9 @@ public class NodeDriver extends CloudDriver implements Node {
     public void startServer(ServiceInfo server) {
         CloudDriver.getInstance().getServiceManager().startService(server).addUpdateListener(new Consumer<Task<ServiceInfo>>() {
             @Override
-            public void accept(Task<ServiceInfo> iServiceTask) {
-                if (iServiceTask.isSuccess()) {
-                    ServiceInfo service = iServiceTask.get();
+            public void accept(Task<ServiceInfo> task) {
+                if (task.isSuccess()) {
+                    ServiceInfo service = task.get();
 
                     ClusterClientExecutor nodeClient = NodeDriver.getInstance().getExecutor().getClient(service.getTask().getNode()).orElse(null);
                     boolean thisSidesNode = service.getTask().getNode().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName());
@@ -552,7 +548,7 @@ public class NodeDriver extends CloudDriver implements Node {
                     }
 
                 } else {
-                    iServiceTask.error().printStackTrace();
+                    task.error().printStackTrace();
                 }
             }
         });

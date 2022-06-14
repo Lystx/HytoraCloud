@@ -3,6 +3,9 @@ package cloud.hytora.common;
 import cloud.hytora.common.function.ExceptionallyRunnable;
 import cloud.hytora.common.wrapper.Task;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -34,6 +37,24 @@ public class DriverUtility {
                 e.printStackTrace();
             }
         }
+    }
+
+
+    @Nonnull
+    @CheckReturnValue
+    public static String args(@Nullable Object messageObject, @Nonnull Object... args) {
+        StringBuilder message = new StringBuilder(String.valueOf(messageObject));
+        for (Object arg : args) {
+            if (arg instanceof Throwable) {
+                continue;
+            }
+            int index = message.indexOf("{}");
+            if (index == -1) {
+                break;
+            }
+            message.replace(index, index + 2, String.valueOf(arg));
+        }
+        return message.toString();
     }
 
     public static <R, T extends Throwable> R perform(boolean condition, Supplier<R> ifTrue, T throwIfFalse) {

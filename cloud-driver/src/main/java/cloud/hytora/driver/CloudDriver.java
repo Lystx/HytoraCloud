@@ -66,7 +66,7 @@ import java.util.function.Supplier;
  * @since SNAPSHOT-1.0
  */
 @Getter
-@DriverStatus(version = "SNAPSHOT-0.1", experimental = true, developers = {"Lystx"})
+@DriverStatus(version = "SNAPSHOT-1.3", experimental = true, developers = {"Lystx"})
 public abstract class CloudDriver extends DriverUtility {
 
     /**

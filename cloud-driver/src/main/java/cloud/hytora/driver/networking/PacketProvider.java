@@ -46,9 +46,7 @@ public class PacketProvider {
         PacketProvider.autoRegister(NodeRequestServerStartPacket.class);
 
         //Service packets
-        PacketProvider.autoRegister(ServiceShutdownPacket.class);
-        PacketProvider.autoRegister(CloudServerCacheUnregisterPacket.class);
-        PacketProvider.autoRegister(CloudServerCacheUpdatePacket.class);
+        PacketProvider.autoRegister(ServiceForceShutdownPacket.class);
         PacketProvider.autoRegister(ServiceRequestShutdownPacket.class);
         PacketProvider.autoRegister(CloudServerCommandPacket.class);
 

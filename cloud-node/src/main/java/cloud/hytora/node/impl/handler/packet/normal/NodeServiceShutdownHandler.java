@@ -1,0 +1,22 @@
+package cloud.hytora.node.impl.handler.packet.normal;
+
+import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.networking.packets.services.ServiceRequestShutdownPacket;
+import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
+import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
+import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ServiceManager;
+
+public class NodeServiceShutdownHandler implements PacketHandler<ServiceRequestShutdownPacket> {
+
+    @Override
+    public void handle(PacketChannel wrapper, ServiceRequestShutdownPacket packet) {
+        String serverName = packet.getService();
+        ServiceManager serviceManager = CloudDriver.getInstance().getServiceManager();
+        ServiceInfo service = serviceManager.getServiceByNameOrNull(serverName);
+
+        if (service != null) {
+            service.shutdown();
+        }
+    }
+}

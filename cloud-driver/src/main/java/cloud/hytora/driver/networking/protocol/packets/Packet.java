@@ -48,15 +48,4 @@ public abstract class Packet implements Bufferable {
         buffer.accept(this.buffer);
     }
 
-    public static String getName(Packet packet) {
-        return packet.getClass().getSimpleName();
-    }
-
-    public String getDestinationChannel() {
-        return destinationChannel;
-    }
-
-    public void setDestinationChannel(String destinationChannel) {
-        this.destinationChannel = destinationChannel;
-    }
 }

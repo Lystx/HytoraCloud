@@ -22,7 +22,15 @@ import java.util.stream.Collectors;
 @Setter
 public abstract class DefaultServiceManager implements ServiceManager {
 
-    protected List<ServiceInfo> allCachedServices = new ArrayList<>();
+    /**
+     * All cached {@link ServiceInfo} stored in a {@link List}
+     */
+    protected List<ServiceInfo> allCachedServices;
+
+    public DefaultServiceManager() {
+        this.allCachedServices = new ArrayList<>();
+        CloudDriver.getInstance().getEventManager().registerListener(this);
+    }
 
     public void setAllCachedServices(List<ServiceInfo> allCachedServices) {
         this.allCachedServices = new ArrayList<>(allCachedServices);
@@ -48,7 +56,7 @@ public abstract class DefaultServiceManager implements ServiceManager {
     }
 
     @Override
-    public List<String> queryServiceOutput(ServiceInfo service) {
+    public List<String> getScreenOutput(ServiceInfo service) {
         return new ArrayList<>();
     }
 
@@ -57,6 +65,16 @@ public abstract class DefaultServiceManager implements ServiceManager {
         return this.getAllCachedServices().stream().filter(it -> it.getName().equals(name)).findAny();
     }
 
+
+    public void updateServerInternally(ServiceInfo service) {
+        Optional<ServiceInfo> server = this.getService(service.getName());
+        if (server.isPresent()) {
+            ServiceInfo serviceInfo = server.get();
+            int i = allCachedServices.indexOf(serviceInfo);
+            allCachedServices.set(i, service);
+        }
+
+    }
 
     @Override
     public @NotNull Task<ServiceInfo> getFallbackAsService() {

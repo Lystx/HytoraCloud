@@ -3,11 +3,12 @@ package cloud.hytora.remote.impl;
 import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.EventListener;
-import cloud.hytora.driver.event.defaults.server.CloudServerCacheRegisterEvent;
+import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
+import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
+import cloud.hytora.driver.event.defaults.server.ServiceUpdateEvent;
 import cloud.hytora.driver.networking.packets.RedirectPacket;
-import cloud.hytora.driver.networking.packets.services.CloudServerCacheUnregisterPacket;
-import cloud.hytora.driver.networking.packets.services.ServiceShutdownPacket;
-import cloud.hytora.driver.networking.packets.services.CloudServerCacheUpdatePacket;
+import cloud.hytora.driver.networking.packets.services.ServiceForceShutdownPacket;
+import cloud.hytora.driver.networking.packets.services.ServiceRequestShutdownPacket;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.impl.DefaultServiceManager;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
@@ -22,30 +23,33 @@ public class RemoteServiceManager extends DefaultServiceManager {
 
     public RemoteServiceManager() {
         AdvancedNetworkExecutor executor = CloudDriver.getInstance().getExecutor();
-        executor.registerPacketHandler((PacketHandler<ServiceShutdownPacket>) (ctx, packet) -> Remote.getInstance().shutdown());
-        executor.registerPacketHandler((PacketHandler<CloudServerCacheUnregisterPacket>) (ctx, packet) -> this.getAllCachedServices().remove(getServiceByNameOrNull(packet.getService())));
-
-        executor.registerPacketHandler((PacketHandler<CloudServerCacheUpdatePacket>) (ctx, packet) -> {
-            ServiceInfo packetService = packet.getService();
-            ServiceInfo service = getServiceByNameOrNull(packetService.getName());
-            if (service == null) {
-                return;
-            }
-
-            service.cloneInternally(packetService, service);
-
-            if (allCachedServices.removeIf(s -> s.getName().equalsIgnoreCase(service.getName()))) {
-                allCachedServices.add(service);
+        executor.registerPacketHandler((PacketHandler<ServiceForceShutdownPacket>) (ctx, packet) -> {
+            if (packet.getService().equalsIgnoreCase(Remote.getInstance().thisService().getName())) {
+                Remote.getInstance().shutdown();
             }
         });
-
-        CloudDriver.getInstance().getEventManager().registerListener(this);
     }
 
     @EventListener
-    public void handleAdd(CloudServerCacheRegisterEvent event) {
-        ServiceInfo server = event.getServer();
+    public void handleAdd(ServiceRegisterEvent event) {
+        ServiceInfo server = event.getServiceInfo();
         this.registerService(server);
+    }
+
+    @EventListener
+    public void handleRemove(ServiceUnregisterEvent event) {
+        ServiceInfo server = this.getServiceByNameOrNull(event.getService());
+        if (server == null) {
+            return;
+        }
+        this.unregisterService(server);
+    }
+
+    @EventListener
+    public void handleUpdate(ServiceUpdateEvent event) {
+        ServiceInfo server = event.getService();
+
+        this.updateServerInternally(server);
     }
 
     @Override
@@ -56,13 +60,14 @@ public class RemoteServiceManager extends DefaultServiceManager {
 
     @Override
     public void shutdownService(ServiceInfo service) {
-        // TODO: 11.04.2022
+        CloudDriver.getInstance().getExecutor().sendPacket(new ServiceRequestShutdownPacket(service.getName()));
     }
 
 
     @Override
     public void updateService(@NotNull ServiceInfo service) {
-        Remote.getInstance().getClient().sendPacket(new CloudServerCacheUpdatePacket(service));
+        this.updateServerInternally(service);
+        CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceUpdateEvent(service));
     }
 
     @Override

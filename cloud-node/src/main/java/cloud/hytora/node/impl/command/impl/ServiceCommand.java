@@ -8,7 +8,7 @@ import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.completer.CloudServerCompleter;
 import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.event.EventListener;
-import cloud.hytora.driver.event.defaults.server.CloudServerRequestScreenLeaveEvent;
+import cloud.hytora.driver.event.defaults.server.ServiceRequestScreenLeaveEvent;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.deployment.CloudDeployment;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
@@ -35,7 +35,7 @@ public class ServiceCommand {
     }
 
     @EventListener
-    public void handleQuit(CloudServerRequestScreenLeaveEvent event) {
+    public void handleQuit(ServiceRequestScreenLeaveEvent event) {
         this.leaveScreen(event.getCommandManager(), event.getConsole(), event.getSender(), event.getService());
     }
 

@@ -8,7 +8,7 @@ import cloud.hytora.driver.module.controller.base.ModuleState;
 import cloud.hytora.driver.module.controller.task.ModuleTask;
 
 @ModuleConfiguration(
-        name = "RestModule",
+        name = "module-rest",
         main = RestModule.class,
         author = "Lystx",
         description = "Manages the rest api",

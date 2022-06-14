@@ -3,8 +3,8 @@ package cloud.hytora.bridge.proxy.bungee.events.cloud;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.component.ChatComponent;
 import cloud.hytora.driver.event.EventListener;
-import cloud.hytora.driver.event.defaults.server.CloudServerCacheRegisterEvent;
-import cloud.hytora.driver.event.defaults.server.CloudServerCacheUnregisterEvent;
+import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
+import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 
 import cloud.hytora.driver.networking.packets.player.*;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
@@ -12,7 +12,6 @@ import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.remote.Remote;
 import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
@@ -48,15 +47,15 @@ public class ProxyRemoteHandler {
 
 
     @EventListener
-    public void handle(CloudServerCacheRegisterEvent event) {
-        ServiceInfo serviceInfo = event.getServer();
+    public void handle(ServiceRegisterEvent event) {
+        ServiceInfo serviceInfo = event.getServiceInfo();
         if (!serviceInfo.getTask().getVersion().isProxy()) {
             this.registerService(serviceInfo);
         }
     }
 
     @EventListener
-    public void handle(CloudServerCacheUnregisterEvent event) {
+    public void handle(ServiceUnregisterEvent event) {
         ProxyServer.getInstance().getServers().remove(event.getService());
     }
 

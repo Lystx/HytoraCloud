@@ -432,7 +432,7 @@ public class DefaultPacketBuffer implements PacketBuffer {
 		this.writeInt(id);
 
 		//writing destination channel
-		this.writeString(packet.getDestinationChannel());
+		this.writeString(packet.destinationChannel());
 
 		//writing header
 		this.writeDocument(packet.transferInfo().getDocument());

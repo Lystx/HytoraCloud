@@ -3,14 +3,17 @@ package cloud.hytora.node.service;
 import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.common.wrapper.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.event.defaults.server.CloudServerCacheRegisterEvent;
-import cloud.hytora.driver.event.defaults.server.CloudServerCacheUnregisterEvent;
+import cloud.hytora.driver.event.EventListener;
+import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
+import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
+import cloud.hytora.driver.event.defaults.server.ServiceUpdateEvent;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.packets.services.*;
 import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.node.config.ServiceCrashPrevention;
 import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.impl.DefaultServiceManager;
 import cloud.hytora.node.NodeDriver;
@@ -18,7 +21,7 @@ import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 
-import cloud.hytora.node.service.helper.ServiceQueueProcessWorker;
+import cloud.hytora.node.service.helper.CloudServerProcessWorker;
 import lombok.Getter;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
@@ -31,38 +34,32 @@ import java.util.*;
 @Getter
 public class NodeServiceManager extends DefaultServiceManager {
 
-    private final Map<String, List<String>> cachedServiceOutputs = new HashMap<>();
+    /**
+     * All the process output from services stored by their name
+     */
+    private final Map<String, List<String>> cachedServiceOutputs;
+
+    /**
+     * The worker to start service
+     */
+    private final CloudServerProcessWorker worker;
 
     public NodeServiceManager() {
-        // TODO: 15.04.2022 check
-        AdvancedNetworkExecutor executor = CloudDriver.getInstance().getExecutor();
-
-        executor.registerPacketHandler((PacketHandler<ServiceRequestShutdownPacket>)
-                (channelHandlerContext, serviceRequestShutdownPacket) ->
-                        shutdownService(CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(serviceRequestShutdownPacket.getService())));
-
-
-        executor.registerPacketHandler((PacketHandler<CloudServerCacheUpdatePacket>) (ctx, packet) -> {
-            ServiceInfo packetService = packet.getService();
-            ServiceInfo service = getServiceByNameOrNull(packetService.getName());
-            if (service == null) {
-                System.out.println("Tried to update nulled service");
-                return;
-            }
-            packetService.update();
-        });
+        this.cachedServiceOutputs = new HashMap<>();
+        this.worker = new CloudServerProcessWorker();
     }
 
     @Override
-    public List<String> queryServiceOutput(ServiceInfo service) {
+    public List<String> getScreenOutput(ServiceInfo service) {
         return cachedServiceOutputs.getOrDefault(service.getName(), new ArrayList<>());
     }
 
     @Override
     public void registerService(ServiceInfo service) {
         super.registerService(service);
+
         this.cachedServiceOutputs.put(service.getName(), new ArrayList<>());
-        CloudDriver.getInstance().getEventManager().callEventGlobally(new CloudServerCacheRegisterEvent(service));
+        CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceRegisterEvent(service));
     }
 
     @Override
@@ -78,11 +75,9 @@ public class NodeServiceManager extends DefaultServiceManager {
         //removing cached screen
         this.cachedServiceOutputs.remove(service.getName());
 
-        CloudDriver.getInstance().getEventManager().callEventGlobally(new CloudServerCacheUnregisterEvent(service.getName()));
-        NodeDriver.getInstance().getExecutor().sendPacketToAll(new CloudServerCacheUnregisterPacket(service.getName()));
+        CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceUnregisterEvent(service.getName()));
 
         NodeDriver.getInstance().getLogger().info("§c==> §7Channel §8[§b" + service.getName() + "@" + service.getHostName() + ":" + service.getPort() + "§8] §7disconnected §8[§eUptime: " + service.getReadableUptime() + "§8]");
-
 
         Scheduler.runTimeScheduler().scheduleDelayedTask(() -> {
             if (!service.isReady() && CloudDriver.getInstance().isRunning()) {
@@ -140,14 +135,16 @@ public class NodeServiceManager extends DefaultServiceManager {
                     }
                 }
             }
-        }, 500).addIgnoreExceptionClass(FileSystemException.class);
+        }, 300).addIgnoreExceptionClass(FileSystemException.class);
 
     }
 
+    @Override
     public Task<ServiceInfo> startService(@NotNull ServiceInfo service) {
-        return new ServiceQueueProcessWorker(this, service).processService();
+        return worker.processService(service);
     }
 
+    @Override
     public void sendPacketToService(ServiceInfo service, Packet packet) {
         NodeDriver.getInstance().getExecutor().getAllCachedConnectedClients().stream().filter(it -> it.getName().equals(service.getName())).findAny().ifPresent(it -> it.sendPacket(packet));
     }
@@ -158,19 +155,32 @@ public class NodeServiceManager extends DefaultServiceManager {
         node.stopServer(service);
     }
 
-
     @Override
     public void updateService(@NotNull ServiceInfo service) {
-        Optional<ServiceInfo> server = this.getService(service.getName());
-        if (server.isPresent()) {
-            ServiceInfo serviceInfo = server.get();
-            int i = allCachedServices.indexOf(serviceInfo);
-            allCachedServices.set(i, service);
-        }
+        this.updateServerInternally(service);
+
         DriverUpdatePacket.publishUpdate(NodeDriver.getInstance());
 
-        CloudServerCacheUpdatePacket packet = new CloudServerCacheUpdatePacket(service);
-        //update all other nodes and this connected services
-        NodeDriver.getInstance().getExecutor().sendPacketToAll(packet);
+        //calling update event on every other side
+        CloudDriver.getInstance().getEventManager().callEventOnlyPacketBased(new ServiceUpdateEvent(service));
     }
+
+
+
+
+    @EventListener
+    public void handleUpdate(ServiceUpdateEvent event) {
+        ServiceInfo server = event.getService();
+
+        this.updateService(server);
+    }
+
+    @EventListener
+    public void handleRemove(ServiceUnregisterEvent event) {
+        String serverName = event.getService();
+
+        Optional<ServiceInfo> service = this.getService(serverName);
+        service.ifPresent(this::unregisterService);
+    }
+
 }

@@ -5,7 +5,7 @@ import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.EventManager;
 import cloud.hytora.driver.event.defaults.player.CloudPlayerUpdateEvent;
-import cloud.hytora.driver.event.defaults.server.CloudServerCacheUnregisterEvent;
+import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 import cloud.hytora.driver.networking.packets.player.CloudPlayerUpdatePacket;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.CloudPlayer;
@@ -58,7 +58,7 @@ public abstract class DefaultPlayerManager implements PlayerManager {
     }
 
     @EventListener
-    public void handle(CloudServerCacheUnregisterEvent event) {
+    public void handle(ServiceUnregisterEvent event) {
 
         this.cachedCloudPlayers.values().forEach(player -> {
             if (player.getProxyServer() == null || player.getProxyServer().getName().equals(event.getService())) {

@@ -25,7 +25,6 @@ public class RemoteNodeUpdateHandler implements PacketHandler<NodeCycleDataPacke
             logger.warn("Tried updating non-existent node {}! Data: {}", name, data);
             return;
         }
-        logger.debug("{} -> {}", node, data);
         node.setLastCycleData(data);
     }
 }
