@@ -24,7 +24,6 @@ public class DefaultCloudOfflinePlayer implements CloudOfflinePlayer {
 
 	protected UUID uniqueId;
 	protected String name;
-	protected DefaultPlayerConnection lastConnection;
 	protected long firstLogin;
 	protected long lastLogin;
 	protected Document properties;
@@ -35,7 +34,6 @@ public class DefaultCloudOfflinePlayer implements CloudOfflinePlayer {
 			case WRITE:
 				buffer.writeUniqueId(uniqueId);
 				buffer.writeString(name);
-				buffer.writeObject(lastConnection);
 				buffer.writeLong(firstLogin);
 				buffer.writeLong(lastLogin);
 				buffer.writeDocument(properties);
@@ -44,7 +42,6 @@ public class DefaultCloudOfflinePlayer implements CloudOfflinePlayer {
 			case READ:
 				uniqueId = buffer.readUniqueId();
 				name = buffer.readString();
-				lastConnection = buffer.readObject(DefaultPlayerConnection.class);
 				firstLogin = buffer.readLong();
 				lastLogin = buffer.readLong();
 				properties = buffer.readDocument();
@@ -74,11 +71,6 @@ public class DefaultCloudOfflinePlayer implements CloudOfflinePlayer {
 	@Override
 	public Document getProperties() {
 		return properties;
-	}
-
-	@Override
-	public void setLastConnection(@NotNull PlayerConnection connection) {
-		this.lastConnection = (DefaultPlayerConnection) connection;
 	}
 
 	@Override

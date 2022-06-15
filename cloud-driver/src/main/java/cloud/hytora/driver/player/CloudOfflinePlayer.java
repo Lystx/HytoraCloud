@@ -61,22 +61,6 @@ public interface CloudOfflinePlayer extends Bufferable, IdentityHolder {
     void setProperties(@Nonnull Document properties);
 
     /**
-     * The last {@link PlayerConnection} that was registered under this player
-     * when he left the network for the last time
-     *
-     */
-    @NotNull
-    PlayerConnection getLastConnection();
-
-    /**
-     * Overrides the last registered connection to keep
-     * track of correct data
-     *
-     * @param connection the connection to set
-     */
-    void setLastConnection(@Nonnull PlayerConnection connection);
-
-    /**
      * The time as long (date in millis) when this player has
      * logged in for the first time on this network
      */
