@@ -1,7 +1,7 @@
 package cloud.hytora.driver.networking.protocol.wrapped;
 
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.wrapper.Task;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.networking.packets.RedirectPacket;

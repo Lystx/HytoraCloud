@@ -1,6 +1,6 @@
 package cloud.hytora.driver.node;
 
-import cloud.hytora.common.wrapper.Task;
+import cloud.hytora.common.task.Task;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -1,6 +1,6 @@
 package cloud.hytora.driver.networking.protocol.wrapped;
 
-import cloud.hytora.common.wrapper.Task;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.QueryState;

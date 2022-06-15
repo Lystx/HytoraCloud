@@ -1,6 +1,6 @@
 package cloud.hytora.node.impl.player;
 
-import cloud.hytora.common.wrapper.Task;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.EventManager;
 import cloud.hytora.driver.event.defaults.player.CloudPlayerDisconnectEvent;

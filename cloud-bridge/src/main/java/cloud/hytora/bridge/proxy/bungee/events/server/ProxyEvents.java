@@ -1,6 +1,6 @@
 package cloud.hytora.bridge.proxy.bungee.events.server;
 
-import cloud.hytora.common.wrapper.Task;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.component.ChatColor;
 import cloud.hytora.driver.player.CloudPlayer;

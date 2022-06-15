@@ -1,7 +1,7 @@
 package cloud.hytora.driver.networking.cluster.client;
 
 import cloud.hytora.common.collection.ThreadRunnable;
-import cloud.hytora.common.wrapper.Task;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.defaults.driver.DriverConnectEvent;

@@ -1,7 +1,7 @@
 package cloud.hytora.common;
 
 import cloud.hytora.common.function.ExceptionallyRunnable;
-import cloud.hytora.common.wrapper.Task;
+import cloud.hytora.common.task.Task;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;

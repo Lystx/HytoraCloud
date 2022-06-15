@@ -2,7 +2,7 @@ package cloud.hytora.node;
 
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.wrapper.Task;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;

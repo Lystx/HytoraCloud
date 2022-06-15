@@ -1,6 +1,6 @@
 package cloud.hytora.driver.event;
 
-import cloud.hytora.common.wrapper.Task;
+import cloud.hytora.common.task.Task;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

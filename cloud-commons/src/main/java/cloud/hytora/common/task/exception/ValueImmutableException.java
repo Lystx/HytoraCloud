@@ -1,7 +1,7 @@
-package cloud.hytora.common.wrapper.exception;
+package cloud.hytora.common.task.exception;
 
 
-import cloud.hytora.common.wrapper.Task;
+import cloud.hytora.common.task.Task;
 
 public class ValueImmutableException extends RuntimeException {
 

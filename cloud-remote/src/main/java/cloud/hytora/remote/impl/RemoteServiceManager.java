@@ -1,6 +1,6 @@
 package cloud.hytora.remote.impl;
 
-import cloud.hytora.common.wrapper.Task;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;

@@ -1,6 +1,6 @@
 package cloud.hytora.driver.player;
 
-import cloud.hytora.common.wrapper.Task;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;

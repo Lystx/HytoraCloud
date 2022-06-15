@@ -1,10 +1,10 @@
-package cloud.hytora.common.wrapper;
+package cloud.hytora.common.task;
 
 import cloud.hytora.common.collection.NamedThreadFactory;
 import cloud.hytora.common.scheduler.Scheduler;
-import cloud.hytora.common.wrapper.def.SimpleTask;
-import cloud.hytora.common.wrapper.exception.ValueHoldsNoObjectException;
-import cloud.hytora.common.wrapper.exception.ValueImmutableException;
+import cloud.hytora.common.task.def.SimpleTask;
+import cloud.hytora.common.task.exception.ValueHoldsNoObjectException;
+import cloud.hytora.common.task.exception.ValueImmutableException;
 import cloud.hytora.common.function.ExceptionallyRunnable;
 import org.jetbrains.annotations.NotNull;
 

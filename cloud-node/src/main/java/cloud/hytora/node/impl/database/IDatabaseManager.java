@@ -1,6 +1,6 @@
 package cloud.hytora.node.impl.database;
 
-import cloud.hytora.common.wrapper.Task;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.node.impl.database.impl.SectionedDatabase;
 import org.jetbrains.annotations.NotNull;
 

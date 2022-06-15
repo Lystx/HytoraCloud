@@ -1,11 +1,11 @@
 
-package cloud.hytora.common.wrapper.def;
+package cloud.hytora.common.task.def;
 
-import cloud.hytora.common.wrapper.Task;
-import cloud.hytora.common.wrapper.WrapperListener;
-import cloud.hytora.common.wrapper.exception.ValueHoldsNoObjectException;
-import cloud.hytora.common.wrapper.exception.ValueImmutableException;
-import cloud.hytora.common.wrapper.exception.ValueTimedOutException;
+import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.WrapperListener;
+import cloud.hytora.common.task.exception.ValueHoldsNoObjectException;
+import cloud.hytora.common.task.exception.ValueImmutableException;
+import cloud.hytora.common.task.exception.ValueTimedOutException;
 import lombok.Getter;
 import lombok.Setter;
 

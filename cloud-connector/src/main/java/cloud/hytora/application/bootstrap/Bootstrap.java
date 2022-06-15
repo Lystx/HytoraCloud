@@ -9,7 +9,7 @@ import javax.swing.*;
 import cloud.hytora.application.elements.data.ApplicationData;
 import cloud.hytora.application.elements.StartPanelInfoBox;
 import cloud.hytora.application.elements.event.CommitHistoryLoadedEvent;
-import cloud.hytora.common.wrapper.Task;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.services.utils.RemoteIdentity;

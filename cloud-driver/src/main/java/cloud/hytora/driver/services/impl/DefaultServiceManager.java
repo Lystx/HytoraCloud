@@ -1,6 +1,6 @@
 package cloud.hytora.driver.services.impl;
 
-import cloud.hytora.common.wrapper.Task;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.fallback.FallbackEntry;

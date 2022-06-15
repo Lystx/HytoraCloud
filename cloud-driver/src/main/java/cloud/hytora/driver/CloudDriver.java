@@ -22,6 +22,8 @@ import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.common.scheduler.Scheduler;
+import cloud.hytora.driver.provider.ProviderRegistry;
+import cloud.hytora.driver.provider.defaults.DefaultProviderRegistry;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.task.ServiceTask;
@@ -47,6 +49,7 @@ import javax.annotation.Nullable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 
@@ -84,6 +87,11 @@ public abstract class CloudDriver extends DriverUtility {
      * The default logger service
      */
     protected final Logger logger;
+
+    /**
+     * The provider registry to register/get providers
+     */
+    protected final ProviderRegistry providerRegistry;
 
     /**
      * The default event manager
@@ -133,7 +141,6 @@ public abstract class CloudDriver extends DriverUtility {
      */
     public static final String APPLICATION_NAME = "Application";
 
-
     /**
      * Constructs a new {@link CloudDriver} instance with a provided {@link Logger} instance <br>
      * and a provided {@link DriverEnvironment} to declare the environment this Instance runs on
@@ -149,7 +156,8 @@ public abstract class CloudDriver extends DriverUtility {
 
         this.environment = environment;
         this.logger = logger;
-        this.eventManager = new DefaultEventManager();
+        this.eventManager = new DefaultEventManager(); //eventManager needs to come before Registry bc it is needed in Registry
+        this.providerRegistry = new DefaultProviderRegistry(true);
         this.templateManager = new DefaultTemplateManager();
         this.tickWorker = new DefaultTickWorker(20);
         this.scheduler = Scheduler.runTimeScheduler();

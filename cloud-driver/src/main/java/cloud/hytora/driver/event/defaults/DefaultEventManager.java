@@ -2,7 +2,7 @@ package cloud.hytora.driver.event.defaults;
 
 import cloud.hytora.common.collection.ClassWalker;
 import cloud.hytora.common.misc.ReflectionUtils;
-import cloud.hytora.common.wrapper.Task;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.*;

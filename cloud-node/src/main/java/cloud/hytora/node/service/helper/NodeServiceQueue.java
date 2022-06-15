@@ -1,6 +1,6 @@
 package cloud.hytora.node.service.helper;
 
-import cloud.hytora.common.wrapper.Task;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 
 
