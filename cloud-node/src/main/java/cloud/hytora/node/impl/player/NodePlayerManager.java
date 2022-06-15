@@ -103,7 +103,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
     @Override
     public CloudPlayer constructPlayer(@NotNull UUID uniqueId, @NotNull String name) {
         CloudOfflinePlayer offlinePlayer = getOfflinePlayerByUniqueIdBlockingOrNull(uniqueId);
-        return offlinePlayer == null ? new DefaultCloudPlayer(uniqueId, name) : new DefaultCloudPlayer(uniqueId, name, new DefaultPlayerConnection(), offlinePlayer.getFirstLogin(), offlinePlayer.getLastLogin(), offlinePlayer.getProperties(), null, null);
+        return offlinePlayer == null ? new DefaultCloudPlayer(uniqueId, name) : new DefaultCloudPlayer(uniqueId, name, offlinePlayer.getFirstLogin(), offlinePlayer.getLastLogin(), offlinePlayer.getProperties(), null, null);
     }
 
     @Override

@@ -33,11 +33,11 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements Clo
     }
 
     public DefaultCloudPlayer(UUID uniqueId, String name, ServiceInfo server, ServiceInfo proxyServer) {
-        this(uniqueId, name, null, System.currentTimeMillis(), System.currentTimeMillis(), DocumentFactory.newJsonDocument(), server, proxyServer);
+        this(uniqueId, name, System.currentTimeMillis(), System.currentTimeMillis(), DocumentFactory.newJsonDocument(), server, proxyServer);
     }
 
-    public DefaultCloudPlayer(UUID uniqueId, String name, PlayerConnection lastConnection, long firstLogin, long lastLogin, Document properties, ServiceInfo server, ServiceInfo proxyServer) {
-        super(uniqueId, name, (DefaultPlayerConnection) lastConnection, firstLogin, lastLogin, properties);
+    public DefaultCloudPlayer(UUID uniqueId, String name, long firstLogin, long lastLogin, Document properties, ServiceInfo server, ServiceInfo proxyServer) {
+        super(uniqueId, name,  firstLogin, lastLogin, properties);
         this.server = server;
         this.proxyServer = proxyServer;
 

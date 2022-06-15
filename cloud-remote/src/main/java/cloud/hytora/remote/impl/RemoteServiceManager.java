@@ -78,4 +78,5 @@ public class RemoteServiceManager extends DefaultServiceManager {
         }
         Remote.getInstance().getClient().sendPacket(new RedirectPacket(service.getName(), packet));
     }
+
 }

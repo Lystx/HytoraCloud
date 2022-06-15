@@ -158,6 +158,9 @@ public class DefaultEventManager implements EventManager {
 	@NotNull
 	@Override
 	public <E extends CloudEvent> E callEventOnlyLocally(@NotNull E event) {
+		if (event == null) {
+			return null;
+		}
 		if (!(event instanceof DriverLogEvent)) {
 			CloudDriver.getInstance().getLogger().trace("Calling event {} | {}", event.getClass().getSimpleName(), event);
 		}
@@ -168,6 +171,9 @@ public class DefaultEventManager implements EventManager {
 				continue;
 			}
 			for (RegisteredListener listener : new ArrayList<>(listeners)) {
+				if (listener == null) {
+					continue;
+				}
 				if (listener.isIgnoreCancelled() && event instanceof Cancelable && ((Cancelable)event).isCancelled()) continue;
 
 				try {

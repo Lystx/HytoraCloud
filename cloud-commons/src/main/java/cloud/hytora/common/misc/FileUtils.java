@@ -36,8 +36,7 @@ import java.util.zip.ZipOutputStream;
 public final class FileUtils {
 
 	public static final InputStream EMPTY_STREAM = new ByteArrayInputStream(new byte[0]);
-	private static final Map<String, String> ZIP_FILE_SYSTEM_PROPERTIES = ImmutableMap
-		.of("create", "false", "encoding", "UTF-8");
+	private static final Map<String, String> ZIP_FILE_SYSTEM_PROPERTIES = ImmutableMap.of("create", "false", "encoding", "UTF-8");
 	private static Path tempDirectory;
 
 	private FileUtils() {}

@@ -1,5 +1,6 @@
 package cloud.hytora.driver.services;
 
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.common.MessagePlaceholder;
@@ -8,6 +9,7 @@ import cloud.hytora.driver.exception.IncompatibleDriverEnvironment;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.PacketSender;
 import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.packets.QueryState;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.utils.ServiceState;
@@ -127,7 +129,7 @@ public interface ServiceInfo extends Bufferable, SelfCloneable<ServiceInfo>, Net
 
     void setMotd(String motd);
 
-    void executeCommand(@NotNull String commandLine);
+    void sendCommand(@NotNull String commandLine);
 
     void update();
 

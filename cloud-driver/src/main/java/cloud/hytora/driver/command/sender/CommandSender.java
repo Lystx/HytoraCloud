@@ -1,5 +1,8 @@
 package cloud.hytora.driver.command.sender;
 
+import cloud.hytora.common.DriverUtility;
+import cloud.hytora.common.misc.StringUtils;
+
 import javax.annotation.Nonnull;
 
 /**
@@ -9,6 +12,10 @@ import javax.annotation.Nonnull;
 public interface CommandSender {
 
 	void sendMessage(@Nonnull String message);
+
+	default void sendMessage(@Nonnull String message, Object... args) {
+		sendMessage(DriverUtility.args(message, args));
+	}
 
 	boolean hasPermission(@Nonnull String permission);
 

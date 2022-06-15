@@ -103,8 +103,11 @@ public class ServiceCommand {
             if (s.equalsIgnoreCase("leave") || s.equalsIgnoreCase("-l")) {
                 this.leaveScreen(commandManager, console, sender, service);
             } else {
-                sender.sendMessage("§7Sending Command-Line §8'§e" + s + "§8' §7to service§8...");
-                service.executeCommand(s);
+                if (s.trim().isEmpty()) {
+                    return;
+                }
+               // sender.sendMessage("Executing '{}' on {}", s, service.getName());
+                service.sendCommand(s);
             }
         });
 

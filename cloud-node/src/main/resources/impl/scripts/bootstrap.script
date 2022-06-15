@@ -1,0 +1,25 @@
+# You can add or change properties for the HytoraCloud runtime
+# You can use the '#' symbol to make a comment
+
+# Available log levels TRACE, DEBUG, EXTENDED, INFO, WARN, ERROR
+var cloud.logging.level INFO
+var cloud.logging.file.size 16
+var cloud.logging.file.extension .log
+
+var cloud.version 1.0
+var cloud.developer Lystx
+var cloud.debug false
+
+var cloud.console.prompt §8| §bCloud §8» §b%screen% §8» §r
+
+run header.script as resource
+
+var cls = MyClass()
+
+class MyClass:
+
+
+    MyClass():
+        this.name = "Hello"
+        this.secondName = "World"
+

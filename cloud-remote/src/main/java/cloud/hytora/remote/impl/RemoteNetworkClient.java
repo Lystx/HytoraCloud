@@ -12,7 +12,7 @@ public class RemoteNetworkClient extends ClusterParticipant {
     public RemoteNetworkClient(String authKey, String clientName, String hostname, int port, Document customData, Runnable... connectionFailed) {
         super(authKey, clientName, ConnectionType.SERVICE, customData);
 
-        this.bootAsync().handlePacketsAsync().openConnection(hostname, port).addUpdateListener(channelTask -> {
+        this.bootAsync().openConnection(hostname, port).addUpdateListener(channelTask -> {
             if (channelTask.isPresent()) {
                 CloudDriver.getInstance().getLogger().info("This service has connected to the Cluster!");
             } else {

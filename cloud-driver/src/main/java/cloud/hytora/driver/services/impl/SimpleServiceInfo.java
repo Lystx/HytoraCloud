@@ -1,6 +1,7 @@
 package cloud.hytora.driver.services.impl;
 
 import cloud.hytora.common.misc.StringUtils;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
@@ -13,6 +14,7 @@ import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.QueryState;
 import cloud.hytora.driver.services.NodeServiceInfo;
 import cloud.hytora.driver.services.ServicePingProperties;
 import cloud.hytora.driver.services.task.ServiceTask;
@@ -164,7 +166,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
     }
 
     @Override
-    public void executeCommand(@NotNull String commandLine) {
+    public void sendCommand(@NotNull String commandLine) {
         this.sendPacket(new CloudServerCommandPacket(commandLine));
     }
 

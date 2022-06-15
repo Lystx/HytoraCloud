@@ -21,7 +21,6 @@ import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 import cloud.hytora.driver.services.utils.version.VersionFile;
 import cloud.hytora.driver.services.utils.version.VersionType;
-import cloud.hytora.node.impl.event.ServiceOutputLineAddEvent;
 import cloud.hytora.node.service.NodeServiceManager;
 import cloud.hytora.node.NodeDriver;
 
@@ -108,11 +107,6 @@ public class CloudServerProcessWorker {
 
         ServiceVersion version = service.getTask().getVersion();
 
-        File serverIcon = new File(serverDir, "server-icon.png");
-        if (!serverIcon.exists()) {
-            copyFileWithURL("/impl/files/server-icon.png", new File(serverDir, "server-icon.png")); //copying server icon if none already provided
-        }
-
         //managing version specific files
         for (VersionFile versionFile : version.instantiateVersionFiles()) {
             File file = new File(serverDir, versionFile.getFileName());
@@ -127,25 +121,13 @@ public class CloudServerProcessWorker {
                 .redirectOutput(new LogOutputStream() {
                     @Override
                     protected void processLine(String line) {
-
-                        DestructiveListener listener = CloudDriver.getInstance().getEventManager().registerSelfDestructiveHandler(ServiceOutputLineAddEvent.class, event -> {
-                            String line1 = event.getLine();
-                            if (((NodeServiceManager) CloudDriver.getInstance().getServiceManager()).getCachedServiceOutputs().get(service.getName()) == null) {
-                                return;
-                            }
-                            ((NodeServiceManager) CloudDriver.getInstance().getServiceManager()).getCachedServiceOutputs().get(service.getName()).add(line1);
+                        NodeServiceManager sm = (NodeServiceManager) CloudDriver.getInstance().getServiceManager();
+                        if (sm.getCachedServiceOutputs().get(service.getName()) != null) {
+                            sm.getCachedServiceOutputs().get(service.getName()).add(line);
                             if (service.asCloudServer().isScreenServer()) {
-                                CloudDriver.getInstance().getCommandSender().sendMessage(line1);
+                                CloudDriver.getInstance().getCommandSender().sendMessage(line);
                             }
-                        });
-                        CloudDriver.getInstance().getEventManager().registerSelfDestructiveHandler(ServiceUnregisterEvent.class, e -> {
-                            if (service.asCloudServer().isScreenServer()) {
-                                CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceRequestScreenLeaveEvent(CloudDriver.getInstance().getCommandManager(), NodeDriver.getInstance().getConsole(), CloudDriver.getInstance().getCommandSender(), service));
-                            }
-                            listener.destroy();
-                        });
-
-                        CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceOutputLineAddEvent(service, line));
+                        }
                     }
                 })
                 .start();
@@ -244,25 +226,6 @@ public class CloudServerProcessWorker {
         return arguments.toArray(new String[0]);
     }
 
-
-    private void copyFileWithURL(String filename, File location) {
-        try {
-            URL inputUrl = getClass().getResource(filename);
-            if (location.exists()) {
-                return;
-            }
-            if (inputUrl == null) {
-                throw new CloudException("Couldn't copy " + filename + " to Location: " + location.toString());
-            }
-            try {
-                FileUtils.copyURLToFile(inputUrl, location);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-        }
-    }
 
 
     private void downloadServiceVersion(ServiceVersion version) {

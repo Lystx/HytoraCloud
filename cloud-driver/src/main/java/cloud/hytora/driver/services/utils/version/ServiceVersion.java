@@ -30,21 +30,21 @@ public enum ServiceVersion {
             "https://ci.md-5.net/job/BungeeCord/lastSuccessfulBuild/artifact/bootstrap/target/BungeeCord.jar",
             "BungeeCord",
             "latest",
-            BungeeConfiguration.class //configurations
+            BungeeConfiguration.class, ServerIconFile.class //configurations
     ),
     WATERFALL(
             VersionType.BUNGEE,
             null, //auto build url link
             "Waterfall",
             "latest",
-            BungeeConfiguration.class //configurations
+            BungeeConfiguration.class, ServerIconFile.class //configurations
     ),
     VELOCITY_3(
             VersionType.VELOCITY,
             "https://versions.velocitypowered.com/download/3.0.1.jar",
             "Velocity",
             "3.0.1",
-            VelocityConfiguration.class //configurations
+            VelocityConfiguration.class, ServerIconFile.class //configurations
     ),
 
     //=======================================================
