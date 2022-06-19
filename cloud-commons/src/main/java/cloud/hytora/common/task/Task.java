@@ -326,6 +326,8 @@ public interface Task<T> extends Serializable {
      */
     <V> Task<V> map(Function<T, V> mapper);
 
+    <E> E mapOrElse(Function<T, E> mapper, Supplier<E> ifNull);
+
     /**
      * Maps this value thread-blocking
      *

@@ -383,6 +383,14 @@ public class SimpleTask<T> implements Task<T> {
     }
 
     @Override
+    public <E> E mapOrElse(Function<T, E> mapper, Supplier<E> ifNull) {
+        if (this.isNull()) {
+            return ifNull.get();
+        }
+        return mapper.apply(this.heldValue);
+    }
+
+    @Override
     public <V> Task<V> map(Function<T, V> mapper) {
         Task<V> task = Task.empty();
         if (this.isNull()) {
