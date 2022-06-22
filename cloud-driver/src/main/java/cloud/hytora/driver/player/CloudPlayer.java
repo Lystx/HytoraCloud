@@ -2,6 +2,9 @@ package cloud.hytora.driver.player;
 
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.common.SelfCloneable;
+import cloud.hytora.driver.exception.ModuleNeededException;
+import cloud.hytora.driver.exception.PlayerNotOnlineException;
+import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.driver.player.connection.PlayerConnection;
 import cloud.hytora.driver.services.ServiceInfo;
 import org.jetbrains.annotations.NotNull;
@@ -74,4 +77,13 @@ public interface CloudPlayer extends CloudOfflinePlayer, SelfCloneable<CloudPlay
      */
     @Nonnull
     Document getTemporaryProperties();
+
+    /**
+     * Tries to get the {@link PermissionPlayer} of this player
+     *
+     * @throws ModuleNeededException if the perms-module is not loaded
+     */
+    @Nonnull
+    PermissionPlayer asPermissionPlayer() throws ModuleNeededException;
+
 }

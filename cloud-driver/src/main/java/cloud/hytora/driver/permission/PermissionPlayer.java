@@ -1,11 +1,13 @@
 package cloud.hytora.driver.permission;
 
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.CloudPlayer;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -17,6 +19,27 @@ import java.util.concurrent.TimeUnit;
  * @since SNAPSHOT-1.3
  */
 public interface PermissionPlayer extends PermissionEntity {
+
+
+	static PermissionPlayer ofPlayer(CloudOfflinePlayer player) {
+		return CloudDriver.getInstance().getProviderRegistry().get(PermissionManager.class).mapOrElse(pm -> pm.getPlayer(player), () -> null);
+	}
+
+	static PermissionPlayer ofOfflineByName(String name) {
+		return ofPlayer(CloudDriver.getInstance().getPlayerManager().getOfflinePlayerByNameBlockingOrNull(name));
+	}
+
+	static PermissionPlayer ofOnlineByName(String name) {
+		return ofPlayer(CloudDriver.getInstance().getPlayerManager().getCloudPlayerByNameOrNull(name));
+	}
+
+	static PermissionPlayer ofOfflineByUniqueId(UUID uniqueID) {
+		return ofPlayer(CloudDriver.getInstance().getPlayerManager().getOfflinePlayerByUniqueIdBlockingOrNull(uniqueID));
+	}
+
+	static PermissionPlayer ofOnlineByUniqueID(UUID uniqueID) {
+		return ofPlayer(CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(uniqueID));
+	}
 
 	/**
 	 * Tries to get the {@link CloudPlayer} player of this permission

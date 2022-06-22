@@ -1,11 +1,15 @@
 package cloud.hytora.driver.player.impl;
 
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.exception.ModuleNeededException;
 import cloud.hytora.driver.exception.PlayerNotOnlineException;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
+import cloud.hytora.driver.permission.PermissionManager;
+import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.connection.DefaultPlayerConnection;
 import cloud.hytora.driver.player.connection.PlayerConnection;
@@ -54,6 +58,15 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements Clo
     @Override
     public CloudPlayer asOnlinePlayer() throws PlayerNotOnlineException {
         return this;
+    }
+
+    @Override
+    public @NotNull PermissionPlayer asPermissionPlayer() throws ModuleNeededException {
+        Task<PermissionManager> task = CloudDriver.getInstance().getProviderRegistry().get(PermissionManager.class);
+        if (task.isNull()) {
+            throw new ModuleNeededException("Permission Module");
+        }
+        return task.get().getPlayer(this);
     }
 
     @Override

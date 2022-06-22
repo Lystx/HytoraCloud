@@ -42,7 +42,7 @@ public interface PermissionGroup extends PermissionEntity {
     default Collection<PermissionGroup> findInheritedGroups() {
         return Collections.unmodifiableCollection(
                 getInheritedGroups().stream()
-                        .map(CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class)::getGroupByName).collect(Collectors.toList())
+                        .map(CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class)::getPermissionGroupByNameOrNull).collect(Collectors.toList())
         );
     }
 

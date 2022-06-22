@@ -6,6 +6,7 @@ import cloud.hytora.driver.module.controller.base.ModuleCopyType;
 import cloud.hytora.driver.module.controller.base.ModuleEnvironment;
 import cloud.hytora.driver.module.controller.base.ModuleState;
 import cloud.hytora.driver.module.controller.task.ModuleTask;
+import cloud.hytora.driver.permission.PermissionPlayer;
 
 @ModuleConfiguration(
         name = "module-perms",
@@ -23,6 +24,9 @@ public class PermsModule extends DriverModule {
 
     @ModuleTask(id = 1, state = ModuleState.LOADED)
     public void load() {
+
+        PermissionPlayer player = PermissionPlayer.ofOfflineByName("Lystx");
+
 
     }
 
