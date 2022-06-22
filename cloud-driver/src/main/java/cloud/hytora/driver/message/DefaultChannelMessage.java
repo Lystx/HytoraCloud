@@ -6,6 +6,7 @@ import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.protocol.SimpleNetworkComponent;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.UUID;
 
-@Getter @Setter @AllArgsConstructor
+@Getter @Setter @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class DefaultChannelMessage implements ChannelMessage {
 
     /**
