@@ -1,5 +1,6 @@
 package cloud.hytora.node.console.jline3;
 
+import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.node.console.ColorTranslator;
 import cloud.hytora.driver.command.Console;
@@ -180,6 +181,7 @@ public class JLine3Console implements Console {
 
 	@Override
 	public void addInputHandler(@Nonnull Consumer<? super String> handler) {
+		Logger.constantInstance().debug("Added InputHandler {} to console!", handler);
 		inputHandlers.add(handler);
 	}
 

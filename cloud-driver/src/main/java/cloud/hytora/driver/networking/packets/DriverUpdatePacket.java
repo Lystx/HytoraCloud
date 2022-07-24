@@ -1,5 +1,6 @@
 package cloud.hytora.driver.networking.packets;
 
+import cloud.hytora.common.logging.Logger;
 import cloud.hytora.driver.event.defaults.driver.DriverCacheUpdateEvent;
 import cloud.hytora.driver.networking.PacketSender;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
@@ -38,6 +39,8 @@ public class DriverUpdatePacket extends Packet {
 
     public static void publishUpdate(PacketSender sender) {
         sender.sendPacket(new DriverUpdatePacket());
+
+        Logger.constantInstance().debug("Published Update using {}", sender);
     }
 
     public DriverUpdatePacket() {

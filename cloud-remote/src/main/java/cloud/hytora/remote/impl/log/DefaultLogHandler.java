@@ -1,5 +1,6 @@
 package cloud.hytora.remote.impl.log;
 
+import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.formatter.UncoloredMessageFormatter;
 import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.logging.handler.LogHandler;
@@ -14,7 +15,7 @@ public class DefaultLogHandler implements LogHandler {
 
 	@Override
 	public void handle(@Nonnull LogEntry entry) {
-		PrintStream stream = entry.getLevel().isHighlighted() ? err : out;
+		PrintStream stream = entry.getLevel() == LogLevel.ERROR ? err : out;
 		stream.println(UncoloredMessageFormatter.format(entry));
 	}
 

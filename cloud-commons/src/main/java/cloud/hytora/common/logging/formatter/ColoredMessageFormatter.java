@@ -1,6 +1,7 @@
 package cloud.hytora.common.logging.formatter;
 
 import cloud.hytora.common.logging.ConsoleColor;
+import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.logging.handler.LogHandler;
 
@@ -14,6 +15,9 @@ public class ColoredMessageFormatter {
 
 	@Nonnull
 	public static String format(@Nonnull LogEntry entry) {
+		if (entry.getLevel() == LogLevel.NULL) {
+			return ConsoleColor.toColoredString('§', entry.getMessage());
+		}
 		StringBuilder builder = new StringBuilder()
 			.append(ConsoleColor.DARK_GRAY)
 			.append("[")
@@ -27,10 +31,10 @@ public class ColoredMessageFormatter {
 
 		builder.append(ConsoleColor.DARK_GRAY)
 			.append("] ")
-			.append(entry.getLevel().isHighlighted() ? ConsoleColor.RED : ConsoleColor.GRAY);
+			.append(entry.getLevel().isHighlighted() ? ConsoleColor.CYAN : ConsoleColor.DEFAULT);
 
 		SpacePadder.padRight(builder, entry.getLevel().getName() + ConsoleColor.DARK_GRAY + ":", 10 + ConsoleColor.DARK_GRAY.toString().length());
-		builder.append(entry.getLevel().isHighlighted() ? ConsoleColor.YELLOW : ConsoleColor.DEFAULT)
+		builder.append(entry.getLevel().isHighlighted() ? (entry.getLevel().getHighlightColor() != null ? entry.getLevel().getHighlightColor() : ConsoleColor.YELLOW) : ConsoleColor.DEFAULT)
 			.append(ConsoleColor.toColoredString('§', entry.getMessage()));
 
 		if (entry.getException() != null) {

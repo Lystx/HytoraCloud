@@ -1,6 +1,7 @@
 package cloud.hytora.node.impl.module;
 
 
+import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.module.ModuleController;
@@ -32,12 +33,14 @@ public class NodeModuleManager implements ModuleManager {
 
     @Override
     public void setModulesDirectory(@Nonnull Path directory) {
+        Logger.constantInstance().debug("Set Module-Loading-Directory to {}!", directory.toString());
         FileUtils.createDirectory(directory);
         this.directory = directory;
     }
 
     @Override
     public synchronized void unregisterModules() {
+        Logger.constantInstance().debug("Unregistering modules [{}]...", modules.size());
         for (DefaultModuleController module : modules) {
             try {
                 module.unregisterModule();
@@ -55,8 +58,8 @@ public class NodeModuleManager implements ModuleManager {
 
     @Override
     public synchronized void resolveModules() {
+        Logger.constantInstance().debug("Resolving Modules...");
         unregisterModules();
-        CloudDriver.getInstance().getLogger().info("Resolving modules..");
         FileUtils.createDirectory(directory);
 
         if (NodeDriver.getInstance().getConfig().isRemote()) {
@@ -192,6 +195,7 @@ public class NodeModuleManager implements ModuleManager {
 
     @Override
     public synchronized void loadModules() {
+        Logger.constantInstance().debug("Loading Modules [{}]...", modules.size());
         for (ModuleController module : modules) {
             module.loadModule();
         }
@@ -199,6 +203,7 @@ public class NodeModuleManager implements ModuleManager {
 
     @Override
     public synchronized void enableModules() {
+        Logger.constantInstance().debug("Enabling Modules [{}]...", modules.size());
         for (ModuleController module : modules) {
             module.enableModule();
         }
@@ -206,6 +211,7 @@ public class NodeModuleManager implements ModuleManager {
 
     @Override
     public synchronized void disableModules() {
+        Logger.constantInstance().debug("Disabling Modules [{}]...", modules.size());
         for (ModuleController module : modules) {
             module.disableModule();
         }

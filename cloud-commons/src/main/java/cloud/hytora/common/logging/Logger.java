@@ -8,6 +8,7 @@ import cloud.hytora.common.logging.internal.factory.ConstantLoggerFactory;
 import cloud.hytora.common.logging.internal.factory.DefaultLoggerFactory;
 import cloud.hytora.common.logging.internal.factory.Slf4jLoggerFactory;
 import cloud.hytora.common.misc.ReflectionUtils;
+import jline.internal.Log;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -45,6 +46,12 @@ public abstract class Logger {
     @CheckReturnValue
     public static Logger newInstance() {
         return factory.forName(ReflectionUtils.getCaller().getSimpleName());
+    }
+
+
+    private static Logger constantInstance;
+    public static Logger constantInstance() {
+        return constantInstance;
     }
 
     public abstract Logger translateColors();
@@ -97,4 +104,7 @@ public abstract class Logger {
         }
     }
 
+    public Logger() {
+        constantInstance = this;
+    }
 }

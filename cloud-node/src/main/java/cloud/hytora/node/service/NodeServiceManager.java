@@ -61,79 +61,71 @@ public class NodeServiceManager extends DefaultServiceManager {
 
 
     @Override
-    @SuppressWarnings("unchecked")
     public void unregisterService(ServiceInfo service) {
+        CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceUnregisterEvent(service.getName()));
         super.unregisterService(service);
 
+        this.cachedServiceOutputs.remove(service.getName());//removing cached screen
         ServiceTask con = service.getTask();
 
         File parent = (con.getTaskGroup().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
         File folder = new File(parent, service.getName() + "/");
 
-        //removing cached screen
-        this.cachedServiceOutputs.remove(service.getName());
+        if (!service.isReady() && CloudDriver.getInstance().isRunning()) {
+            NodeDriver.getInstance().getLogger().warn("Service {} probably crashed during startup because it was not authenticated when it stopped", service.getName());
 
-        CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceUnregisterEvent(service.getName()));
+            File crashFolder = new File(NodeDriver.LOG_FOLDER, "crashes/");
+            crashFolder.mkdirs();
 
-        NodeDriver.getInstance().getLogger().info("§c==> §7Channel §8[§b" + service.getName() + "@" + service.getHostName() + ":" + service.getPort() + "§8] §7disconnected §8[§eUptime: " + service.getReadableUptime() + "§8]");
+            File specificCrashFolders = new File(crashFolder, con.getName() + "/");
+            specificCrashFolders.mkdirs();
 
-        Scheduler.runTimeScheduler().scheduleDelayedTask(() -> {
-            if (!service.isReady() && CloudDriver.getInstance().isRunning()) {
-                NodeDriver.getInstance().getLogger().warn("Service {} probably crashed during startup because it was not authenticated when it stopped", service.getName());
+            File crashFile = new File(specificCrashFolders, service.getName() + "_" + UUID.randomUUID().toString() + ".log");
 
-                File crashFolder = new File(NodeDriver.LOG_FOLDER, "crashes/");
-                crashFolder.mkdirs();
+            try {
+                cloud.hytora.common.misc.FileUtils.writeToFile(crashFile, service.queryServiceOutput());
+                NodeDriver.getInstance().getLogger().warn("Saving logs to identify crash under {}...", crashFile.getName());
+            } catch (IOException e) {
+                e.printStackTrace();
+                NodeDriver.getInstance().getLogger().warn("Couldn't save crash logs...");
+            }
+            INodeConfig config = NodeDriver.getInstance().getConfig();
+            ServiceCrashPrevention scp = config.getServiceCrashPrevention();
 
-                File specificCrashFolders = new File(crashFolder, con.getName() + "/");
-                specificCrashFolders.mkdirs();
+            if (scp.isEnabled()) {
 
-                File crashFile = new File(specificCrashFolders, service.getName() + "_" + UUID.randomUUID().toString() + ".log");
+                NodeDriver.getInstance().getServiceQueue().getPausedGroups().add(con.getName());
 
+                CloudDriver.getInstance().getScheduler().scheduleDelayedTask(() -> {
+                    NodeDriver.getInstance().getServiceQueue().getPausedGroups().remove(con.getName());
+                    NodeDriver.getInstance().getServiceQueue().dequeue();
+                }, scp.getTimeUnit().toMillis(scp.getTime()));
+
+                NodeDriver.getInstance().getLogger().warn("Due to ServiceCrashPrevention (SCP) being enabled, starting services of ServiceTask {} is now paused for {} {}", con.getName(), scp.getTime(), scp.getTimeUnit().name().toLowerCase());
+            }
+
+        }
+
+        if (con.getTaskGroup().getShutdownBehaviour().isStatic()) {
+            //only delete cloud files
+            File property = new File(folder, "property.json");
+            property.delete();
+
+            File bridgePlugin = new File(folder, "plugins/plugin.jar");
+            bridgePlugin.delete();
+
+            File applicationFile = new File(folder, con.getVersion().getJar());
+            applicationFile.delete();
+
+        } else {
+            //dynamic -> delete everything
+            if (folder.exists()) {
                 try {
-                    cloud.hytora.common.misc.FileUtils.writeToFile(crashFile, service.queryServiceOutput());
-                    NodeDriver.getInstance().getLogger().warn("Saving logs to identify crash under {}...", crashFile.getName());
+                    FileUtils.deleteDirectory(folder);
                 } catch (IOException e) {
-                    e.printStackTrace();
-                    NodeDriver.getInstance().getLogger().warn("Couldn't save crash logs...");
-                }
-                INodeConfig config = NodeDriver.getInstance().getConfig();
-                ServiceCrashPrevention scp = config.getServiceCrashPrevention();
-
-                if (scp.isEnabled()) {
-
-                    NodeDriver.getInstance().getServiceQueue().getPausedGroups().add(con.getName());
-
-                    CloudDriver.getInstance().getScheduler().scheduleDelayedTask(() -> {
-                        NodeDriver.getInstance().getServiceQueue().getPausedGroups().remove(con.getName());
-                        NodeDriver.getInstance().getServiceQueue().dequeue();
-                    }, scp.getTimeUnit().toMillis(scp.getTime()));
-
-                    NodeDriver.getInstance().getLogger().warn("Due to ServiceCrashPrevention (SCP) being enabled, starting services of ServiceTask {} is now paused for {} {}", con.getName(), scp.getTime(), scp.getTimeUnit().name().toLowerCase());
-                }
-
-            }
-
-            if (con.getTaskGroup().getShutdownBehaviour().isStatic()) {
-                //only delete cloud files
-                File property = new File(folder, "property.json");
-                property.delete();
-
-                File bridgePlugin = new File(folder, "plugins/plugin.jar");
-                bridgePlugin.delete();
-
-                File applicationFile = new File(folder, con.getVersion().getJar());
-                applicationFile.delete();
-
-            } else {
-                //dynamic -> delete everything
-                if (folder.exists()) {
-                    try {
-                        FileUtils.deleteDirectory(folder);
-                    } catch (IOException e) {
-                    }
                 }
             }
-        }, 300).addIgnoreExceptionClass(FileSystemException.class);
+        }
 
     }
 
@@ -165,21 +157,11 @@ public class NodeServiceManager extends DefaultServiceManager {
     }
 
 
-
-
     @EventListener
     public void handleUpdate(ServiceUpdateEvent event) {
         ServiceInfo server = event.getService();
 
         this.updateService(server);
-    }
-
-    @EventListener
-    public void handleRemove(ServiceUnregisterEvent event) {
-        String serverName = event.getService();
-
-        Optional<ServiceInfo> service = this.getService(serverName);
-        service.ifPresent(this::unregisterService);
     }
 
 }

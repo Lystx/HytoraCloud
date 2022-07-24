@@ -116,6 +116,9 @@ public class LocalTemplateStorage implements TemplateStorage {
 
         if (template != null && template.getStorage() != null && template.getPrefix() != null && template.getName() != null) {
             File workingDirectory = nodeCloudServer.getWorkingDirectory();
+            if (workingDirectory == null) {
+                return;
+            }
             File templateDirectory = new File(NodeDriver.TEMPLATES_DIR, template.buildTemplatePath());
 
             File[] files = workingDirectory.listFiles();

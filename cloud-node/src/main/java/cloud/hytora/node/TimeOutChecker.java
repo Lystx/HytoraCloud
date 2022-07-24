@@ -14,8 +14,6 @@ public class TimeOutChecker implements Runnable {
 
 	@Override
 	public synchronized void run() {
-		CloudDriver.getInstance().getLogger().trace("Running cloud main loop iteration");
-
 		// TODO: 23.05.2022 check why not work properly
 		//this.checkNodeTimeout(); //checking nodes
 		//this.checkServiceTimeout(); //checking for service timeout

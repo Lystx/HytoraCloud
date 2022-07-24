@@ -111,7 +111,7 @@ public class ServiceCommand {
             }
         });
 
-        for (String cachedLine : cachedLines) {
+        for (String cachedLine : new ArrayList<>(cachedLines)) {
             sender.sendMessage(cachedLine);
         }
     }

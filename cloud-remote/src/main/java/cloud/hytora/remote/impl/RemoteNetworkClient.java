@@ -17,6 +17,7 @@ public class RemoteNetworkClient extends ClusterParticipant {
                 CloudDriver.getInstance().getLogger().info("This service has connected to the Cluster!");
             } else {
                 CloudDriver.getInstance().getLogger().info("This service couldn't connect to the Cluster!");
+                channelTask.error().printStackTrace();
                 for (Runnable runnable : connectionFailed) runnable.run();
             }
         });

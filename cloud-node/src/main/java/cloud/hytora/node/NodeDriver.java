@@ -1,7 +1,9 @@
 package cloud.hytora.node;
 
+import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.StringUtils;
+import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.document.DocumentFactory;
@@ -96,6 +98,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -144,6 +147,8 @@ public class NodeDriver extends CloudDriver implements Node {
     public static final File SERVICE_DIR_STATIC = new File(SERVICE_DIR, "permanent/");
     public static final File SERVICE_DIR_DYNAMIC = new File(SERVICE_DIR, "temporary/");
 
+
+
     public NodeDriver(Logger logger, Console console) throws Exception {
         super(logger, DriverEnvironment.NODE);
         instance = this;
@@ -155,6 +160,9 @@ public class NodeDriver extends CloudDriver implements Node {
         this.configManager = new ConfigManager();
         this.configManager.read();
         this.config = this.configManager.getConfig().getNodeConfig();
+
+        this.logger.setMinLevel(this.configManager.getConfig().getLogLevel());
+        this.logger.debug("Set LogLevel to {}", this.logger.getMinLevel().getName());
 
         //storage managing
         this.storage = new NodeDriverStorage();
@@ -170,6 +178,8 @@ public class NodeDriver extends CloudDriver implements Node {
         if (!this.configManager.isDidExist()) {
             this.startSetup();
             return;
+        } else {
+            this.logger.trace("Setup already done ==> Skipping...");
         }
 
         //avoid log4j errors
@@ -189,21 +199,22 @@ public class NodeDriver extends CloudDriver implements Node {
         });
 
         DriverStatus status = status();
+
+        this.logger.info("§8");
+        this.logger.info("§8");
+        this.logger.info("§b    __  __      __                   ________                __");
+        this.logger.info("§b   / / / /_  __/ /_____  _________ _/ ____/ /___  __  ______/ /");
+        this.logger.info("§b  / /_/ / / / / __/ __ \\/ ___/ __ `/ /   / / __ \\/ / / / __  / ");
+        this.logger.info("§b / __  / /_/ / /_/ /_/ / /  / /_/ / /___/ / /_/ / /_/ / /_/ /  ");
+        this.logger.info("§b/_/ /_/\\__, _____\\____/_/   \\__,_/\\____________/\\________,_/   ");
+        this.logger.info("§b      /____/ ___/____ ___  __  _______/ __/  | |  / <  /       ");
+        this.logger.info("§b ______    \\__ \\/ __ `__ \\/ / / / ___/ /_    | | / // /  ______");
+        this.logger.info("§b/_____/   ___/ / / / / / / /_/ / /  / __/    | |/ // /  /_____/");
+        this.logger.info("§b         /____/_/ /_/ /_/\\__,_/_/  /_/       |___//_/          ");
+        this.logger.info("§8");
+        this.logger.info("§bVersion §7: {}", (status.version() + " " + (status.experimental() ? "§8[§6Experimental§8]" : "§8[§aStable§8]")));
+        this.logger.info("§bDeveloper(s) §7: {}", (Arrays.toString(status.developers()).replace("[", "").replace("]", "")));
         this.logger.info("§8==================================================");
-        this.logger.info("§8");
-        this.logger.info("§8");
-        this.logger.info("§8» §bHytoraCloud §8| §7Where §3opportunity §7connects §8«");
-        this.logger.info("§8");
-        this.logger.info("§8");
-        this.logger.info("§8");
-        this.logger.info("§8× §bVersion §7: §7" + status.version() + " " + (status.experimental() ? "§8[§6Experimental§8]" : "§8[§aStable§8]"));
-        this.logger.info("§8× §bDeveloper(s) §7: §7" + Arrays.toString(status.developers()).replace("[", "").replace("]", ""));
-        this.logger.info("§8");
-        this.logger.info("§8");
-        this.logger.info("§8==================================================");
-        this.logger.info("§8");
-        this.logger.info("§8");
-        this.logger.info("§8");
         this.logger.info("§8");
         this.logger.info("§8");
         this.logger.info("§8");
@@ -224,21 +235,22 @@ public class NodeDriver extends CloudDriver implements Node {
         }
 
         if (this.config.isRemote()) {
-            this.logger.info("§7This Node is a §eSubNode §7and will now connect to all provided Nodes in Cluster...");
+            this.logger.info("This Node is a SubNode and will now connect to all provided Nodes in Cluster...");
             ProtocolAddress[] clusterAddresses = this.config.getClusterAddresses();
             for (ProtocolAddress address : clusterAddresses) {
                 this.executor.connectToOtherNode(address.getAuthKey(), this.config.getNodeName(), address.getHost(), address.getPort(), DocumentFactory.emptyDocument()).addUpdateListener(b -> {
                     if (b.isSuccess()) {
-                        this.logger.info("§aSuccessfully §7connected to §b" + address);
+                        this.logger.info("Successfully connected to §a" + address);
                     }
                 });
             }
         } else {
-            this.logger.info("§7This Node is a §aHeadNode §7and boots up the Cluster...");
+            this.logger.info("§7This Node is a HeadNode §7and boots up the Cluster...");
         }
 
 
         //creating needed files
+        this.logger.trace("Creating needed folders...");
         NodeDriver.NODE_FOLDER.mkdirs();
 
         NodeDriver.STORAGE_FOLDER.mkdirs();
@@ -247,6 +259,7 @@ public class NodeDriver extends CloudDriver implements Node {
         NodeDriver.SERVICE_DIR.mkdirs();
         NodeDriver.SERVICE_DIR_STATIC.mkdirs();
         NodeDriver.SERVICE_DIR_DYNAMIC.mkdirs();
+        this.logger.trace("Required folders created!");
 
         this.databaseManager = new DefaultDatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType());
 
@@ -264,9 +277,9 @@ public class NodeDriver extends CloudDriver implements Node {
         this.logger.info("§8");
 
         //managing and loading modules
-        moduleManager.setModulesDirectory(MODULE_FOLDER.toPath());
-        moduleManager.resolveModules();
-        moduleManager.loadModules();
+        this.moduleManager.setModulesDirectory(MODULE_FOLDER.toPath());
+        this.moduleManager.resolveModules();
+        this.moduleManager.loadModules();
 
         //checking if directories got deleted meanwhile
         for (TaskGroup parent : this.serviceTaskManager.getAllTaskGroups()) {
@@ -285,13 +298,12 @@ public class NodeDriver extends CloudDriver implements Node {
         //registering template storage
         this.templateManager.registerStorage(new LocalTemplateStorage());
 
-
         //copying files
-        this.logger.info("§7Copying files§8...");
+        this.logger.trace("§7Copying files§8...");
         FileUtils.copyResource("/impl/plugin.jar", STORAGE_VERSIONS_FOLDER + "/plugin.jar", getClass());
         FileUtils.copyResource("/impl/remote.jar", STORAGE_VERSIONS_FOLDER + "/remote.jar", getClass());
 
-        this.logger.info("§7Registering §bCommands §8& §bArgumentParsers§8...");
+        this.logger.trace("Registering Commands & ArgumentParsers...");
         this.commandManager.registerCommand(new ShutdownCommand());
         this.commandManager.registerCommand(new HelpCommand());
         this.commandManager.registerCommand(new NodeCommand());
@@ -301,19 +313,21 @@ public class NodeDriver extends CloudDriver implements Node {
         this.commandManager.registerCommand(new PlayerCommand());
         this.commandManager.registerCommand(new TickCommand());
         this.commandManager.registerCommand(new ClusterCommand());
+        this.commandManager.registerCommand(new LoggerCommand());
 
         //registering command argument parsers
         this.commandManager.registerParser(ServiceVersion.class, ServiceVersion::valueOf);
+        this.commandManager.registerParser(LogLevel.class, LogLevel::valueOf);
         this.commandManager.registerParser(ServiceInfo.class, this.serviceManager::getServiceByNameOrNull);
         this.commandManager.registerParser(ServiceTask.class, this.serviceTaskManager::getTaskByNameOrNull);
         this.commandManager.registerParser(CloudPlayer.class, this.playerManager::getCloudPlayerByNameOrNull);
         this.commandManager.registerParser(Node.class, this.nodeManager::getNodeByNameOrNull);
 
-        this.logger.info("§a=> §7Registered §a" + this.commandManager.getCommands().size() + " Commands §8& §a" + this.commandManager.getParsers().size() + " Parsers§8!");
-        this.logger.info("§8");
+        this.logger.trace("Registered " + this.commandManager.getCommands().size() + " Commands & " + this.commandManager.getParsers().size() + " Parsers!");
+        this.logger.trace("§8");
 
         //registering packet handlers
-        this.logger.info("Registering §bPacketts §8& §bHandlers§8...");
+        this.logger.trace("Registering Packets & Handlers...");
         this.executor.registerPacketHandler(new NodeRedirectPacketHandler());
         this.executor.registerPacketHandler(new NodeDataCycleHandler());
         this.executor.registerPacketHandler(new NodeOfflinePlayerPacketHandler());
@@ -329,21 +343,22 @@ public class NodeDriver extends CloudDriver implements Node {
         this.executor.registerRemoteHandler(new NodeRemoteServerStopHandler());
         this.executor.registerRemoteHandler(new NodeRemoteLoggingHandler());
 
-        this.logger.info("§a=> Registered §a" + PacketProvider.getRegisteredPackets().size() + " Packets §8& §a" + this.executor.getRegisteredPacketHandlers().size() + " Handlers§8.");
-        this.logger.info("§8");
+        this.logger.trace("Registered " + PacketProvider.getRegisteredPackets().size() + " Packets & " + this.executor.getRegisteredPacketHandlers().size() + " PacketHandlers.");
+        this.logger.trace("§8");
 
         //heart-beat execution for time out checking
         TimeOutChecker check = new TimeOutChecker();
         scheduledExecutor.scheduleAtFixedRate(check, 1, 1, TimeUnit.SECONDS);
 
         //enabling modules after having loaded the database
-        this.logger.info("Enabling §bModules§8...");
-        this.logger.info("§8");
-        moduleManager.enableModules();
+        this.moduleManager.enableModules();
 
         // print finish successfully message
-        this.logger.info("§7This Node has §asuccessfully §7booted up§8!");
-        this.logger.info("§2==> Thanks for using HytoraCloud");
+        this.logger.info("§8");
+        this.logger.info("§8");
+        this.logger.info("This Node has successfully booted up and is now ready for personal use!");
+        this.logger.info("=> Thanks for using HytoraCloud");
+        this.logger.info("§8");
         this.logger.info("§8");
 
         //starting service queue
@@ -351,14 +366,7 @@ public class NodeDriver extends CloudDriver implements Node {
 
         //add node cycle data
         scheduledExecutor.scheduleAtFixedRate(() -> executor.sendPacketToAll(new NodeCycleDataPacket(this.config.getNodeName(), getLastCycleData())), 1_000, NodeCycleData.PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
-        scheduledExecutor.scheduleAtFixedRate(() -> {
-
-            for (ClusterClientExecutor client : this.executor.getAllCachedConnectedClients()) {
-                if (client.getName().equalsIgnoreCase("Application")) {
-                    DriverUpdatePacket.publishUpdate(client);
-                }
-            }
-        }, 1_000, 1, TimeUnit.SECONDS);
+        scheduledExecutor.scheduleAtFixedRate(() -> this.executor.getClient("Application").ifPresent(DriverUpdatePacket::publishUpdate), 1_000, 1, TimeUnit.SECONDS);
 
         // add a shutdown hook for fast closes
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
@@ -524,31 +532,12 @@ public class NodeDriver extends CloudDriver implements Node {
                 return;
             }
             process.destroyForcibly();
-        }, TimeUnit.MILLISECONDS, 500);
+        }, TimeUnit.MILLISECONDS, 200);
     }
 
     @Override
     public void startServer(ServiceInfo server) {
-        CloudDriver.getInstance().getServiceManager().startService(server).addUpdateListener(new Consumer<Task<ServiceInfo>>() {
-            @Override
-            public void accept(Task<ServiceInfo> task) {
-                if (task.isSuccess()) {
-                    ServiceInfo service = task.get();
-
-                    ClusterClientExecutor nodeClient = NodeDriver.getInstance().getExecutor().getClient(service.getTask().getNode()).orElse(null);
-                    boolean thisSidesNode = service.getTask().getNode().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName());
-
-                    if (thisSidesNode) {
-                        CloudDriver.getInstance().getLogger().info("§6==> §7This Node started §b" + service.getName());
-                    } else {
-                        CloudDriver.getInstance().getLogger().info("§6==> §7Node '" + nodeClient.getName() + "' §8(§b" + nodeClient.getChannel() + "§8) started §b" + service.getName());
-                    }
-
-                } else {
-                    task.error().printStackTrace();
-                }
-            }
-        });
+        CloudDriver.getInstance().getServiceManager().startService(server);
     }
 
     @Override
@@ -611,7 +600,7 @@ public class NodeDriver extends CloudDriver implements Node {
         this.webServer.shutdown();
 
         //shutting down servers
-        for (ServiceInfo service : this.serviceManager.getAllCachedServices()) {
+        for (ServiceInfo service : new ArrayList<>(this.serviceManager.getAllCachedServices())) {
             NodeServiceInfo cloudServer = service.asCloudServer();
             cloudServer.shutdown();
         }

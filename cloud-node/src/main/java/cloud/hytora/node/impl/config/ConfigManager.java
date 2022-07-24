@@ -1,5 +1,7 @@
 package cloud.hytora.node.impl.config;
 
+import cloud.hytora.common.logging.LogLevel;
+import cloud.hytora.common.logging.Logger;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.http.SSLConfiguration;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
@@ -18,19 +20,23 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-@Getter @Setter
+@Getter
+@Setter
 public class ConfigManager {
 
     private boolean didExist;
     private MainConfiguration config;
 
     public void read() throws IOException {
+        Logger.constantInstance().trace("Reading config.json (NodeConfiguration)...");
         if (NodeDriver.CONFIG_FILE.exists()) {
+            Logger.constantInstance().trace("Config-File does exist ==> Reading existing config...");
             this.didExist = true;
             this.config = DocumentFactory.newJsonDocument(NodeDriver.CONFIG_FILE).toInstance(MainConfiguration.class);
         } else {
             this.didExist = false;
             this.config = new MainConfiguration(
+                    LogLevel.TRACE,
                     new DatabaseConfiguration(
                             DatabaseType.FILE,
                             "127.0.0.1",
@@ -61,15 +67,18 @@ public class ConfigManager {
                                     "/etc/ssl/certificate.pem",
                                     "/etc/ssl/privateKey.key"
                             )
-                    ),25565, 40000, new ArrayList<>());
+                    ), 25565, 40000, new ArrayList<>());
+            Logger.constantInstance().trace("Config-File does not exist ==> Creating and saving default config..");
         }
 
         if (this.config.getNodeConfig().getClusterAddresses().length > 0) {
             this.config.getNodeConfig().markAsRemote();
         }
+        Logger.constantInstance().trace("Config loaded successfully!");
     }
 
     public void save() throws IOException {
+        Logger.constantInstance().trace("Current Configuration was saved in config.json!");
         DocumentFactory.newJsonDocument(this.config).saveToFile(NodeDriver.CONFIG_FILE);
     }
 }

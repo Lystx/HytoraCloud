@@ -87,11 +87,6 @@ public class NodeServiceQueue {
                     ServiceInfo service = new SimpleServiceInfo(task.getName(), this.getPossibleServiceIDByGroup(task), port, address);
                     CloudDriver.getInstance().getServiceManager().registerService(service);
 
-                    if (thisSidesNode) {
-                        CloudDriver.getInstance().getLogger().info("This Node queued §a" + service.getName() + " §8| §bPort " + service.getPort() + "§8| §bCapacity " + service.getMaxPlayers() + " §8| §bType " + (service.getTask().getVersion().isProxy() ? "Proxy" : "Spigot") + " §8| §bState " + service.getServiceState().getName());
-                    } else {
-                        CloudDriver.getInstance().getLogger().info("Node '" + nodeClient.getName() + "' §8(§b" + nodeClient.getChannel() + "§8) §7queued §a" + service.getName() + " §8| §bPort " + service.getPort() + "§8| §bCapacity " + service.getMaxPlayers() + " §8| §bType " + (service.getTask().getVersion().isProxy() ? "Proxy" : "Spigot") + " §8| §bState " + service.getServiceState().getName());
-                    }
                 });
     }
 

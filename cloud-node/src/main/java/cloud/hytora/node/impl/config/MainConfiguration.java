@@ -1,5 +1,6 @@
 package cloud.hytora.node.impl.config;
 
+import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.database.config.DatabaseConfiguration;
@@ -14,6 +15,7 @@ import lombok.Setter;
 @Setter
 public class MainConfiguration {
 
+    private LogLevel logLevel;
     private DatabaseConfiguration databaseConfiguration;
     private DefaultNodeConfig nodeConfig;
 

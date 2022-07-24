@@ -54,35 +54,48 @@ public class ModuleListener {
             return;
         }
 
+
+        String message = "";
+        if (state == 2 && !config.isShowReadyMessage()) { //if state is READY but config has disabled this extra message -> ignore execution
+            return;
+        }
+
+        switch (state) {
+            case 0: //starting of server
+                message = config.getMessages().getStartMessage();
+                break;
+            case 1: //stopping of server
+                message = config.getMessages().getStopMessage();
+                break;
+
+            case 2: //ready of server
+                message = config.getMessages().getReadyMessage();
+                break;
+        }
+
+        //applying placeholders
+        message = serviceInfo.replacePlaceHolders(message);
+
+
         //iterating through all players
         for (CloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
             if (config.getDisabledMessages().contains(player.getUniqueId())) {
                 continue; //player has disabled messages
             }
             PlayerExecutor executor = PlayerExecutor.forPlayer(player);
-            if (state == 2 && !config.isShowReadyMessage()) { //if state is READY but config has disabled this extra message -> ignore execution
-                return;
-            }
-
-            String message = "";
-            switch (state) {
-                case 0: //starting of server
-                    message = config.getMessages().getStartMessage();
-                    break;
-                case 1: //stopping of server
-                    message = config.getMessages().getStopMessage();
-                    break;
-
-                case 2: //ready of server
-                    message = config.getMessages().getReadyMessage();
-                    break;
-            }
-
-            //applying placeholders
-            serviceInfo.replacePlaceHolders(message);
 
             //sending message to player
-            executor.sendMessage(message);
+            executor.sendMessage(message.replace("%prefix%", config.getMessages().getPrefix()));
+        }
+
+        if (config.isDisplayInConsole()) {
+            if (config.isDisplayPrefixInConsole()) {
+                message = message.replace("%prefix%", config.getMessages().getPrefix());
+            } else {
+                message = message.replace("%prefix%", "");
+            }
+            message = message.trim();
+            CloudDriver.getInstance().getLogger().info(message);
         }
     }
 }

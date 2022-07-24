@@ -1,5 +1,6 @@
 package cloud.hytora.node.impl.database.config;
 
+import cloud.hytora.common.logging.LogLevel;
 import lombok.*;
 
 @Getter

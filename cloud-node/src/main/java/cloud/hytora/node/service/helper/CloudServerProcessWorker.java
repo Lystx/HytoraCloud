@@ -84,6 +84,7 @@ public class CloudServerProcessWorker {
         new RemoteIdentity(
                 NodeDriver.getInstance().getConfig().getAuthKey(),
                 service.getTask().getNode(),
+                service.getTask().getVersion().getType(),
                 NodeDriver.getInstance().getExecutor().getHostName(),
                 service.getName(),
                 NodeDriver.getInstance().getExecutor().getPort()

@@ -51,7 +51,7 @@ public class NettyHttpServer extends NettySSLServer implements HttpServer {
                     .sync()
                     .channel();
 
-            CloudDriver.getInstance().getLogger().info("HttpServer is now listening on {}!", address);
+            CloudDriver.getInstance().getLogger().info("Added HttpListener for ProtocolAddress of value {}!", address);
         } catch (InterruptedException ex) {
             ex.printStackTrace();
         }

@@ -14,5 +14,5 @@ public interface MessagePlaceholder {
      *
      * @param input the input text
      */
-    void replacePlaceHolders(String input);
+    String replacePlaceHolders(String input);
 }

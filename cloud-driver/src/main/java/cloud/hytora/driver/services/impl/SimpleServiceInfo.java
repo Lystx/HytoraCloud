@@ -211,7 +211,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
     }
 
     @Override
-    public void replacePlaceHolders(String input) {
+    public String replacePlaceHolders(String input) {
         input = input.replace("{server.name}", this.getName());
         input = input.replace("{server.motd}", this.getMotd());
         input = input.replace("{server.host}", this.getHostName());
@@ -221,13 +221,18 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
 
         input = input.replace("{server.id}", String.valueOf(this.getServiceID()));
         input = input.replace("{server.port}", String.valueOf(this.getPort()));
-        input = input.replace("{server.maxPlayers}", String.valueOf(this.getMaxPlayers()));
+        input = input.replace("{server.capacity}", String.valueOf(this.getMaxPlayers()));
 
+        input = input.replace("{server.node}", this.getTask().getNode());
 
         input = input.replace("{server.state}", this.getServiceState().getName());
         input = input.replace("{server.visibility}", this.getServiceVisibility().name());
         input = input.replace("{server.creationTime}", String.valueOf(this.getCreationTimestamp()));
+        input = input.replace("{server.uptime}", String.valueOf(this.getReadableUptime()));
+        input = input.replace("{server.uptimeDif}", String.valueOf(System.currentTimeMillis() - this.getCreationTimestamp()));
         input = input.replace("{server.properties}", this.getProperties().asRawJsonString());
+
+        return task.replacePlaceHolders(input);
     }
 
     @Override

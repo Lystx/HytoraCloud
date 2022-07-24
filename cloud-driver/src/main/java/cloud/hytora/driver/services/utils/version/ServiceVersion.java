@@ -13,7 +13,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 public enum ServiceVersion {
@@ -329,6 +331,11 @@ public enum ServiceVersion {
             }
         }
         return cachedInstantiatedVersionFiles;
+    }
+
+
+    public static ServiceVersion[] valuesOf(VersionType type) {
+        return Arrays.stream(values()).filter(v -> v.getType() == type).toArray(ServiceVersion[]::new);
     }
 
     public boolean isProxy() {

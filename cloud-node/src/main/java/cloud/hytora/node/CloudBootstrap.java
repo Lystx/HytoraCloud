@@ -22,6 +22,7 @@ public class CloudBootstrap {
             Console console = new JLine3Console("§8| §bCloud §8» §b%screen% §8» §r");
             console.setLineCaching(true);
             HandledLogger logger = new HandledAsyncLogger(LogLevel.fromName(System.getProperty("cloud.logging.level", "INFO")));
+
             Logger.setFactory(logger.addHandler(new ConsoleLogHandler(console), new FileLogHandler()));
 
             System.setOut(logger.asPrintStream(LogLevel.INFO));
@@ -29,12 +30,7 @@ public class CloudBootstrap {
 
             CloudDriver driver = new NodeDriver(logger, console);
 
-            logger.addHandler(new LogHandler() {
-                @Override
-                public void handle(@NotNull LogEntry entry) throws Exception {
-                    driver.getEventManager().callEventGlobally(new DriverLogEvent(entry));
-                }
-            });
+            logger.addHandler(entry -> driver.getEventManager().callEventGlobally(new DriverLogEvent(entry)));
         } catch (Exception e) {
             e.printStackTrace();
         }

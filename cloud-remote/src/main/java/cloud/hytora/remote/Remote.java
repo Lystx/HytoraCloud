@@ -5,6 +5,8 @@ import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.common.logging.handler.HandledLogger;
 import cloud.hytora.common.misc.StringUtils;
+import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.TaskHolder;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
@@ -25,6 +27,7 @@ import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.task.ServiceTaskManager;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
+import cloud.hytora.driver.services.utils.version.VersionType;
 import cloud.hytora.driver.storage.DriverStorage;
 import cloud.hytora.driver.storage.RemoteDriverStorage;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
@@ -100,10 +103,6 @@ public class Remote extends CloudDriver {
 
         this.storage = new RemoteDriverStorage(this.client);
 
-        this.scheduledExecutor.scheduleAtFixedRate(() -> {
-            ServiceInfo serviceInfo = thisService();
-            perform(serviceInfo != null, serviceInfo::update);
-        }, 0, SERVER_PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
     }
 
     private static Logger init() {
@@ -152,30 +151,52 @@ public class Remote extends CloudDriver {
         return remote;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws NoSuchMethodException, ClassNotFoundException {
         try {
 
             List<String> arguments = new ArrayList<>(Arrays.asList(args));
             Class<?> main = Class.forName(arguments.remove(0));
             Method method = main.getMethod("main", String[].class);
-            initFromOtherInstance(RemoteIdentity.read(new File("property.json")), packet -> {
-                CloudDriver.getInstance().getLogger().info("Launching '" + main.getName() + "' ...");
-                try {
-                    method.invoke(null, (Object) arguments.toArray(new String[0]));
-                    CloudDriver.getInstance().getLogger().info("Launched '" + main.getName() + "'!");
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
-                    ServiceInfo serviceInfo = Remote.getInstance().thisService();
-                    serviceInfo.setReady(false);
-                    serviceInfo.update();
-                    CloudDriver.getInstance().getLogger().error("Couldn't launch '" + main.getName() + "'!");
-                    CloudDriver.getInstance().getScheduler().scheduleDelayedTask(() -> CloudDriver.getInstance().shutdown(), TimeUnit.SECONDS.toMillis(3));
 
+            RemoteIdentity identity = RemoteIdentity.read(new File("property.json"));
+            Remote remote = new Remote(identity, init());
+
+
+            if (identity.getVersionType() == VersionType.BUNGEE) { //idk why but if done on spigot nothing works
+                remote.nexCacheUpdate().syncUninterruptedly(); //wait till cache done
+            }
+
+            Thread applicationThread = new Thread(() -> {
+                try {
+                    remote.getLogger().info("Starting application thread..");
+                    method.invoke(
+                            null,
+                            new Object[] { new String[0] }
+                    );
+                } catch (Exception ex) {
+                    remote.getLogger().error("Unable to start application..", ex);
+                    // TODO stop
                 }
-            });
+            }, "Application-Thread");
+
+            applicationThread.setContextClassLoader(ClassLoader.getSystemClassLoader());
+            applicationThread.start();
+
+            remote.getScheduledExecutor().scheduleAtFixedRate(() -> {
+                ServiceInfo serviceInfo = remote.thisService();
+                perform(serviceInfo != null, serviceInfo::update);
+            }, 0, SERVER_PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public Task<DriverUpdatePacket> nexCacheUpdate() {
+        Task<DriverUpdatePacket> task = Task.empty();
+        task.denyNull();
+        CloudDriver.getInstance().getExecutor().registerSelfDestructivePacketHandler((PacketHandler<DriverUpdatePacket>) (wrapper1, packet) -> task.setResult(packet));
+        return task;
     }
 
     public static Remote getInstance() {

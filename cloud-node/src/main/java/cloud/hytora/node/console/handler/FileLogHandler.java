@@ -1,5 +1,6 @@
 package cloud.hytora.node.console.handler;
 
+import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.formatter.UncoloredMessageFormatter;
 import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.logging.handler.LogHandler;
@@ -65,8 +66,11 @@ public class FileLogHandler implements LogHandler {
 
     @Override
     public void handle(@Nonnull LogEntry entry) throws Exception {
-        if (entry.getLevel().isHighlighted()) {
+        if (entry.getLevel() == LogLevel.ERROR) {
             write(initStream(errorFile, () -> selectFile("error.")), entry);
+        }
+        if (entry.getLevel() == LogLevel.WARN) {
+            write(initStream(errorFile, () -> selectFile("warn.")), entry);
         }
         write(initStream(outFile, () -> selectFile("cloud.")), entry);
     }

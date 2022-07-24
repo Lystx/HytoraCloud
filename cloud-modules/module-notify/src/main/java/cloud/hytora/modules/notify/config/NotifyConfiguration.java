@@ -5,6 +5,7 @@ import cloud.hytora.modules.notify.config.sub.MessageConfiguration;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import javax.naming.ldap.PagedResultsControl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
@@ -17,6 +18,16 @@ public class NotifyConfiguration {
      * If the module is enabled at all
      */
     private final boolean enabled;
+
+    /**
+     * If all messages should be shown in console too
+     */
+    private final boolean displayInConsole;
+
+    /**
+     * If prefix should be shown in console or only ingame
+     */
+    private final boolean displayPrefixInConsole;
 
     /**
      * If a message should appear when a service
@@ -43,6 +54,8 @@ public class NotifyConfiguration {
 
         this.enabled = true;
         this.showReadyMessage = true;
+        this.displayPrefixInConsole = false;
+        this.displayInConsole = true;
         this.messages = new MessageConfiguration();
         this.disabledMessages = new ArrayList<>();
     }

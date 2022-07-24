@@ -4,6 +4,7 @@ import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
+import cloud.hytora.driver.services.utils.version.VersionType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,6 +26,11 @@ public class RemoteIdentity {
      * The name of the node this service runs on
      */
     private String node;
+
+    /**
+     * The version type
+     */
+    private VersionType versionType;
 
     /**
      * The host name of the node this service runs on
@@ -51,7 +57,7 @@ public class RemoteIdentity {
 
 
     public static RemoteIdentity forApplication(ProtocolAddress address) {
-        return new RemoteIdentity(address.getAuthKey(), "", address.getHost(), CloudDriver.APPLICATION_NAME, address.getPort());
+        return new RemoteIdentity(address.getAuthKey(), "", VersionType.BUNGEE, address.getHost(), CloudDriver.APPLICATION_NAME, address.getPort());
     }
 
     public static RemoteIdentity read(File file) {

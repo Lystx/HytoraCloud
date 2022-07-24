@@ -56,6 +56,7 @@ public class NotifyModule extends DriverModule {
     @ModuleTask(id = 2, state = ModuleState.ENABLED)
     public void enable() {
 
+        CloudDriver.getInstance().getLogger().info("Registering Event & Command for Notify-Module", configuration);
         //registering command and listener
         this.registerEvent(new ModuleListener());
         this.registerCommand(new NotifyCommand());

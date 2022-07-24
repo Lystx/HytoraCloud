@@ -1,8 +1,10 @@
 package cloud.hytora.node.impl.node;
 
+import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.event.defaults.server.ServiceClusterConnectEvent;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.cluster.client.ClusterParticipant;
 import cloud.hytora.driver.networking.cluster.client.SimpleClusterClientExecutor;
@@ -53,7 +55,7 @@ public class HytoraNode extends ClusterExecutor {
         this.bootAsync().handlePacketsAsync().openConnection(this.hostName, this.port)
                 .addUpdateListener(wrapper -> {
                     if (wrapper.isSuccess()) {
-                        NodeDriver.getInstance().getLogger().info("§7Networking was §asuccessfully booted up §7and is §eready §7to accept connections§8!");
+                        NodeDriver.getInstance().getLogger().debug("Networking was successfully booted up and is ready to accept connections!");
                     } else {
                         wrapper.error().printStackTrace();
                     }
@@ -135,7 +137,6 @@ public class HytoraNode extends ClusterExecutor {
 
                     return;
                 }
-                service.setServiceState(ServiceState.ONLINE);
 
                 DriverUpdatePacket.publishUpdate(service);
                 // update cache
@@ -147,10 +148,9 @@ public class HytoraNode extends ClusterExecutor {
 
                 service.update();
 
-                NodeDriver.getInstance().getLogger().info("§a==> Channel §8[§b" + service.getName() + "@" + service.getHostName() + ":" + service.getPort() + "§8] §7connected §8[§a" + this.getStats(service) + "ms§8]");
+                CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceClusterConnectEvent(service));
 
             } else {
-
                 String service = executor.getName();
                 if (service.equalsIgnoreCase("Application")) {
                     NodeDriver.getInstance().getLogger().warn("§a==> Channel §e{} - {} disconnected", "Cloud Application", executor.getChannel());
@@ -165,7 +165,9 @@ public class HytoraNode extends ClusterExecutor {
                 }
             }
 
-            NodeDriver.getInstance().getServiceQueue().dequeue();
+            Scheduler.runTimeScheduler().scheduleDelayedTask(() -> {
+                NodeDriver.getInstance().getServiceQueue().dequeue();
+            }, 200L);
         }
     }
 

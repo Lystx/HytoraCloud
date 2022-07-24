@@ -10,12 +10,13 @@ import java.util.Arrays;
 @AllArgsConstructor
 public enum LogLevel {
 
-    TRACE(0, false),
-    DEBUG(2, false),
+    NULL(-1, false),
+    TRACE(0, ConsoleColor.YELLOW),
+    DEBUG(2, ConsoleColor.YELLOW),
     STATUS(7, false),
     INFO(10, false),
-    WARN(15, true),
-    ERROR(25, true);
+    WARN(15, ConsoleColor.ORANGE),
+    ERROR(25,  ConsoleColor.RED);
 
     /**
      * The value of this level
@@ -27,7 +28,23 @@ public enum LogLevel {
      */
     private final boolean highlighted;
 
+    /**
+     * The custom highlight color
+     */
+    private final ConsoleColor highlightColor;
+
+    LogLevel(int value, ConsoleColor highlightColor) {
+        this(value, true, highlightColor);
+    }
+
+    LogLevel(int value, boolean highlighted) {
+        this.value = value;
+        this.highlighted = highlighted;
+        this.highlightColor =  null;
+    }
+
     public boolean isEnabled(@Nonnull LogLevel loggerLevel) {
+        if (this == NULL) return true;
         return this.getValue() >= loggerLevel.getValue();
     }
 

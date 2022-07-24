@@ -156,4 +156,19 @@ public class DefaultServiceTask extends ProtocolPropertyHolder implements Servic
 
     }
 
+    @Override
+    public String replacePlaceHolders(String input) {
+        input = input.replace("{task.name}", this.getName());
+        input = input.replace("{task.motd}", this.getMotd());
+        input = input.replace("{task.node}", this.getNode());
+
+        input = input.replace("{task.memory}", String.valueOf(this.getMemory()));
+        input = input.replace("{task.java}", String.valueOf(this.getJavaVersion()));
+        input = input.replace("{task.capacity}", String.valueOf(this.getDefaultMaxPlayers()));
+
+        input = input.replace("{task.version}", this.getVersion().getJar());
+        input = input.replace("{task.properties}", this.getProperties().asRawJsonString());
+
+        return input;
+    }
 }

@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 @Getter
@@ -28,7 +29,7 @@ public abstract class DefaultServiceManager implements ServiceManager {
     protected List<ServiceInfo> allCachedServices;
 
     public DefaultServiceManager() {
-        this.allCachedServices = new ArrayList<>();
+        this.allCachedServices = new CopyOnWriteArrayList<>();
         CloudDriver.getInstance().getEventManager().registerListener(this);
     }
 

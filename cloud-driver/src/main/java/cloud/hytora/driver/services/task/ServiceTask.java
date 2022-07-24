@@ -1,5 +1,6 @@
 package cloud.hytora.driver.services.task;
 
+import cloud.hytora.driver.common.MessagePlaceholder;
 import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
 import cloud.hytora.driver.common.SelfCloneable;
 import cloud.hytora.driver.node.Node;
@@ -13,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 
-public interface ServiceTask extends Bufferable, PropertyHolder, SelfCloneable<ServiceTask> {
+public interface ServiceTask extends Bufferable, MessagePlaceholder, PropertyHolder, SelfCloneable<ServiceTask> {
 
     /**
      * @return the name of the group

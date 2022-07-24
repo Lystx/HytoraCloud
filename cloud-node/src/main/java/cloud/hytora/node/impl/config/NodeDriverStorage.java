@@ -1,5 +1,6 @@
 package cloud.hytora.node.impl.config;
 
+import cloud.hytora.common.logging.Logger;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.networking.packets.StorageUpdatePacket;
@@ -17,6 +18,10 @@ public class NodeDriverStorage implements DriverStorage {
 	 */
 	private Document rawData;
 
+	public NodeDriverStorage() {
+		Logger.constantInstance().trace("Initializing DriverStorage (Node-Side)...");
+	}
+
 	@Nonnull
 	@Override
 	public DriverStorage setRawData(@Nonnull Document data) {
@@ -33,5 +38,6 @@ public class NodeDriverStorage implements DriverStorage {
 	@Override
 	public void fetch() {
 		rawData = DocumentFactory.newJsonDocument();
+		Logger.constantInstance().trace("DriverStorage is now set up!");
 	}
 }
