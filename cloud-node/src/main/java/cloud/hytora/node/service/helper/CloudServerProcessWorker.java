@@ -17,10 +17,12 @@ import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
+import cloud.hytora.driver.services.utils.ServiceProcessType;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 import cloud.hytora.driver.services.utils.version.VersionFile;
 import cloud.hytora.driver.services.utils.version.VersionType;
+import cloud.hytora.node.impl.config.MainConfiguration;
 import cloud.hytora.node.service.NodeServiceManager;
 import cloud.hytora.node.NodeDriver;
 
@@ -62,6 +64,7 @@ public class CloudServerProcessWorker {
 
         // load all current task templates
         ServiceTask serviceTask = service.getTask();
+        ServiceProcessType serviceProcessType = MainConfiguration.getInstance().getServiceProcessType();
 
         //all templates for this service
         Collection<ServiceTemplate> templates = serviceTask.getTaskGroup().getTemplates(); //parent templates
@@ -80,11 +83,17 @@ public class CloudServerProcessWorker {
         // copy plugin
         FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "plugin.jar"), new File(serverDir, "plugins/plugin.jar"));
 
+        if (serviceProcessType == ServiceProcessType.WRAPPER) {
+            //copy remote file
+            FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "remote.jar"), new File(serverDir, "remote.jar"));
+        }
+
         // write property for identify service
         new RemoteIdentity(
                 NodeDriver.getInstance().getConfig().getAuthKey(),
                 service.getTask().getNode(),
                 service.getTask().getVersion().getType(),
+                MainConfiguration.getInstance().getServiceProcessType(),
                 NodeDriver.getInstance().getExecutor().getHostName(),
                 service.getName(),
                 NodeDriver.getInstance().getExecutor().getPort()
@@ -162,24 +171,22 @@ public class CloudServerProcessWorker {
     private String[] args(ServiceInfo service) {
 
         File parent = (service.getTask().getTaskGroup().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
+        File folder = new File(parent, service.getName() + "/");
 
         Path remoteFile = new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "remote.jar").toPath();
-        File applicationFile = new File(parent, service.getName() + "/" + service.getTask().getVersion().getJar());
+        File applicationFile = new File(folder, service.getTask().getVersion().getJar());
 
         ServiceTask task = service.getTask();
         int javaVersion = task.getJavaVersion();
-
+        ServiceProcessType serviceProcessType = MainConfiguration.getInstance().getServiceProcessType();
 
         List<String> arguments = new ArrayList<>(Collections.singletonList("java"));
 
         if (javaVersion != -1) {
 
             INodeConfig config = NodeDriver.getInstance().getConfig();
-            JavaVersion version = config.getJavaVersions().stream().filter(jv -> jv.getId() == javaVersion).findFirst().orElse(null);
+            config.getJavaVersions().stream().filter(jv -> jv.getId() == javaVersion).findFirst().ifPresent(version -> arguments.add(version.getPath()));
 
-            if (version != null) {
-                arguments.add(version.getPath()); //adding path to custom java version
-            }
         }
 
         //adding pre defined arguments
@@ -187,10 +194,15 @@ public class CloudServerProcessWorker {
                 Arrays.asList(
                         "-DIReallyKnowWhatIAmDoingISwear",
                         "-Dcom.mojang.eula.agree=true",
-                        "-Xms" + service.getTask().getMemory() + "M",
                         "-Xmx" + service.getTask().getMemory() + "M"
                 )
         );
+
+        if (serviceProcessType == ServiceProcessType.WRAPPER) {
+            arguments.add("-javaagent:" + remoteFile.toAbsolutePath());
+            // forces the vm to add the wrapper jar to the classpath (ucp) of the builtin boot classloader
+        }
+
 
         if (task.getJavaVersion() >= 9) {
             arguments.addAll(Arrays.asList(
@@ -205,19 +217,24 @@ public class CloudServerProcessWorker {
             arguments.addAll(Arrays.asList(task.getTaskGroup().getJavaArguments()));
         }
 
-        arguments.addAll(Arrays.asList(
-                "-cp", remoteFile.toAbsolutePath() + File.pathSeparator + applicationFile.toPath().toAbsolutePath()));
+        if (serviceProcessType == ServiceProcessType.WRAPPER) {
+            arguments.addAll(Arrays.asList("-cp", remoteFile.toAbsolutePath() + ":" + applicationFile.toPath().toAbsolutePath()));
 
-        String mainClass = getMainClass(applicationFile.toPath());
-        String remoteMainClass = getMainClass(remoteFile);
+            String mainClass = getMainClass(applicationFile.toPath());
+            String remoteMainClass = getMainClass(remoteFile);
 
-        if (mainClass == null || remoteMainClass == null) {
-            System.out.println("MASSIVE ERROR");
-            return null;
+            if (mainClass == null || remoteMainClass == null) {
+                System.out.println("MASSIVE ERROR");
+                return null;
+            }
+
+            arguments.add(remoteMainClass);
+            //arguments.add(mainClass);
+            arguments.add(applicationFile.getName());
+            
+        } else if (serviceProcessType == ServiceProcessType.BRIDGE_PLUGIN) {
+            arguments.addAll(Arrays.asList("-jar", applicationFile.getName()));
         }
-
-        arguments.add(remoteMainClass);
-        arguments.add(mainClass);
 
         if (service.getTask().getVersion().getType() == VersionType.SPIGOT) {
             arguments.add("nogui");
@@ -226,7 +243,6 @@ public class CloudServerProcessWorker {
 
         return arguments.toArray(new String[0]);
     }
-
 
 
     private void downloadServiceVersion(ServiceVersion version) {

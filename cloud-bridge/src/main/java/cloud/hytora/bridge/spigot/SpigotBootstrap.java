@@ -1,6 +1,8 @@
 package cloud.hytora.bridge.spigot;
 
 import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.utils.RemoteIdentity;
+import cloud.hytora.driver.services.utils.ServiceProcessType;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
 import cloud.hytora.bridge.PluginBridge;
@@ -13,6 +15,12 @@ public class SpigotBootstrap extends JavaPlugin implements PluginBridge, RemoteA
 
     @Override
     public void onLoad() {
+        RemoteIdentity identity = getIdentity();
+        if (identity.getProcessType() == ServiceProcessType.BRIDGE_PLUGIN) {
+            Remote remote = new Remote(identity);
+            remote.nexCacheUpdate().syncUninterruptedly().get();
+        }
+
         Remote.getInstance().setAdapter(this);
     }
 

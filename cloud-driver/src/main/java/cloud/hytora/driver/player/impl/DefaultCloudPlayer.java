@@ -8,11 +8,13 @@ import cloud.hytora.driver.exception.ModuleNeededException;
 import cloud.hytora.driver.exception.PlayerNotOnlineException;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
+import cloud.hytora.driver.permission.PermissionChecker;
 import cloud.hytora.driver.permission.PermissionManager;
 import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.connection.DefaultPlayerConnection;
 import cloud.hytora.driver.player.connection.PlayerConnection;
+import cloud.hytora.driver.player.executor.PlayerExecutor;
 import cloud.hytora.driver.services.ServiceInfo;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
@@ -119,4 +121,20 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements Clo
         wrappedTo.setName(wrappedFrom.name);
     }
 
+    @Override
+    public void sendMessage(@NotNull String message) {
+        PlayerExecutor.forPlayer(this).sendMessage(message);
+    }
+
+    @Override
+    public boolean hasPermission(@NotNull String permission) {
+        PermissionChecker permissionChecker = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionChecker.class);
+        return permissionChecker != null && permissionChecker.hasPermission(this.uniqueId, permission);
+    }
+
+    @NotNull
+    @Override
+    public CloudPlayer getPlayer() {
+        return this;
+    }
 }

@@ -26,7 +26,6 @@ public final class CollectionUtils {
 	@Deprecated
 	public static final String REGEX_2 = "=";
 
-	private static final Logger logger = Logger.newInstance();
 	private static boolean logMappingError = true;
 
 	private CollectionUtils() {}
@@ -54,6 +53,20 @@ public final class CollectionUtils {
 		}
 		return builder.toString();
 	}
+
+	@SafeVarargs
+	public static <T> Map<T, T> mapOf(T... keysAndValues) {
+		Map<T, T> map = new HashMap<>();
+
+		if (keysAndValues.length % 2 != 0)
+			throw new IllegalArgumentException("Cannot create document of " + keysAndValues.length + " arguments");
+		for (int i = 0; i < keysAndValues.length; i += 2) {
+			map.put(keysAndValues[i], keysAndValues[i + 1]);
+		}
+
+		return map;
+	}
+
 
 	@Nonnull
 	@CheckReturnValue
@@ -102,8 +115,8 @@ public final class CollectionUtils {
 				map.put(keyElement, valueElement);
 
 			} catch (Exception ex) {
-				if (logMappingError)
-					logger.error("Cannot generate key/value: " + ex.getClass().getName() + ": " + ex.getMessage());
+				//if (logMappingError)
+					//logger.error("Cannot generate key/value: " + ex.getClass().getName() + ": " + ex.getMessage());
 			}
 		}
 
@@ -121,8 +134,8 @@ public final class CollectionUtils {
 			try {
 				result.put(keyMapper.apply(key), valueMapper.apply(value));
 			} catch (Exception ex) {
-				if (logMappingError)
-					logger.error("Unable to map '{}'='{}'", key, value, ex);
+				//if (logMappingError)
+					//logger.error("Unable to map '{}'='{}'", key, value, ex);
 			}
 		});
 		return result;
@@ -137,8 +150,8 @@ public final class CollectionUtils {
 			try {
 				result.add(mapper.apply(value));
 			} catch (Exception ex) {
-				if (logMappingError)
-					logger.error("Unable map '{}'", value, ex);
+				//if (logMappingError)
+					//logger.error("Unable map '{}'", value, ex);
 			}
 		});
 		return result;
@@ -154,8 +167,8 @@ public final class CollectionUtils {
 			try {
 				result.add(mapper.apply(value));
 			} catch (Exception ex) {
-				if (logMappingError)
-					logger.error("Unable map '{}'", value, ex);
+				//if (logMappingError)
+					//logger.error("Unable map '{}'", value, ex);
 			}
 		}
 		return result;
@@ -171,8 +184,8 @@ public final class CollectionUtils {
 			try {
 				result.put(keyMapper.apply(entry.getKey()), valueMapper.apply(entry.getValue()));
 			} catch (Exception ex) {
-				if (logMappingError)
-					logger.error("Unable map '{}'='{}'", entry.getKey(), entry.getValue(), ex);
+				//if (logMappingError)
+					//logger.error("Unable map '{}'='{}'", entry.getKey(), entry.getValue(), ex);
 			}
 		}
 		return result;

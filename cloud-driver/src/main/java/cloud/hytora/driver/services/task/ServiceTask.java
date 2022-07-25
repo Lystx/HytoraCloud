@@ -5,6 +5,7 @@ import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
 import cloud.hytora.driver.common.SelfCloneable;
 import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.property.PropertyHolder;
+import cloud.hytora.driver.services.ConfigurableService;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
@@ -15,6 +16,10 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collection;
 
 public interface ServiceTask extends Bufferable, MessagePlaceholder, PropertyHolder, SelfCloneable<ServiceTask> {
+
+
+    ConfigurableService configureFutureService();
+
 
     /**
      * @return the name of the group

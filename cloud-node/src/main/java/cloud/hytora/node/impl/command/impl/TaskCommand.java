@@ -64,6 +64,7 @@ public class TaskCommand {
     }
     @SubCommand("create")
     @CommandDescription("Creates a new task")
+    @SubCommandScope(CommandScope.CONSOLE)
     public void executeCreate(CommandSender sender) {
 
         new TaskSetup(NodeDriver.getInstance().getConsole()).start((setup, state) -> {

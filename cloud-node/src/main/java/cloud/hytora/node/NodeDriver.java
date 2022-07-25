@@ -21,6 +21,7 @@ import cloud.hytora.driver.message.ChannelMessenger;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.packets.services.ServiceForceShutdownPacket;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.permission.PermissionChecker;
 import cloud.hytora.node.impl.handler.packet.normal.*;
 import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteLoggingHandler;
 import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteServerStartHandler;
@@ -149,7 +150,7 @@ public class NodeDriver extends CloudDriver implements Node {
 
 
 
-    public NodeDriver(Logger logger, Console console) throws Exception {
+    public NodeDriver(Logger logger, Console console, boolean devMode) throws Exception {
         super(logger, DriverEnvironment.NODE);
         instance = this;
 
@@ -180,6 +181,12 @@ public class NodeDriver extends CloudDriver implements Node {
             return;
         } else {
             this.logger.trace("Setup already done ==> Skipping...");
+        }
+
+        if (devMode) {
+            this.logger.debug("DevMode is activated!");
+            //in dev mode player "Lystx" has every permission
+            this.providerRegistry.upsert(PermissionChecker.class, (playerUniqueId, permission) -> playerUniqueId.toString().equalsIgnoreCase("82e8f5a2-4077-407b-af8b-e8325cad7191"));
         }
 
         //avoid log4j errors
@@ -336,6 +343,8 @@ public class NodeDriver extends CloudDriver implements Node {
         this.executor.registerPacketHandler(new NodeStoragePacketHandler());
         this.executor.registerPacketHandler(new NodeLoggingPacketHandler());
         this.executor.registerPacketHandler(new NodeServiceShutdownHandler());
+        this.executor.registerPacketHandler(new NodePlayerCommandHandler());
+        this.executor.registerPacketHandler(new NodeServiceConfigureHandler());
 
         //remote packet handlers
         this.executor.registerRemoteHandler(new NodeRemoteShutdownHandler());

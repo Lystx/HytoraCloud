@@ -135,6 +135,11 @@ public class NodeServiceManager extends DefaultServiceManager {
     }
 
     @Override
+    public Task<ServiceInfo> thisService() {
+        return Task.empty();
+    }
+
+    @Override
     public void sendPacketToService(ServiceInfo service, Packet packet) {
         NodeDriver.getInstance().getExecutor().getAllCachedConnectedClients().stream().filter(it -> it.getName().equals(service.getName())).findAny().ifPresent(it -> it.sendPacket(packet));
     }

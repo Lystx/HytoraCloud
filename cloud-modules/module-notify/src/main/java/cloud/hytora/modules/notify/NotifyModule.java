@@ -1,6 +1,7 @@
 package cloud.hytora.modules.notify;
 
 import cloud.hytora.common.scheduler.Scheduler;
+import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.module.controller.DriverModule;
 import cloud.hytora.driver.module.controller.base.ModuleConfiguration;
@@ -12,6 +13,9 @@ import cloud.hytora.modules.notify.command.NotifyCommand;
 import cloud.hytora.modules.notify.config.NotifyConfiguration;
 import cloud.hytora.modules.notify.listener.ModuleListener;
 import lombok.Getter;
+
+import java.io.File;
+import java.io.IOException;
 
 @ModuleConfiguration(
         name = "module-notify",
@@ -43,14 +47,19 @@ public class NotifyModule extends DriverModule {
 
     @ModuleTask(id = 1, state = ModuleState.LOADED)
     public void loadConfig() {
-        CloudDriver.getInstance().getLogger().info("Loading notify config...");
+
+        CloudDriver.getInstance().getLogger().debug("============");
+        CloudDriver.getInstance().getLogger().debug("Loading notify config...");
         if (controller.getConfig().isEmpty()) {
+            CloudDriver.getInstance().getLogger().debug("Empty notify config...");
             controller.getConfig().set(configuration = new NotifyConfiguration());
             controller.getConfig().save();
         } else {
+            CloudDriver.getInstance().getLogger().debug("Existing notify config...");
             configuration = controller.getConfig().toInstance(NotifyConfiguration.class);
         }
-        CloudDriver.getInstance().getLogger().info("Loaded config {}", configuration);
+        CloudDriver.getInstance().getLogger().debug("Loaded config {}", configuration);
+        CloudDriver.getInstance().getLogger().debug("============");
     }
 
     @ModuleTask(id = 2, state = ModuleState.ENABLED)

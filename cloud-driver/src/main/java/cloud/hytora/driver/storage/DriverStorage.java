@@ -2,9 +2,11 @@ package cloud.hytora.driver.storage;
 
 
 
+import cloud.hytora.document.Bundle;
 import cloud.hytora.document.Document;
 
 import javax.annotation.Nonnull;
+import java.lang.reflect.Type;
 
 
 public interface DriverStorage {
@@ -25,8 +27,15 @@ public interface DriverStorage {
 		return getRawData().getInstance(path, classOfT);
 	}
 
+	default <T> T get(@Nonnull String path, @Nonnull Type classOfT) {
+		return getRawData().getInstance(path, classOfT);
+	}
+
 	default <T> T get(@Nonnull String path, @Nonnull Class<T> classOfT, T defaultValue) {
 		return getRawData().fallbackValue(defaultValue).getInstance(path, classOfT);
+	}
+	default Bundle getBundle(@Nonnull String path) {
+		return getRawData().getBundle(path);
 	}
 
 	/**

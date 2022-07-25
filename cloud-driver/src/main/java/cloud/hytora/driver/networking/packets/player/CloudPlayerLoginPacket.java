@@ -20,6 +20,8 @@ public class CloudPlayerLoginPacket extends Packet {
     private String username;
     private UUID uuid;
 
+    private String proxy;
+
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
 
@@ -28,11 +30,13 @@ public class CloudPlayerLoginPacket extends Packet {
             case READ:
                 username = buf.readString();
                 uuid = buf.readUniqueId();
+                proxy = buf.readString();
                 break;
 
             case WRITE:
                 buf.writeString(username);
                 buf.writeUniqueId(uuid);
+                buf.writeString(proxy);
                 break;
         }
     }

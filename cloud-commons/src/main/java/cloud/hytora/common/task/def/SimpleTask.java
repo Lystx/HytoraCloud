@@ -298,7 +298,7 @@ public class SimpleTask<T> implements Task<T> {
     }
 
     @Override
-    public Task<T> addSimpleUpdateListener(Consumer<T> listener) {
+    public Task<T> thenAccept(Consumer<T> listener) {
         return this.addUpdateListener(v -> {
             try {
                 listener.accept(v.get());

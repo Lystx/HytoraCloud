@@ -17,4 +17,8 @@ public class CommandObject {
 	 */
 	private String permission;
 
+	/**
+	 * The scope to execute it
+	 */
+	private CommandScope scope;
 }

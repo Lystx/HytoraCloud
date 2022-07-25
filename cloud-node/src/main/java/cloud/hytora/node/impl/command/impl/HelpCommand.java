@@ -28,7 +28,9 @@ public class HelpCommand {
         java.util.List<String> duplicates = new ArrayList<String>();
 
         for (RegisteredCommand command : CloudDriver.getInstance().getCommandManager().getCommands()) {
-
+            if (!command.getScope().covers(sender)) {
+                continue;
+            }
             if (duplicates.stream().anyMatch(s -> Arrays.asList(command.getNames()).contains(s))) {
                 continue;
             }

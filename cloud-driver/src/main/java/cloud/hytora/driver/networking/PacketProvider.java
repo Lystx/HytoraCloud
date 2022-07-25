@@ -1,5 +1,6 @@
 package cloud.hytora.driver.networking;
 
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.packets.*;
 import cloud.hytora.driver.networking.packets.group.ServiceTaskExecutePacket;
 
@@ -12,16 +13,15 @@ import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.networking.protocol.packets.defaults.HandshakePacket;
 import cloud.hytora.driver.networking.protocol.packets.defaults.ResponsePacket;
 import cloud.hytora.driver.networking.protocol.packets.defaults.SimplePacket;
-import com.google.common.collect.Maps;
-
 import lombok.Getter;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class PacketProvider {
 
     @Getter
-    private static final Map<Integer, Class<? extends Packet>> registeredPackets = Maps.newConcurrentMap();
+    private static final Map<Integer, Class<? extends Packet>> registeredPackets = new HashMap<>();
 
     public static int getPacketId(Class<? extends Packet> clazz) {
         return registeredPackets.keySet().stream().filter(id -> registeredPackets.get(id).equals(clazz)).findAny().orElse(-1);
@@ -48,6 +48,7 @@ public class PacketProvider {
         //Service packets
         PacketProvider.autoRegister(ServiceForceShutdownPacket.class);
         PacketProvider.autoRegister(ServiceRequestShutdownPacket.class);
+        PacketProvider.autoRegister(ServiceConfigPacket.class);
         PacketProvider.autoRegister(CloudServerCommandPacket.class);
 
         //updating packet
@@ -71,6 +72,7 @@ public class PacketProvider {
         PacketProvider.autoRegister(CloudPlayerComponentMessagePacket.class);
         PacketProvider.autoRegister(CloudPlayerTabListPacket.class);
         PacketProvider.autoRegister(OfflinePlayerRequestPacket.class);
+        PacketProvider.autoRegister(CloudPlayerExecuteCommandPacket.class);
 
         //util packets
         PacketProvider.autoRegister(RedirectPacket.class);
@@ -90,6 +92,7 @@ public class PacketProvider {
             return;
         }
         registeredPackets.put(id, packetClass);
+        CloudDriver.getInstance().getLogger().debug("Registered Packet {} under ID {}", packetClass, id);
     }
 
     public static int generatePacketId() {

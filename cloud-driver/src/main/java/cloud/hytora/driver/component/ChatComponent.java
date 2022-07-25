@@ -560,13 +560,18 @@ public class ChatComponent implements Bufferable {
         }
         IEntry with = json.getEntry("with");
         if (with != null) {
-            Bundle array = with.toBundle();
-            for (int i = 0, j = array.size(); i < j; i++) {
-                IEntry el = array.getEntry(i);
-                if (el.isPrimitive())
-                    cc.addWith(el.toString());
-                else if (el.isDocument())
-                    cc.addWith(fromJson(el.toDocument()));
+            try {
+
+                Bundle array = with.toBundle();
+                for (int i = 0, j = array.size(); i < j; i++) {
+                    IEntry el = array.getEntry(i);
+                    if (el.isPrimitive())
+                        cc.addWith(el.toString());
+                    else if (el.isDocument())
+                        cc.addWith(fromJson(el.toDocument()));
+                }
+            } catch (IllegalStateException e) {
+
             }
         }
         IEntry score = json.getEntry("score");
@@ -740,40 +745,65 @@ public class ChatComponent implements Bufferable {
         return this.toDocument().hashCode();
     }
 
+
+    private boolean toNullSafeBoolean(Boolean b) {
+        return b != null && b;
+    }
+
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
         switch (state) {
             case WRITE:
-                buf.writeDocument(this.toDocument());
+
+                buf.writeOptionalString(this.text);
+                buf.writeOptionalEnum(this.color);
+                buf.writeOptionalString(this.insertion);
+                buf.writeOptionalString(this.translate);
+                buf.writeOptionalString(this.selector);
+
+                buf.writeOptionalString(this.scoreObjective);
+                buf.writeOptionalString(this.scoreUsername);
+
+                buf.writeObjectCollection(this.extra);
+                buf.writeObjectCollection(this.with);
+
+                buf.writeBoolean(toNullSafeBoolean(bold));
+                buf.writeBoolean(toNullSafeBoolean(underlined));
+                buf.writeBoolean(toNullSafeBoolean(strikethrough));
+                buf.writeBoolean(toNullSafeBoolean(italic));
+                buf.writeBoolean(toNullSafeBoolean(obfuscated));
+
+                buf.writeOptionalObject(this.clickEvent);
+                buf.writeOptionalObject(this.hoverEvent);
+
                 break;
             case READ:
-                ChatComponent component = ChatComponent.fromJson(buf.readDocument());
 
                 //general settings
-                this.text = component.text;
-                this.color = component.color;
-                this.insertion = component.insertion;
-                this.translate = component.translate;
-                this.selector = component.selector;
+                this.text = buf.readString();
+                this.color = buf.readOptionalEnum(ChatColor.class);
+                this.insertion = buf.readOptionalString();
+                this.translate = buf.readOptionalString();
+                this.selector = buf.readOptionalString();
 
                 //scoreboard management
-                this.scoreObjective = component.scoreObjective;
-                this.scoreUsername = component.scoreUsername;
+                this.scoreObjective = buf.readOptionalString();
+                this.scoreUsername = buf.readOptionalString();
 
                 //lists
-                this.extra.addAll(component.extra);
-                this.with.addAll(component.with);
+                this.extra.addAll(buf.readObjectCollection(ChatComponent.class));
+                this.with.addAll(buf.readObjectCollection(ChatComponent.class));
 
                 //style of text
-                this.bold = component.bold;
-                this.underlined = component.underlined;
-                this.strikethrough = component.strikethrough;
-                this.italic = component.italic;
-                this.obfuscated = component.obfuscated;
+                this.bold = buf.readBoolean();
+                this.underlined = buf.readBoolean();
+                this.strikethrough = buf.readBoolean();
+                this.italic = buf.readBoolean();
+                this.obfuscated = buf.readBoolean();
 
                 //events
-                this.clickEvent = component.clickEvent;
-                this.hoverEvent = component.hoverEvent;
+                this.clickEvent = buf.readOptionalObject(ClickEvent.class);
+                this.hoverEvent = buf.readOptionalObject(HoverEvent.class);
                 break;
         }
     }

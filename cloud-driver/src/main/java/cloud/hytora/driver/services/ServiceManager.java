@@ -107,6 +107,10 @@ public interface ServiceManager {
     @Nonnull
     Task<ServiceInfo> getFallbackAsService();
 
+    Task<ServiceInfo> thisService();
+
+    ServiceInfo thisServiceOrNull();
+
     @Nullable
     default ServiceInfo getFallbackAsServiceOrNull() {
         return getFallbackAsService().get();

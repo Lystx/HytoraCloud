@@ -143,7 +143,9 @@ public class DefaultModuleController implements ModuleController {
         dataFolder.toFile().mkdirs();
 
         Document config = DocumentFactory.newJsonDocument();
-        config.saveToFile(dataFolder.resolve("config.json"));
+        if (getConfig().isEmpty()) {
+            config.saveToFile(dataFolder.resolve("config.json"));
+        }
     }
 
     @Override
@@ -232,8 +234,8 @@ public class DefaultModuleController implements ModuleController {
             if (module == null) return; // was never initialized
             if (state != ModuleState.DISABLED) return; // must be disabled first
 
+            this.reloadConfig();
             this.logger.accept("INFO", "Module " + module + " is being loaded...");
-
             try {
 
                 state = ModuleState.LOADED;
@@ -331,8 +333,7 @@ public class DefaultModuleController implements ModuleController {
     public boolean isEnabled(boolean defaultValue) {
         StorableDocument config = getConfig();
         if (!config.contains("enabled")) {
-            config.set("enabled", defaultValue);
-            config.save();
+            return false;
         }
 
         boolean enabled = config.getBoolean("enabled");

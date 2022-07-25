@@ -14,6 +14,8 @@ import cloud.hytora.node.console.handler.FileLogHandler;
 import cloud.hytora.node.console.jline3.JLine3Console;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
+
 public class CloudBootstrap {
 
     public static void main(String[] args) {
@@ -28,7 +30,7 @@ public class CloudBootstrap {
             System.setOut(logger.asPrintStream(LogLevel.INFO));
             System.setErr(logger.asPrintStream(LogLevel.ERROR));
 
-            CloudDriver driver = new NodeDriver(logger, console);
+            CloudDriver driver = new NodeDriver(logger, console, Arrays.asList(args).contains("--devMode"));
 
             logger.addHandler(entry -> driver.getEventManager().callEventGlobally(new DriverLogEvent(entry)));
         } catch (Exception e) {

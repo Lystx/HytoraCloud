@@ -18,7 +18,7 @@ import java.util.UUID;
 public class CloudPlayerTabListPacket extends Packet {
 
     private UUID uuid;
-    private ChatComponent header, footer;
+    private String header, footer;
 
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
@@ -27,14 +27,14 @@ public class CloudPlayerTabListPacket extends Packet {
 
             case READ:
                 uuid = buf.readUniqueId();
-                header = buf.readObject(ChatComponent.class);
-                footer = buf.readObject(ChatComponent.class);
+                header = buf.readString();
+                footer = buf.readString();
                 break;
 
             case WRITE:
                 buf.writeUniqueId(uuid);
-                buf.writeObject(header);
-                buf.writeObject(footer);
+                buf.writeString(header);
+                buf.writeString(footer);
                 break;
         }
     }

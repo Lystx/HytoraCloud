@@ -9,8 +9,8 @@ import cloud.hytora.driver.command.annotation.data.RegisteredCommandArgument;
 import cloud.hytora.driver.command.completer.CommandCompleter;
 import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.command.sender.PlayerCommandSender;
-import com.google.common.primitives.Primitives;
 
+import com.google.gson.internal.Primitives;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -95,7 +95,7 @@ public abstract class DefaultCommandManager implements CommandManager {
                         commandAnnotation.permission(),
                         method.getAnnotation(CommandDescription.class) != null ? method.getAnnotation(CommandDescription.class).value() : "",
                         commandDescriptionAnnotation != null ? commandDescriptionAnnotation.value() : "",
-                        commandAnnotation.scope(),
+                        method.getAnnotation(SubCommandScope.class) == null ? commandAnnotation.scope() : method.getAnnotation(SubCommandScope.class).value(),
                         arguments,
                         method,
                         command
@@ -141,9 +141,8 @@ public abstract class DefaultCommandManager implements CommandManager {
         Set<CommandObject> ingameCommands = new HashSet<>();
         for (RegisteredCommand command : commands) {
             if (command.getScope().isIngame()) {
-                String prefix = command.getScope().isUniversal() ? "cloud " : "";
                 for (String name : command.getNames()) {
-                    ingameCommands.add(new CommandObject(prefix + name, command.getPermission()));
+                    ingameCommands.add(new CommandObject((command.getScope() == CommandScope.CONSOLE_AND_INGAME ? "cloud " : "") + name, command.getPermission(), command.getScope()));
                 }
             }
         }
@@ -426,7 +425,7 @@ public abstract class DefaultCommandManager implements CommandManager {
                 sender.sendMessage("§8");
                 sender.sendMessage("Help for Command '" + annotation.name()[0] + "':");
                 for (RegisteredCommand registeredCommand : CloudDriver.getInstance().getCommandManager().getCommands().stream().filter(c -> Arrays.asList(c.getNames()).stream().anyMatch(s -> Arrays.asList(annotation.name()).contains(s))).collect(Collectors.toList())) {
-                    if (registeredCommand.getPath().trim().isEmpty()) {
+                    if (registeredCommand.getPath().trim().isEmpty() || !registeredCommand.getScope().covers(sender)) {
                         continue;
                     }
                     sender.sendMessage("§b" + registeredCommand.getNames()[0] + " " + registeredCommand.getPath() + " | §7" + (registeredCommand.getDescription().trim().isEmpty() ? registeredCommand.getMainDescription() : registeredCommand.getDescription()));

@@ -172,6 +172,8 @@ public abstract class CloudDriver extends DriverUtility {
             this.logger.error("Couldn't override Netty Logger to prevent slf4j-spam!");
         }
 
+        //make sure its set
+        Logger.setFactory(logger);
 
         // check if the leak detection level is set before overriding it
         // may be useful for debugging of the network

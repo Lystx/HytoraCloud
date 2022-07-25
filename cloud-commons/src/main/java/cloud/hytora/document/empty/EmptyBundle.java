@@ -2,12 +2,14 @@ package cloud.hytora.document.empty;
 
 import cloud.hytora.document.Bundle;
 import cloud.hytora.document.IEntry;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.Writer;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -110,10 +112,6 @@ public class EmptyBundle implements Bundle {
 	}
 
 	@Override
-	public void forEach(@Nonnull Consumer<? super Object> action) {
-	}
-
-	@Override
 	public void forEachEntry(@Nonnull Consumer<? super IEntry> action) {
 	}
 
@@ -124,5 +122,11 @@ public class EmptyBundle implements Bundle {
 	@Override
 	public String toString() {
 		return this.asRawJsonString();
+	}
+
+	@NotNull
+	@Override
+	public Iterator<IEntry> iterator() {
+		return null;
 	}
 }

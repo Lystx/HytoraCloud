@@ -30,7 +30,7 @@ public class CloudPlayerExecutor implements PlayerExecutor {
     }
 
     @Override
-    public void setTabList(ChatComponent header, ChatComponent footer) {
+    public void setTabList(String header, String footer) {
         this.sendPacketToProxy(new CloudPlayerTabListPacket(getExecutorUniqueId(), header, footer));
     }
 

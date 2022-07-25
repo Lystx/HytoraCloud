@@ -18,8 +18,9 @@ import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.remote.Remote;
 import org.jetbrains.annotations.NotNull;
 
-public class RemoteServiceManager extends DefaultServiceManager {
+import java.util.concurrent.Callable;
 
+public class RemoteServiceManager extends DefaultServiceManager {
 
     public RemoteServiceManager() {
         AdvancedNetworkExecutor executor = CloudDriver.getInstance().getExecutor();
@@ -56,6 +57,11 @@ public class RemoteServiceManager extends DefaultServiceManager {
     public Task<ServiceInfo> startService(@NotNull ServiceInfo service) {
         //TODO SEND PACKET
         return Task.empty();
+    }
+
+    @Override
+    public Task<ServiceInfo> thisService() {
+        return Task.build(getAllCachedServices().stream().filter(s -> s.getName().equalsIgnoreCase(Remote.getInstance().getProperty().getName())).findFirst().orElse(null));
     }
 
     @Override

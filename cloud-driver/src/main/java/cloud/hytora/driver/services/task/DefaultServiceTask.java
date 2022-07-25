@@ -7,7 +7,9 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.property.ProtocolPropertyHolder;
+import cloud.hytora.driver.services.ConfigurableService;
 import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.impl.DefaultConfigurableService;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.fallback.SimpleFallback;
 import cloud.hytora.driver.services.template.ServiceTemplate;
@@ -53,6 +55,11 @@ public class DefaultServiceTask extends ProtocolPropertyHolder implements Servic
     @Override
     public Node findNode() {
         return CloudDriver.getInstance().getNodeManager().getNodeByNameOrNull(this.node);
+    }
+
+    @Override
+    public ConfigurableService configureFutureService() {
+        return new DefaultConfigurableService(this);
     }
 
     public TaskGroup getTaskGroup() {

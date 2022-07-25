@@ -1,3 +1,5 @@
 Manifest-Version: 1.0
-Main-Class: cloud.hytora.remote.Remote
+Main-Class: cloud.hytora.remote.Bootstrap
+Premain-Class: cloud.hytora.remote.Bootstrap
+Launcher-Agent-Class: cloud.hytora.remote.Bootstrap
 

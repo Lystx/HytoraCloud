@@ -6,12 +6,14 @@ import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.Console;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.completer.CloudServerCompleter;
+import cloud.hytora.driver.command.completer.TaskCompleter;
 import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.server.ServiceRequestScreenLeaveEvent;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.deployment.CloudDeployment;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
+import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.node.NodeDriver;
@@ -44,7 +46,7 @@ public class ServiceCommand {
     public void onListCommand(CommandSender sender) {
         sender.sendMessage("§8");
         for (ServiceInfo service : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
-            sender.sendMessage("§b" + service.getName() + " §8[" + service.getServiceState().getName() + " §8/ §7" + service.getServiceVisibility().toString() + "§8] §bSlots §7" + service.getOnlinePlayers() + "§8/§7" + service.getMaxPlayers());
+            sender.sendMessage("§b" + service.getName() + " §8[" + service.getServiceState().getName() + " §8/ §7" + service.getServiceVisibility().toString() + "§8] §bSlots §7" + service.getOnlinePlayerCount() + "§8/§7" + service.getMaxPlayers());
         }
         sender.sendMessage("§8");
     }
@@ -75,8 +77,32 @@ public class ServiceCommand {
     }
 
 
-    @SubCommand("screen <service>")
+    @SubCommand("start <task> <amount>")
+    public void onStartCommand(
+            CommandSender sender,
+            @CommandArgument(value = "task", completer = TaskCompleter.class) ServiceTask task,
+            @CommandArgument("amount") int amount
 
+    ) {
+
+        if (amount <= 0) {
+            sender.sendMessage("§cPlease provide a number bigger than 0!");
+            return;
+        }
+        for (int i = 0; i < amount; i++) {
+
+            task.configureFutureService()
+                    .ignoreIfLimitOfServicesReached()
+                    .maxPlayers(task.getDefaultMaxPlayers())
+                    .motd(task.getMotd())
+                    .node(task.getNode())
+                    .memory(task.getMemory())
+                    .start();
+        }
+
+    }
+
+    @SubCommand("screen <service>")
     public void onScreenCommand(
             CommandSender sender,
             @CommandArgument(value = "service", completer = CloudServerCompleter.class) ServiceInfo service
@@ -106,7 +132,7 @@ public class ServiceCommand {
                 if (s.trim().isEmpty()) {
                     return;
                 }
-               // sender.sendMessage("Executing '{}' on {}", s, service.getName());
+                // sender.sendMessage("Executing '{}' on {}", s, service.getName());
                 service.sendCommand(s);
             }
         });
@@ -171,7 +197,7 @@ public class ServiceCommand {
         sender.sendMessage("§bAddress: §7" + service.getHostName() + ":" + service.getPort());
         sender.sendMessage("§bState: " + service.getServiceState().getName());
         sender.sendMessage("§bVisibility: §7" + service.getServiceVisibility());
-        sender.sendMessage("§bPlayers: §7" + service.getOnlinePlayers() + "§8/§7" + service.getMaxPlayers());
+        sender.sendMessage("§bPlayers: §7" + service.getOnlinePlayerCount() + "§8/§7" + service.getMaxPlayers());
         sender.sendMessage("§bMotd: §7" + service.getMotd());
         sender.sendMessage("§bReady: §7" + (service.isReady() ? "§aYes" : "§cNo"));
         sender.sendMessage("§bUptime: §7" + service.getReadableUptime());

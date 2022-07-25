@@ -19,7 +19,6 @@ import cloud.hytora.driver.node.NodeCycleData;
 import cloud.hytora.driver.node.NodeInfo;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
 import cloud.hytora.driver.services.ServiceInfo;
-import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.config.MainConfiguration;
 import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
@@ -80,7 +79,7 @@ public class HytoraNode extends ClusterExecutor {
 
             if (state == ConnectionState.CONNECTED) {
                 NodeConnectionDataRequestPacket packet = new NodeConnectionDataRequestPacket();
-                wrapper.overrideExecutor(HytoraNode.this).prepareSingleQuery().execute(packet).addSimpleUpdateListener(new Consumer<BufferedResponse>() {
+                wrapper.overrideExecutor(HytoraNode.this).prepareSingleQuery().execute(packet).thenAccept(new Consumer<BufferedResponse>() {
                     @Override
                     public void accept(BufferedResponse response) {
                         DefaultNodeConfig nodeConfig = response.buffer().readObject(DefaultNodeConfig.class);
@@ -282,5 +281,15 @@ public class HytoraNode extends ClusterExecutor {
     @Override
     public void sendPacket(Packet packet, NetworkComponent component) {
         this.getClient(component.getName()).ifPresent(c -> c.sendPacket(packet));
+    }
+
+    @Override
+    public int getProxyStartPort() {
+        return MainConfiguration.getInstance().getProxyStartPort();
+    }
+
+    @Override
+    public int getSpigotStartPort() {
+        return MainConfiguration.getInstance().getSpigotStartPort();
     }
 }

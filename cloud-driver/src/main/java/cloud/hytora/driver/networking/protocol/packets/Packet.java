@@ -1,5 +1,6 @@
 package cloud.hytora.driver.networking.protocol.packets;
 
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
@@ -11,6 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 @Setter
@@ -48,4 +50,19 @@ public abstract class Packet implements Bufferable {
         buffer.accept(this.buffer);
     }
 
+
+
+    public Task<Void> publish() {
+        return Task.callSync(() -> {
+            CloudDriver.getInstance().getExecutor().sendPacket(Packet.this);
+            return null;
+        });
+    }
+
+    public Task<Void> publishAsync() {
+        return Task.callAsync(() -> {
+            CloudDriver.getInstance().getExecutor().sendPacket(Packet.this);
+            return null;
+        });
+    }
 }

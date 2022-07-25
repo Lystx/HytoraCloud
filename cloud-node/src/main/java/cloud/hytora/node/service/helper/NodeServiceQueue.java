@@ -25,12 +25,12 @@ import java.util.List;
 @Getter
 public class NodeServiceQueue {
 
-    private static int MAX_BOOTABLE_SERVICES = 2;
+    private final int maxBootableServices;
 
     private final Collection<String> pausedGroups;
 
     public NodeServiceQueue() {
-        MAX_BOOTABLE_SERVICES = NodeDriver.getInstance().getConfig().getMaxBootableServicesAtSameTime();
+        this.maxBootableServices = NodeDriver.getInstance().getConfig().getMaxBootableServicesAtSameTime();
         this.pausedGroups = new ArrayList<>();
 
         this.dequeue();
@@ -91,7 +91,7 @@ public class NodeServiceQueue {
     }
 
     private boolean minBootableServiceExists() {
-        return this.getAmountOfBootableServices() >= MAX_BOOTABLE_SERVICES;
+        return this.getAmountOfBootableServices() >= maxBootableServices;
     }
 
     private int getAmountOfBootableServices() {

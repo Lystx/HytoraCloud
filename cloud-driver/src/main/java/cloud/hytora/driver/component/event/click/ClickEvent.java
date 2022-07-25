@@ -3,20 +3,28 @@ package cloud.hytora.driver.component.event.click;
 
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
+import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
+import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
 
 @Data
-public class ClickEvent {
+@NoArgsConstructor
+public class ClickEvent implements Bufferable {
 
     /**
      * The action that triggers this click event
      */
-    private final ClickAction action;
+    private ClickAction action;
 
     /**
      * The value of the click
      */
-    private final String value;
+    private String value;
 
     /**
      * Creates a new click event with the given action and
@@ -63,4 +71,14 @@ public class ClickEvent {
         return obj;
     }
 
+    @Override
+    public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
+        if (state == BufferState.READ) {
+            this.action = buf.readEnum(ClickAction.class);
+            this.value = buf.readString();
+        } else {
+            buf.writeEnum(this.action);
+            buf.writeString(this.value);
+        }
+    }
 }

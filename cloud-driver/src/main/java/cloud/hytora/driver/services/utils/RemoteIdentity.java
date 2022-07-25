@@ -8,6 +8,7 @@ import cloud.hytora.driver.services.utils.version.VersionType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +32,12 @@ public class RemoteIdentity {
      * The version type
      */
     private VersionType versionType;
+
+    /**
+     * The processing of the service
+     */
+    @Setter
+    private ServiceProcessType processType = ServiceProcessType.WRAPPER;
 
     /**
      * The host name of the node this service runs on
@@ -57,7 +64,7 @@ public class RemoteIdentity {
 
 
     public static RemoteIdentity forApplication(ProtocolAddress address) {
-        return new RemoteIdentity(address.getAuthKey(), "", VersionType.BUNGEE, address.getHost(), CloudDriver.APPLICATION_NAME, address.getPort());
+        return new RemoteIdentity(address.getAuthKey(), "", VersionType.BUNGEE, ServiceProcessType.WRAPPER, address.getHost(), CloudDriver.APPLICATION_NAME, address.getPort());
     }
 
     public static RemoteIdentity read(File file) {

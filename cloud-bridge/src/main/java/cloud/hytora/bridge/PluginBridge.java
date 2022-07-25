@@ -2,9 +2,12 @@ package cloud.hytora.bridge;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
 import cloud.hytora.remote.Remote;
+
+import java.io.File;
 
 public interface PluginBridge {
 
@@ -19,6 +22,10 @@ public interface PluginBridge {
 
         CloudDriver.getInstance().getLogger().info("Service = CloudServer[name={}, port={}, state={}, visibility={}]", service.getName(), service.getPort(), service.getServiceState(), service.getServiceVisibility());
 
+    }
+
+    default RemoteIdentity getIdentity() {
+        return RemoteIdentity.read(new File("property.json"));
     }
 
     void shutdown();

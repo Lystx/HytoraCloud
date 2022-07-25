@@ -6,7 +6,6 @@ import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.http.api.WebSocketChannel;
 import cloud.hytora.driver.http.api.WebSocketFrameType;
 import cloud.hytora.driver.http.api.WebSocketListener;
-import com.google.common.base.Preconditions;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -36,9 +35,6 @@ public class NettyWebSocketChannel implements WebSocketChannel {
 
 	@Override
 	public void sendFrame(@Nonnull WebSocketFrameType type, @Nonnull byte[] data) {
-		Preconditions.checkNotNull(type);
-		Preconditions.checkNotNull(data);
-
 		WebSocketFrame frame;
 		CloudDriver.getInstance().getLogger().trace("Sending {} on {}", type, this);
 

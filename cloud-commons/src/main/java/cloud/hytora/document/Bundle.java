@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * A Bundle represents an array or list of string, numbers, objects or arrays.
@@ -20,7 +21,7 @@ import java.util.function.Consumer;
  * @see Document
  * @see IEntry
  */
-public interface Bundle extends JsonEntity {
+public interface Bundle extends JsonEntity, Iterable<IEntry> {
 
 	@Nonnull
 	Object[] toArray();
@@ -28,6 +29,10 @@ public interface Bundle extends JsonEntity {
 	@Nonnull
 	List<Object> toList();
 
+
+	default <T> List<T> toList(Class<T> typeClass) {
+		return entries().stream().map(e -> e.toInstance(typeClass)).collect(Collectors.toList());
+	}
 	@Nonnull
 	@Override
 	String asRawJsonString();
@@ -241,7 +246,6 @@ public interface Bundle extends JsonEntity {
 		return DocumentFactory.newWrappedBundle(this, false);
 	}
 
-	void forEach(@Nonnull Consumer<? super Object> action);
 
 	void forEachEntry(@Nonnull Consumer<? super IEntry> action);
 

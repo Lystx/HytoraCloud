@@ -5,20 +5,28 @@ import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.JsonEntity;
 import cloud.hytora.driver.component.ChatComponent;
+import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
+import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
 
 
 @Data
-public class HoverEvent {
+@NoArgsConstructor
+public class HoverEvent implements Bufferable {
     /**
      * The action that triggered this hover event
      */
-    private final HoverAction action;
+    private HoverAction action;
 
     /**
      * The text that triggers this event
      */
-    private final JsonEntity value;
+    private JsonEntity value;
 
     /**
      * Creates a new hover event with the given action
@@ -103,5 +111,16 @@ public class HoverEvent {
         obj.set("action", this.action.name().toLowerCase());
         obj.set("value", this.value);
         return obj;
+    }
+
+    @Override
+    public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
+        if (state == BufferState.READ) {
+            this.action = buf.readEnum(HoverAction.class);
+            this.value = null; // TODO: 25.07.2022
+        } else {
+            buf.writeEnum(action);
+            // TODO: 25.07.2022 write entity
+        }
     }
 }

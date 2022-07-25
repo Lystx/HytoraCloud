@@ -2,8 +2,6 @@ package cloud.hytora.common.misc;
 
 import cloud.hytora.common.collection.WrappedException;
 import cloud.hytora.common.function.ExceptionallyConsumer;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -36,7 +34,7 @@ import java.util.zip.ZipOutputStream;
 public final class FileUtils {
 
 	public static final InputStream EMPTY_STREAM = new ByteArrayInputStream(new byte[0]);
-	private static final Map<String, String> ZIP_FILE_SYSTEM_PROPERTIES = ImmutableMap.of("create", "false", "encoding", "UTF-8");
+	private static final Map<String, String> ZIP_FILE_SYSTEM_PROPERTIES = CollectionUtils.mapOf("create", "false", "encoding", "UTF-8");
 	private static Path tempDirectory;
 
 	private FileUtils() {}
@@ -404,7 +402,6 @@ public final class FileUtils {
 
 	@Nonnull
 	public static Path createTempFile(@Nonnull UUID uuid) {
-		Preconditions.checkNotNull(tempDirectory, "The temp directory cannot be null");
 		Path file = tempDirectory.resolve(uuid.toString());
 		createFile(file);
 		return file;

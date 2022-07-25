@@ -70,7 +70,7 @@ public interface Task<T> extends Serializable {
             return unitPromise;
         }
         for (Task<?> promise : tasks) {
-            promise.addSimpleUpdateListener(o -> {
+            promise.thenAccept(o -> {
                 if (Arrays.stream(tasks).allMatch(Task::isPresent) && !unitPromise.isPresent()) {
                     unitPromise.setResult(true);
                 }
@@ -420,7 +420,7 @@ public interface Task<T> extends Serializable {
      * @param listener the listener as consumer to add
      * @return current value instance
      */
-    Task<T> addSimpleUpdateListener(Consumer<T> listener);
+    Task<T> thenAccept(Consumer<T> listener);
 
     /**
      * Waits until a value is provided in this value

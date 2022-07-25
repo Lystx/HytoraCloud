@@ -2,14 +2,13 @@ package cloud.hytora.bridge.proxy.bungee;
 
 import cloud.hytora.bridge.proxy.bungee.adapter.BungeeLocalProxyPlayer;
 import cloud.hytora.bridge.proxy.bungee.events.cloud.ProxyRemoteHandler;
+import cloud.hytora.bridge.proxy.bungee.events.server.ProxyCommandListener;
 import cloud.hytora.bridge.proxy.bungee.utils.CloudReconnectHandler;
 
 import cloud.hytora.driver.services.ServiceInfo;
-import cloud.hytora.driver.services.utils.ServiceState;
-import cloud.hytora.driver.services.utils.ServiceVisibility;
+import cloud.hytora.driver.services.utils.*;
 import cloud.hytora.bridge.PluginBridge;
 import cloud.hytora.bridge.proxy.bungee.events.server.ProxyEvents;
-import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 import cloud.hytora.remote.Remote;
 import cloud.hytora.remote.adapter.proxy.RemoteProxyAdapter;
 import cloud.hytora.remote.adapter.proxy.LocalProxyPlayer;
@@ -25,6 +24,12 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
 
     @Override
     public void onLoad() {
+        RemoteIdentity identity = getIdentity();
+        if (identity.getProcessType() == ServiceProcessType.BRIDGE_PLUGIN) {
+            Remote remote = new Remote(identity);
+            remote.nexCacheUpdate().syncUninterruptedly().get();
+        }
+
         ProxyServer.getInstance().setReconnectHandler(new CloudReconnectHandler());
         Remote.getInstance().setAdapter(this);
     }
@@ -41,6 +46,7 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
 
         new ProxyRemoteHandler();
         this.getProxy().getPluginManager().registerListener(this, new ProxyEvents());
+        this.getProxy().getPluginManager().registerListener(this, new ProxyCommandListener());
 
         System.out.println("<=======[ BUNGEECORD ]=========>");
     }
@@ -75,7 +81,21 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
         if (server.getTask().getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY) {
             return;
         }
-        ProxyServer.getInstance().getServers().put(server.getName(), ProxyServer.getInstance().constructServerInfo(server.getName(), new InetSocketAddress(server.getHostName(), server.getPort()), server.getMotd(), false));
+        if (ProxyServer.getInstance().getServers() == null) {
+            System.out.println("Couldn't access ProxyServerMap for Server " + server.getName());
+            return;
+        }
+        ProxyServer
+                .getInstance()
+                .getServers()
+                .put(server
+                        .getName(),
+                        ProxyServer
+                                .getInstance()
+                                .constructServerInfo(
+                                        server.getName()
+                                        , new InetSocketAddress(
+                                                server.getHostName(), server.getPort()), server.getMotd(), false));
     }
 
     @Override

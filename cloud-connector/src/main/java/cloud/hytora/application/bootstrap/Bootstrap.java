@@ -60,6 +60,7 @@ public class Bootstrap {
             JDialog.setDefaultLookAndFeelDecorated(true);
         }
 
+        /*
         //connecting to cloud node
         Remote.initFromOtherInstance(RemoteIdentity.forApplication(new ProtocolAddress(host, port, key)), packet -> {
 
@@ -106,7 +107,7 @@ public class Bootstrap {
             });
         },  () -> {
             System.exit(0);
-        });
+        });*/
 
     }
 

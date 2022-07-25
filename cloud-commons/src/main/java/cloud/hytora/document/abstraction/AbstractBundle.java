@@ -3,10 +3,13 @@ package cloud.hytora.document.abstraction;
 import cloud.hytora.document.Bundle;
 import cloud.hytora.document.IEntry;
 import cloud.hytora.common.misc.CollectionUtils;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -22,6 +25,22 @@ public abstract class AbstractBundle implements Bundle {
 
 	public AbstractBundle(boolean editable) {
 		this(new AtomicBoolean(editable));
+	}
+
+	@Override
+	public void forEach(Consumer<? super IEntry> action) {
+		entries().forEach(action);
+	}
+
+	@NotNull
+	@Override
+	public Iterator<IEntry> iterator() {
+		return entries().iterator();
+	}
+
+	@Override
+	public Spliterator<IEntry> spliterator() {
+		return entries().spliterator();
 	}
 
 	@Nonnull
@@ -102,11 +121,6 @@ public abstract class AbstractBundle implements Bundle {
 	@Nonnull
 	protected <T> List<T> convertEntries(@Nonnull Function<IEntry, T> mapper) {
 		return CollectionUtils.convertCollection(entries(), mapper);
-	}
-
-	@Override
-	public void forEach(@Nonnull Consumer<? super Object> action) {
-		toList().forEach(action);
 	}
 
 	@Override

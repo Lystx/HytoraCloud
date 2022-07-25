@@ -3,6 +3,7 @@ package cloud.hytora.document.wrapped;
 import cloud.hytora.document.Bundle;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.IEntry;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -11,7 +12,9 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Spliterator;
 import java.util.function.Consumer;
 
 
@@ -19,6 +22,23 @@ public interface WrappedBundle extends Bundle {
 
 	@Nonnull
 	Bundle getTargetBundle();
+
+
+	@Override
+	default void forEach(Consumer<? super IEntry> action) {
+		getTargetBundle().forEach(action);
+	}
+
+	@Override
+	default Spliterator<IEntry> spliterator() {
+		return getTargetBundle().spliterator();
+	}
+
+	@NotNull
+	@Override
+	default Iterator<IEntry> iterator() {
+		return getTargetBundle().iterator();
+	}
 
 	@Nonnull
 	@Override
@@ -189,10 +209,6 @@ public interface WrappedBundle extends Bundle {
 		return getTargetBundle().markUneditable();
 	}
 
-	@Override
-	default void forEach(@Nonnull Consumer<? super Object> action) {
-		getTargetBundle().forEach(action);
-	}
 
 	@Override
 	default void forEachEntry(@Nonnull Consumer<? super IEntry> action) {

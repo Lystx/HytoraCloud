@@ -11,6 +11,7 @@ import cloud.hytora.driver.module.controller.base.ModuleCopyType;
 import cloud.hytora.driver.module.controller.base.ModuleEnvironment;
 import cloud.hytora.driver.module.controller.base.ModuleState;
 import cloud.hytora.driver.module.controller.task.ModuleTask;
+import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.task.ServiceTask;
@@ -103,8 +104,30 @@ public class ProxyModule extends DriverModule {
         String footer = tabList[1];
 
         //setting tabList
-        PlayerExecutor executor = PlayerExecutor.forAll();
-        executor.setTabList(ChatComponent.text(header), ChatComponent.text(footer));
+        for (CloudPlayer cloudPlayer : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
+            PlayerExecutor executor = PlayerExecutor.forPlayer(cloudPlayer);
+            ServiceInfo server = cloudPlayer.getServer();
+
+            if (server != null) {
+                header = server.replacePlaceHolders(header);
+                footer = server.replacePlaceHolders(footer);
+            }
+
+            //proxy place holder
+            header = header.replace("{proxy}", (cloudPlayer.getProxyServer() == null ? "UNKNOWN" : cloudPlayer.getProxyServer().getName()));
+            footer = footer.replace("{proxy}", (cloudPlayer.getProxyServer() == null ? "UNKNOWN" : cloudPlayer.getProxyServer().getName()));
+
+            header = header.replace("{service}", (cloudPlayer.getServer() == null ? "UNKNOWN" : cloudPlayer.getServer().getName()));
+            footer = footer.replace("{service}", (cloudPlayer.getServer() == null ? "UNKNOWN" : cloudPlayer.getServer().getName()));
+
+            //player placeholder
+            header = header.replace("{players.online}", "" + CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers().size());
+            footer = footer.replace("{players.online}", "" + CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers().size());
+            footer = footer.replace("{players.max}", "" + CloudDriver.getInstance().getPlayerManager().countPlayerCapacity());
+            header = header.replace("{players.max}", "" + CloudDriver.getInstance().getPlayerManager().countPlayerCapacity());
+
+            executor.setTabList(header, footer);
+        }
 
     }
 

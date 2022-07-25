@@ -8,13 +8,13 @@ import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
 import cloud.hytora.driver.node.config.ServiceCrashPrevention;
 import cloud.hytora.driver.node.config.SimpleJavaVersion;
+import cloud.hytora.driver.services.utils.ServiceProcessType;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.database.config.DatabaseConfiguration;
 import cloud.hytora.node.impl.database.config.DatabaseType;
 import lombok.*;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.UUID;
@@ -37,6 +37,7 @@ public class ConfigManager {
             this.didExist = false;
             this.config = new MainConfiguration(
                     LogLevel.TRACE,
+                    ServiceProcessType.WRAPPER,
                     new DatabaseConfiguration(
                             DatabaseType.FILE,
                             "127.0.0.1",

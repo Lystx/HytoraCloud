@@ -79,8 +79,8 @@ public class ModuleListener {
 
         //iterating through all players
         for (CloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
-            if (config.getDisabledMessages().contains(player.getUniqueId())) {
-                continue; //player has disabled messages
+            if (!config.getEnabledNotifications().contains(player.getUniqueId())) {
+                continue; //player has disabled messages or is not empowered to receive some
             }
             PlayerExecutor executor = PlayerExecutor.forPlayer(player);
 

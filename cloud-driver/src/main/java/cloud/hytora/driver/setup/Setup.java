@@ -5,8 +5,8 @@ import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.driver.command.Console;
 import cloud.hytora.driver.setup.annotations.*;
-import com.google.common.primitives.Primitives;
 import cloud.hytora.driver.CloudDriver;
+import com.google.gson.internal.Primitives;
 import lombok.Getter;
 
 import java.lang.reflect.Field;

@@ -1,11 +1,9 @@
 package cloud.hytora.modules.notify.config;
 
-import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.modules.notify.config.sub.MessageConfiguration;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import javax.naming.ldap.PagedResultsControl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
@@ -43,9 +41,9 @@ public class NotifyConfiguration {
 
     /**
      * A list of players {@link UUID}s that have
-     * disabled receiving messages
+     * enabled receiving messages
      */
-    private final Collection<UUID> disabledMessages;
+    private final Collection<UUID> enabledNotifications;
 
     /**
      * Default config constructor
@@ -57,7 +55,7 @@ public class NotifyConfiguration {
         this.displayPrefixInConsole = false;
         this.displayInConsole = true;
         this.messages = new MessageConfiguration();
-        this.disabledMessages = new ArrayList<>();
+        this.enabledNotifications = new ArrayList<>();
     }
 
 

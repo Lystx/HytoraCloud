@@ -7,8 +7,11 @@ import cloud.hytora.driver.event.defaults.driver.DriverCacheUpdateEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 
+import cloud.hytora.driver.event.defaults.task.TaskMaintenanceChangeEvent;
 import cloud.hytora.driver.networking.packets.player.*;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
+import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.executor.PlayerExecutor;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.remote.Remote;
@@ -19,6 +22,7 @@ import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import net.md_5.bungee.chat.ComponentSerializer;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 
 public class ProxyRemoteHandler {
 
@@ -41,6 +45,25 @@ public class ProxyRemoteHandler {
         Remote.getInstance().getExecutor().registerPacketHandler(new MessageHandler());
         Remote.getInstance().getExecutor().registerPacketHandler(new ComponentHandler());
         Remote.getInstance().getExecutor().registerPacketHandler(new TabHandler());
+    }
+
+    @EventListener
+    public void handle(TaskMaintenanceChangeEvent event) {
+        ServiceTask task = event.getTask();
+        ServiceInfo thisService = CloudDriver.getInstance().getServiceManager().thisServiceOrNull();
+
+        if (event.isNewMaintenanceValue() && task.getName().equalsIgnoreCase(thisService.getTask().getName())) {
+
+            List<String> whitelistedPlayers = CloudDriver.getInstance().getStorage().getBundle("cloud::whitelist").toInstances(String.class);
+            for (CloudPlayer cp : thisService.getOnlinePlayers()) {
+                if (whitelistedPlayers.contains(cp.getName())) {
+                    PlayerExecutor.forPlayer(cp).sendMessage("§7Maintenance for your Proxy was enabled but you didn't get kicked because you are whitelisted!");
+                    continue;
+                }
+                PlayerExecutor.forPlayer(cp).disconnect("§cThe network is currently in maintenance!"); // TODO: 25.07.2022 custom message
+            }
+
+        }
     }
 
 
@@ -87,12 +110,12 @@ public class ProxyRemoteHandler {
                 return;
             }
 
-            ChatComponent header = packet.getHeader();
-            ChatComponent footer = packet.getFooter();
+            String header = packet.getHeader();
+            String footer = packet.getFooter();
 
             player.setTabHeader(
-                    ComponentSerializer.parse(header.toString()),
-                    ComponentSerializer.parse(footer.toString())
+                    new TextComponent(header),
+                    new TextComponent(footer)
             );
         }
     }

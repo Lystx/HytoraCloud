@@ -78,11 +78,16 @@ public abstract class DefaultServiceManager implements ServiceManager {
     }
 
     @Override
+    public ServiceInfo thisServiceOrNull() {
+        return thisService().orElse(null);
+    }
+
+    @Override
     public @NotNull Task<ServiceInfo> getFallbackAsService() {
         return Task.build(
                 getAvailableFallbacksAsServices()
                         .stream()
-                        .min(Comparator.comparing(ServiceInfo::getOnlinePlayers)).orElse(null));
+                        .min(Comparator.comparing(ServiceInfo::getOnlinePlayerCount)).orElse(null));
     }
 
     @Override

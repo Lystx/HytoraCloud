@@ -8,6 +8,7 @@ import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.ServicePingProperties;
+import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.remote.Remote;
 import net.md_5.bungee.api.Favicon;
 import net.md_5.bungee.api.ProxyServer;
@@ -22,6 +23,7 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -35,25 +37,19 @@ public class ProxyEvents implements Listener {
 
     @EventHandler
     public void handle(PreLoginEvent event) {
-        System.out.println("PRE");
-        /*
 
-        List<String> whitelistedPlayers = CloudDriver.getInstance().getStorage().get("cloud::whitelist", List.class);
+        ServiceInfo serviceInfo = CloudDriver.getInstance().getServiceManager().thisServiceOrNull();
+        ServiceTask serviceTask = serviceInfo.getTask();
 
-        if (whitelistedPlayers == null) {
-            whitelistedPlayers = new ArrayList<>();
-        }
+        List<String> whitelistedPlayers = CloudDriver.getInstance().getStorage().getBundle("cloud::whitelist").toInstances(String.class);
 
         if (event.getConnection().getName() != null) {
-            if (!whitelistedPlayers.contains(event.getConnection().getName())) {
-                event.setCancelReason(new TextComponent("§cDu besitzt momentan keinen Zuganng, um das §nNetzwerk §czu betreten."));
+            if (serviceTask.isMaintenance() && !whitelistedPlayers.contains(event.getConnection().getName())) {
+                event.setCancelReason(new TextComponent("§cThe network is currently in maintenance!\nCome back later!"));
                 event.setCancelled(true);
                 return;
             }
-        }*/
-        // TODO: 29.05.2022 whitelist
-        CloudDriver.getInstance().getLogger().info("Available Services : {}", CloudDriver.getInstance().getServiceManager().getAllCachedServices().size());
-
+        }
         Task<ServiceInfo> fallback = CloudDriver.getInstance().getServiceManager().getFallbackAsService();
 
         if (fallback.isNull()) {
@@ -65,14 +61,12 @@ public class ProxyEvents implements Listener {
 
     @EventHandler
     public void handle(PostLoginEvent event) {
-        System.out.println("POST");
         ProxiedPlayer player = event.getPlayer();
 
     }
 
     @EventHandler
     public void handle(LoginEvent event) {
-        System.out.println("LOGIN");
         PendingConnection c = event.getConnection();
         CloudDriver.getInstance().getLogger().info("Logging in Player[uuid={}, name={}]", c.getUniqueId(), c.getName());
         playerManager.registerCloudPlayer(c.getUniqueId(), c.getName());
@@ -98,7 +92,6 @@ public class ProxyEvents implements Listener {
 
     @EventHandler
     public void handle(ServerConnectEvent event) {
-        System.out.println("CONNECT");
         ServerInfo target = event.getTarget();
         ProxiedPlayer player = event.getPlayer();
 
@@ -116,7 +109,6 @@ public class ProxyEvents implements Listener {
 
     @EventHandler
     public void handle(ServerConnectedEvent event) {
-        System.out.println("CONNECTED");
         Server server = event.getServer();
         ProxiedPlayer player = event.getPlayer();
 
@@ -136,7 +128,6 @@ public class ProxyEvents implements Listener {
 
     @EventHandler
     public void handle(PlayerDisconnectEvent event) {
-        System.out.println("DISCONNECT");
         playerManager.unregisterCloudPlayer(event.getPlayer().getUniqueId(), event.getPlayer().getName());
     }
 
@@ -150,7 +141,7 @@ public class ProxyEvents implements Listener {
         int maxPlayers, onlinePlayers;
         if (pingProperties.isUsePlayerPropertiesOfService()) {
             maxPlayers = serviceInfo.getMaxPlayers();
-            onlinePlayers = pingProperties.isCombineAllProxiesIfProxyService() ? CloudDriver.getInstance().getPlayerManager().getCloudPlayerOnlineAmount() : serviceInfo.getOnlinePlayers();
+            onlinePlayers = pingProperties.isCombineAllProxiesIfProxyService() ? CloudDriver.getInstance().getPlayerManager().getCloudPlayerOnlineAmount() : serviceInfo.getOnlinePlayerCount();
         } else {
             maxPlayers = pingProperties.getCustomMaxPlayers();
             onlinePlayers = pingProperties.getCustomOnlinePlayers();
@@ -191,7 +182,6 @@ public class ProxyEvents implements Listener {
 
     @EventHandler
     public void handle(ServerKickEvent event) {
-        System.out.println("KICK");
         ProxiedPlayer player = event.getPlayer();
         ServiceInfo fallback = CloudDriver.getInstance().getServiceManager().getFallbackAsServiceOrNull();
 

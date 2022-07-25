@@ -1,6 +1,5 @@
 package cloud.hytora.driver.services;
 
-import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.common.MessagePlaceholder;
@@ -9,7 +8,7 @@ import cloud.hytora.driver.exception.IncompatibleDriverEnvironment;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.PacketSender;
 import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
-import cloud.hytora.driver.networking.protocol.packets.QueryState;
+import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.utils.ServiceState;
@@ -17,8 +16,10 @@ import cloud.hytora.driver.services.utils.ServiceVisibility;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public interface ServiceInfo extends Bufferable, SelfCloneable<ServiceInfo>, NetworkComponent, PacketSender, MessagePlaceholder {
 
@@ -101,7 +102,7 @@ public interface ServiceInfo extends Bufferable, SelfCloneable<ServiceInfo>, Net
     /**
      * @return the online amount of the service
      */
-    default int getOnlinePlayers() {
+    default int getOnlinePlayerCount() {
         return (int) CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()
                 .stream()
                 .filter(it -> {
@@ -111,10 +112,22 @@ public interface ServiceInfo extends Bufferable, SelfCloneable<ServiceInfo>, Net
     }
 
     /**
+     * @return the online amount of the service
+     */
+    default Collection<CloudPlayer> getOnlinePlayers() {
+        return CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()
+                .stream()
+                .filter(it -> {
+                    ServiceInfo service = getTask().getVersion().isProxy() ? it.getProxyServer() : it.getServer();
+                    return service != null && service.equals(this);
+                }).collect(Collectors.toList());
+    }
+
+    /**
      * @return if the service is full
      */
     default boolean isFull() {
-        return this.getOnlinePlayers() >= this.getMaxPlayers();
+        return this.getOnlinePlayerCount() >= this.getMaxPlayers();
     }
 
 

@@ -98,10 +98,11 @@ public class RemotePlayerManager extends DefaultPlayerManager {
     @Override
     public void registerCloudPlayer(@NotNull UUID uniqueId, @NotNull String username) {
         CloudPlayer cloudPlayer = constructPlayer(uniqueId, username);
+        cloudPlayer.setProxyServer(CloudDriver.getInstance().getServiceManager().thisServiceOrNull());
 
         this.cachedCloudPlayers.put(uniqueId, cloudPlayer);
         Remote.getInstance().getEventManager().callEventGlobally(new CloudPlayerLoginEvent(cloudPlayer));
-        Remote.getInstance().getClient().sendPacket(new CloudPlayerLoginPacket(username, uniqueId));
+        Remote.getInstance().getClient().sendPacket(new CloudPlayerLoginPacket(username, uniqueId, cloudPlayer.getProxyServer().getName()));
     }
 
     @Override
