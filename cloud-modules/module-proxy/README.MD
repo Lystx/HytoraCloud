@@ -1,27 +1,25 @@
 ### Proxy
 
-The **Proxy Module** is used to manage your proxies.
-It controls the **MOTD**, **Tablist**, **maintenance** and the **online count**.
-The online count of proxies of one group will be summed up and displayed in the player info.
-<br />
-You can **download**
-it [here](https://repo.thesimplecloud.eu/artifactory/gradle-release-local/eu/thesimplecloud/simplecloud/simplecloud-module-proxy/2.4.0/simplecloud-module-proxy-2.4.0.jar)
+The Proxy-Module manages all of your proxies.<br>
+It manages to display your MOTD(s) and TabList(s) and many more things
+that are managed on your proxy.
 
-![ProxyModuleTab]( "ProxyModuleTab")
+**Compatible Softwares**
+- BungeeCord
+- Waterfall
+<br>
 
-![ProxyModuleMotd]( "ProxyModuleMotd")
+**Screenshots**
 
-![ProxyModuleMotdMaintenance]( "ProxyModuleMotdMaintenance")
+![MotdNormalLayout](https://i.imgur.com/DcYBjnb.png "MotdNormalLayout")
 
+![MotdMaintenanceLayOut](https://i.imgur.com/MQ5xXWN_d.webp?maxwidth=760&fidelity=grand "MotdMaintenanceLayOut")
+
+![TabList](https://i.imgur.com/hiCWvqC_d.webp?maxwidth=760&fidelity=grand "TabList")
 <br />
 
 **Permissions:**
-<br />
-
 ````
-Maintenance join: cloud.maintenance.join
-Full join: cloud.full.join
+Not implemented yet
 ````
-
-<br />
 
