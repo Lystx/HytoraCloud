@@ -4,6 +4,9 @@ The Proxy-Module manages all of your proxies.<br>
 It manages to display your MOTD(s) and TabList(s) and many more things
 that are managed on your proxy.
 
+**Commands usage**
+- proxy (rl) | reloads the module and syncs it to the servers
+
 **Compatible Softwares**
 - BungeeCord
 - Waterfall
@@ -20,6 +23,6 @@ that are managed on your proxy.
 
 **Permissions:**
 ````
-Not implemented yet
+cloud.module.proxy.command.use - for use of command
 ````
 

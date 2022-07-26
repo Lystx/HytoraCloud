@@ -10,8 +10,8 @@ import cloud.hytora.modules.proxy.ProxyModule;
 
 @Command(
         name = "proxy",
-        permission = "cloud.command.use",
-        scope = CommandScope.CONSOLE
+        permission = "cloud.module.proxy.command.use",
+        scope = CommandScope.CONSOLE_AND_INGAME
 )
 @CommandAutoHelp
 @CommandDescription("Manages the proxy module")
