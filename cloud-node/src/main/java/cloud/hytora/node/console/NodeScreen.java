@@ -47,7 +47,7 @@ public class NodeScreen implements Screen {
         if (CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class).isScreenActive(this.name)) {
             CommandSender commandSender = CloudDriver.getInstance().getCommandSender();
             if (commandSender != null) {
-                commandSender.sendMessage(line);
+                commandSender.forceMessage(line);
             }
         }
     }
