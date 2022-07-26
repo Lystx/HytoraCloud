@@ -110,7 +110,7 @@ public class NodeServiceQueue {
     }
 
     private boolean isServiceIDAlreadyExists(ServiceTask serviceGroup, int id) {
-        return CloudDriver.getInstance().getServiceManager().getAllServicesByGroup(serviceGroup).stream().anyMatch(it -> id == it.getServiceID());
+        return CloudDriver.getInstance().getServiceManager().getAllServicesByTask(serviceGroup).stream().anyMatch(it -> id == it.getServiceID());
     }
 
     private boolean isPortUsed(int port) {

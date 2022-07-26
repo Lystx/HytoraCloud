@@ -3,7 +3,10 @@ package cloud.hytora.node.console.handler;
 import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
 import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.logging.handler.LogHandler;
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.Console;
+import cloud.hytora.driver.console.Screen;
+import cloud.hytora.driver.console.ScreenManager;
 import lombok.AllArgsConstructor;
 
 import javax.annotation.Nonnull;

@@ -3,6 +3,7 @@ package cloud.hytora.node.service;
 import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.console.ScreenManager;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
@@ -55,6 +56,9 @@ public class NodeServiceManager extends DefaultServiceManager {
     public void registerService(ServiceInfo service) {
         super.registerService(service);
 
+        ScreenManager screenManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
+        screenManager.registerScreen(service.getName(), false);
+
         this.cachedServiceOutputs.put(service.getName(), new ArrayList<>());
         CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceRegisterEvent(service));
     }
@@ -64,6 +68,10 @@ public class NodeServiceManager extends DefaultServiceManager {
     public void unregisterService(ServiceInfo service) {
         CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceUnregisterEvent(service.getName()));
         super.unregisterService(service);
+
+
+        ScreenManager screenManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
+        screenManager.unregisterScreen(service.getName());
 
         this.cachedServiceOutputs.remove(service.getName());//removing cached screen
         ServiceTask con = service.getTask();

@@ -3,7 +3,6 @@ package cloud.hytora.driver.services;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
-import cloud.hytora.driver.networking.protocol.packets.QueryState;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.utils.ServiceState;
@@ -80,8 +79,8 @@ public interface ServiceManager {
     void shutdownService(ServiceInfo service);
 
 
-    default List<ServiceInfo> getAllServicesByGroup(@NotNull ServiceTask serviceGroup) {
-        return this.getAllCachedServices().stream().filter(it -> it.getTask().equals(serviceGroup)).collect(Collectors.toList());
+    default List<ServiceInfo> getAllServicesByTask(@NotNull ServiceTask serviceTask) {
+        return this.getAllCachedServices().stream().filter(it -> it.getTask().getName().equalsIgnoreCase(serviceTask.getName())).collect(Collectors.toList());
     }
 
     default List<ServiceInfo> getAllServicesByState(@NotNull ServiceState serviceState) {

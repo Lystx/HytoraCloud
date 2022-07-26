@@ -72,7 +72,7 @@ public class DefaultServiceTask extends ProtocolPropertyHolder implements Servic
 
     @Override
     public List<ServiceInfo> getOnlineServices() {
-        return CloudDriver.getInstance().getServiceManager().getAllServicesByGroup(this);
+        return CloudDriver.getInstance().getServiceManager().getAllServicesByTask(this);
     }
 
     @Override

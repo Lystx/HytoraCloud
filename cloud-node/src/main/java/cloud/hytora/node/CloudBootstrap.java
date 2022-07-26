@@ -22,7 +22,6 @@ public class CloudBootstrap {
 
         try {
             Console console = new JLine3Console("§8| §bCloud §8» §b%screen% §8» §r");
-            console.setLineCaching(true);
             HandledLogger logger = new HandledAsyncLogger(LogLevel.fromName(System.getProperty("cloud.logging.level", "INFO")));
 
             Logger.setFactory(logger.addHandler(new ConsoleLogHandler(console), new FileLogHandler()));

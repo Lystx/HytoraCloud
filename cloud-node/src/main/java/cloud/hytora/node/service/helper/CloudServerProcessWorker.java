@@ -3,6 +3,8 @@ package cloud.hytora.node.service.helper;
 import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.console.Screen;
+import cloud.hytora.driver.console.ScreenManager;
 import cloud.hytora.driver.event.DestructiveListener;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceRequestScreenLeaveEvent;
@@ -125,19 +127,18 @@ public class CloudServerProcessWorker {
 
         File folder = new File(parent, service.getName() + "/");
 
+
+        ScreenManager screenManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
+
         StartedProcess result = new ProcessExecutor()
                 .command(this.args(service))
                 .directory(folder)
                 .redirectOutput(new LogOutputStream() {
                     @Override
                     protected void processLine(String line) {
-                        NodeServiceManager sm = (NodeServiceManager) CloudDriver.getInstance().getServiceManager();
-                        if (sm.getCachedServiceOutputs().get(service.getName()) != null) {
-                            sm.getCachedServiceOutputs().get(service.getName()).add(line);
-                            if (service.asCloudServer().isScreenServer()) {
-                                CloudDriver.getInstance().getCommandSender().sendMessage(line);
-                            }
-                        }
+                        Screen screenByNameOrNull = screenManager.getScreenByNameOrNull(service.getName());
+                        screenByNameOrNull.writeLine(line);
+
                     }
                 })
                 .start();

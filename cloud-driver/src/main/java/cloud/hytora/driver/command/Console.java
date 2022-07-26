@@ -10,17 +10,10 @@ import java.util.function.Consumer;
 
 public interface Console {
 
-	boolean isPrintingEnabled();
-
-	void setPrintingEnabled(boolean enabled);
-
 	void setCommandInputValue(@Nonnull String commandInputValue);
 
 	void resetPrompt();
 
-	void removePrompt();
-
-	void emptyPrompt();
 
 	void clearScreen();
 
@@ -39,31 +32,17 @@ public interface Console {
 	String readLineOrNull();
 
 	@Nonnull
-	Console writeRaw(@Nonnull String rawText);
-
-	@Nonnull
-	Console forceWrite(@Nonnull String text);
-
-	@Nonnull
-	Console forceWriteLine(@Nonnull String text);
-
-	@Nonnull
-	Console write(@Nonnull String text);
-
-	@Nonnull
 	Console writeLine(@Nonnull String text);
+
+	Console forceWrite(String text);
 
 	@Nonnull
 	List<String> getAllWroteLines();
 
-	void setLineCaching(boolean active);
 
 	void addInputHandler(@Nonnull Consumer<? super String> handler);
 
 	@Nonnull
 	Collection<Consumer<? super String>> getInputHandlers();
 
-	Setup<?> getCurrentSetup();
-
-    void setCurrentSetup(Setup<?> tSetupExecutor);
 }

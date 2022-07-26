@@ -33,6 +33,7 @@ import org.zeroturnaround.exec.ProcessResult;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 @Getter
@@ -45,6 +46,8 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
 
     private int port;
     private String hostName;
+
+    private UUID uniqueId;
     private int maxPlayers;
     private String motd;
 
@@ -72,6 +75,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
 
         this.creationTimestamp = System.currentTimeMillis();
         this.properties = DocumentFactory.newJsonDocument();
+        this.uniqueId = UUID.randomUUID();
 
         this.pingProperties = new DefaultPingProperties();
         this.pingProperties.setMotd(task.getMotd());
@@ -204,6 +208,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
 
         to.setMaxPlayers(from.getMaxPlayers());
         to.setMotd(from.getMotd());
+        to.setUniqueId(from.getUniqueId());
         to.setReady(from.isReady());
         ((SimpleServiceInfo)to).setCreationTimeStamp(from.getCreationTimestamp());
         ((SimpleServiceInfo)to).setPingProperties((DefaultPingProperties) from.getPingProperties());
@@ -241,6 +246,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
         switch (state) {
 
             case READ:
+                this.uniqueId = buf.readUniqueId();
                 this.task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(buf.readString());
                 this.hostName = buf.readString();
                 this.motd = buf.readString();
@@ -260,6 +266,8 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
                 break;
 
             case WRITE:
+
+                buf.writeUniqueId(this.getUniqueId());
 
                 buf.writeString(this.getTask().getName());
                 buf.writeString(this.getHostName());

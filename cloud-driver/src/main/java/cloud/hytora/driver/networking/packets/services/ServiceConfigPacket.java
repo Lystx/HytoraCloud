@@ -13,17 +13,19 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import sun.plugin.util.UIUtil;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.UUID;
 
 @AllArgsConstructor
 @Getter
 @NoArgsConstructor
 public class ServiceConfigPacket extends Packet {
 
-
-    private ServiceTask serviceTask;
+    private UUID uniqueId;
+    private String serviceTask;
 
     private int port;
     private int memory;
@@ -45,7 +47,8 @@ public class ServiceConfigPacket extends Packet {
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
         if (state == BufferState.READ) {
-            serviceTask = buf.readObject(DefaultServiceTask.class);
+            uniqueId = buf.readUniqueId();
+            serviceTask = buf.readString();
             port = buf.readInt();
             memory = buf.readInt();
             maxPlayers = buf.readInt();
@@ -56,7 +59,8 @@ public class ServiceConfigPacket extends Packet {
             templates = buf.readWrapperObjectCollection(CloudTemplate.class);
             version = buf.readEnum(ServiceVersion.class);
         } else {
-            buf.writeObject(serviceTask);
+            buf.writeUniqueId(uniqueId);
+            buf.writeString(serviceTask);
             buf.writeInt(port);
             buf.writeInt(memory);
             buf.writeInt(maxPlayers);

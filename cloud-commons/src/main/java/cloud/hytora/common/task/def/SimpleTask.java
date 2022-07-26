@@ -56,6 +56,10 @@ public class SimpleTask<T> implements Task<T> {
      */
     private final Collection<Consumer<Task<T>>> updateListeners;
 
+    public SimpleTask(T value) {
+        this();
+        this.heldValue = value;
+    }
     public SimpleTask() {
         this.heldValue = null;
         this.immutable = false;
@@ -105,6 +109,7 @@ public class SimpleTask<T> implements Task<T> {
     @Override
     public Task<T> setFailure(Throwable ex) {
         this.throwable = ex;
+        this.done = true;
         this.releaseLocks();
         return this;
     }
@@ -124,13 +129,13 @@ public class SimpleTask<T> implements Task<T> {
             throw new ValueImmutableException(this);
         }
         this.heldValue = newValue;
+        this.done = true;
         this.releaseLocks();
         return this;
     }
 
     private void releaseLocks() {
         this.updateListeners.forEach(c -> c.accept(this));
-        this.done = true;
 
         //releasing all locks
         for (CountDownLatch latch : countDownLatches) {
@@ -301,7 +306,7 @@ public class SimpleTask<T> implements Task<T> {
     public Task<T> thenAccept(Consumer<T> listener) {
         return this.addUpdateListener(v -> {
             try {
-                listener.accept(v.get());
+                listener.accept(this.get());
             } catch (ValueHoldsNoObjectException e) {
                 listener.accept(null);
             }
@@ -354,6 +359,15 @@ public class SimpleTask<T> implements Task<T> {
         }
 
         or.accept(this.heldValue);
+    }
+
+    @Override
+    public void ifPresentOrElse(Consumer<T> ifPresent, Runnable orElse) {
+        if (this.isPresent()) {
+            ifPresent.accept(this.get());
+        } else {
+            orElse.run();
+        }
     }
 
     @Override

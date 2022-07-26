@@ -16,6 +16,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 
@@ -105,6 +106,16 @@ public class DefaultEventManager implements EventManager {
 		}, this::removeListener);
 		this.addListener(listener);
 		return listener;
+	}
+
+
+	@Override
+	public <E extends CloudEvent> void registerDestructiveHandler(@NotNull Class<E> eventClass, @NotNull BiConsumer<E, DestructiveListener> handler) {
+		DestructiveListener listener = new DefaultDestructiveListener<E>(eventClass, (l, e) -> {
+			handler.accept(e, l);
+		}, this::removeListener);
+		this.addListener(listener);
+
 	}
 
 	@Nonnull

@@ -18,12 +18,17 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public interface ServiceInfo extends Bufferable, SelfCloneable<ServiceInfo>, NetworkComponent, PacketSender, MessagePlaceholder {
 
     NodeServiceInfo asCloudServer() throws IncompatibleDriverEnvironment;
+
+    UUID getUniqueId();
+
+    void setUniqueId(UUID uniqueId);
 
     ServicePingProperties getPingProperties();
 

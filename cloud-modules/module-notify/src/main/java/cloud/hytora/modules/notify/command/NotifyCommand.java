@@ -34,7 +34,7 @@ public class NotifyCommand {
         } else {
             //has disabled notify ==> enabling
 
-            configuration.getEnabledNotifications().remove(player.getUniqueId());
+            configuration.getEnabledNotifications().add(player.getUniqueId());
             player.sendMessage("§7You will §anow §7receive notifications§8!");
         }
 

@@ -5,6 +5,8 @@ import cloud.hytora.document.Document;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 
+import java.util.UUID;
+
 public interface ConfigurableService {
 
     ConfigurableService port(int port);
@@ -12,6 +14,8 @@ public interface ConfigurableService {
     ConfigurableService memory(int memoryInMB);
 
     ConfigurableService motd(String motd);
+
+    ConfigurableService uniqueId(UUID uniqueId);
 
     ConfigurableService properties(Document document);
 
@@ -27,5 +31,5 @@ public interface ConfigurableService {
     ConfigurableService ignoreIfLimitOfServicesReached();
 
 
-    void start();
+    Task<ServiceInfo> start();
 }

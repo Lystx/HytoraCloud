@@ -4,10 +4,14 @@ import cloud.hytora.common.function.BiSupplier;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.driver.command.Console;
+import cloud.hytora.driver.console.Screen;
+import cloud.hytora.driver.console.ScreenManager;
+import cloud.hytora.driver.console.TabCompleter;
 import cloud.hytora.driver.setup.annotations.*;
 import cloud.hytora.driver.CloudDriver;
 import com.google.gson.internal.Primitives;
 import lombok.Getter;
+import org.jline.reader.Candidate;
 
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
@@ -67,16 +71,6 @@ public abstract class Setup<T extends Setup<?>> {
     private final Console console;
 
     /**
-     * The logger to display info
-     */
-    private final Logger logger;
-
-    /**
-     * All lines of the console
-     */
-    private final List<String> restoredLines;
-
-    /**
      * The current setup part
      */
     private int current;
@@ -105,6 +99,11 @@ public abstract class Setup<T extends Setup<?>> {
     private SetupListener<T> setupListener;
 
     /**
+     * To identify console screen
+     */
+    private String uniqueSetupName;
+    
+    /**
      * If this setup is allowed to be cancelled
      */
     public abstract boolean isCancellable();
@@ -121,24 +120,42 @@ public abstract class Setup<T extends Setup<?>> {
     public Setup(Console console) {
 
         this.console = console;
-        this.logger = CloudDriver.getInstance().getLogger();
 
         this.cancelled = false;
         this.exitAfterAnswer = false;
         this.map = new HashMap<>();
-        this.restoredLines = console.getAllWroteLines();
         this.current = 1;
 
         this.loadSetupParts();
-
-        CloudDriver.getInstance().getCommandManager().setActive(false);
-        this.console.setCurrentSetup(this);
-        this.console.setLineCaching(false);
-
+        this.uniqueSetupName = "setup#" + UUID.randomUUID();
+        
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class).registerScreen(uniqueSetupName, false);
+  
+    }
+    
+    public Screen getSetupScreen() {
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class).getScreenByNameOrNull(this.uniqueSetupName);
     }
 
     public void start(SetupListener<T> finishHandler) {
         this.setupListener = finishHandler;
+
+        ScreenManager screenManager = CloudDriver.getInstance().getProviderRegistry().get(ScreenManager.class).get();
+        Screen screen = screenManager.getScreenByNameOrNull(this.uniqueSetupName);
+        screen.registerTabCompleter(buffer -> {
+
+            SetupEntry value = getSetup().getValue();
+            if (value.getCompleter() != null) {
+                Class<? extends SetupSuggester> value1 = value.getCompleter().value();
+                SetupSuggester completer = ReflectionUtils.createEmpty(value1);
+                if (completer == null) {
+                    return new ArrayList<>();
+                }
+                return completer.suggest(Setup.this, getSetup().getValue());
+            }
+            return new ArrayList<>();
+        });
+        screenManager.joinScreen(screen); //joining setup screen
 
         //Setting current setup
         this.setup = this.getEntry(1);
@@ -158,18 +175,15 @@ public abstract class Setup<T extends Setup<?>> {
 
     @SuppressWarnings("unchecked")
     private void exit(boolean success) {
-        CloudDriver.getInstance().getCommandManager().setActive(true);
 
-        if (headerBehaviour() == SetupHeaderBehaviour.RESTORE_PREVIOUS_LINES) {
-            this.console.clearScreen();
-            for (String restoredLine : new ArrayList<>(this.restoredLines)) {
-                this.console.forceWrite(restoredLine);
-            }
-        }
+        ScreenManager unchecked = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
+        unchecked.leaveCurrentScreen();
+        unchecked.unregisterScreen(this.uniqueSetupName);
+
+
         //If already exited by another code line
         if (this.setupListener != null) {
             //Setup done and accepting consumer
-            this.console.setCurrentSetup(null);
             if (success) {
                 this.setupListener.accept((T) this, SetupControlState.FINISHED);
             } else {
@@ -177,7 +191,6 @@ public abstract class Setup<T extends Setup<?>> {
             }
             this.setupListener = null;
         }
-        this.console.setLineCaching(true);
 
     }
 
@@ -196,17 +209,17 @@ public abstract class Setup<T extends Setup<?>> {
 
             //No input provided
             if (input.trim().isEmpty()) {
-                this.logger.translateColors().info("§cPlease do not enter §eempty §cinput!");
+                this.getSetupScreen().writeLine("§cPlease do not enter §eempty §cinput!");
                 return;
             }
 
             //Cancelling setup
             if (input.equalsIgnoreCase("cancel")) {
                 if (!this.isCancellable()) {
-                    this.logger.translateColors().info("§cYou cannot cancel the current setup§c!");
+                    this.getSetupScreen().writeLine("§cYou cannot cancel the current setup§c!");
                     return;
                 }
-                this.logger.translateColors().info("§cThe current setup was §ecancelled§c!");
+                this.getSetupScreen().writeLine("§cThe current setup was §ecancelled§c!");
                 this.cancelled = true;
                 this.current += 10000;
 
@@ -218,7 +231,7 @@ public abstract class Setup<T extends Setup<?>> {
 
             //If answer is enum only
             if (!setupEntry.isEnumRequired(input)) {
-                this.logger.translateColors().info("§cPossible answers: §e" + Arrays.toString(setup.getValue().getRequiresEnum().value().getEnumConstants()).replace("]", ")").replace("[", "("));
+                this.getSetupScreen().writeLine("§cPossible answers: §e" + Arrays.toString(setup.getValue().getRequiresEnum().value().getEnumConstants()).replace("]", ")").replace("[", "("));
                 return;
             }
 
@@ -231,17 +244,17 @@ public abstract class Setup<T extends Setup<?>> {
                 }
 
                 if (onlyAllowed == null || onlyAllowed.length == 0) {
-                    this.logger.translateColors().info("§cCouldn't show you any possible answers because no possible answers were provided in the Setup!");
+                    this.getSetupScreen().writeLine("§cCouldn't show you any possible answers because no possible answers were provided in the Setup!");
                 } else {
-                    this.logger.translateColors().info("§cPossible answers: §e" + Arrays.toString(onlyAllowed).replace("]", "").replace("[", ""));
+                    this.getSetupScreen().writeLine("§cPossible answers: §e" + Arrays.toString(onlyAllowed).replace("]", "").replace("[", ""));
                 }
-                this.logger.translateColors().info("§cRequired Type: §e" + this.setup.getKey().getType().getSimpleName());
+                this.getSetupScreen().writeLine("§cRequired Type: §e" + this.setup.getKey().getType().getSimpleName());
                 return;
             }
 
             //If the current input is forbidden to use
             if (setupEntry.isForbidden(input)) {
-                this.logger.translateColors().info(!input.trim().isEmpty() ? ("§cThe answer '§e" + input + " §cmay not be used for this question!") : "§cThis §eanswer §cmay not be used for this question!");
+                this.getSetupScreen().writeLine(!input.trim().isEmpty() ? ("§cThe answer '§e" + input + " §cmay not be used for this question!") : "§cThis §eanswer §cmay not be used for this question!");
                 return;
             }
 
@@ -251,7 +264,7 @@ public abstract class Setup<T extends Setup<?>> {
                 BiSupplier<String, Boolean> supplier = ReflectionUtils.createEmpty(value);
                 if (supplier != null) {
                     if (supplier.supply(input)) {
-                        this.logger.translateColors().info(checker.message().replace("%input%", input));
+                        this.getSetupScreen().writeLine(checker.message().replace("%input%", input));
                         return;
                     }
                 }
@@ -272,7 +285,7 @@ public abstract class Setup<T extends Setup<?>> {
                 value = transformer.parse(setupEntry, input);
 
                 if (value == null) {
-                    this.logger.translateColors().info("§cPlease try again");
+                    this.getSetupScreen().writeLine("§cPlease try again");
                     return;
                 }
 
@@ -280,7 +293,7 @@ public abstract class Setup<T extends Setup<?>> {
                 this.setup.getKey().set(this, value);
 
             } catch (Exception ex) {
-                this.logger.translateColors().info("§cThe §einput §cdidn't match any of the available §eAnswerTypes§c!");
+                this.getSetupScreen().writeLine("§cThe §einput §cdidn't match any of the available §eAnswerTypes§c!");
                 return;
             }
 
@@ -358,10 +371,10 @@ public abstract class Setup<T extends Setup<?>> {
         if (entry.getAnswers() != null) {
             sb.append(" ").append((Arrays.toString(entry.getAnswers().only())).replace("[", "(").replace("]", ")"));
         }
-        this.logger.translateColors().info(sb.toString());
+        this.getSetupScreen().writeLine(sb.toString());
 
         if (entry.getRequiresEnum() != null) {
-            this.logger.translateColors().info("§7Possible Answers§8: §b" + Arrays.toString(entry.getRequiresEnum().value().getEnumConstants()).replace("]", "§8)").replace("[", "§8(§b").replace(",", "§8, §b"));
+            this.getSetupScreen().writeLine("§7Possible Answers§8: §b" + Arrays.toString(entry.getRequiresEnum().value().getEnumConstants()).replace("]", "§8)").replace("[", "§8(§b").replace(",", "§8, §b"));
         }
 
         if (entry.getSuggestedAnswer() != null) {
@@ -380,21 +393,21 @@ public abstract class Setup<T extends Setup<?>> {
      * > Setup-Name
      */
     private void printHeader(String header) {
-        this.console.clearScreen();
+        this.getSetupScreen().clear();
 
-        this.logger.translateColors().info("§8");
-        this.logger.translateColors().info(header);
-        this.logger.translateColors().info("§8");
+        this.getSetupScreen().writeLine("§8");
+        this.getSetupScreen().writeLine(header);
+        this.getSetupScreen().writeLine("§8");
         if (this.isCancellable()) {
-            this.logger.translateColors().info("§7» §7You can cancel this setup by typing \"§ecancel§7\"!");
+            this.getSetupScreen().writeLine("§7» §7You can cancel this setup by typing \"§ecancel§7\"!");
         } else {
-            this.logger.translateColors().info("§7» §7This setup is §cnot allowed §7to be cancelled!");
+            this.getSetupScreen().writeLine("§7» §7This setup is §cnot allowed §7to be cancelled!");
         }
-        this.logger.translateColors().info("§7» §7Suggested answers can be §coverridden §7by typing your own!");
-        this.logger.translateColors().info("§7» §7Suggested answers can be accepted by hitting §aenter§7!");
-        this.logger.translateColors().info("§7» §7Hit §eTAB §7to see possible answers§7!");
-        this.logger.translateColors().info("§7» §7Current Question §f: §b" + (this.current == 1 ? 1 : current) + "/" + (this.map.keySet().size() == 0 ? "Loading" : this.map.keySet().size() + ""));
-        this.logger.translateColors().info("§8");
+        this.getSetupScreen().writeLine("§7» §7Suggested answers can be §coverridden §7by typing your own!");
+        this.getSetupScreen().writeLine("§7» §7Suggested answers can be accepted by hitting §aenter§7!");
+        this.getSetupScreen().writeLine("§7» §7Hit §eTAB §7to see possible answers§7!");
+        this.getSetupScreen().writeLine("§7» §7Current Question §f: §b" + (this.current == 1 ? 1 : current) + "/" + (this.map.keySet().size() == 0 ? "Loading" : this.map.keySet().size() + ""));
+        this.getSetupScreen().writeLine("§8");
     }
 
 }

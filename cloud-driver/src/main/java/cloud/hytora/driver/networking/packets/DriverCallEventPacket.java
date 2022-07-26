@@ -21,7 +21,6 @@ public class DriverCallEventPacket extends Packet {
 
     private ProtocolTansferableEvent event;
 
-
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
         switch (state) {

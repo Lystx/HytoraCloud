@@ -5,6 +5,7 @@ import org.jline.reader.UserInterruptException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -25,7 +26,7 @@ public class ConsoleReadThread extends Thread {
 		String line;
 		while (!Thread.interrupted() && (line = readLineOrNull()) != null) {
 			lastLine = line;
-			for (Consumer<? super String> handler : console.getInputHandlers()) {
+			for (Consumer<? super String> handler : new ArrayList<>(console.getInputHandlers())) {
 				handler.accept(line);
 			}
 		}

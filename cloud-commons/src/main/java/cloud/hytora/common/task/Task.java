@@ -115,7 +115,7 @@ public interface Task<T> extends Serializable {
      * @return the created value instance
      */
     static <T> Task<T> build(T value, boolean immutable) {
-        return new SimpleTask<T>().setResult(value).setImmutable(immutable);
+        return new SimpleTask<T>(value).setImmutable(immutable);
     }
 
     static Task<Void> runSync(@Nonnull Runnable runnable) {
@@ -312,6 +312,8 @@ public interface Task<T> extends Serializable {
      * @param or        the task to perform if the check returns true
      */
     void orElseDo(Predicate<T> predicate, Runnable ifFalse, Consumer<T> or);
+
+    void ifPresentOrElse(Consumer<T> ifPresent, Runnable orElse);
 
     T getOrPerform(Predicate<Task<T>> predicate, Consumer<Task<T>> ifTrue, Consumer<Task<T>> ifFalse);
 

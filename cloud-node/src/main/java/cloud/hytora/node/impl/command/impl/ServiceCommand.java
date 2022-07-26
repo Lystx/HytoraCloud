@@ -1,5 +1,7 @@
 package cloud.hytora.node.impl.command.impl;
 
+import cloud.hytora.common.function.ExceptionallyConsumer;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandManager;
 import cloud.hytora.driver.command.CommandScope;
@@ -8,6 +10,8 @@ import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.completer.CloudServerCompleter;
 import cloud.hytora.driver.command.completer.TaskCompleter;
 import cloud.hytora.driver.command.sender.CommandSender;
+import cloud.hytora.driver.console.Screen;
+import cloud.hytora.driver.console.ScreenManager;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.server.ServiceRequestScreenLeaveEvent;
 import cloud.hytora.driver.services.ServiceInfo;
@@ -22,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 @Command(
         name = {"service", "ser"},
@@ -38,7 +43,7 @@ public class ServiceCommand {
 
     @EventListener
     public void handleQuit(ServiceRequestScreenLeaveEvent event) {
-        this.leaveScreen(event.getCommandManager(), event.getConsole(), event.getSender(), event.getService());
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class).leaveCurrentScreen();
     }
 
     @SubCommand("list")
@@ -112,52 +117,29 @@ public class ServiceCommand {
             return;
         }
 
-        Console console = Objects.requireNonNull(NodeDriver.getInstance().getConsole());
-        CommandManager commandManager = CloudDriver.getInstance().getCommandManager();
+        ScreenManager sm = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
 
-        console.clearScreen();
-        List<String> cachedLines = service.queryServiceOutput();
-        sender.sendMessage("§8");
-        sender.sendMessage("§7Joining screen of §a" + service.getName() + "§8...");
-        sender.sendMessage("§7To exit the screen type §8'§cleave§8'");
-        sender.sendMessage("§8");
+        sm.getScreenByName(service.getName()).ifPresentOrElse(new ExceptionallyConsumer<Screen>() {
+            @Override
+            public void acceptExceptionally(Screen screen) throws Exception {
+                screen.addInputHandler((ExceptionallyConsumer<String>) s -> {
+                    if (s.equalsIgnoreCase("leave") || s.equalsIgnoreCase("-l")) {        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class).leaveCurrentScreen();
 
-        service.asCloudServer().setScreenServer(true);
-        console.setLineCaching(false);
-        commandManager.setActive(false);
-        commandManager.setInActiveHandler((commandSender, s) -> {
-            if (s.equalsIgnoreCase("leave") || s.equalsIgnoreCase("-l")) {
-                this.leaveScreen(commandManager, console, sender, service);
-            } else {
-                if (s.trim().isEmpty()) {
-                    return;
-                }
-                // sender.sendMessage("Executing '{}' on {}", s, service.getName());
-                service.sendCommand(s);
+                    } else {
+                        if (s.trim().isEmpty()) {
+                            return;
+                        }
+                        // sender.sendMessage("Executing '{}' on {}", s, service.getName());
+                        service.sendCommand(s);
+                    }
+                });
+
+                sm.joinScreen(screen);
             }
-        });
+        }, () -> sender.sendMessage("§cNo Screen found for this Service!"));
 
-        for (String cachedLine : new ArrayList<>(cachedLines)) {
-            sender.sendMessage(cachedLine);
-        }
     }
 
-    private void leaveScreen(CommandManager commandManager, Console console, CommandSender sender, ServiceInfo service) {
-
-        console.clearScreen();
-        for (String allWroteLine : console.getAllWroteLines()) {
-            console.forceWrite(allWroteLine);
-        }
-        console.setLineCaching(true);
-        commandManager.setInActiveHandler(null);
-        commandManager.setActive(true);
-
-        sender.sendMessage("§8");
-        sender.sendMessage("§7You left screen §c" + service.getName() + "§8!");
-        sender.sendMessage("§8");
-
-        service.asCloudServer().setScreenServer(false);
-    }
 
     @SubCommand("stop <name>")
     @CommandDescription("Stops a service")

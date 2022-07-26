@@ -1,10 +1,13 @@
 package cloud.hytora.driver.services.impl;
 
+import cloud.hytora.common.function.ExceptionallyBiConsumer;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
+import cloud.hytora.driver.event.DestructiveListener;
+import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
 import cloud.hytora.driver.networking.EndpointNetworkExecutor;
 import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
 import cloud.hytora.driver.networking.packets.services.ServiceConfigPacket;
@@ -14,15 +17,13 @@ import cloud.hytora.driver.services.ConfigurableService;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
-import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.UUID;
 
 public class DefaultConfigurableService implements ConfigurableService {
 
@@ -36,6 +37,8 @@ public class DefaultConfigurableService implements ConfigurableService {
     private boolean ignoreOfLimit;
 
     private String motd;
+
+    private UUID uniqueId;
 
     private String node;
 
@@ -57,11 +60,18 @@ public class DefaultConfigurableService implements ConfigurableService {
         this.properties = DocumentFactory.newJsonDocument();
         this.version = serviceTask.getVersion();
         this.ignoreOfLimit = false;
+        this.uniqueId = UUID.randomUUID();
     }
 
     @Override
     public ConfigurableService port(int port) {
         this.port = port;
+        return this;
+    }
+
+    @Override
+    public ConfigurableService uniqueId(UUID uniqueId) {
+        this.uniqueId = uniqueId;
         return this;
     }
 
@@ -113,8 +123,12 @@ public class DefaultConfigurableService implements ConfigurableService {
         return this;
     }
 
+
     @Override
-    public void start() {
+    public Task<ServiceInfo> start() {
+        Task<ServiceInfo> task = Task.empty();
+
+
         Task.runAsync(() -> {
             if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
                 EndpointNetworkExecutor executor = (EndpointNetworkExecutor) CloudDriver.getInstance().getExecutor();
@@ -139,6 +153,7 @@ public class DefaultConfigurableService implements ConfigurableService {
                 ServiceInfo service = new SimpleServiceInfo(serviceTask.getName(), newServiceId(), port, address);
                 service.setProperties(properties);
                 service.setMaxPlayers(maxPlayers);
+                service.setUniqueId(uniqueId);
                 service.setMotd(motd);
 
                 CloudDriver.getInstance().getServiceManager().registerService(service);
@@ -155,8 +170,10 @@ public class DefaultConfigurableService implements ConfigurableService {
                 node.ifEmpty(n -> CloudDriver.getInstance().getLogger().error("Tried to start {} but the Node {} for Servers of Configuration {} is not connected!", service.getName(), this.node, serviceTask.getName()));
 
             } else {
+
                 ServiceConfigPacket packet = new ServiceConfigPacket(
-                        serviceTask,
+                        uniqueId,
+                        serviceTask.getName(),
                         port,
                         memory,
                         maxPlayers,
@@ -167,19 +184,26 @@ public class DefaultConfigurableService implements ConfigurableService {
                         templates,
                         version
                 );
+
+                CloudDriver.getInstance().getEventManager().registerDestructiveHandler(ServiceReadyEvent.class, (ExceptionallyBiConsumer<ServiceReadyEvent, DestructiveListener>) (event, listener) -> {
+
+                    ServiceInfo serviceInfo = event.getServiceInfo();
+                    System.out.println("eVENT -> " + this.uniqueId + " / " + serviceInfo.getUniqueId());
+                    if (serviceInfo.getUniqueId().equals(this.uniqueId)) {
+                        task.setResult(serviceInfo);
+                        System.out.println("DEBUG " + serviceInfo);
+                        listener.destroy();
+                    }
+                });
                 packet.publishAsync();
             }
         });
+
+        return task;
     }
 
     private int newServiceId() {
-        int id = 1;
-        while (this.isServiceIdUsed(serviceTask, id)) id++;
-        return id;
-    }
-
-    private boolean isServiceIdUsed(ServiceTask serviceGroup, int id) {
-        return CloudDriver.getInstance().getServiceManager().getAllServicesByGroup(serviceGroup).stream().anyMatch(it -> id == it.getServiceID());
+        return (CloudDriver.getInstance().getServiceManager().getAllServicesByTask(serviceTask).size() + 1);
     }
 
     private boolean isPortUsed(int port) {

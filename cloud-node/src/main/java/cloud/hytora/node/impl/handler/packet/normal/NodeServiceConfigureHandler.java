@@ -1,6 +1,7 @@
 package cloud.hytora.node.impl.handler.packet.normal;
 
 import cloud.hytora.document.Document;
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.packets.services.ServiceConfigPacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
@@ -10,13 +11,15 @@ import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 
 import java.util.Collection;
+import java.util.UUID;
 
 public class NodeServiceConfigureHandler implements PacketHandler<ServiceConfigPacket> {
 
     @Override
     public void handle(PacketChannel wrapper, ServiceConfigPacket packet) {
 
-        ServiceTask serviceTask = packet.getServiceTask();
+        ServiceTask serviceTask = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(packet.getServiceTask());
+        UUID uniqueId = packet.getUniqueId();
         Document properties = packet.getProperties();
         Collection<ServiceTemplate> templates = packet.getTemplates();
 
@@ -32,7 +35,9 @@ public class NodeServiceConfigureHandler implements PacketHandler<ServiceConfigP
         ConfigurableService configurableService = serviceTask.configureFutureService();
         if (ignoreOfLimit) configurableService.ignoreIfLimitOfServicesReached();
 
-        configurableService.node(node)
+        configurableService
+                .uniqueId(uniqueId)
+                .node(node)
                 .motd(motd)
                 .version(version)
                 .port(port)

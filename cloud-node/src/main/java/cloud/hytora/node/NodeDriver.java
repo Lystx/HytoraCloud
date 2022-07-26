@@ -1,6 +1,9 @@
 package cloud.hytora.node;
 
+import cloud.hytora.common.function.ExceptionallyConsumer;
 import cloud.hytora.common.logging.LogLevel;
+import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
+import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.scheduler.Scheduler;
@@ -15,6 +18,9 @@ import cloud.hytora.driver.command.DefaultCommandSender;
 import cloud.hytora.driver.command.sender.CommandSender;
 
 
+import cloud.hytora.driver.console.Screen;
+import cloud.hytora.driver.console.ScreenManager;
+import cloud.hytora.driver.console.TabCompleter;
 import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.http.impl.NettyHttpServer;
 import cloud.hytora.driver.message.ChannelMessenger;
@@ -22,6 +28,7 @@ import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.packets.services.ServiceForceShutdownPacket;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.permission.PermissionChecker;
+import cloud.hytora.node.console.NodeScreenManager;
 import cloud.hytora.node.impl.handler.packet.normal.*;
 import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteLoggingHandler;
 import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteServerStartHandler;
@@ -99,10 +106,8 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.time.Instant;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -149,13 +154,23 @@ public class NodeDriver extends CloudDriver implements Node {
     public static final File SERVICE_DIR_DYNAMIC = new File(SERVICE_DIR, "temporary/");
 
 
-
     public NodeDriver(Logger logger, Console console, boolean devMode) throws Exception {
         super(logger, DriverEnvironment.NODE);
         instance = this;
 
         this.running = true;
         this.console = console;
+
+
+        //setting node screen manager
+        this.providerRegistry.upsert(ScreenManager.class, new NodeScreenManager());
+
+        ScreenManager screenManager = this.providerRegistry.getUnchecked(ScreenManager.class);
+        screenManager.registerScreen("console", true);
+        Screen consoleScreen = screenManager.getScreenByNameOrNull("console");
+        consoleScreen.registerTabCompleter(buffer -> CloudDriver.getInstance().getCommandManager().completeCommand(CloudDriver.getInstance().getCommandSender(), buffer));
+        screenManager.joinScreen(consoleScreen);
+
 
         //loading config
         this.configManager = new ConfigManager();
@@ -172,7 +187,7 @@ public class NodeDriver extends CloudDriver implements Node {
         //loading console
         this.console.addInputHandler(s -> CloudDriver.getInstance().getCommandManager().executeCommand(CloudDriver.getInstance().getCommandSender(), s));
 
-        this.commandSender = new DefaultCommandSender(this.getConfig().getNodeName(), this.console);
+        this.commandSender = new DefaultCommandSender(this.getConfig().getNodeName(), this.console).function((ExceptionallyConsumer<String>) s -> console.forceWrite(ColoredMessageFormatter.format(new LogEntry(Instant.now(), "node", s, LogLevel.INFO, null)))).forceFunction((ExceptionallyConsumer<String>) console::forceWrite);
         this.commandManager = new NodeCommandManager();
 
         //checking if setup required
@@ -361,6 +376,7 @@ public class NodeDriver extends CloudDriver implements Node {
 
         //enabling modules after having loaded the database
         this.moduleManager.enableModules();
+
 
         // print finish successfully message
         this.logger.info("§8");

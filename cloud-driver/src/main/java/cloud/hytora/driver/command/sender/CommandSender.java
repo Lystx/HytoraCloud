@@ -11,7 +11,11 @@ import javax.annotation.Nonnull;
  */
 public interface CommandSender {
 
-	void sendMessage(@Nonnull String message);
+	default void forceMessage(@Nonnull String message) {
+
+	}
+
+	void sendMessage(String message);
 
 	default void sendMessage(@Nonnull String message, Object... args) {
 		sendMessage(DriverUtility.args(message, args));

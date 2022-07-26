@@ -2,7 +2,9 @@ package cloud.hytora.driver.command;
 
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.command.sender.ConsoleCommandSender;
+import cloud.hytora.driver.component.ChatColor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -20,8 +22,15 @@ public class DefaultCommandSender implements ConsoleCommandSender {
      */
     private Consumer<String> messageSending;
 
+    /**
+     * The consumer to send a message
+     */
+    private Consumer<String> forceSending;
     @Override
     public void sendMessage(@NotNull String message) {
+        if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
+            message = ChatColor.translateAlternateColorCodes('§', message);
+        }
         if (messageSending != null) {
             messageSending.accept(message);
             return;
@@ -29,8 +38,18 @@ public class DefaultCommandSender implements ConsoleCommandSender {
         getLogger().info(message);
     }
 
-    public ConsoleCommandSender function(Consumer<String> messageSending) {
+    @Override
+    public void forceMessage(@NotNull String message) {
+        this.forceSending.accept(message);
+    }
+
+    public DefaultCommandSender function(Consumer<String> messageSending) {
         this.messageSending = messageSending;
+        return this;
+    }
+
+    public DefaultCommandSender forceFunction(Consumer<String> forceSending) {
+        this.forceSending = forceSending;
         return this;
     }
 

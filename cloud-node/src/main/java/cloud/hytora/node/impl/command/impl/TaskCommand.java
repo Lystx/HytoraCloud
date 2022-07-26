@@ -177,7 +177,7 @@ public class TaskCommand {
             return;
         }
         CloudDriver.getInstance().getServiceTaskManager().removeTask(task);
-        CloudDriver.getInstance().getServiceManager().getAllServicesByGroup(task).forEach(ser -> CloudDriver.getInstance().getServiceManager().shutdownService(ser));
+        CloudDriver.getInstance().getServiceManager().getAllServicesByTask(task).forEach(ser -> CloudDriver.getInstance().getServiceManager().shutdownService(ser));
 
         sender.sendMessage("§7The ServiceTask §b" + task.getName() + " §7was deleted§8!");
     }
