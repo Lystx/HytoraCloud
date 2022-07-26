@@ -12,6 +12,7 @@ A minecraft CloudSystem based on the Node-Cluster-Principle using Netty-Framewor
   Manager of the cloud, commander of nodes 
   and is able to manage services itself<br>
 <br>
+
 - **Node** (*as SubNode*): <br>
  Only Responsible for starting & stopping of services (minecraft servers, bungee proxies), connects to the master. <br>
 
