@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public interface CloudOfflinePlayer extends Bufferable, IdentityHolder {
 
@@ -43,6 +44,11 @@ public interface CloudOfflinePlayer extends Bufferable, IdentityHolder {
      */
     @NotNull
     UUID getUniqueId();
+
+    /**
+     * the temporary properties of this player
+     */
+    TemporaryProperties getTemporaryProperties();
 
     /**
      * The permanent properties of this player

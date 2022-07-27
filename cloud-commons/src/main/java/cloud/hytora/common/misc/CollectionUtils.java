@@ -124,6 +124,11 @@ public final class CollectionUtils {
 
 	}
 
+	public static <T> void updateValue(List<? super T> collection, T oldValue, T newValue) {
+		int index = collection.indexOf(oldValue);
+		collection.set(index, newValue);
+	}
+
 	@Nonnull
 	@CheckReturnValue
 	public static <FromK, FromV, ToK, ToV> Map<ToK, ToV> convertMap(@Nonnull Map<FromK, FromV> map,

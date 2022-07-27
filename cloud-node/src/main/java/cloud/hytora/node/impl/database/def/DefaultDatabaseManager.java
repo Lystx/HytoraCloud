@@ -3,10 +3,10 @@ package cloud.hytora.node.impl.database.def;
 import cloud.hytora.common.task.Task;
 
 
-import cloud.hytora.node.impl.database.impl.SectionedDatabase;
+import cloud.hytora.driver.database.SectionedDatabase;
 import cloud.hytora.node.impl.database.config.DatabaseType;
-import cloud.hytora.node.impl.database.IDatabase;
-import cloud.hytora.node.impl.database.IDatabaseManager;
+import cloud.hytora.driver.database.IDatabase;
+import cloud.hytora.driver.database.IDatabaseManager;
 import cloud.hytora.node.impl.database.impl.DatabaseFile;
 import cloud.hytora.node.impl.database.impl.DatabaseMongoDB;
 import cloud.hytora.node.impl.database.impl.DatabaseMySQL;

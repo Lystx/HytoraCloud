@@ -1,13 +1,14 @@
 package cloud.hytora.driver.permission;
 
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.common.IdentityHolder;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
-public interface PermissionGroup extends PermissionEntity {
+public interface PermissionGroup extends PermissionEntity, IdentityHolder {
 
     @Nonnull
     String getName();

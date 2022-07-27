@@ -71,16 +71,6 @@ public interface CloudPlayer extends CloudOfflinePlayer, PlayerCommandSender, Se
     void update();
 
     /**
-     * The temporary properties as {@link Document} a player gets
-     * when joining
-     * These properties will always be deleted when leaving / re-joining
-     * the network (don't save anything important in these properties;
-     * only temporary stuff)
-     */
-    @Nonnull
-    Document getTemporaryProperties();
-
-    /**
      * Tries to get the {@link PermissionPlayer} of this player
      *
      * @throws ModuleNeededException if the perms-module is not loaded

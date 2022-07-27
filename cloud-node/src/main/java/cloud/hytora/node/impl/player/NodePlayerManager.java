@@ -1,5 +1,6 @@
 package cloud.hytora.node.impl.player;
 
+import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
@@ -14,12 +15,15 @@ import cloud.hytora.driver.networking.packets.player.CloudPlayerUpdatePacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.TemporaryProperties;
 import cloud.hytora.driver.player.impl.DefaultPlayerManager;
 import cloud.hytora.driver.player.impl.DefaultCloudPlayer;
+import cloud.hytora.driver.player.impl.DefaultTemporaryProperties;
 import cloud.hytora.node.NodeDriver;
-import cloud.hytora.node.impl.database.impl.SectionedDatabase;
-import cloud.hytora.node.impl.database.impl.section.DatabaseSection;
+import cloud.hytora.driver.database.SectionedDatabase;
+import cloud.hytora.driver.database.DatabaseSection;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -42,10 +46,17 @@ public class NodePlayerManager extends DefaultPlayerManager {
                             //logged in for the first time probably
 
                             cloudPlayer.setFirstLogin(System.currentTimeMillis());
-                            cloudPlayer.setLastLogin(System.currentTimeMillis());
                             cloudPlayer.setProperties(DocumentFactory.newJsonDocument());
                             cloudPlayer.saveOfflinePlayer();
                             CloudDriver.getInstance().getLogger().debug("Created DatabaseEntry for Player[name={}, uuid={}]", cloudPlayer.getName(), cloudPlayer.getUniqueId());
+                        } else {
+                            cloudPlayer.setProperties(cloudOfflinePlayer.getProperties());
+                            cloudPlayer.setFirstLogin(cloudOfflinePlayer.getFirstLogin());
+                            ((DefaultCloudPlayer)cloudPlayer).setTemporaryProperties((DefaultTemporaryProperties) cloudOfflinePlayer.getTemporaryProperties());
+
+                            cloudPlayer.setLastLogin(System.currentTimeMillis());
+                            cloudPlayer.saveOfflinePlayer();
+                            cloudPlayer.update();
                         }
                     });
 
@@ -57,10 +68,14 @@ public class NodePlayerManager extends DefaultPlayerManager {
 
         executor.registerPacketHandler((PacketHandler<CloudPlayerDisconnectPacket>) (wrapper, packet) -> {
             this.getCloudPlayer(packet.getUuid()).ifPresent(cloudPlayer -> {
+                if (cloudPlayer == null) {
+                    return;
+                }
                 CloudDriver.getInstance().getLogger().debug("Player[name={}, uuid={}] dissconnected from [proxy={}, server={}]!", cloudPlayer.getName(), cloudPlayer.getUniqueId(), cloudPlayer.getProxyServer().getName(), (cloudPlayer.getServer() == null ? "none" : cloudPlayer.getServer().getName()));
                 this.cachedCloudPlayers.remove(cloudPlayer.getUniqueId());
                 eventManager.callEventGlobally(new CloudPlayerDisconnectEvent(cloudPlayer));
                 DriverUpdatePacket.publishUpdate(NodeDriver.getInstance());
+
             });
         });
     }
@@ -77,6 +92,20 @@ public class NodePlayerManager extends DefaultPlayerManager {
         });
     }
 
+    @Override
+    public @Nullable CloudOfflinePlayer getOfflinePlayerByUniqueIdBlockingOrNull(@NotNull UUID uniqueId) {
+
+        SectionedDatabase database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
+        DatabaseSection<CloudOfflinePlayer> db = database.getSection(CloudOfflinePlayer.class);
+        return db.findById(uniqueId.toString());
+    }
+
+    @Override
+    public @NotNull Collection<CloudOfflinePlayer> getAllOfflinePlayersBlockingOrEmpty() {
+        SectionedDatabase database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
+        DatabaseSection<CloudOfflinePlayer> db = database.getSection(CloudOfflinePlayer.class);
+        return db.getAll();
+    }
 
     @Override
     public @NotNull Task<CloudOfflinePlayer> getOfflinePlayerByUniqueIdAsync(@NotNull UUID uniqueId) {
@@ -88,6 +117,15 @@ public class NodePlayerManager extends DefaultPlayerManager {
                 return db.findById(uniqueId.toString());
             }
         });
+    }
+
+
+
+    @Override
+    public @Nullable CloudOfflinePlayer getOfflinePlayerByNameBlockingOrNull(@NotNull String name) {
+        SectionedDatabase database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
+        DatabaseSection<CloudOfflinePlayer> db = database.getSection(CloudOfflinePlayer.class);
+        return db.findByMatch("name", name);
     }
 
     @Override
@@ -102,12 +140,15 @@ public class NodePlayerManager extends DefaultPlayerManager {
         });
     }
 
+
     @Override
     public void saveOfflinePlayerAsync(@NotNull CloudOfflinePlayer player) {
         Task.runAsync(() -> {
             SectionedDatabase database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
             DatabaseSection<CloudOfflinePlayer> db = database.getSection(CloudOfflinePlayer.class);
             db.upsert(player);
+
+            Logger.constantInstance().debug("Saving OfflinePlayer[name={}, uuid={}]", player.getName(), player.getUniqueId());
         });
     }
 
@@ -119,7 +160,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
     @Override
     public CloudPlayer constructPlayer(@NotNull UUID uniqueId, @NotNull String name) {
         CloudOfflinePlayer offlinePlayer = getOfflinePlayerByUniqueIdBlockingOrNull(uniqueId);
-        return offlinePlayer == null ? new DefaultCloudPlayer(uniqueId, name) : new DefaultCloudPlayer(uniqueId, name, offlinePlayer.getFirstLogin(), offlinePlayer.getLastLogin(), offlinePlayer.getProperties(), null, null);
+        return offlinePlayer == null ? new DefaultCloudPlayer(uniqueId, name) : new DefaultCloudPlayer(uniqueId, name, offlinePlayer.getFirstLogin(), offlinePlayer.getLastLogin(), null, null, offlinePlayer.getProperties(), offlinePlayer.getTemporaryProperties());
     }
 
     @Override

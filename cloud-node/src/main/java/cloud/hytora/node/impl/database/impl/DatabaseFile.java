@@ -6,7 +6,7 @@ import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.node.NodeDriver;
 
 
-import cloud.hytora.node.impl.database.IDatabase;
+import cloud.hytora.driver.database.IDatabase;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;

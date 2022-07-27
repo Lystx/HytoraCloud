@@ -6,7 +6,6 @@ import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
 import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.document.DocumentFactory;
@@ -20,7 +19,6 @@ import cloud.hytora.driver.command.sender.CommandSender;
 
 import cloud.hytora.driver.console.Screen;
 import cloud.hytora.driver.console.ScreenManager;
-import cloud.hytora.driver.console.TabCompleter;
 import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.http.impl.NettyHttpServer;
 import cloud.hytora.driver.message.ChannelMessenger;
@@ -41,7 +39,6 @@ import cloud.hytora.node.impl.module.NodeModuleManager;
 import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.PacketProvider;
-import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
 import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
 import cloud.hytora.driver.networking.packets.node.NodeCycleDataPacket;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
@@ -67,7 +64,7 @@ import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.task.bundle.DefaultTaskGroup;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
-import cloud.hytora.node.impl.database.impl.SectionedDatabase;
+import cloud.hytora.driver.database.SectionedDatabase;
 import cloud.hytora.node.impl.handler.http.V1PingRouter;
 import cloud.hytora.node.impl.handler.http.V1StatusRouter;
 import cloud.hytora.node.impl.setup.NodeRemoteSetup;
@@ -89,7 +86,7 @@ import cloud.hytora.node.impl.config.MainConfiguration;
 import cloud.hytora.driver.command.Console;
 import cloud.hytora.node.impl.config.NodeDriverStorage;
 import cloud.hytora.node.impl.database.config.DatabaseConfiguration;
-import cloud.hytora.node.impl.database.IDatabaseManager;
+import cloud.hytora.driver.database.IDatabaseManager;
 import cloud.hytora.node.impl.database.def.DefaultDatabaseManager;
 import cloud.hytora.node.service.NodeServiceTaskManager;
 import cloud.hytora.node.impl.node.HytoraNode;
@@ -109,7 +106,6 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Getter
@@ -284,6 +280,8 @@ public class NodeDriver extends CloudDriver implements Node {
         this.logger.trace("Required folders created!");
 
         this.databaseManager = new DefaultDatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType());
+
+        this.providerRegistry.upsert(IDatabaseManager.class, this.databaseManager);
 
         SectionedDatabase database = this.databaseManager.getDatabase();
         database.registerSection("players", DefaultCloudOfflinePlayer.class);

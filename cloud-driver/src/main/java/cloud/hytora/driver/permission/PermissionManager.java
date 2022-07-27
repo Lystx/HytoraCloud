@@ -77,6 +77,30 @@ public interface PermissionManager {
 	Task<PermissionGroup> getPermissionGroup(@Nonnull String name);
 
 	/**
+	 * Updates the data of the provided {@link PermissionGroup} and
+	 * syncs it all across the network
+	 *
+	 * @param group the group to update
+	 */
+	void updatePermissionGroup(PermissionGroup group);
+
+	/**
+	 * Adds and saves a new {@link PermissionGroup}
+	 * If there is already a group with this name, nothing will happen
+	 *
+	 * @param group the group to add
+	 */
+	void addPermissionGroup(PermissionGroup group);
+
+	/**
+	 * Deletes an existing {@link PermissionGroup} filtered by its name
+	 * If the group does not exist, nothing will happen
+	 *
+	 * @param name the name of the group
+	 */
+	void deletePermissionGroup(String name);
+
+	/**
 	 * Creates a new {@link PermissionPlayer} by using a {@link CloudOfflinePlayer}
 	 *
 	 * @param player the offline player instance

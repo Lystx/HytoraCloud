@@ -1,25 +1,16 @@
 package cloud.hytora.node.impl.command.impl;
 
-import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;
-import cloud.hytora.driver.player.connection.DefaultPlayerConnection;
-import cloud.hytora.driver.player.impl.DefaultCloudOfflinePlayer;
-import cloud.hytora.node.NodeDriver;
-import cloud.hytora.node.impl.database.impl.SectionedDatabase;
-import cloud.hytora.node.impl.database.impl.section.DatabaseSection;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 @Command(
         name = {"player", "players", "ps", "p"},
@@ -76,7 +67,6 @@ public class PlayerCommand {
             CloudPlayer onlinePlayer = player.asOnlinePlayer();
             sender.sendMessage("§bProxy: §7" + onlinePlayer.getProxyServer());
             sender.sendMessage("§bServer: §7" + onlinePlayer.getServer());
-            sender.sendMessage("§bOnline Properties: §7" + onlinePlayer.getTemporaryProperties().asRawJsonString());
         }
         sender.sendMessage("§8");
     }

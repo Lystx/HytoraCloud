@@ -3,6 +3,7 @@ package cloud.hytora.driver.player.impl;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
+import cloud.hytora.document.gson.adapter.ExcludeJsonField;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.exception.ModuleNeededException;
 import cloud.hytora.driver.exception.PlayerNotOnlineException;
@@ -12,6 +13,7 @@ import cloud.hytora.driver.permission.PermissionChecker;
 import cloud.hytora.driver.permission.PermissionManager;
 import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.TemporaryProperties;
 import cloud.hytora.driver.player.connection.DefaultPlayerConnection;
 import cloud.hytora.driver.player.connection.PlayerConnection;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
@@ -29,27 +31,27 @@ import java.util.UUID;
 @Setter
 public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements CloudPlayer {
 
+    @ExcludeJsonField
     private ServiceInfo server;
+    @ExcludeJsonField
     private ServiceInfo proxyServer;
+    @ExcludeJsonField
     private PlayerConnection connection;
-    private Document temporaryProperties;
 
     public DefaultCloudPlayer(UUID uuid, String name) {
         this(uuid, name, null, null);
     }
 
     public DefaultCloudPlayer(UUID uniqueId, String name, ServiceInfo server, ServiceInfo proxyServer) {
-        this(uniqueId, name, System.currentTimeMillis(), System.currentTimeMillis(), DocumentFactory.newJsonDocument(), server, proxyServer);
+        this(uniqueId, name, System.currentTimeMillis(), System.currentTimeMillis(), server, proxyServer, DocumentFactory.newJsonDocument(), new DefaultTemporaryProperties());
     }
 
-    public DefaultCloudPlayer(UUID uniqueId, String name, long firstLogin, long lastLogin, Document properties, ServiceInfo server, ServiceInfo proxyServer) {
-        super(uniqueId, name,  firstLogin, lastLogin, properties);
+    public DefaultCloudPlayer(UUID uniqueId, String name, long firstLogin, long lastLogin, ServiceInfo server, ServiceInfo proxyServer, Document properties, TemporaryProperties temporaryProperties) {
+        super(uniqueId, name,  firstLogin, lastLogin, properties, (DefaultTemporaryProperties) temporaryProperties);
         this.server = server;
         this.proxyServer = proxyServer;
 
         this.connection = new DefaultPlayerConnection(proxyServer == null ? "UNKNOWN" : proxyServer.getName(), new ProtocolAddress("127.0.0.1", -1), -1, true, false);
-        this.temporaryProperties = DocumentFactory.newJsonDocument();
-
     }
 
     @Override
@@ -78,14 +80,12 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements Clo
 
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
-
+        super.applyBuffer(state, buf);
         switch (state) {
 
             case READ:
                 this.uniqueId = buf.readUniqueId();
                 this.name = buf.readString();
-
-                this.temporaryProperties = buf.readDocument();
                 this.connection = buf.readOptionalObject(DefaultPlayerConnection.class);
 
                 String proxyName = buf.readOptionalString();
@@ -99,7 +99,6 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements Clo
                 buf.writeUniqueId(this.uniqueId);
                 buf.writeString(this.name);
 
-                buf.writeDocument(this.temporaryProperties);
                 buf.writeOptionalObject(this.connection);
 
                 buf.writeOptionalString(this.proxyServer == null ? null : this.proxyServer.getName());

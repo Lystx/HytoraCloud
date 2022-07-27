@@ -5,7 +5,7 @@ import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.bson.BsonDocument;
 import cloud.hytora.node.impl.config.MainConfiguration;
 import cloud.hytora.node.impl.database.config.DatabaseConfiguration;
-import cloud.hytora.node.impl.database.IDatabase;
+import cloud.hytora.driver.database.IDatabase;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.*;

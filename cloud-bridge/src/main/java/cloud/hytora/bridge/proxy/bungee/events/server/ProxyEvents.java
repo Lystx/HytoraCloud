@@ -43,6 +43,7 @@ public class ProxyEvents implements Listener {
 
         List<String> whitelistedPlayers = CloudDriver.getInstance().getStorage().getBundle("cloud::whitelist").toInstances(String.class);
 
+
         if (event.getConnection().getName() != null) {
             if (serviceTask.isMaintenance() && !whitelistedPlayers.contains(event.getConnection().getName())) {
                 event.setCancelReason(new TextComponent("§cThe network is currently in maintenance!\nCome back later!"));
@@ -65,7 +66,7 @@ public class ProxyEvents implements Listener {
 
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void handle(LoginEvent event) {
         PendingConnection c = event.getConnection();
         CloudDriver.getInstance().getLogger().info("Logging in Player[uuid={}, name={}]", c.getUniqueId(), c.getName());
