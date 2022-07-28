@@ -26,6 +26,7 @@ import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.packets.services.ServiceForceShutdownPacket;
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.permission.PermissionChecker;
+import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.node.console.NodeScreenManager;
 import cloud.hytora.node.impl.handler.packet.normal.*;
 import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteLoggingHandler;
@@ -159,7 +160,7 @@ public class NodeDriver extends CloudDriver implements Node {
 
 
         //setting node screen manager
-        this.providerRegistry.upsert(ScreenManager.class, new NodeScreenManager());
+        this.providerRegistry.setProvider(ScreenManager.class, new NodeScreenManager());
 
         ScreenManager screenManager = this.providerRegistry.getUnchecked(ScreenManager.class);
         screenManager.registerScreen("console", true);
@@ -197,7 +198,7 @@ public class NodeDriver extends CloudDriver implements Node {
         if (devMode) {
             this.logger.debug("DevMode is activated!");
             //in dev mode player "Lystx" has every permission
-            this.providerRegistry.upsert(PermissionChecker.class, (playerUniqueId, permission) -> playerUniqueId.toString().equalsIgnoreCase("82e8f5a2-4077-407b-af8b-e8325cad7191"));
+            this.providerRegistry.setProvider(PermissionChecker.class, (playerUniqueId, permission) -> playerUniqueId.toString().equalsIgnoreCase("82e8f5a2-4077-407b-af8b-e8325cad7191"));
         }
 
         //avoid log4j errors
@@ -281,7 +282,7 @@ public class NodeDriver extends CloudDriver implements Node {
 
         this.databaseManager = new DefaultDatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType());
 
-        this.providerRegistry.upsert(IDatabaseManager.class, this.databaseManager);
+        this.providerRegistry.setProvider(IDatabaseManager.class, this.databaseManager);
 
         SectionedDatabase database = this.databaseManager.getDatabase();
         database.registerSection("players", DefaultCloudOfflinePlayer.class);
@@ -341,6 +342,7 @@ public class NodeDriver extends CloudDriver implements Node {
         this.commandManager.registerParser(ServiceInfo.class, this.serviceManager::getServiceByNameOrNull);
         this.commandManager.registerParser(ServiceTask.class, this.serviceTaskManager::getTaskByNameOrNull);
         this.commandManager.registerParser(CloudPlayer.class, this.playerManager::getCloudPlayerByNameOrNull);
+        this.commandManager.registerParser(CloudOfflinePlayer.class, this.playerManager::getOfflinePlayerByNameBlockingOrNull);
         this.commandManager.registerParser(Node.class, this.nodeManager::getNodeByNameOrNull);
 
         this.logger.trace("Registered " + this.commandManager.getCommands().size() + " Commands & " + this.commandManager.getParsers().size() + " Parsers!");

@@ -29,4 +29,5 @@ public interface Screen {
 
     Collection<String> getAllCachedLines();
 
+    String readLineOrNull();
 }

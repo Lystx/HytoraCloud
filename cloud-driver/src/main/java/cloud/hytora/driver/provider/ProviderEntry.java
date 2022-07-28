@@ -2,7 +2,7 @@
 package cloud.hytora.driver.provider;
 
 /**
- * Represents an entry you insert when using {@link ProviderRegistry#upsert(Class, Object, boolean, boolean)}
+ * Represents an entry you insert when using {@link ProviderRegistry#setProvider(Class, Object, boolean, boolean)}
  * To get information about the created providers you created
  *
  * @param <T> the generic type of the provider of this entry

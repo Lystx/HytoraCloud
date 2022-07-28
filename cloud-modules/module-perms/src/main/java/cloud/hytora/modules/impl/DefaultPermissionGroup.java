@@ -8,14 +8,17 @@ import cloud.hytora.driver.permission.Permission;
 import cloud.hytora.driver.permission.PermissionGroup;
 import cloud.hytora.driver.permission.PermissionManager;
 import lombok.Getter;
+import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
-@Getter
+@Getter @Setter
 public class DefaultPermissionGroup implements PermissionGroup {
 
     /**
@@ -66,13 +69,13 @@ public class DefaultPermissionGroup implements PermissionGroup {
     /**
      * The cached permissions of this group
      */
-    private Map<String, Permission> permissions;
+    private Map<String, Long> permissions;
 
     public DefaultPermissionGroup() {
         this.permissions = new HashMap<>();
     }
 
-    public DefaultPermissionGroup(String name, String color, String chatColor, String namePrefix, String prefix, String suffix, int sortId, boolean defaultGroup, Collection<String> inheritedGroups, Map<String, Permission> permissions) {
+    public DefaultPermissionGroup(String name, String color, String chatColor, String namePrefix, String prefix, String suffix, int sortId, boolean defaultGroup, Collection<String> inheritedGroups, Map<String, Long> permissions) {
         this.name = name;
         this.color = color;
         this.chatColor = chatColor;
@@ -122,7 +125,7 @@ public class DefaultPermissionGroup implements PermissionGroup {
 
     @Override
     public void addPermission(Permission permission) {
-        this.permissions.put(permission.getPermission(), permission);
+        this.permissions.put(permission.getPermission(), permission.getExpirationDate());
     }
 
     @Override
@@ -132,17 +135,25 @@ public class DefaultPermissionGroup implements PermissionGroup {
 
     @Override
     public Collection<Permission> getPermissions() {
-        return this.permissions.values();
+        return this.permissions.keySet().stream().map(permission -> {
+            long timeOut = permissions.get(permission);
+
+            return Permission.of(permission, timeOut);
+        }).collect(Collectors.toList());
     }
 
     @Override
     public Task<Permission> getPermission(String permission) {
-        return Task.callAsync(() -> this.permissions.get(permission));
+        return Task.callAsync(() -> {
+            Long timeOut = permissions.get(permission);
+            return timeOut == null ? null : Permission.of(permission, timeOut);
+        });
     }
 
     @Override
     public Permission getPermissionOrNull(String permission) {
-        return this.permissions.get(permission);
+        Long timeOut = permissions.get(permission);
+        return timeOut == null ? null : Permission.of(permission, timeOut);
     }
 
     @Override

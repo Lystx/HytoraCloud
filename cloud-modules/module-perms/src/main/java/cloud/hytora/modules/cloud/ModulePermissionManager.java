@@ -16,9 +16,12 @@ import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Getter
 public class ModulePermissionManager extends DefaultPermissionManager {
@@ -27,8 +30,6 @@ public class ModulePermissionManager extends DefaultPermissionManager {
 
     public ModulePermissionManager() {
         this.cachedPermissionGroups = new ArrayList<>();
-
-        this.loadGroups();
     }
 
     @NotNull
@@ -37,11 +38,14 @@ public class ModulePermissionManager extends DefaultPermissionManager {
         return cachedPermissionGroups;
     }
 
-    private void loadGroups() {
+    public void loadGroups() {
         SectionedDatabase database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
         DatabaseSection<DefaultPermissionGroup> section = database.getSection(DefaultPermissionGroup.class);
         this.cachedPermissionGroups.clear();
         this.cachedPermissionGroups.addAll(section.getAll());
+
+
+        CloudDriver.getInstance().getLogger().info("Perms-Module loaded {} PermissionGroups!", this.cachedPermissionGroups.size());
     }
 
 
@@ -74,6 +78,7 @@ public class ModulePermissionManager extends DefaultPermissionManager {
         return this.cachedPermissionGroups.stream().filter(g -> g.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
     }
 
+
     @NotNull
     @Override
     public Task<PermissionGroup> getPermissionGroup(@NotNull String name) {
@@ -83,27 +88,48 @@ public class ModulePermissionManager extends DefaultPermissionManager {
     @Override
     public void updatePermissionGroup(PermissionGroup group) {
         PermissionGroup oldGroup = this.getPermissionGroupByNameOrNull(group.getName());
-        if (oldGroup == null) {
-            return;
-        }
         SectionedDatabase database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
         DatabaseSection<DefaultPermissionGroup> section = database.getSection(DefaultPermissionGroup.class);
 
-        int index = this.cachedPermissionGroups.indexOf(oldGroup);
-        this.cachedPermissionGroups.set(index, group);
-
-        section.update(group.getName(), (DefaultPermissionGroup) group);
+        if (oldGroup == null) {
+            this.cachedPermissionGroups.add(group);
+        } else {
+            int index = this.cachedPermissionGroups.indexOf(oldGroup);
+            this.cachedPermissionGroups.set(index, group);
+        }
+        section.upsert(group.getName(), (DefaultPermissionGroup) group);
     }
 
-    @NotNull
     @Override
-    public PermissionPlayer getPlayer(@NotNull CloudOfflinePlayer player) {
+    public void updatePermissionPlayer(PermissionPlayer player) {
+        if (player.getPermissionGroups().isEmpty()) {
+            for (PermissionGroup group : this.getAllCachedPermissionGroups().stream().filter(PermissionGroup::isDefaultGroup).collect(Collectors.toList())) {
+                player.addPermissionGroup(group);
+            }
+
+        }
         SectionedDatabase database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
         DatabaseSection<DefaultPermissionPlayer> section = database.getSection(DefaultPermissionPlayer.class);
 
-        DefaultPermissionPlayer foundPlayer = section.findById(player.getMainIdentity());
-        foundPlayer.setOfflinePlayer(player);
+        section.upsert(player.getUniqueId().toString(), (DefaultPermissionPlayer) player);
+    }
 
-        return foundPlayer;
+
+    @Nullable
+    @Override
+    public PermissionPlayer getPlayerByNameOrNull(@NotNull String name) {
+        SectionedDatabase database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
+        DatabaseSection<DefaultPermissionPlayer> section = database.getSection(DefaultPermissionPlayer.class);
+
+        return section.findByMatch("name", name);
+    }
+
+    @javax.annotation.Nullable
+    @Override
+    public PermissionPlayer getPlayerByUniqueIdOrNull(@NotNull UUID uniqueId) {
+        SectionedDatabase database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
+        DatabaseSection<DefaultPermissionPlayer> section = database.getSection(DefaultPermissionPlayer.class);
+
+        return section.findById(uniqueId.toString());
     }
 }

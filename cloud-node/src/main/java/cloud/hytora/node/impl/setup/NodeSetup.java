@@ -3,7 +3,6 @@ package cloud.hytora.node.impl.setup;
 import cloud.hytora.driver.command.Console;
 import cloud.hytora.driver.setup.Setup;
 import cloud.hytora.driver.setup.annotations.*;
-import cloud.hytora.driver.setup.suggesters.BooleanSuggester;
 import cloud.hytora.node.impl.database.config.DatabaseType;
 import lombok.Getter;
 
@@ -35,7 +34,7 @@ public class NodeSetup extends Setup<NodeSetup> {
     private DatabaseType databaseType;
 
     public NodeSetup(Console console) {
-        super(console);
+        super();
     }
 
     @Override

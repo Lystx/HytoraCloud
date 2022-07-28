@@ -20,7 +20,7 @@ public class NodeRemoteSetup extends Setup<NodeRemoteSetup> {
     private String authKey;
 
     public NodeRemoteSetup(Console console) {
-        super(console);
+        super();
     }
 
     @Override

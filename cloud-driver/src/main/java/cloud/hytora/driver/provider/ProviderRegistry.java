@@ -19,22 +19,22 @@ public interface ProviderRegistry {
      * @param <T> the generic of the provider (of any type)
      * @throws ProviderImmutableException if a provider already exists and is immutable (not modifiable)
      */
-    <T> void upsert(Class<T> service, T provider, boolean immutable, boolean needsReplacement) throws ProviderImmutableException;
+    <T> Task<T> setProvider(Class<T> service, T provider, boolean immutable, boolean needsReplacement) throws ProviderImmutableException;
 
     /**
-     * Helper-Method for {@link ProviderRegistry#upsert(Class, Object, boolean, boolean)} but it sets immutable to false
+     * Helper-Method for {@link ProviderRegistry#setProvider(Class, Object, boolean, boolean)} but it sets immutable to false
      *
      * @param service the class of the service (interface) you want to set the wrapper for
      * @param provider the provider instance you want to set
      * @param <T> the generic of the provider (of any type)
      * @throws ProviderImmutableException if a provider already exists and is immutable (not modifiable)
      */
-    default <T> void upsert(Class<T> service, T provider) throws ProviderImmutableException {
-        this.upsert(service, provider, false);
+    default <T> Task<T> setProvider(Class<T> service, T provider) throws ProviderImmutableException {
+        return this.setProvider(service, provider, false);
     }
 
     /**
-     * Helper-Method for {@link ProviderRegistry#upsert(Class, Object, boolean, boolean)} but it sets needsReplacement to false
+     * Helper-Method for {@link ProviderRegistry#setProvider(Class, Object, boolean, boolean)} but it sets needsReplacement to false
      *
      * @param service the class of the service (interface) you want to set the wrapper for
      * @param provider the provider instance you want to set
@@ -42,8 +42,8 @@ public interface ProviderRegistry {
      * @param <T> the generic of the provider (of any type)
      * @throws ProviderImmutableException if a provider already exists and is immutable (not modifiable)
      */
-    default <T> void upsert(Class<T> service, T provider, boolean immutable) throws ProviderImmutableException {
-        this.upsert(service, provider, immutable, false);
+    default <T> Task<T> setProvider(Class<T> service, T provider, boolean immutable) throws ProviderImmutableException {
+        return this.setProvider(service, provider, immutable, false);
     }
 
     /**

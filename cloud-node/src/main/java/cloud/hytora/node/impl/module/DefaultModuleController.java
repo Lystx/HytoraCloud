@@ -281,6 +281,7 @@ public class DefaultModuleController implements ModuleController {
             this.unregisterClassLoader.accept(classLoader);
 
             try {
+                state = ModuleState.DISABLED;
                 if (this.moduleConfig.getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
                     this.callTasks(this.state);
                 }

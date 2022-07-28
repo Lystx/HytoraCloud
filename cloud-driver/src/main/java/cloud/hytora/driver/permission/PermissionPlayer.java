@@ -21,25 +21,25 @@ import java.util.concurrent.TimeUnit;
 public interface PermissionPlayer extends PermissionEntity {
 
 
-	static PermissionPlayer ofPlayer(CloudOfflinePlayer player) {
-		return CloudDriver.getInstance().getProviderRegistry().get(PermissionManager.class).mapOrElse(pm -> pm.getPlayer(player), () -> null);
+	static PermissionPlayer byName(String name) {
+		return CloudDriver
+				.getInstance()
+				.getProviderRegistry()
+				.get(PermissionManager.class)
+				.mapOrElse(pm -> pm.getPlayerByNameOrNull(name), () -> null);
 	}
 
-	static PermissionPlayer ofOfflineByName(String name) {
-		return ofPlayer(CloudDriver.getInstance().getPlayerManager().getOfflinePlayerByNameBlockingOrNull(name));
+	static PermissionPlayer byUniqueId(UUID uniqueID) {
+		return CloudDriver
+				.getInstance()
+				.getProviderRegistry()
+				.get(PermissionManager.class)
+				.mapOrElse(pm -> pm.getPlayerByUniqueIdOrNull(uniqueID), () -> null);
 	}
 
-	static PermissionPlayer ofOnlineByName(String name) {
-		return ofPlayer(CloudDriver.getInstance().getPlayerManager().getCloudPlayerByNameOrNull(name));
-	}
+	String getName();
 
-	static PermissionPlayer ofOfflineByUniqueId(UUID uniqueID) {
-		return ofPlayer(CloudDriver.getInstance().getPlayerManager().getOfflinePlayerByUniqueIdBlockingOrNull(uniqueID));
-	}
-
-	static PermissionPlayer ofOnlineByUniqueID(UUID uniqueID) {
-		return ofPlayer(CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(uniqueID));
-	}
+	UUID getUniqueId();
 
 	/**
 	 * Tries to get the {@link CloudPlayer} player of this permission
@@ -67,6 +67,13 @@ public interface PermissionPlayer extends PermissionEntity {
 	Collection<PermissionGroup> getPermissionGroups();
 
 	/**
+	 * Checks if this player is in a specific {@link PermissionGroup}
+	 *
+	 * @param name the name of the group to check
+	 */
+	boolean isInPermissionGroup(String name);
+
+	/**
 	 * Returns the highest {@link PermissionGroup} sorted by {@link PermissionGroup#getSortId()}<br>
 	 * Might be null if the player is in no groups
 	 *
@@ -92,6 +99,11 @@ public interface PermissionPlayer extends PermissionEntity {
 	 * @param value the value for the unit
 	 */
 	void addPermissionGroup(@Nonnull PermissionGroup group, TimeUnit unit, long value);
+
+	/**
+	 * Checks for expired groups & permissions
+	 */
+	void checkForExpiredValues();
 
 	/**
 	 * Tries to remove a certain {@link PermissionGroup} from this player if he owns it<br>

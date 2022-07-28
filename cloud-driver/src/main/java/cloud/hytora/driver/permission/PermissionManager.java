@@ -101,13 +101,28 @@ public interface PermissionManager {
 	void deletePermissionGroup(String name);
 
 	/**
-	 * Creates a new {@link PermissionPlayer} by using a {@link CloudOfflinePlayer}
+	 * Creates a new {@link PermissionPlayer} by searching for provided uuid
 	 *
-	 * @param player the offline player instance
+	 * @param uniqueId the uuid of player
 	 * @return created player instance
 	 */
-	@Nonnull
-	PermissionPlayer getPlayer(@Nonnull CloudOfflinePlayer player);
+	@Nullable
+	PermissionPlayer getPlayerByUniqueIdOrNull(@Nonnull UUID uniqueId);
 
+	/**
+	 * Creates a new {@link PermissionPlayer} by searching for provided uuid
+	 *
+	 * @param uniqueId the uuid of player
+	 * @return created player instance
+	 */
+	@Nullable
+	PermissionPlayer getPlayerByNameOrNull(@Nonnull String name);
+
+	/**
+	 * Updates a {@link PermissionPlayer} in database
+	 *
+	 * @param player the player to updat
+	 */
+	void updatePermissionPlayer(PermissionPlayer player);
 
 }

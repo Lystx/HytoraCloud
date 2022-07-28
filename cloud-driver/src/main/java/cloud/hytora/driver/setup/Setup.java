@@ -66,11 +66,6 @@ public abstract class Setup<T extends Setup<?>> {
     private final Map<Field, SetupEntry> map;
 
     /**
-     * The console to display questions
-     */
-    private final Console console;
-
-    /**
      * The current setup part
      */
     private int current;
@@ -117,9 +112,7 @@ public abstract class Setup<T extends Setup<?>> {
         return SetupHeaderBehaviour.CLEAR_SCREEN_AFTER;
     }
 
-    public Setup(Console console) {
-
-        this.console = console;
+    public Setup() {
 
         this.cancelled = false;
         this.exitAfterAnswer = false;
@@ -164,7 +157,7 @@ public abstract class Setup<T extends Setup<?>> {
         //While current id is in range of map-cache
         while (this.current < this.map.size() + 1) {
             //Reading input and executing Setup#next(String)
-            String line = this.console.readLineOrNull();
+            String line = this.getSetupScreen().readLineOrNull();
             if (line != null) {
                 executeInput(line);
             }
@@ -175,7 +168,6 @@ public abstract class Setup<T extends Setup<?>> {
 
     @SuppressWarnings("unchecked")
     private void exit(boolean success) {
-
         ScreenManager unchecked = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
         unchecked.leaveCurrentScreen();
         unchecked.unregisterScreen(this.uniqueSetupName);
@@ -379,7 +371,7 @@ public abstract class Setup<T extends Setup<?>> {
 
         if (entry.getSuggestedAnswer() != null) {
             String value = entry.getSuggestedAnswer().value();
-            this.console.setCommandInputValue(value);
+            //this.console.setCommandInputValue(value);
         }
 
     }

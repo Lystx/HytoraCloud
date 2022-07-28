@@ -70,7 +70,7 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements Clo
         if (task.isNull()) {
             throw new ModuleNeededException("Permission Module");
         }
-        return task.get().getPlayer(this);
+        return task.get().getPlayerByUniqueIdOrNull(this.uniqueId);
     }
 
     @Override

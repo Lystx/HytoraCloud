@@ -20,6 +20,7 @@ import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -46,6 +47,7 @@ public abstract class DefaultCommandManager implements CommandManager {
         this.registerParser(short.class, Short::parseShort);
         this.registerParser(float.class, Float::parseFloat);
         this.registerParser(boolean.class, Boolean::valueOf);
+        this.registerParser(TimeUnit.class, TimeUnit::valueOf);
     }
 
     @Override

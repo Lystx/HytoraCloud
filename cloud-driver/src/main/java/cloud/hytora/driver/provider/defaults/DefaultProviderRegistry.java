@@ -21,7 +21,7 @@ public class DefaultProviderRegistry implements ProviderRegistry {
     }
 
     @Override
-    public <T> void upsert(Class<T> service, T provider, boolean immutable, boolean needsReplacement) throws ProviderImmutableException {
+    public <T> Task<T> setProvider(Class<T> service, T provider, boolean immutable, boolean needsReplacement) throws ProviderImmutableException {
         ProviderEntry<?> current = this.entries.get(service);
         if (current != null && current.isImmutable()) {
             throw new ProviderImmutableException(service);
@@ -31,6 +31,7 @@ public class DefaultProviderRegistry implements ProviderRegistry {
             CloudDriver.getInstance().getEventManager().registerListener(provider);
         }
         this.entries.put(service, new DefaultProviderEntry<>(service, provider, immutable, needsReplacement));
+        return Task.build(provider);
     }
 
     

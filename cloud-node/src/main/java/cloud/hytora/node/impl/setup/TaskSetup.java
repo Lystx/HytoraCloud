@@ -76,7 +76,7 @@ public class TaskSetup extends Setup<TaskSetup> {
     private String fallbackPermission;
 
     public TaskSetup(Console console) {
-        super(console);
+        super();
     }
 
     @Override

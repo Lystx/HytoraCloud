@@ -1,115 +1,234 @@
 package cloud.hytora.modules.impl;
 
 import cloud.hytora.common.task.Task;
-import cloud.hytora.document.gson.adapter.ExcludeJsonField;
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.permission.Permission;
 import cloud.hytora.driver.permission.PermissionGroup;
+import cloud.hytora.driver.permission.PermissionManager;
 import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.CloudPlayer;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Getter
 @NoArgsConstructor
 public class DefaultPermissionPlayer implements PermissionPlayer {
 
+    private String name;
+    private UUID uniqueId;
+    private Map<String, DefaultPermission> permissions; //<Name, Instance>
 
-    @Setter @ExcludeJsonField
-    private CloudOfflinePlayer offlinePlayer;
+    private Map<String, Long> groups; //<Name, TimeOut>
 
+    public DefaultPermissionPlayer(String name, UUID uniqueId) {
+        this.name = name;
+        this.uniqueId = uniqueId;
+
+        this.permissions = new HashMap<>();
+        this.groups =  new HashMap<>();
+
+    }
 
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
 
+        switch (state) {
+            case READ:
+                name = buf.readString();
+                uniqueId = buf.readUniqueId();
+
+                permissions = new HashMap<>();
+                for (DefaultPermission defaultPermission : buf.readObjectCollection(DefaultPermission.class)) {
+                    addPermission(defaultPermission);
+                }
+                int size = buf.readInt();
+                this.groups = new HashMap<>();
+                for (int i = 0; i < size; i++) {
+                    String name = buf.readString();
+                    long expirationDate = buf.readLong();
+                    this.groups.put(name, expirationDate);
+                }
+                break;
+
+            case WRITE:
+                buf.writeString(name);
+                buf.writeUniqueId(uniqueId);
+                buf.writeObjectCollection(permissions.values());
+
+                buf.writeInt(groups.size());
+                for (String name : groups.keySet()) {
+                    buf.writeString(name);
+                    buf.writeLong(groups.get(name));
+                }
+
+                break;
+        }
     }
 
     @Override
-    public void addPermission(Permission permission) {
+    public void checkForExpiredValues() {
+        boolean modifiedGroups = this.testGroups();
+        boolean modifiedPerms = this.testPerms();
 
+        if (modifiedGroups || modifiedPerms) {
+            this.update();
+        }
+    }
+
+    public boolean testGroups() {
+        long currentTime = System.currentTimeMillis();
+        int sizeBefore = groups.size();
+        for (String groupName : groups.keySet()) {
+            long timeOut = groups.get(groupName);
+            if (timeOut != -1 && currentTime > timeOut || CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).getPlayerByNameOrNull(groupName) == null) {
+                groups.remove(groupName);
+            }
+        }
+        if (sizeBefore != groups.size()) CloudDriver.getInstance().getLogger().trace("Removed expired groups from {}", this.getName());
+        return sizeBefore != groups.size();
+    }
+
+
+    public boolean testPerms() {
+        int sizeBefore = permissions.size();
+        for (String permission : permissions.keySet()) {
+            DefaultPermission dp = permissions.get(permission);
+            if (dp.hasExpired()) {
+                permissions.remove(permission);
+            }
+        }
+        if (sizeBefore != permissions.size()) CloudDriver.getInstance().getLogger().trace("Removed expired perms from {}", this.getName());
+        return sizeBefore != permissions.size();
+    }
+
+
+    @Override
+    public void addPermission(Permission permission) {
+        this.permissions.put(permission.getPermission(), (DefaultPermission) permission);
     }
 
     @Override
     public void removePermission(Permission permission) {
-
+        this.permissions.remove(permission.getPermission());
     }
 
     @Override
     public Collection<Permission> getPermissions() {
-        return null;
+        this.checkForExpiredValues();
+        return this.permissions.values().stream().map(p -> (Permission)p).collect(Collectors.toList());
     }
 
     @Override
     public Task<Permission> getPermission(String permission) {
-        return null;
+        this.checkForExpiredValues();
+        return Task.callAsync(() -> this.permissions.get(permission));
     }
 
     @Override
     public Permission getPermissionOrNull(String permission) {
-        return null;
+        this.checkForExpiredValues();
+        return this.permissions.get(permission);
     }
 
     @Override
     public boolean hasPermission(String permission) {
-        return false;
+        this.checkForExpiredValues();
+        Permission perm = this.getPermissionOrNull(permission);
+        if (perm == null) {
+            for (PermissionGroup group : getPermissionGroups()) { // TODO: 27.07.2022 check construct here
+                if (group.hasPermission(permission)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        if (perm.hasExpired()) { //permission has expired ==> removing it and updating
+            this.removePermission(perm);
+            this.update();
+            return false;
+        }
+        return true;
     }
 
     @Override
-    public boolean hasPermission(Permission permission) {
-        return false;
-    }
+    public boolean hasPermission(Permission permission) { // TODO: 27.07.2022 check this
 
+        this.checkForExpiredValues();
+        if (permission.hasExpired()) { //permission has expired ==> removing it and updating
+            this.removePermission(permission);
+            this.update();
+            return false;
+        }
+        if (this.getPermission(permission.getPermission()).isPresent()) {
+            return true;
+        } else {
+            for (PermissionGroup group : getPermissionGroups()) { // TODO: 27.07.2022 check construct here
+                if (group.hasPermission(permission)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
     @Override
     public void update() {
-
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).updatePermissionPlayer(this);
     }
 
     @Nullable
     @Override
     public CloudPlayer toOnlinePlayer() {
-        return null;
+        return CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(uniqueId);
     }
 
     @NotNull
     @Override
     public CloudOfflinePlayer toOfflinePlayer() {
-        return null;
+        return CloudDriver.getInstance().getPlayerManager().getOfflinePlayerByUniqueIdBlockingOrNull(uniqueId);
     }
 
     @NotNull
     @Override
     public Collection<PermissionGroup> getPermissionGroups() {
-        return null;
+        this.checkForExpiredValues();
+        return this.groups.keySet().stream().map(s -> CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).getPermissionGroupByNameOrNull(s)).collect(Collectors.toList());
     }
 
     @Nullable
     @Override
     public PermissionGroup getHighestGroup() {
-        return null;
+        this.checkForExpiredValues();
+        return getPermissionGroups().stream().min(Comparator.comparingInt(PermissionGroup::getSortId)).orElse(null);
+    }
+
+    @Override
+    public boolean isInPermissionGroup(String name) {
+        this.checkForExpiredValues();
+        return groups.get(name) != null;
     }
 
     @Override
     public void addPermissionGroup(@NotNull PermissionGroup group) {
-
+        this.groups.put(group.getName(), -1L);
     }
 
     @Override
     public void addPermissionGroup(@NotNull PermissionGroup group, TimeUnit unit, long value) {
-
+        this.groups.put(group.getName(), (System.currentTimeMillis() + unit.toMillis(value)));
     }
 
     @Override
     public void removePermissionGroup(String groupName) {
-
+        this.groups.remove(groupName);
     }
 }

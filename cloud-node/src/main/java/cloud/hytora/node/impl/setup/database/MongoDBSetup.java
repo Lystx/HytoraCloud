@@ -30,7 +30,7 @@ public class MongoDBSetup extends Setup<MongoDBSetup> {
     private String authDatabase;
 
     public MongoDBSetup(Console console) {
-        super(console);
+        super();
     }
 
 

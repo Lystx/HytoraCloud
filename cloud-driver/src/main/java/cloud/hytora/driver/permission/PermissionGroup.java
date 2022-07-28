@@ -13,24 +13,41 @@ public interface PermissionGroup extends PermissionEntity, IdentityHolder {
     @Nonnull
     String getName();
 
+    void setName(String name);
+
     @Nonnull
     String getColor();
+
+    void setColor(String color);
 
     @Nonnull
     String getChatColor();
 
+    void setChatColor(String chatColor);
+
     @Nonnull
     String getNamePrefix();
+
+    void setNamePrefix(String namePrefix);
 
     @Nonnull
     String getPrefix();
 
+    void setPrefix(String prefix);
+
     @Nonnull
     String getSuffix();
 
+
+    void setSuffix(String suffix);
+
     int getSortId();
 
+    void setSortId(int sortId);
+
     boolean isDefaultGroup();
+
+    void setDefaultGroup(boolean defaultGroup);
 
     @Nonnull
     Collection<String> getInheritedGroups();

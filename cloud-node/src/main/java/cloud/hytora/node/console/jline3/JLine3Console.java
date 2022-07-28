@@ -7,7 +7,7 @@ import cloud.hytora.driver.console.Screen;
 import cloud.hytora.driver.console.ScreenManager;
 import cloud.hytora.node.console.ColorTranslator;
 import cloud.hytora.driver.command.Console;
-import cloud.hytora.driver.setup.Setup;
+import cloud.hytora.node.console.ConsoleReadThread;
 import lombok.Getter;
 import lombok.Setter;
 import org.fusesource.jansi.Ansi;
@@ -24,7 +24,6 @@ import javax.annotation.Nonnull;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 @Getter
@@ -170,7 +169,7 @@ public class JLine3Console implements Console {
     }
 
     @Nonnull
-    protected LineReader getLineReader() {
+    public LineReader getLineReader() {
         return lineReader;
     }
 

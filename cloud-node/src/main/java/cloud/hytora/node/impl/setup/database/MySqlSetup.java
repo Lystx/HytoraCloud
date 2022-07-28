@@ -27,7 +27,7 @@ public class MySqlSetup extends Setup<MySqlSetup> {
     private String databaseName;
 
     public MySqlSetup(Console console) {
-        super(console);
+        super();
     }
 
 

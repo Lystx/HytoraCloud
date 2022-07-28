@@ -7,6 +7,7 @@ import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.console.Screen;
 import cloud.hytora.driver.console.ScreenManager;
 import cloud.hytora.driver.console.TabCompleter;
+import cloud.hytora.node.NodeDriver;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
@@ -70,6 +71,11 @@ public class NodeScreen implements Screen {
     @Override
     public void clearCache() {
         this.allCachedLines.clear();
+    }
+
+    @Override
+    public String readLineOrNull() {
+        return NodeDriver.getInstance().getConsole().readLineOrNull();
     }
 
 }
