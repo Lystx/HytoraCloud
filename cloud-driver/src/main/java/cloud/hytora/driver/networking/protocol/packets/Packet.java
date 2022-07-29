@@ -65,4 +65,8 @@ public abstract class Packet implements Bufferable {
             return null;
         });
     }
+
+    public Task<BufferedResponse> publishAsQuery() {
+        return CloudDriver.getInstance().getExecutor().getPacketChannel().prepareSingleQuery().execute(this);
+    }
 }

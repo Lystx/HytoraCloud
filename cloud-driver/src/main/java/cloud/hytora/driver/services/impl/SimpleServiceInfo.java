@@ -52,7 +52,6 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
     private String motd;
 
     private Process process;
-    private ProcessResult processResult;
     private File workingDirectory;
 
     private ServiceState serviceState = ServiceState.PREPARED;

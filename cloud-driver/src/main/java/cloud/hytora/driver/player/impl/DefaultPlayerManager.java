@@ -38,7 +38,9 @@ public abstract class DefaultPlayerManager implements PlayerManager {
     public DefaultPlayerManager(EventManager eventManager) {
 
         AdvancedNetworkExecutor executor = CloudDriver.getInstance().getExecutor();
-
+        if (executor == null) {
+            return;
+        }
         executor.registerPacketHandler((PacketHandler<CloudPlayerUpdatePacket>) (wrapper, packet) -> {
 
             CloudPlayer player = packet.getPlayer();

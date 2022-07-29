@@ -41,12 +41,6 @@ public class MySqlSetup extends Setup<MySqlSetup> {
         return true;
     }
 
-    @Override
-    public SetupHeaderBehaviour headerBehaviour() {
-        return SetupHeaderBehaviour.RESTORE_PREVIOUS_LINES;
-    }
-
-
     public static class Checker implements BiSupplier<String, Boolean> {
 
         @Override

@@ -7,6 +7,7 @@ import cloud.hytora.node.NodeDriver;
 
 
 import cloud.hytora.driver.database.IDatabase;
+import cloud.hytora.node.impl.database.config.DatabaseConfiguration;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -21,6 +22,10 @@ public class DatabaseFile implements IDatabase {
     private final String fileExtension = ".json";
 
     public DatabaseFile() {
+    }
+
+    public DatabaseFile(DatabaseConfiguration configuration) {
+
     }
 
     @Override

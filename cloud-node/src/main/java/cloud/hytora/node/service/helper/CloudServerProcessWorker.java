@@ -13,6 +13,7 @@ import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.controller.base.ModuleConfig;
 import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.node.config.JavaVersion;
+import cloud.hytora.driver.services.impl.SimpleServiceInfo;
 import cloud.hytora.driver.services.task.TaskDownloadEntry;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
@@ -144,9 +145,12 @@ public class CloudServerProcessWorker {
                 .start();
 
         Process process = result.getProcess();
-        service.asCloudServer().setProcess(process);
-        service.asCloudServer().setWorkingDirectory(folder);
-        task.setResult(service);
+
+        SimpleServiceInfo serviceInfo = (SimpleServiceInfo)service;
+        serviceInfo.setProcess(process);
+        serviceInfo.setWorkingDirectory(folder);
+
+        task.setResult(serviceInfo);
 
         return task;
     }

@@ -5,7 +5,9 @@ import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
 import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.misc.FileUtils;
+import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.common.misc.StringUtils;
+import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.document.DocumentFactory;
@@ -27,6 +29,11 @@ import cloud.hytora.driver.networking.packets.services.ServiceForceShutdownPacke
 import cloud.hytora.driver.networking.protocol.packets.Packet;
 import cloud.hytora.driver.permission.PermissionChecker;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
+import cloud.hytora.driver.player.executor.PlayerExecutor;
+import cloud.hytora.driver.services.fallback.SimpleFallback;
+import cloud.hytora.driver.services.template.def.CloudTemplate;
+import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
+import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 import cloud.hytora.node.console.NodeScreenManager;
 import cloud.hytora.node.impl.handler.packet.normal.*;
 import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteLoggingHandler;
@@ -184,7 +191,7 @@ public class NodeDriver extends CloudDriver implements Node {
         //loading console
         this.console.addInputHandler(s -> CloudDriver.getInstance().getCommandManager().executeCommand(CloudDriver.getInstance().getCommandSender(), s));
 
-        this.commandSender = new DefaultCommandSender(this.getConfig().getNodeName(), this.console).function((ExceptionallyConsumer<String>) s -> console.forceWrite(ColoredMessageFormatter.format(new LogEntry(Instant.now(), "node", s, LogLevel.INFO, null)))).forceFunction((ExceptionallyConsumer<String>) console::forceWrite);
+        this.commandSender = new DefaultCommandSender(this.getConfig().getNodeName(), this.console).forceFunction((ExceptionallyConsumer<String>) s -> console.forceWrite(ColoredMessageFormatter.format(new LogEntry(Instant.now(), "node", s, LogLevel.INFO, null)))).function((ExceptionallyConsumer<String>) console::writeLine);
         this.commandManager = new NodeCommandManager();
 
         //checking if setup required
@@ -194,6 +201,8 @@ public class NodeDriver extends CloudDriver implements Node {
         } else {
             this.logger.trace("Setup already done ==> Skipping...");
         }
+
+        this.commandManager.setActive(true);
 
         if (devMode) {
             this.logger.debug("DevMode is activated!");
@@ -280,7 +289,7 @@ public class NodeDriver extends CloudDriver implements Node {
         NodeDriver.SERVICE_DIR_DYNAMIC.mkdirs();
         this.logger.trace("Required folders created!");
 
-        this.databaseManager = new DefaultDatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType());
+        this.databaseManager = new DefaultDatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType(), MainConfiguration.getInstance().getDatabaseConfiguration());
 
         this.providerRegistry.setProvider(IDatabaseManager.class, this.databaseManager);
 
@@ -427,10 +436,9 @@ public class NodeDriver extends CloudDriver implements Node {
     }
 
     private void startSetup() {
-        new NodeSetup(NodeDriver.getInstance().getConsole()).start((setup, setupControlState) -> {
+        new NodeSetup().start((setup, setupControlState) -> {
 
             if (setupControlState != SetupControlState.FINISHED) return;
-
             switch (setup.getDatabaseType()) {
                 case FILE:
                     initConfigs(setup, null, null);
@@ -521,6 +529,67 @@ public class NodeDriver extends CloudDriver implements Node {
         configManager.setConfig(config);
         configManager.save();
 
+        if (setup.isDefaultTasks()) {
+
+            String[] args = new String[]{
+                    "-XX:+UseG1GC",
+                    "-XX:+ParallelRefProcEnabled",
+                    "-XX:MaxGCPauseMillis=200",
+                    "-XX:+UnlockExperimentalVMOptions",
+                    "-XX:+DisableExplicitGC",
+                    "-XX:+AlwaysPreTouch",
+                    "-XX:G1NewSizePercent=30",
+                    "-XX:G1MaxNewSizePercent=40",
+                    "-XX:G1HeapRegionSize=8M",
+                    "-XX:G1ReservePercent=20",
+                    "-XX:G1HeapWastePercent=5",
+                    "-XX:G1MixedGCCountTarget=4",
+                    "-XX:InitiatingHeapOccupancyPercent=15",
+                    "-XX:G1MixedGCLiveThresholdPercent=90",
+                    "-XX:G1RSetUpdatingPauseTimePercent=5",
+                    "-XX:SurvivorRatio=32",
+                    "-XX:+PerfDisableSharedMem",
+                    "-XX:MaxTenuringThreshold=1",
+                    "-Dusing.aikars.flags=https://mcflags.emc.gs",
+                    "-Daikars.new.flags=true",
+                    "-XX:-UseAdaptiveSizePolicy",
+                    "-XX:CompileThreshold=100",
+                    "-Dio.netty.recycler.maxCapacity=0",
+                    "-Dio.netty.recycler.maxCapacity.default=0",
+                    "-Djline.terminal=jline.UnsupportedTerminal"
+            };
+
+            this.databaseManager = new DefaultDatabaseManager(databaseType, new DatabaseConfiguration(databaseType, databaseHost, databasePort, databaseName, authDatabase, databaseUser, databasePassword));
+
+            SectionedDatabase database = this.databaseManager.getDatabase();
+            database.registerSection("players", DefaultCloudOfflinePlayer.class);
+            database.registerSection("tasks", DefaultServiceTask.class);
+            database.registerSection("groups", DefaultTaskGroup.class);
+            NodeServiceTaskManager taskManager = new NodeServiceTaskManager();
+
+            DefaultTaskGroup proxyGroup = new DefaultTaskGroup("Proxy", SpecificDriverEnvironment.PROXY, ServiceShutdownBehaviour.DELETE, args, new ArrayList<>(), Collections.singleton(new CloudTemplate("Proxy", "default", "local", true)));
+            DefaultTaskGroup lobbyGroup = new DefaultTaskGroup("Lobby", SpecificDriverEnvironment.MINECRAFT, ServiceShutdownBehaviour.DELETE, args, new ArrayList<>(), Collections.singleton(new CloudTemplate("Lobby", "default", "local", true)));
+
+
+            ServiceTask proxyTask = new DefaultServiceTask("Proxy", proxyGroup.getName(), config.getNodeConfig().getNodeName(), "Default HytoraCloud Service", "", 1024, 250, 1, -1, 0, true, -1, new SimpleFallback(false, "", 0), ServiceVersion.BUNGEECORD, new ArrayList<>());
+            ServiceTask lobbyTask = new DefaultServiceTask("Lobby", lobbyGroup.getName(), config.getNodeConfig().getNodeName(), "Default HytoraCloud Service", "", 512, 50, 1, -1, 1, true, -1, new SimpleFallback(true, "", 1), ServiceVersion.SPIGOT_1_8_8, new ArrayList<>());
+            lobbyTask.setProperty("gameServer", true);
+
+            proxyTask.setProperty("onlineMode", true);
+            proxyTask.setProperty("proxyProtocol", false);
+
+            taskManager.addTask(lobbyTask);
+            taskManager.addTask(proxyTask);
+            taskManager.addTaskGroup(proxyGroup);
+            taskManager.addTaskGroup(lobbyGroup);
+
+            this.logger.info("Created default Proxy & Lobby ServiceTasks!");
+            this.logger.info("§7You §acompleted §7the NodeSetup§8!");
+            this.logger.info("Please reboot the Node now to apply all changes!");
+            System.exit(0);
+            return;
+        }
+
         this.logger.info("§7You §acompleted §7the NodeSetup§8!");
         this.logger.info("Please reboot the Node now to apply all changes!");
         System.exit(0);
@@ -559,6 +628,7 @@ public class NodeDriver extends CloudDriver implements Node {
             process.destroyForcibly();
         }, TimeUnit.MILLISECONDS, 200);
     }
+
 
     @Override
     public void startServer(ServiceInfo server) {
@@ -618,28 +688,42 @@ public class NodeDriver extends CloudDriver implements Node {
 
 
         this.logger.info("§7Trying to terminate the §cCloudsystem§8...");
+        PlayerExecutor.forAll().disconnect("§cThe network was shut down!");
 
-        this.moduleManager.disableModules();
-        this.moduleManager.unregisterModules();
+        Task.runTaskLater(() -> {
 
-        this.webServer.shutdown();
 
-        //shutting down servers
-        for (ServiceInfo service : new ArrayList<>(this.serviceManager.getAllCachedServices())) {
-            NodeServiceInfo cloudServer = service.asCloudServer();
-            cloudServer.shutdown();
-        }
+            this.moduleManager.disableModules();
+            this.moduleManager.unregisterModules();
 
-        //Shutting down networking and database
-        Task.multiTasking(this.executor.shutdown(), this.databaseManager.shutdown()).addUpdateListener(wrapper -> {
-            Task.runTaskLater(() -> {
-                FileUtils.delete(NodeDriver.SERVICE_DIR_DYNAMIC.toPath());
-                FileUtils.delete(NodeDriver.STORAGE_TEMP_FOLDER.toPath());
+            this.webServer.shutdown();
 
-                logger.info("§aSuccessfully exited the CloudSystem§8!");
-                System.exit(0);
-            }, TimeUnit.SECONDS, 2);
-        });
+            //shutting down servers
+            for (ServiceInfo service : new ArrayList<>(this.serviceManager.getAllCachedServices())) {
+                NodeServiceInfo cloudServer = service.asCloudServer();
+                Process process = cloudServer.getProcess();
+                if (process != null) {
+                    process.destroyForcibly();
+                }
+            }
+
+            Task.runSync(() -> logger.info("Terminating in §8[§c5§8]"));
+            Task.runTaskLater(() -> logger.info("Terminating in §8[§c4§8]"), TimeUnit.SECONDS, 1);
+            Task.runTaskLater(() -> logger.info("Terminating in §8[§c3§8]"), TimeUnit.SECONDS, 2);
+            Task.runTaskLater(() -> logger.info("Terminating in §8[§c2§8]"), TimeUnit.SECONDS, 3);
+            Task.runTaskLater(() -> logger.info("Terminating in §8[§c1§8]"), TimeUnit.SECONDS, 4);
+
+            //Shutting down networking and database
+            Task.multiTasking(this.executor.shutdown(), this.databaseManager.shutdown()).addUpdateListener(wrapper -> {
+                Task.runTaskLater(() -> {
+                    FileUtils.delete(NodeDriver.SERVICE_DIR_DYNAMIC.toPath());
+                    FileUtils.delete(NodeDriver.STORAGE_TEMP_FOLDER.toPath());
+
+                    logger.info("§aSuccessfully exited the CloudSystem§8!");
+                    System.exit(0);
+                }, TimeUnit.SECONDS, 5);
+            });
+        }, TimeUnit.SECONDS, 1);
     }
 
 }

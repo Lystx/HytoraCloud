@@ -44,12 +44,6 @@ public class MongoDBSetup extends Setup<MongoDBSetup> {
         return true;
     }
 
-    @Override
-    public SetupHeaderBehaviour headerBehaviour() {
-        return SetupHeaderBehaviour.RESTORE_PREVIOUS_LINES;
-    }
-
-
     public static class Checker implements BiSupplier<String, Boolean> {
 
         @Override

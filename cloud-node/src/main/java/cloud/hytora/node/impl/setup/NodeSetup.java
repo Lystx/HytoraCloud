@@ -11,31 +11,31 @@ public class NodeSetup extends Setup<NodeSetup> {
 
     @Question(id = 1, question = "What should this Node be called?")
     @QuestionTip("Use something like 'Node-' and a number behind it")
-   // @SuggestedAnswer("Node-")
+    @SuggestedAnswer("Node-")
     private String name;
 
     @Question(id = 2, question = "Which host should this Node bind to?")
     @QuestionTip("Default is 127.0.0.1")
-   // @SuggestedAnswer("127.0.0.1")
+    @SuggestedAnswer("127.0.0.1")
     private String host;
 
     @Question(id = 3, question = "Which port should this Node bind to?")
     @QuestionTip("Consider your database ports to be free")
-    //@SuggestedAnswer("2704")
+    @SuggestedAnswer("2704")
     private int port;
 
     @Question(id = 4, question = "Is this Node a Remote (Slave) in the Cluster?")
-    //@QuestionTip("A Remote receives commands and connects to the HeadNode")
+    @QuestionTip("A Remote receives commands and connects to the HeadNode")
     private boolean remote;
 
-    @Question(id = 5, question = "Which database do you want to use?")
+    @Question(id = 5, question = "Do you want to create a default Lobby & Proxy Task?")
+    private boolean defaultTasks;
+
+    @Question(id = 6, question = "Which database do you want to use?")
     @QuestionTip("When using multiple Nodes, you should use an online database!")
     @RequiresEnum(DatabaseType.class)
     private DatabaseType databaseType;
 
-    public NodeSetup(Console console) {
-        super();
-    }
 
     @Override
     public boolean isCancellable() {

@@ -1,6 +1,6 @@
 package cloud.hytora.modules.cloud;
 
-import cloud.hytora.common.misc.CollectionUtils;
+import cloud.hytora.common.function.ExceptionallySupplier;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.database.DatabaseSection;
@@ -8,15 +8,14 @@ import cloud.hytora.driver.database.IDatabaseManager;
 import cloud.hytora.driver.database.SectionedDatabase;
 import cloud.hytora.driver.permission.PermissionGroup;
 import cloud.hytora.driver.permission.PermissionPlayer;
-import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.modules.DefaultPermissionManager;
-import cloud.hytora.modules.impl.DefaultPermissionGroup;
-import cloud.hytora.modules.impl.DefaultPermissionPlayer;
+import cloud.hytora.modules.global.impl.DefaultPermissionGroup;
+import cloud.hytora.modules.global.impl.DefaultPermissionPlayer;
+import cloud.hytora.modules.global.packets.PermsCacheUpdatePacket;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -27,9 +26,16 @@ import java.util.stream.Collectors;
 public class ModulePermissionManager extends DefaultPermissionManager {
 
     private final List<PermissionGroup> cachedPermissionGroups;
+    private final List<PermissionPlayer> allCachedPermissionPlayers;
 
     public ModulePermissionManager() {
         this.cachedPermissionGroups = new ArrayList<>();
+        this.allCachedPermissionPlayers = new ArrayList<>();
+    }
+
+    private void update() {
+        PermsCacheUpdatePacket packet = new PermsCacheUpdatePacket(this.cachedPermissionGroups, this.allCachedPermissionPlayers);
+        packet.publishAsync();
     }
 
     @NotNull
@@ -44,7 +50,7 @@ public class ModulePermissionManager extends DefaultPermissionManager {
         this.cachedPermissionGroups.clear();
         this.cachedPermissionGroups.addAll(section.getAll());
 
-
+        this.update();
         CloudDriver.getInstance().getLogger().info("Perms-Module loaded {} PermissionGroups!", this.cachedPermissionGroups.size());
     }
 
@@ -58,6 +64,8 @@ public class ModulePermissionManager extends DefaultPermissionManager {
         DatabaseSection<DefaultPermissionGroup> section = database.getSection(DefaultPermissionGroup.class);
         this.cachedPermissionGroups.add(group);
         section.insert(group);
+
+        this.update();
     }
 
     @Override
@@ -70,6 +78,8 @@ public class ModulePermissionManager extends DefaultPermissionManager {
         DatabaseSection<DefaultPermissionGroup> section = database.getSection(DefaultPermissionGroup.class);
         this.cachedPermissionGroups.remove(group);
         section.delete(name);
+
+        this.update();
     }
 
     @Nullable
@@ -98,38 +108,82 @@ public class ModulePermissionManager extends DefaultPermissionManager {
             this.cachedPermissionGroups.set(index, group);
         }
         section.upsert(group.getName(), (DefaultPermissionGroup) group);
+        this.update();
     }
 
     @Override
     public void updatePermissionPlayer(PermissionPlayer player) {
+
+        PermissionPlayer oldPlayer = this.getPlayerByUniqueIdOrNull(player.getUniqueId());
+        if (oldPlayer == null) {
+            this.allCachedPermissionPlayers.add(player);
+        } else {
+            int index = this.allCachedPermissionPlayers.indexOf(oldPlayer);
+            this.allCachedPermissionPlayers.set(index, player);
+        }
         if (player.getPermissionGroups().isEmpty()) {
             for (PermissionGroup group : this.getAllCachedPermissionGroups().stream().filter(PermissionGroup::isDefaultGroup).collect(Collectors.toList())) {
                 player.addPermissionGroup(group);
             }
-
         }
         SectionedDatabase database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
         DatabaseSection<DefaultPermissionPlayer> section = database.getSection(DefaultPermissionPlayer.class);
 
         section.upsert(player.getUniqueId().toString(), (DefaultPermissionPlayer) player);
+        this.update();
     }
 
 
     @Nullable
     @Override
     public PermissionPlayer getPlayerByNameOrNull(@NotNull String name) {
-        SectionedDatabase database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
-        DatabaseSection<DefaultPermissionPlayer> section = database.getSection(DefaultPermissionPlayer.class);
+        return
+                this.allCachedPermissionPlayers.
+                        stream()
+                        .filter(
+                                p ->
+                                        p
+                                                .getName()
+                                                .equalsIgnoreCase(name)
+                        )
+                        .findFirst()
+                        .orElseGet(
+                                (ExceptionallySupplier<PermissionPlayer>) () -> {
+                                    SectionedDatabase database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
+                                    DatabaseSection<DefaultPermissionPlayer> section = database.getSection(DefaultPermissionPlayer.class);
+                                    DefaultPermissionPlayer player = section.findByMatch("name", name);
+                                    if (player != null) {
 
-        return section.findByMatch("name", name);
+                                        this.allCachedPermissionPlayers.add(player);
+                                        this.update();
+                                    }
+                                    return player;
+                                });
+    }
+
+    @Override
+    public Task<PermissionPlayer> getPlayerAsyncByUniqueId(UUID uniqueId) {
+        return Task.callAsync(() -> getPlayerByUniqueIdOrNull(uniqueId));
+    }
+
+    @Override
+    public Task<PermissionPlayer> getPlayerAsyncByName(String name) {
+        return Task.callAsync(() -> getPlayerByNameOrNull(name));
     }
 
     @javax.annotation.Nullable
     @Override
     public PermissionPlayer getPlayerByUniqueIdOrNull(@NotNull UUID uniqueId) {
-        SectionedDatabase database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
-        DatabaseSection<DefaultPermissionPlayer> section = database.getSection(DefaultPermissionPlayer.class);
+        return this.allCachedPermissionPlayers.stream().filter(p -> p.getUniqueId().equals(uniqueId)).findFirst().orElseGet((ExceptionallySupplier<PermissionPlayer>) () -> {
+            SectionedDatabase database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
+            DatabaseSection<DefaultPermissionPlayer> section = database.getSection(DefaultPermissionPlayer.class);
+            DefaultPermissionPlayer player = section.findById(uniqueId.toString());
+            if (player != null) {
 
-        return section.findById(uniqueId.toString());
+                this.allCachedPermissionPlayers.add(player);
+                this.update();
+            }
+            return player;
+        });
     }
 }

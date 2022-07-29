@@ -118,6 +118,11 @@ public interface PermissionManager {
 	@Nullable
 	PermissionPlayer getPlayerByNameOrNull(@Nonnull String name);
 
+	PermissionPlayer createPlayer(String name, UUID uniqueId);
+
+	Task<PermissionPlayer> getPlayerAsyncByUniqueId(UUID uniqueId);
+	Task<PermissionPlayer> getPlayerAsyncByName(String name);
+
 	/**
 	 * Updates a {@link PermissionPlayer} in database
 	 *

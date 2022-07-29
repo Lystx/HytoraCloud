@@ -62,15 +62,19 @@ public class TaskSetup extends Setup<TaskSetup> {
     @SuggestedAnswer("-1")
     private int javaVersion;
 
-    @Question(id = 13, question = "Is this group a Fallback?")
+    @Question(id = 13, question = "What is the startOrder of this task?")
+    @QuestionTip("The lower the startOrder the higher it will be ranked in selection of service starting")
+    private int startOrder;
+
+    @Question(id = 14, question = "Is this group a Fallback?")
     @ExitAfterInput("false")
     @AnswerCompleter(BooleanSuggester.class)
     private boolean fallback;
 
-    @Question(id = 14, question = "Whats the priority of this fallback?")
+    @Question(id = 15, question = "Whats the priority of this fallback?")
     private int fallbackPriority;
 
-    @Question(id = 15, question = "Whats the permission players need to access this fallback?")
+    @Question(id = 16, question = "Whats the permission players need to access this fallback?")
     @QuestionTip("Use 'none' for no permission")
     @SuggestedAnswer("none")
     private String fallbackPermission;
@@ -87,11 +91,6 @@ public class TaskSetup extends Setup<TaskSetup> {
     @Override
     public boolean shouldPrintHeader() {
         return true;
-    }
-
-    @Override
-    public SetupHeaderBehaviour headerBehaviour() {
-        return SetupHeaderBehaviour.RESTORE_PREVIOUS_LINES;
     }
 
 

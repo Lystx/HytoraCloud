@@ -1,0 +1,6 @@
+name: Cloud-Perms
+author: Lystx
+version: SNAPSHOT-1.0
+main: cloud.hytora.modules.ingame.bungee.BungeeCloudPermsPlugin
+depend:
+  - HytoraCloud-Bridge

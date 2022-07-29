@@ -108,10 +108,6 @@ public abstract class Setup<T extends Setup<?>> {
      */
     public abstract boolean shouldPrintHeader();
 
-    public SetupHeaderBehaviour headerBehaviour() {
-        return SetupHeaderBehaviour.CLEAR_SCREEN_AFTER;
-    }
-
     public Setup() {
 
         this.cancelled = false;

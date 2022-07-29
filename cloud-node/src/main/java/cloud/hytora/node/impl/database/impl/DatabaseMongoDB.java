@@ -25,6 +25,10 @@ public class DatabaseMongoDB implements IDatabase {
     private MongoDatabase database;
     private final String identifier = "_uniqueId_key_";
 
+    public DatabaseMongoDB(DatabaseConfiguration configuration) {
+
+    }
+
     @Override
     public void connect() {
         DatabaseConfiguration configuration = MainConfiguration.getInstance().getDatabaseConfiguration();

@@ -18,6 +18,10 @@ public class DatabaseMySQL implements IDatabase {
 
     private Connection connection;
 
+    public DatabaseMySQL(DatabaseConfiguration config) {
+
+    }
+
     @SneakyThrows
     @Override
     public void connect() {

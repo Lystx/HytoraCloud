@@ -1,0 +1,7 @@
+name: Cloud-Perms
+author: Lystx
+version: SNAPSHOT-1.0
+main: cloud.hytora.modules.ingame.spigot.BukkitCloudPermsPlugin
+api-version: 1.13
+depend:
+  - HytoraCloud-Bridge

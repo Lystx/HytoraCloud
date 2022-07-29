@@ -143,8 +143,8 @@ public class TaskCommand {
                     fallback.setPermission("");
                 }
 
+                serviceTask.setStartOrder(setup.getStartOrder());
                 serviceTask.setFallback(fallback);
-                serviceTask.setStartOrder(1);
                 serviceTask.setDefaultMaxPlayers(maxPlayers);
                 serviceTask.setMinOnlineService(minServers);
                 serviceTask.setMaxOnlineService(maxServers);

@@ -30,12 +30,19 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
         this.getAllTaskGroups().addAll(this.database.getSection(TaskGroup.class).getAll());
         this.getAllCachedTasks().addAll(this.database.getSection(ServiceTask.class).getAll());
 
-        //registering packet handler
-        CloudDriver.getInstance().getExecutor().registerPacketHandler(this);
+        if (CloudDriver.getInstance().getExecutor() != null) {
 
-        //registering events
-        CloudDriver.getInstance().getEventManager().registerListener(this);
+            //registering packet handler
+            CloudDriver.getInstance().getExecutor().registerPacketHandler(this);
 
+            //registering events
+            CloudDriver.getInstance().getEventManager().registerListener(this);
+
+        }
+
+        if (CloudDriver.getInstance().getExecutor() == null) {
+            return;
+        }
         if (this.getAllCachedTasks().isEmpty()) {
             CloudDriver.getInstance().getLogger().warn("There are no ServiceTasks loaded!");
             CloudDriver.getInstance().getLogger().warn("Maybe you want to create some?");
@@ -66,7 +73,9 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
     @Override
     public void addTask(@NotNull ServiceTask task) {
         this.database.getSection(ServiceTask.class).insert(task.getName(), task);
-        NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceTaskExecutePacket(task, ServiceTaskExecutePacket.ExecutionPayLoad.CREATE));
+        if (NodeDriver.getInstance().getExecutor() != null) {
+            NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceTaskExecutePacket(task, ServiceTaskExecutePacket.ExecutionPayLoad.CREATE));
+        }
         super.addTask(task);
     }
 
@@ -85,7 +94,9 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
     @Override
     public void removeTask(@NotNull ServiceTask task) {
         this.database.getSection(ServiceTask.class).delete(task.getName());
-        NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceTaskExecutePacket(task, ServiceTaskExecutePacket.ExecutionPayLoad.REMOVE));
+        if (NodeDriver.getInstance().getExecutor() != null) {
+            NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceTaskExecutePacket(task, ServiceTaskExecutePacket.ExecutionPayLoad.REMOVE));
+        }
         super.removeTask(task);
     }
 

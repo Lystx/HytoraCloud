@@ -4,6 +4,7 @@ import cloud.hytora.common.task.Task;
 
 
 import cloud.hytora.driver.database.SectionedDatabase;
+import cloud.hytora.node.impl.database.config.DatabaseConfiguration;
 import cloud.hytora.node.impl.database.config.DatabaseType;
 import cloud.hytora.driver.database.IDatabase;
 import cloud.hytora.driver.database.IDatabaseManager;
@@ -19,13 +20,13 @@ public class DefaultDatabaseManager implements IDatabaseManager {
     private final IDatabase internalDatabase;
     private final SectionedDatabase database;
 
-    public DefaultDatabaseManager(DatabaseType type) {
+    public DefaultDatabaseManager(DatabaseType type, DatabaseConfiguration configuration) {
         if (type == DatabaseType.MYSQL) {
-            this.internalDatabase = new DatabaseMySQL();
+            this.internalDatabase = new DatabaseMySQL(configuration);
         } else if (type == DatabaseType.MONGODB) {
-            this.internalDatabase = new DatabaseMongoDB();
+            this.internalDatabase = new DatabaseMongoDB(configuration);
         } else if (type == DatabaseType.FILE) {
-            this.internalDatabase = new DatabaseFile();
+            this.internalDatabase = new DatabaseFile(configuration);
         } else {
             this.internalDatabase = null;
         }

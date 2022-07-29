@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -70,7 +71,15 @@ public abstract class DefaultServiceManager implements ServiceManager {
     public void updateServerInternally(ServiceInfo service) {
         Optional<ServiceInfo> server = this.getService(service.getName());
         if (server.isPresent()) {
-            ServiceInfo serviceInfo = server.get();
+
+            SimpleServiceInfo serviceInfo = (SimpleServiceInfo) server.get();
+
+            Process process = serviceInfo.getProcess();
+            File workingDirectory = serviceInfo.getWorkingDirectory();
+
+            ((SimpleServiceInfo)service).setProcess(process);
+            ((SimpleServiceInfo)service).setWorkingDirectory(workingDirectory);
+
             int i = allCachedServices.indexOf(serviceInfo);
             allCachedServices.set(i, service);
         }

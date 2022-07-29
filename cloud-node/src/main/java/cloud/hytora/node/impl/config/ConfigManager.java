@@ -36,8 +36,8 @@ public class ConfigManager {
         } else {
             this.didExist = false;
             this.config = new MainConfiguration(
-                    LogLevel.TRACE,
-                    ServiceProcessType.WRAPPER,
+                    LogLevel.INFO,
+                    ServiceProcessType.BRIDGE_PLUGIN,
                     new DatabaseConfiguration(
                             DatabaseType.FILE,
                             "127.0.0.1",

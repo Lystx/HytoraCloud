@@ -13,6 +13,8 @@ import cloud.hytora.driver.networking.packets.player.CloudPlayerDisconnectPacket
 import cloud.hytora.driver.networking.packets.player.CloudPlayerLoginPacket;
 import cloud.hytora.driver.networking.packets.player.CloudPlayerUpdatePacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
+import cloud.hytora.driver.permission.PermissionManager;
+import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.TemporaryProperties;
@@ -39,6 +41,16 @@ public class NodePlayerManager extends DefaultPlayerManager {
         executor.registerPacketHandler((PacketHandler<CloudPlayerLoginPacket>) (wrapper, packet) -> {
             CloudDriver.getInstance().getLogger().debug("Player[name={}, uuid={}] logged in on {}!", packet.getUsername(), packet.getUuid(), packet.getProxy());
             CloudPlayer cloudPlayer = constructPlayer(packet.getUuid(), packet.getUsername());
+
+            CloudDriver.getInstance().getProviderRegistry().get(PermissionManager.class).ifPresent(permissionManager -> {
+                permissionManager.getPlayerAsyncByUniqueId(cloudPlayer.getUniqueId()).thenAccept(player -> {
+                    if (player == null) {
+                        player = permissionManager.createPlayer(packet.getUsername(), packet.getUuid());
+                        permissionManager.updatePermissionPlayer(player);
+                    }
+                    CloudDriver.getInstance().getLogger().debug("Loaded PermissionPlayer[name={}, uuid={}] into cache!", player.getName(), player.getUniqueId());
+                });
+            });
 
             getOfflinePlayerByUniqueIdAsync(cloudPlayer.getUniqueId())
                     .thenAccept(cloudOfflinePlayer -> {
