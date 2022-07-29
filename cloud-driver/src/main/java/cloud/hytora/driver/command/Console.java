@@ -1,5 +1,6 @@
 package cloud.hytora.driver.command;
 
+import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.driver.setup.Setup;
 
 import javax.annotation.Nonnull;
@@ -33,6 +34,8 @@ public interface Console {
 
 	@Nonnull
 	Console writeLine(@Nonnull String text);
+
+	Console writeEntry(@Nonnull LogEntry entry);
 
 	Console forceWrite(String text);
 

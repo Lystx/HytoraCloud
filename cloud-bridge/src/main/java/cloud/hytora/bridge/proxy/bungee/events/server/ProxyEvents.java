@@ -1,8 +1,11 @@
 package cloud.hytora.bridge.proxy.bungee.events.server;
 
+import cloud.hytora.bridge.proxy.bungee.BungeeBootstrap;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.component.ChatColor;
+import cloud.hytora.driver.permission.PermissionChecker;
+import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.player.PlayerManager;
@@ -37,12 +40,10 @@ public class ProxyEvents implements Listener {
 
     @EventHandler
     public void handle(PreLoginEvent event) {
-
         ServiceInfo serviceInfo = CloudDriver.getInstance().getServiceManager().thisServiceOrNull();
         ServiceTask serviceTask = serviceInfo.getTask();
 
         List<String> whitelistedPlayers = CloudDriver.getInstance().getStorage().getBundle("cloud::whitelist").toInstances(String.class);
-
 
         if (event.getConnection().getName() != null) {
             if (serviceTask.isMaintenance() && !whitelistedPlayers.contains(event.getConnection().getName())) {
@@ -51,6 +52,13 @@ public class ProxyEvents implements Listener {
                 return;
             }
         }
+
+        if (serviceInfo.getOnlinePlayerCount() >= serviceInfo.getMaxPlayers()) {
+            event.setCancelReason(new TextComponent("§cThis Proxy is currently full!"));
+            event.setCancelled(true);
+            return;
+        }
+
         Task<ServiceInfo> fallback = CloudDriver.getInstance().getServiceManager().getFallbackAsService();
 
         if (fallback.isNull()) {

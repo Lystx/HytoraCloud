@@ -191,7 +191,7 @@ public class NodeDriver extends CloudDriver implements Node {
         //loading console
         this.console.addInputHandler(s -> CloudDriver.getInstance().getCommandManager().executeCommand(CloudDriver.getInstance().getCommandSender(), s));
 
-        this.commandSender = new DefaultCommandSender(this.getConfig().getNodeName(), this.console).forceFunction((ExceptionallyConsumer<String>) s -> console.forceWrite(ColoredMessageFormatter.format(new LogEntry(Instant.now(), "node", s, LogLevel.INFO, null)))).function((ExceptionallyConsumer<String>) console::writeLine);
+        this.commandSender = new DefaultCommandSender(this.getConfig().getNodeName(), this.console).forceFunction((ExceptionallyConsumer<String>) s -> console.forceWrite(ColoredMessageFormatter.format(new LogEntry(Instant.now(), "node", s, LogLevel.INFO, null))));
         this.commandManager = new NodeCommandManager();
 
         //checking if setup required

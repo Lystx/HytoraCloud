@@ -18,7 +18,7 @@ public class ConsoleLogHandler implements LogHandler {
 
 	@Override
 	public void handle(@Nonnull LogEntry entry) {
-		console.writeLine(ColoredMessageFormatter.format(entry));
+		console.writeEntry(entry);
 	}
 
 }

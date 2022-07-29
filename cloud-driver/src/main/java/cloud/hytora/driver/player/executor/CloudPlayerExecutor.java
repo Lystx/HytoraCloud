@@ -36,7 +36,7 @@ public class CloudPlayerExecutor implements PlayerExecutor {
 
     @Override
     public void disconnect(String reason) {
-        this.sendPacketToProxy(new CloudPlayerKickPacket(getExecutorUniqueId(), this.player.getProxyServer().getName(), reason));
+        this.sendPacketToProxy(new CloudPlayerKickPacket(getExecutorUniqueId(), this.player.getProxyServer() == null ? "UNKNOWN" : this.player.getProxyServer().getName(), reason));
     }
 
     @Override

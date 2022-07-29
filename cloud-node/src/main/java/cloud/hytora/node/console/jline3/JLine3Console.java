@@ -1,6 +1,8 @@
 package cloud.hytora.node.console.jline3;
 
 import cloud.hytora.common.logging.Logger;
+import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
+import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.console.Screen;
@@ -12,6 +14,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
+import org.jetbrains.annotations.NotNull;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReader.Option;
@@ -67,6 +70,24 @@ public class JLine3Console implements Console {
     @Override
     public String readLineOrNull() {
         return consoleReadThread.readLineOrNull();
+    }
+
+    @Override
+    public Console writeEntry(@NotNull LogEntry entry) {
+        String formatted = ColoredMessageFormatter.format(entry);
+
+        if (!formatted.endsWith(System.lineSeparator())) {
+            formatted += System.lineSeparator();
+        }
+        ScreenManager sm = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
+        Screen console = sm.getScreenByNameOrNull("console");
+        if (console != null) {
+            console.cacheLine(entry.getMessage());
+        }
+        if (sm.isScreenActive("console")) {
+            forceWrite(formatted);
+        }
+        return this;
     }
 
     @Nonnull
