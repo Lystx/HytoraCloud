@@ -15,7 +15,8 @@ import cloud.hytora.driver.networking.protocol.codec.prepender.NettyPacketLength
 import cloud.hytora.driver.networking.protocol.packets.ConnectionState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
+import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.networking.protocol.packets.defaults.HandshakePacket;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.networking.protocol.wrapped.SimplePacketChannel;
@@ -124,7 +125,7 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
                                              }
 
                                              @Override
-                                             public void channelRead0(ChannelHandlerContext channelHandlerContext, Packet packet) {
+                                             public void channelRead0(ChannelHandlerContext channelHandlerContext, AbstractPacket packet) {
 
                                                  SimpleClusterClientExecutor client = (SimpleClusterClientExecutor) getConnectedClientByChannel(channelHandlerContext.channel());
 
@@ -218,7 +219,7 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
 
 
     @Override
-    public void sendPacket(Packet packet) {
+    public void sendPacket(IPacket packet) {
         this.sendPacketToAll(packet);
     }
 
@@ -261,7 +262,7 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
     }
 
 
-    public void sendPacketToType(Packet packet, ConnectionType type) {
+    public void sendPacketToType(AbstractPacket packet, ConnectionType type) {
         this.getAllClientsByType(type).forEach(it -> it.sendPacket(packet));
     }
 
@@ -275,7 +276,7 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
 
 
 
-    public void sendPacketToAll(Packet packet) {
+    public void sendPacketToAll(IPacket packet) {
         allCachedConnectedClients.forEach(it -> it.sendPacket(packet));
     }
 

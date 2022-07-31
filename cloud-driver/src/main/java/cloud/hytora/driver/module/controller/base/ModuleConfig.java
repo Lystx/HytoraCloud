@@ -1,7 +1,7 @@
 package cloud.hytora.driver.module.controller.base;
 
 
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import lombok.AllArgsConstructor;
@@ -16,7 +16,7 @@ import java.util.Arrays;
 @AllArgsConstructor
 @Getter
 @NoArgsConstructor
-public class ModuleConfig implements Bufferable {
+public class ModuleConfig implements IBufferObject {
 
     private String name, description, version, mainClass, website;
     private String[] author;

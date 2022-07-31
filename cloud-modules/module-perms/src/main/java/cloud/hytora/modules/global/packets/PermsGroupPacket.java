@@ -2,7 +2,7 @@ package cloud.hytora.modules.global.packets;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.permission.PermissionGroup;
 import cloud.hytora.modules.global.impl.DefaultPermissionGroup;
 import lombok.AllArgsConstructor;
@@ -16,7 +16,7 @@ import java.io.IOException;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PermsGroupPacket extends Packet {
+public class PermsGroupPacket extends AbstractPacket {
 
     private PayLoad payLoad;
     private PermissionGroup group;

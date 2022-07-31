@@ -9,6 +9,7 @@ import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUpdateEvent;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
+import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.networking.protocol.packets.QueryState;
 import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.node.config.INodeConfig;
@@ -17,7 +18,7 @@ import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.impl.DefaultServiceManager;
 import cloud.hytora.node.NodeDriver;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 
 import cloud.hytora.node.service.helper.CloudServerProcessWorker;
 import lombok.Getter;
@@ -148,7 +149,7 @@ public class NodeServiceManager extends DefaultServiceManager {
     }
 
     @Override
-    public void sendPacketToService(ServiceInfo service, Packet packet) {
+    public void sendPacketToService(ServiceInfo service, IPacket packet) {
         NodeDriver.getInstance().getExecutor().getAllCachedConnectedClients().stream().filter(it -> it.getName().equals(service.getName())).findAny().ifPresent(it -> it.sendPacket(packet));
     }
 

@@ -1,13 +1,13 @@
 package cloud.hytora.driver.services.fallback;
 
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
-public interface FallbackEntry extends Bufferable {
+public interface FallbackEntry extends IBufferObject {
 
     boolean isEnabled();
     void setEnabled(boolean enabled);

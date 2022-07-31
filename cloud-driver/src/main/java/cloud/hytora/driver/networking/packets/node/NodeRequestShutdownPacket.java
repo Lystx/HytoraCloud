@@ -2,7 +2,7 @@ package cloud.hytora.driver.networking.packets.node;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +13,7 @@ import java.io.IOException;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class NodeRequestShutdownPacket extends Packet {
+public class NodeRequestShutdownPacket extends AbstractPacket {
 
     private String name;
 

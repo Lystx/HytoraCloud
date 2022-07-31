@@ -68,7 +68,7 @@ import java.util.function.Supplier;
 import java.util.jar.*;
 
 @Getter
-public class Remote extends CloudDriver {
+public class Remote extends CloudDriver<ServiceInfo> {
 
     private static Remote instance;
     private final ServiceTaskManager serviceTaskManager;
@@ -301,6 +301,13 @@ public class Remote extends CloudDriver {
     public AdvancedNetworkExecutor getExecutor() {
         return client;
     }
+
+    @Override
+    public ServiceInfo thisSidesClusterParticipant() {
+        return thisService();
+    }
+
+
 
 
 }

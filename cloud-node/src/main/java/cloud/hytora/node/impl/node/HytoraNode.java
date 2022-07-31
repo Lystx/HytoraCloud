@@ -62,11 +62,11 @@ public class HytoraNode extends ClusterExecutor {
     }
 
 
-    public <T extends Packet> void registerRemoteHandler(PacketHandler<T> handler) {
+    public <T extends AbstractPacket> void registerRemoteHandler(PacketHandler<T> handler) {
         this.remoteHandlers.add(handler);
     }
 
-    public <T extends Packet> void registerUniversalHandler(PacketHandler<T> handler) {
+    public <T extends AbstractPacket> void registerUniversalHandler(PacketHandler<T> handler) {
         this.registerRemoteHandler(handler);
         this.registerPacketHandler(handler);
     }
@@ -200,7 +200,7 @@ public class HytoraNode extends ClusterExecutor {
             }
 
             @Override
-            public <T extends Packet> void handlePacket(PacketChannel wrapper, @NotNull T packet) {
+            public <T extends IPacket> void handlePacket(PacketChannel wrapper, @NotNull T packet) {
 
 
                 for (PacketHandler packetHandler : new ArrayList<>(HytoraNode.this.remoteHandlers)) {
@@ -252,7 +252,7 @@ public class HytoraNode extends ClusterExecutor {
     }
 
     @Override
-    public void sendPacketToAll(Packet packet) {
+    public void sendPacketToAll(IPacket packet) {
         if (NodeDriver.getInstance().getConfig().isRemote()) {
             nodeAsClient.sendPacket(packet);
         }
@@ -260,7 +260,7 @@ public class HytoraNode extends ClusterExecutor {
     }
 
     @Override
-    public void sendPacket(Packet packet) {
+    public void sendPacket(IPacket packet) {
         if (this.nodeAsClient != null) {
             this.nodeAsClient.sendPacket(packet);
             return;
@@ -279,7 +279,7 @@ public class HytoraNode extends ClusterExecutor {
     }
 
     @Override
-    public void sendPacket(Packet packet, NetworkComponent component) {
+    public void sendPacket(IPacket packet, NetworkComponent component) {
         this.getClient(component.getName()).ifPresent(c -> c.sendPacket(packet));
     }
 

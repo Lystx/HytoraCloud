@@ -4,7 +4,7 @@ import cloud.hytora.document.Document;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,7 +16,7 @@ import java.io.IOException;
 @Getter
 @Setter
 @NoArgsConstructor
-public class HandshakePacket extends Packet {
+public class HandshakePacket extends AbstractPacket {
 
     /**
      * The authentication key

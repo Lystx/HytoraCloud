@@ -3,7 +3,7 @@ package cloud.hytora.driver.networking.packets.services;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.services.task.DefaultServiceTask;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
@@ -22,7 +22,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @NoArgsConstructor
-public class ServiceConfigPacket extends Packet {
+public class ServiceConfigPacket extends AbstractPacket {
 
     private UUID uniqueId;
     private String serviceTask;

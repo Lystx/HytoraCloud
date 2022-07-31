@@ -34,7 +34,8 @@ public abstract class DefaultCommandManager implements CommandManager {
     @Getter
     private final Map<Class<?>, ArgumentParser<?>> parsers = new HashMap<>();
 
-    @Getter @Setter
+    @Getter
+    @Setter
     private boolean active;
 
 
@@ -60,17 +61,20 @@ public abstract class DefaultCommandManager implements CommandManager {
     public void registerCommand(@Nonnull Object command) {
         Command commandAnnotation = command.getClass().getAnnotation(Command.class);
         CommandDescription commandDescriptionAnnotation = command.getClass().getAnnotation(CommandDescription.class);
+        CommandExecutionScope executionScopeAnnotation = command.getClass().getAnnotation(CommandExecutionScope.class);
+        CommandPermission commandPermissionAnnotation = command.getClass().getAnnotation(CommandPermission.class);
         CommandAutoHelp autoHelp = command.getClass().getAnnotation(CommandAutoHelp.class);
 
         if (autoHelp != null) {
             RegisteredCommand registeredCommand = new RegisteredCommand(
-                    commandAnnotation.name(),
+                    commandAnnotation.value(),
                     "",
-                    new String[]{"", "help", "?"},
-                    commandAnnotation.permission(),
+                    "",
+                    new String[]{"", "help", "?", " "},
+                    commandPermissionAnnotation.value(),
                     "Shows this help page",
                     commandDescriptionAnnotation != null ? commandDescriptionAnnotation.value() : "",
-                    commandAnnotation.scope(),
+                    executionScopeAnnotation.value(),
                     new ArrayList<>(),
                     null,
                     command
@@ -78,31 +82,56 @@ public abstract class DefaultCommandManager implements CommandManager {
             commands.add(registeredCommand);
         }
 
-        for (Method method : ReflectionUtils.getMethodsAnnotatedWith(command.getClass(), SubCommand.class)) {
-            SubCommand pathAnnotation = method.getAnnotation(SubCommand.class);
+        for (Method method : ReflectionUtils.getMethodsAnnotatedWith(command.getClass(), Command.class, Root.class)) {
+            Command pathAnnotation = method.getAnnotation(Command.class);
+            Syntax syntaxAnnotation = method.getAnnotation(Syntax.class);
+            Root rootAnnotation = method.getAnnotation(Root.class);
+            CommandPermission permission = method.getAnnotation(CommandPermission.class);
+
             List<RegisteredCommandArgument> arguments = new ArrayList<>();
             for (Parameter parameter : method.getParameters()) {
-                if (!parameter.isAnnotationPresent(CommandArgument.class)) {
+                if (!parameter.isAnnotationPresent(Argument.class)) {
                     continue;
                 }
-                CommandArgument argumentAnnotation = parameter.getAnnotation(CommandArgument.class);
+                Argument argumentAnnotation = parameter.getAnnotation(Argument.class);
                 arguments.add(new RegisteredCommandArgument(argumentAnnotation.value(), parameter.getType(), argumentAnnotation.completer(), argumentAnnotation.words(), argumentAnnotation.raw(), argumentAnnotation.optional()));
             }
+            if (rootAnnotation != null) {
 
-            for (String path : pathAnnotation.value()) {
-                RegisteredCommand registeredCommand = new RegisteredCommand(
-                        commandAnnotation.name(),
-                        path,
-                        pathAnnotation.value(),
-                        commandAnnotation.permission(),
+                RegisteredCommand cmd = new RegisteredCommand(
+                        commandAnnotation.value(),
+                        "",
+                        "",
+                        new String[0],
+                        permission != null ? permission.value() : (commandPermissionAnnotation != null ? commandPermissionAnnotation.value() : ""),
                         method.getAnnotation(CommandDescription.class) != null ? method.getAnnotation(CommandDescription.class).value() : "",
                         commandDescriptionAnnotation != null ? commandDescriptionAnnotation.value() : "",
-                        method.getAnnotation(SubCommandScope.class) == null ? commandAnnotation.scope() : method.getAnnotation(SubCommandScope.class).value(),
+                        method.getAnnotation(CommandExecutionScope.class) == null ? command.getClass().getAnnotation(CommandExecutionScope.class).value() : method.getAnnotation(CommandExecutionScope.class).value(),
+                        new ArrayList<>(),
+                        method,
+                        command
+
+                );
+
+                commands.add(cmd);
+                continue;
+            }
+            for (String path : (pathAnnotation == null ? new String[]{""} : pathAnnotation.value())) {
+                RegisteredCommand registeredCommand = new RegisteredCommand(
+                        commandAnnotation.value(),
+                        path,
+                        syntaxAnnotation == null ? "" : syntaxAnnotation.value(),
+                        pathAnnotation == null ? new String[0] : pathAnnotation.value(),
+                        commandPermissionAnnotation == null ? "" : commandPermissionAnnotation.value(),
+                        method.getAnnotation(CommandDescription.class) != null ? method.getAnnotation(CommandDescription.class).value() : "",
+                        commandDescriptionAnnotation != null ? commandDescriptionAnnotation.value() : "",
+                        method.getAnnotation(CommandExecutionScope.class) == null ? command.getClass().getAnnotation(CommandExecutionScope.class).value() : method.getAnnotation(CommandExecutionScope.class).value(),
                         arguments,
                         method,
                         command
                 );
                 commands.add(registeredCommand);
+
             }
 
         }
@@ -144,7 +173,7 @@ public abstract class DefaultCommandManager implements CommandManager {
         for (RegisteredCommand command : commands) {
             if (command.getScope().isIngame()) {
                 for (String name : command.getNames()) {
-                    ingameCommands.add(new CommandObject((command.getScope() == CommandScope.CONSOLE_AND_INGAME ? "cloud " : "") + name, command.getPermission(), command.getScope()));
+                    ingameCommands.add(new CommandObject((command.getScope() == cloud.hytora.driver.command.CommandScope.CONSOLE_AND_INGAME ? "cloud " : "") + name, command.getPermission(), command.getScope()));
                 }
             }
         }
@@ -273,7 +302,9 @@ public abstract class DefaultCommandManager implements CommandManager {
 
         command:
         for (RegisteredCommand command : commands) {
-            if (!command.getScope().covers(sender)) continue;
+            if (!command.getScope().covers(sender)) {
+                continue;
+            }
 
             // if the command begins with the cloud prefix, remove it
             String stripped = input;
@@ -360,45 +391,6 @@ public abstract class DefaultCommandManager implements CommandManager {
         }
 
         sender.sendMessage("§cType 'help' to see all executable commands!");
-        /*
-        List<String> avoidDuplicates = new ArrayList<>();
-
-        if (matchingName.isEmpty()) {
-            if (commands.stream().anyMatch(cmd -> Arrays.stream(cmd.getNames()).anyMatch(s -> s.startsWith(input)))) {
-
-                sender.sendTranslation("cloud.command.syntax.header");
-                for (RegisteredCommand command : commands.stream().filter(cmd -> Arrays.stream(cmd.getNames()).anyMatch(s -> s.startsWith(input))).collect(Collectors.toList())) {
-                    if (!command.getScope().covers(sender)) {
-                        continue;
-                    }
-                    sender.sendTranslation("cloud.command.syntax.entry.without.permission", (command.getNames()[0] + " " + command.getPath()), command.getDescription().trim().isEmpty() ? "No Description" : command.getDescription());
-                }
-                sender.sendTranslation("cloud.command.syntax.footer");
-            } else {
-                sender.sendTranslation("cloud.command.unknown");
-            }
-        } else {
-
-            sender.sendTranslation("cloud.command.syntax.header");
-            for (RegisteredCommand command : matchingName) {
-                if (!command.getScope().covers(sender)) {
-                    continue;
-                }
-                //no input entered -> all commands are shown
-                if (matchingName.size() == commands.size()) {
-                    if (avoidDuplicates.contains(command.getNames()[0])) {
-                        continue;
-                    }
-                    avoidDuplicates.add(command.getNames()[0]);
-                    sender.sendTranslation("cloud.command.syntax.entry.with.permission", command.getNames()[0], command.getPermission(), command.getMainDescription().trim().isEmpty() ? no_description : command.getMainDescription());
-                } else {
-                    sender.sendTranslation("cloud.command.syntax.entry.without.permission", (command.getNames()[0] + " " + command.getPath()), command.getDescription().trim().isEmpty() ? no_description : command.getDescription());
-                }
-            }
-            sender.sendTranslation("cloud.command.syntax.footer");
-        }*/
-
-
     }
 
     protected void execute(@Nonnull RegisteredCommand command, @Nonnull CommandSender sender, @Nonnull Map<String, Object> argumentValues) {
@@ -413,8 +405,8 @@ public abstract class DefaultCommandManager implements CommandManager {
             Parameter parameter = methodsParameters[i];
             if (CommandSender.class.isAssignableFrom(parameter.getType())) {
                 parameters[i] = sender;
-            } else if (parameter.isAnnotationPresent(CommandArgument.class)) {
-                parameters[i] = argumentValues.get(parameter.getAnnotation(CommandArgument.class).value());
+            } else if (parameter.isAnnotationPresent(Argument.class)) {
+                parameters[i] = argumentValues.get(parameter.getAnnotation(Argument.class).value());
             }
         }
 
@@ -425,8 +417,8 @@ public abstract class DefaultCommandManager implements CommandManager {
                 Command annotation = command.getInstance().getClass().getAnnotation(Command.class);
 
                 sender.sendMessage("§8");
-                sender.sendMessage("Help for Command '" + annotation.name()[0] + "':");
-                for (RegisteredCommand registeredCommand : CloudDriver.getInstance().getCommandManager().getCommands().stream().filter(c -> Arrays.asList(c.getNames()).stream().anyMatch(s -> Arrays.asList(annotation.name()).contains(s))).collect(Collectors.toList())) {
+                sender.sendMessage("Help for Command '" + annotation.value()[0] + "':");
+                for (RegisteredCommand registeredCommand : CloudDriver.getInstance().getCommandManager().getCommands().stream().filter(c -> Arrays.asList(c.getNames()).stream().anyMatch(s -> Arrays.asList(annotation.value()).contains(s))).collect(Collectors.toList())) {
                     if (registeredCommand.getPath().trim().isEmpty() || !registeredCommand.getScope().covers(sender)) {
                         continue;
                     }

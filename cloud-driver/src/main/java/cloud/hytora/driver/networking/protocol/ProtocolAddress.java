@@ -1,10 +1,9 @@
 package cloud.hytora.driver.networking.protocol;
 
 import cloud.hytora.document.gson.adapter.ExcludeJsonField;
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import com.google.gson.annotations.JsonAdapter;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,7 +16,7 @@ import java.net.InetSocketAddress;
 @AllArgsConstructor
 @Getter
 @Setter
-public class ProtocolAddress implements Bufferable {
+public class ProtocolAddress implements IBufferObject {
 
     private String host;
     private int port;

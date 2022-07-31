@@ -11,11 +11,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 
 @NoArgsConstructor @AllArgsConstructor @Getter
-public class ProtocolDocument implements WrappedDocument, Bufferable {
+public class ProtocolDocument implements WrappedDocument, IBufferObject {
 
 	/**
 	 * The wrapping document

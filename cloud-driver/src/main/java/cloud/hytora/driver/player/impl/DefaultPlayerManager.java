@@ -46,7 +46,7 @@ public abstract class DefaultPlayerManager implements PlayerManager {
             CloudPlayer player = packet.getPlayer();
 
             this.getCloudPlayer(player.getUniqueId()).ifPresent(cp -> {
-                cp.cloneInternally(player, cp);
+                cp.clone(player);
                 if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
                     cp.update();
                 }

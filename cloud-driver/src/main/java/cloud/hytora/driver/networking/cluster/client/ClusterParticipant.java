@@ -11,7 +11,8 @@ import cloud.hytora.driver.networking.protocol.codec.PacketEncoder;
 import cloud.hytora.driver.networking.protocol.codec.prepender.NettyPacketLengthDeserializer;
 import cloud.hytora.driver.networking.protocol.codec.prepender.NettyPacketLengthSerializer;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
+import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.networking.protocol.packets.defaults.HandshakePacket;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import io.netty.bootstrap.Bootstrap;
@@ -123,7 +124,7 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
     }
 
     @Override
-    public <T extends Packet> void handlePacket(PacketChannel wrapper, @NotNull T packet) {
+    public <T extends IPacket> void handlePacket(PacketChannel wrapper, @NotNull T packet) {
         if (packet instanceof HandshakePacket) {
             HandshakePacket handshake = (HandshakePacket) packet;
             connectedNodeName = handshake.getNodeName();
@@ -153,7 +154,7 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
     }
 
     @Override
-    public void sendPacket(Packet packet) {
+    public void sendPacket(IPacket packet) {
         this.channel.writeAndFlush(packet).addListener((ChannelFutureListener) future -> {
             if (!future.isSuccess()) future.cause().printStackTrace();
         });

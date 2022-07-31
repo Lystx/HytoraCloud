@@ -2,7 +2,8 @@ package cloud.hytora.driver.services;
 
 
 import cloud.hytora.common.task.Task;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
+import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.utils.ServiceState;
@@ -140,6 +141,6 @@ public interface ServiceManager {
      * @param service the service to send the packet to
      * @param packet the packet to send
      */
-    void sendPacketToService(ServiceInfo service, Packet packet);
+    void sendPacketToService(ServiceInfo service, IPacket packet);
 
 }

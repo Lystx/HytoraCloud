@@ -4,7 +4,7 @@ import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.collection.NamedThreadFactory;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.driver.command.CommandManager;
-import cloud.hytora.driver.command.Console;
+import cloud.hytora.driver.common.IClusterObject;
 import cloud.hytora.driver.event.EventManager;
 import cloud.hytora.driver.event.defaults.DefaultEventManager;
 import cloud.hytora.driver.http.api.HttpRequest;
@@ -15,7 +15,7 @@ import cloud.hytora.driver.module.Module;
 import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
@@ -43,13 +43,10 @@ import io.netty.util.internal.logging.JdkLoggerFactory;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 
@@ -70,7 +67,7 @@ import java.util.function.Supplier;
  */
 @Getter
 @DriverStatus(version = "SNAPSHOT-1.3", experimental = true, developers = {"Lystx"})
-public abstract class CloudDriver extends DriverUtility {
+public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUtility {
 
     /**
      * The static instance of this Driver
@@ -145,7 +142,7 @@ public abstract class CloudDriver extends DriverUtility {
      * Constructs a new {@link CloudDriver} instance with a provided {@link Logger} instance <br>
      * and a provided {@link DriverEnvironment} to declare the environment this Instance runs on
      * Then setting default instances for Interfaces like {@link EventManager} or {@link Scheduler}
-     * and finally registering all {@link Packet}s
+     * and finally registering all {@link AbstractPacket}s
      * <br><br>
      *
      * @param logger      the logger instance
@@ -337,6 +334,8 @@ public abstract class CloudDriver extends DriverUtility {
      * @see AdvancedNetworkExecutor
      */
     public abstract AdvancedNetworkExecutor getExecutor();
+
+    public abstract T thisSidesClusterParticipant();
 
     /**
      * Returns the {@link DriverStatus} to gain information about current Cloud Build

@@ -1,7 +1,7 @@
 package cloud.hytora.driver.permission;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 
 import java.util.concurrent.TimeUnit;
 
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  * @author Lystx
  * @since SNAPSHOT-1.3
  */
-public interface Permission extends Bufferable {
+public interface Permission extends IBufferObject {
 
     /**
      * Static method to construct a new {@link Permission} instance

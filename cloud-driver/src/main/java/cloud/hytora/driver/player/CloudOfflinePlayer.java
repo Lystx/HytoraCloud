@@ -1,17 +1,15 @@
 package cloud.hytora.driver.player;
 
 import cloud.hytora.document.Document;
-import cloud.hytora.driver.common.IdentityHolder;
+import cloud.hytora.driver.common.IdentityObject;
 import cloud.hytora.driver.exception.PlayerNotOnlineException;
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
-import cloud.hytora.driver.player.connection.PlayerConnection;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
-public interface CloudOfflinePlayer extends Bufferable, IdentityHolder {
+public interface CloudOfflinePlayer extends IBufferObject, IdentityObject {
 
     /**
      * The cached name of this offline player entry

@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
-public interface PropertyHolder {
+public interface IPropertyObject {
 
     @NotNull
     Document getProperties();

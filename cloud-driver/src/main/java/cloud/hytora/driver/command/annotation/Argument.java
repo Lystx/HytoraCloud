@@ -12,10 +12,10 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface CommandArgument {
+public @interface Argument {
 
 	/**
-	 * @return the argument's name used in the {@link SubCommand}
+	 * @return the argument's name used in the {@link Command}
 	 */
 	@Nonnull
 	String value();

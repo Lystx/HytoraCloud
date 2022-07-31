@@ -109,15 +109,12 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements Clo
 
 
     @Override
-    public void cloneInternally(CloudPlayer from, CloudPlayer to) {
-        to.setProxyServer(from.getProxyServer());
-        to.setServer(from.getServer());
+    public void clone(CloudPlayer from) {
+        this.setProxyServer(from.getProxyServer());
+        this.setServer(from.getServer());
 
-        DefaultCloudPlayer wrappedTo = (DefaultCloudPlayer) to;
-        DefaultCloudPlayer wrappedFrom = (DefaultCloudPlayer) from;
-
-        wrappedTo.setUniqueId(wrappedFrom.uniqueId);
-        wrappedTo.setName(wrappedFrom.name);
+        this.setUniqueId(from.getUniqueId());
+        this.setName(from.getName());
     }
 
     @Override

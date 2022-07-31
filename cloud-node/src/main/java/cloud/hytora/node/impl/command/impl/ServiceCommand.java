@@ -1,11 +1,8 @@
 package cloud.hytora.node.impl.command.impl;
 
 import cloud.hytora.common.function.ExceptionallyConsumer;
-import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.command.CommandManager;
 import cloud.hytora.driver.command.CommandScope;
-import cloud.hytora.driver.command.Console;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.completer.CloudServerCompleter;
 import cloud.hytora.driver.command.completer.TaskCompleter;
@@ -20,20 +17,14 @@ import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.utils.ServiceState;
-import cloud.hytora.node.NodeDriver;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.function.Predicate;
 
-@Command(
-        name = {"service", "ser"},
-        scope = CommandScope.CONSOLE_AND_INGAME,
-        permission = "cloud.command.use"
-)
 @CommandDescription("Manages all services")
+@Command({"service", "ser"})
+@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
+@CommandPermission("cloud.command.use")
 @CommandAutoHelp
 public class ServiceCommand {
 
@@ -46,7 +37,7 @@ public class ServiceCommand {
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class).leaveCurrentScreen();
     }
 
-    @SubCommand("list")
+    @Command("list")
     @CommandDescription("Lists all online services")
     public void onListCommand(CommandSender sender) {
         sender.sendMessage("§8");
@@ -56,13 +47,14 @@ public class ServiceCommand {
         sender.sendMessage("§8");
     }
 
-    @SubCommand("deploy <service> <templateName> <excludes>")
+    @Command("deploy")
+    @Syntax("<service> <templateName> <excludes>")
     @CommandDescription("Copies a service into its template (exclusions are split by ';', use '#' to include all)")
     public void onDeployCommand(
             CommandSender sender,
-            @CommandArgument(value = "service", completer = CloudServerCompleter.class) ServiceInfo service,
-            @CommandArgument("templateName") String templateName,
-            @CommandArgument("excludes") String excludes
+            @Argument(value = "service", completer = CloudServerCompleter.class) ServiceInfo service,
+            @Argument("templateName") String templateName,
+            @Argument("excludes") String excludes
     ) {
 
         if (service == null) {
@@ -82,11 +74,12 @@ public class ServiceCommand {
     }
 
 
-    @SubCommand("start <task> <amount>")
+    @Command("start")
+    @Syntax("<task> <amount>")
     public void onStartCommand(
             CommandSender sender,
-            @CommandArgument(value = "task", completer = TaskCompleter.class) ServiceTask task,
-            @CommandArgument("amount") int amount
+            @Argument(value = "task", completer = TaskCompleter.class) ServiceTask task,
+            @Argument("amount") int amount
 
     ) {
 
@@ -107,10 +100,11 @@ public class ServiceCommand {
 
     }
 
-    @SubCommand("screen <service>")
+    @Command("screen")
+    @Syntax("<service>")
     public void onScreenCommand(
             CommandSender sender,
-            @CommandArgument(value = "service", completer = CloudServerCompleter.class) ServiceInfo service
+            @Argument(value = "service", completer = CloudServerCompleter.class) ServiceInfo service
     ) {
         if (service == null) {
             sender.sendMessage("§cThere is no such Server online!");
@@ -141,11 +135,12 @@ public class ServiceCommand {
     }
 
 
-    @SubCommand("stop <name>")
+    @Command("stop")
+    @Syntax("<name>")
     @CommandDescription("Stops a service")
     public void onStopCommand(
             CommandSender sender,
-            @CommandArgument(value = "name", completer = CloudServerCompleter.class) ServiceInfo service
+            @Argument(value = "name", completer = CloudServerCompleter.class) ServiceInfo service
     ) {
         if (service == null) {
             sender.sendMessage("§cThere is no online service matching this name!");
@@ -162,11 +157,12 @@ public class ServiceCommand {
         CloudDriver.getInstance().getServiceManager().shutdownService(service);
     }
 
-    @SubCommand("info <name>")
+    @Command("info")
+    @Syntax("<name>")
     @CommandDescription("Shows info about a service")
     public void onInfoCommand(
             CommandSender sender,
-            @CommandArgument(value = "name", completer = CloudServerCompleter.class) ServiceInfo service
+            @Argument(value = "name", completer = CloudServerCompleter.class) ServiceInfo service
     ) {
         if (service == null) {
             sender.sendMessage("§cThere is no online service matching this name!");

@@ -4,13 +4,13 @@ import cloud.hytora.document.wrapped.StorableDocument;
 import cloud.hytora.driver.module.controller.base.ModuleConfig;
 import cloud.hytora.driver.module.controller.base.ModuleState;
 import cloud.hytora.driver.module.controller.ModuleClassLoader;
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 
 import javax.annotation.Nonnull;
 import java.nio.file.Path;
 
 
-public interface ModuleController extends Bufferable {
+public interface ModuleController extends IBufferObject {
 
 	boolean isEnabled();
 

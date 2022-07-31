@@ -12,17 +12,15 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-@Command(
-        name = {"player", "players", "ps", "p"},
-        scope = CommandScope.CONSOLE_AND_INGAME,
-        permission = "cloud.command.use"
-)
+@Command({"players", "player"})
+@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
+@CommandPermission("cloud.command.use")
 @CommandAutoHelp
 @CommandDescription("Manages all players")
 public class PlayerCommand {
 
 
-    @SubCommand("list")
+    @Command("list")
     @CommandDescription("Lists all players")
     public void executeList(CommandSender sender) {
 
@@ -42,9 +40,10 @@ public class PlayerCommand {
         sender.sendMessage("§8");
     }
 
-    @SubCommand("info <name>")
+    @Command("info")
+    @Syntax("<name>")
     @CommandDescription("debug command")
-    public void executeInfo(CommandSender sender, @CommandArgument("name") String name) {
+    public void executeInfo(CommandSender sender, @Argument("name") String name) {
 
         PlayerManager playerManager = CloudDriver.getInstance().getPlayerManager();
         CloudOfflinePlayer player = playerManager.getOfflinePlayerByNameBlockingOrNull(name);

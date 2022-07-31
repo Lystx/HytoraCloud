@@ -1,7 +1,7 @@
 package cloud.hytora.driver.database;
 
 
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import lombok.AllArgsConstructor;
 
 import java.util.HashMap;
@@ -31,9 +31,9 @@ public class SectionedDatabase {
      *
      * @param name the name of this section (internally used for your collection names of database)
      * @param typeClass (the wrapper class of your object; don't supply interface classes!)
-     * @param <T> the generic type that has to be a {@link Bufferable} object
+     * @param <T> the generic type that has to be a {@link IBufferObject} object
      */
-    public <T extends Bufferable> void registerSection(String name, Class<T> typeClass) {
+    public <T extends IBufferObject> void registerSection(String name, Class<T> typeClass) {
         DatabaseSection<T> section = new DatabaseSection<T>(this.database,name, typeClass);
         this.sections.put(typeClass, section);
     }
@@ -45,11 +45,11 @@ public class SectionedDatabase {
      * that can access the wrapper class (interfaces)
      *
      * @param typeClass the wrapper class or interface class
-     * @param <T> the generic type that has to be a {@link Bufferable} object
+     * @param <T> the generic type that has to be a {@link IBufferObject} object
      * @return found section or null
      */
     @SuppressWarnings("unchecked")
-    public <T extends Bufferable> DatabaseSection<T> getSection(Class<T> typeClass) {
+    public <T extends IBufferObject> DatabaseSection<T> getSection(Class<T> typeClass) {
         if (sections.containsKey(typeClass)) {
             return (DatabaseSection<T>) sections.get(typeClass);
         } else {

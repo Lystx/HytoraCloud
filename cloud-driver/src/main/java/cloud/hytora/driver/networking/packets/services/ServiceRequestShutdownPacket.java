@@ -2,7 +2,7 @@ package cloud.hytora.driver.networking.packets.services;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import lombok.AllArgsConstructor;
 
 import lombok.Getter;
@@ -20,7 +20,7 @@ import java.io.IOException;
  * @since SNAPSHOT-1.0
  */
 @NoArgsConstructor @AllArgsConstructor @Getter
-public class ServiceRequestShutdownPacket extends Packet {
+public class ServiceRequestShutdownPacket extends AbstractPacket {
 
     /**
      * The name of the service that should be shut down

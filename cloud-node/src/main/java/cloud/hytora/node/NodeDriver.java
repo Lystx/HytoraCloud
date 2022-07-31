@@ -26,7 +26,8 @@ import cloud.hytora.driver.http.impl.NettyHttpServer;
 import cloud.hytora.driver.message.ChannelMessenger;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.packets.services.ServiceForceShutdownPacket;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
+import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.permission.PermissionChecker;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
@@ -118,7 +119,7 @@ import java.util.stream.Collectors;
 
 @Getter
 @Setter
-public class NodeDriver extends CloudDriver implements Node {
+public class NodeDriver extends CloudDriver<Node> implements Node {
 
     @Getter
     private static NodeDriver instance;
@@ -417,6 +418,11 @@ public class NodeDriver extends CloudDriver implements Node {
         this.executor.sendPacketToAll(packet);
     }
 
+    @Override
+    public Node thisSidesClusterParticipant() {
+        return this;
+    }
+
 
     public void reload() {
         logger.info("Reloading..");
@@ -646,7 +652,7 @@ public class NodeDriver extends CloudDriver implements Node {
     }
 
     @Override
-    public void sendPacket(Packet packet) {
+    public void sendPacket(IPacket packet) {
         this.executor.sendPacketToAll(packet);
     }
 
@@ -685,6 +691,7 @@ public class NodeDriver extends CloudDriver implements Node {
         }
 
         this.running = false;
+        this.commandManager.setActive(false);
 
 
         this.logger.info("§7Trying to terminate the §cCloudsystem§8...");
@@ -707,11 +714,9 @@ public class NodeDriver extends CloudDriver implements Node {
                 }
             }
 
-            Task.runSync(() -> logger.info("Terminating in §8[§c5§8]"));
-            Task.runTaskLater(() -> logger.info("Terminating in §8[§c4§8]"), TimeUnit.SECONDS, 1);
-            Task.runTaskLater(() -> logger.info("Terminating in §8[§c3§8]"), TimeUnit.SECONDS, 2);
-            Task.runTaskLater(() -> logger.info("Terminating in §8[§c2§8]"), TimeUnit.SECONDS, 3);
-            Task.runTaskLater(() -> logger.info("Terminating in §8[§c1§8]"), TimeUnit.SECONDS, 4);
+            Task.runSync(() -> logger.info("Terminating in §8[§c3§8]"));
+            Task.runTaskLater(() -> logger.info("Terminating in §8[§c2§8]"), TimeUnit.SECONDS, 1);
+            Task.runTaskLater(() -> logger.info("Terminating in §8[§c1§8]"), TimeUnit.SECONDS, 2);
 
             //Shutting down networking and database
             Task.multiTasking(this.executor.shutdown(), this.databaseManager.shutdown()).addUpdateListener(wrapper -> {
@@ -721,9 +726,25 @@ public class NodeDriver extends CloudDriver implements Node {
 
                     logger.info("§aSuccessfully exited the CloudSystem§8!");
                     System.exit(0);
-                }, TimeUnit.SECONDS, 5);
+                }, TimeUnit.SECONDS, 3);
             });
         }, TimeUnit.SECONDS, 1);
     }
+
+    @Override
+    public void clone(Node from) {
+
+    }
+
+    @Override
+    public String replacePlaceHolders(String input) {
+        return input;
+    }
+
+    @Override
+    public String getMainIdentity() {
+        return this.getName();
+    }
+
 
 }

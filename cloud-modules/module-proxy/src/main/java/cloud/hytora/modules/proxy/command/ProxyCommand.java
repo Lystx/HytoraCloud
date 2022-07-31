@@ -1,23 +1,18 @@
 package cloud.hytora.modules.proxy.command;
 
 import cloud.hytora.driver.command.CommandScope;
-import cloud.hytora.driver.command.annotation.Command;
-import cloud.hytora.driver.command.annotation.CommandAutoHelp;
-import cloud.hytora.driver.command.annotation.CommandDescription;
-import cloud.hytora.driver.command.annotation.SubCommand;
+import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.modules.proxy.ProxyModule;
 
-@Command(
-        name = "proxy",
-        permission = "cloud.module.proxy.command.use",
-        scope = CommandScope.CONSOLE_AND_INGAME
-)
+@Command("proxy")
+@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
+@CommandPermission("cloud.modules.proxy.command.use")
 @CommandAutoHelp
 @CommandDescription("Manages the proxy module")
 public class ProxyCommand {
 
-    @SubCommand("rl")
+    @Command("rl")
     @CommandDescription("Reloads the proxy module")
     public void executeReload(CommandSender sender) {
         ProxyModule.getInstance().loadConfig();

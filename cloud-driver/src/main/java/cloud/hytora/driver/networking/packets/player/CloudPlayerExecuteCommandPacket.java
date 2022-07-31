@@ -2,7 +2,7 @@ package cloud.hytora.driver.networking.packets.player;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,7 +14,7 @@ import java.util.UUID;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CloudPlayerExecuteCommandPacket extends Packet {
+public class CloudPlayerExecuteCommandPacket extends AbstractPacket {
 
     /**
      * The uuid of the player that executed a command

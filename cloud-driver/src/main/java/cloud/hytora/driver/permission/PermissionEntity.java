@@ -1,7 +1,7 @@
 package cloud.hytora.driver.permission;
 
 import cloud.hytora.common.task.Task;
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 
 import java.util.Collection;
 
@@ -15,7 +15,7 @@ import java.util.Collection;
  * @author Lystx
  * @since SNAPSHOT-1.3
  */
-public interface PermissionEntity extends Bufferable {
+public interface PermissionEntity extends IBufferObject {
 
     /**
      * Adds a provided permission to this entity

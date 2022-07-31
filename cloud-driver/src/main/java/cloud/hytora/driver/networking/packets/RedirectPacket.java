@@ -2,8 +2,9 @@ package cloud.hytora.driver.networking.packets;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
+import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import lombok.AllArgsConstructor;
 
 import lombok.Getter;
@@ -15,10 +16,10 @@ import java.io.IOException;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class RedirectPacket extends Packet {
+public class RedirectPacket extends AbstractPacket {
 
     private String client;
-    private Packet packet;
+    private IPacket packet;
 
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {

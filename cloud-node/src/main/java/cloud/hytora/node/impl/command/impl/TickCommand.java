@@ -7,15 +7,13 @@ import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.tps.TickCounter;
 import cloud.hytora.driver.tps.TickType;
 
-@Command(
-        name = {"tps", "tick", "ticks"},
-        scope = CommandScope.CONSOLE_AND_INGAME,
-        permission = "cloud.command.use"
-)
+@Command("tps")
+@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
+@CommandPermission("cloud.command.use")
 @CommandDescription("Shows performance of cloud")
 public class TickCommand {
 
-    @SubCommand("")
+    @Command("")
     @CommandDescription("Shows performance of cloud")
     public void execute(CommandSender sender) {
 

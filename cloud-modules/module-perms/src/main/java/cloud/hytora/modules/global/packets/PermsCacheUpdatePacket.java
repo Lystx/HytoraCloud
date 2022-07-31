@@ -1,9 +1,8 @@
 package cloud.hytora.modules.global.packets;
 
-import cloud.hytora.driver.command.annotation.Command;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.permission.PermissionGroup;
 import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.modules.global.impl.DefaultPermissionGroup;
@@ -19,7 +18,7 @@ import java.util.Collection;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class PermsCacheUpdatePacket extends Packet {
+public class PermsCacheUpdatePacket extends AbstractPacket {
 
     private Collection<PermissionGroup> permissionGroups;
     private Collection<PermissionPlayer> permissionPlayers;

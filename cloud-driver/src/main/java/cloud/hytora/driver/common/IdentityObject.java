@@ -1,6 +1,6 @@
 package cloud.hytora.driver.common;
 
-public interface IdentityHolder {
+public interface IdentityObject {
 
     /**
      * What is always preferred to be the identity

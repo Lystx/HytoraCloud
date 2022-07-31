@@ -43,7 +43,7 @@ public enum ServiceVersion {
     ),
     VELOCITY_3(
             VersionType.VELOCITY,
-            "https://versions.velocitypowered.com/download/3.0.1.jar",
+            "https://download1525.mediafire.com/li1r4i4glplg/srbg7o66ig2oei1/velocity-3.0.1.jar",
             "Velocity",
             "3.0.1",
             VelocityConfiguration.class, ServerIconFile.class //configurations

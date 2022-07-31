@@ -1,6 +1,8 @@
 package cloud.hytora.remote.impl.log;
 
+import cloud.hytora.common.logging.ConsoleColor;
 import cloud.hytora.common.logging.LogLevel;
+import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
 import cloud.hytora.common.logging.formatter.UncoloredMessageFormatter;
 import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.logging.handler.LogHandler;

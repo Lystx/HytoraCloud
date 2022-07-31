@@ -2,7 +2,7 @@ package cloud.hytora.driver.networking.packets.player;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.player.impl.DefaultCloudPlayer;
 import cloud.hytora.driver.player.CloudPlayer;
 
@@ -16,7 +16,7 @@ import java.io.IOException;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CloudPlayerUpdatePacket extends Packet {
+public class CloudPlayerUpdatePacket extends AbstractPacket {
 
     private CloudPlayer player;
 

@@ -24,19 +24,18 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
-@Command(
-        name = {"task", "tasks", "t"},
-        scope = CommandScope.CONSOLE_AND_INGAME,
-        permission = "cloud.command.use"
-)
 @CommandDescription("Manages all service tasks")
+@Command({"task", "tasks"})
+@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
+@CommandPermission("cloud.command.use")
 @CommandAutoHelp
 public class TaskCommand {
 
     
-    @SubCommand("info <name>")
+    @Command("info")
+    @Syntax("<name>")
     @CommandDescription("Shows info about a task")
-    public void execute(CommandSender sender, @CommandArgument(value = "name", completer = TaskCompleter.class) String name) {
+    public void execute(CommandSender sender, @Argument(value = "name", completer = TaskCompleter.class) String name) {
 
         ServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
 
@@ -62,9 +61,9 @@ public class TaskCommand {
         sender.sendMessage("§bVersion: §f" + task.getVersion().getTitle());
         sender.sendMessage("§8");
     }
-    @SubCommand("create")
+    @Command("create")
     @CommandDescription("Creates a new task")
-    @SubCommandScope(CommandScope.CONSOLE)
+    @CommandExecutionScope(CommandScope.CONSOLE)
     public void executeCreate(CommandSender sender) {
 
         new TaskSetup(NodeDriver.getInstance().getConsole()).start((setup, state) -> {
@@ -168,9 +167,10 @@ public class TaskCommand {
         });
     }
 
-    @SubCommand("delete <name>")
+    @Command("delete")
+    @Syntax("<name>")
     @CommandDescription("Deletes a task")
-    public void executeDelete(CommandSender sender, @CommandArgument(value = "name", completer = TaskCompleter.class) String name) {
+    public void executeDelete(CommandSender sender, @Argument(value = "name", completer = TaskCompleter.class) String name) {
         ServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
         if (task == null) {
             sender.sendMessage("§cThere is no existing ServiceTask with the name §e" + name + "§c!");
@@ -182,9 +182,10 @@ public class TaskCommand {
         sender.sendMessage("§7The ServiceTask §b" + task.getName() + " §7was deleted§8!");
     }
 
-    @SubCommand("toggleMaintenance <name>")
+    @Command("toggleMaintenance")
+    @Syntax("<name>")
     @CommandDescription("Toggles maintenance mode for a task")
-    public void executeToggleMaintenance(CommandSender sender, @CommandArgument(value = "name", completer = TaskCompleter.class) String name) {
+    public void executeToggleMaintenance(CommandSender sender, @Argument(value = "name", completer = TaskCompleter.class) String name) {
         ServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
         if (task == null) {
             sender.sendMessage("§cThere is no existing ServiceTask with the name §e" + name + "§c!");
@@ -197,7 +198,7 @@ public class TaskCommand {
         sender.sendMessage("§7The maintenance state of ServiceTask §b" + task.getName() + " §7is now " + (maintenance ? "§aEnabled": "§cDisabled") + "§8!");
     }
 
-    @SubCommand("list")
+    @Command("list")
     @CommandDescription("Lists all configurations")
     public void executeList(CommandSender sender) {
         Collection<ServiceTask> cachedTasks = CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks();

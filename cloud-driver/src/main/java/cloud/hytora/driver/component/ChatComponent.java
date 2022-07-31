@@ -4,7 +4,7 @@ package cloud.hytora.driver.component;
 import cloud.hytora.document.*;
 import cloud.hytora.driver.component.event.click.ClickEvent;
 import cloud.hytora.driver.component.event.hover.HoverEvent;
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import lombok.*;
@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 @Accessors(chain = true)
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class ChatComponent implements Bufferable {
+public class ChatComponent implements IBufferObject {
     /**
      * The text that this chat component represents
      */

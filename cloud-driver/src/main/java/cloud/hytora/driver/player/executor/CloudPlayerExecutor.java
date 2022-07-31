@@ -2,7 +2,7 @@ package cloud.hytora.driver.player.executor;
 
 import cloud.hytora.driver.component.ChatComponent;
 import cloud.hytora.driver.networking.packets.player.*;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.services.ServiceInfo;
 import lombok.AllArgsConstructor;
@@ -44,7 +44,7 @@ public class CloudPlayerExecutor implements PlayerExecutor {
         this.sendPacketToProxy(new CloudPlayerSendServicePacket(getExecutorUniqueId(), server.getName()));
     }
 
-    private void sendPacketToProxy(Packet packet) {
+    private void sendPacketToProxy(AbstractPacket packet) {
         ServiceInfo proxyServer = player.getProxyServer();
         if (proxyServer != null) {
             proxyServer.sendPacket(packet);

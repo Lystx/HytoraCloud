@@ -3,7 +3,7 @@ package cloud.hytora.driver.networking.packets;
 import cloud.hytora.driver.networking.protocol.SimpleNetworkComponent;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.networking.NetworkComponent;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,7 +15,7 @@ import java.io.IOException;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class DriverLoggingPacket extends Packet {
+public class DriverLoggingPacket extends AbstractPacket {
 
     private NetworkComponent component;
     private String message;

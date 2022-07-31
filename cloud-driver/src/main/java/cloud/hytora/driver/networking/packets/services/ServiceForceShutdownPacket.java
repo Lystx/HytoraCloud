@@ -5,7 +5,7 @@ import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUpdateEvent;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.services.ServiceInfo;
 import lombok.AllArgsConstructor;
 
@@ -24,7 +24,7 @@ import java.io.IOException;
  * @since SNAPSHOT-1.0
  */
 @Getter @AllArgsConstructor @NoArgsConstructor
-public class ServiceForceShutdownPacket extends Packet {
+public class ServiceForceShutdownPacket extends AbstractPacket {
 
     /**
      * The name of the service to shut down

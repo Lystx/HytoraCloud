@@ -3,6 +3,7 @@ package cloud.hytora.driver.node;
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
+import cloud.hytora.driver.common.IClusterObject;
 import cloud.hytora.driver.networking.EndpointNetworkExecutor;
 import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
 import cloud.hytora.driver.networking.packets.RedirectPacket;
@@ -12,7 +13,8 @@ import cloud.hytora.driver.networking.packets.node.NodeRequestShutdownPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
+import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
 import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.services.ServiceInfo;
@@ -48,7 +50,7 @@ public class NodeInfo implements Node {
     }
 
     @Override
-    public void sendPacket(Packet packet) {
+    public void sendPacket(IPacket packet) {
         if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
             ((EndpointNetworkExecutor)CloudDriver.getInstance().getExecutor()).sendPacket(packet, this);
         } else {
@@ -98,4 +100,18 @@ public class NodeInfo implements Node {
         }
     }
 
+    @Override
+    public void clone(Node from) {
+
+    }
+
+    @Override
+    public String replacePlaceHolders(String input) {
+        return input;
+    }
+
+    @Override
+    public String getMainIdentity() {
+        return this.name;
+    }
 }

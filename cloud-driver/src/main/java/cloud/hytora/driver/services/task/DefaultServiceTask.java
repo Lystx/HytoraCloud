@@ -1,12 +1,12 @@
 package cloud.hytora.driver.services.task;
 
 import cloud.hytora.driver.event.defaults.task.TaskMaintenanceChangeEvent;
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.node.Node;
-import cloud.hytora.driver.property.ProtocolPropertyHolder;
+import cloud.hytora.driver.property.ProtocolPropertyObject;
 import cloud.hytora.driver.services.ConfigurableService;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.impl.DefaultConfigurableService;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class DefaultServiceTask extends ProtocolPropertyHolder implements ServiceTask, Bufferable {
+public class DefaultServiceTask extends ProtocolPropertyObject implements ServiceTask, IBufferObject {
 
     private String name, parent, node, motd, permission;
     private int memory, defaultMaxPlayers, minOnlineService, maxOnlineService, startOrder;
@@ -140,26 +140,25 @@ public class DefaultServiceTask extends ProtocolPropertyHolder implements Servic
     }
 
     @Override
-    public void cloneInternally(ServiceTask from, ServiceTask t) {
-        DefaultServiceTask to = (DefaultServiceTask) t;
+    public void clone(ServiceTask from) {
 
-        to.setName(from.getName());
-        to.setPermission(from.getPermission());
-        to.setParent(from.getTaskGroup().getName());
-        to.setNode(from.getNode());
-        to.setMotd(from.getMotd());
+        this.setName(from.getName());
+        this.setPermission(from.getPermission());
+        this.setParent(from.getTaskGroup().getName());
+        this.setNode(from.getNode());
+        this.setMotd(from.getMotd());
 
-        to.setMemory(from.getMemory());
-        to.setDefaultMaxPlayers(from.getDefaultMaxPlayers());
-        to.setMinOnlineService(from.getMinOnlineService());
-        to.setMaxOnlineService(from.getMaxOnlineService());
-        to.setStartOrder(from.getStartOrder());
+        this.setMemory(from.getMemory());
+        this.setDefaultMaxPlayers(from.getDefaultMaxPlayers());
+        this.setMinOnlineService(from.getMinOnlineService());
+        this.setMaxOnlineService(from.getMaxOnlineService());
+        this.setStartOrder(from.getStartOrder());
 
-        to.setFallback((SimpleFallback) from.getFallback());
-        to.setMaintenance(from.isMaintenance());
+        this.setFallback((SimpleFallback) from.getFallback());
+        this.setMaintenance(from.isMaintenance());
 
-        to.setVersion(from.getVersion());
-        to.setTemplates(from.getTemplates());
+        this.setVersion(from.getVersion());
+        this.setTemplates(from.getTemplates());
 
     }
 

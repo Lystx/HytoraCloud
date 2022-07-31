@@ -2,10 +2,10 @@ package cloud.hytora.driver.networking.packets;
 
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.driver.event.defaults.driver.DriverCacheUpdateEvent;
-import cloud.hytora.driver.networking.PacketSender;
+import cloud.hytora.driver.networking.IPacketExecutor;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.node.NodeInfo;
 import cloud.hytora.driver.player.impl.DefaultCloudPlayer;
@@ -28,7 +28,7 @@ import java.util.List;
 
 @Getter
 @AllArgsConstructor
-public class DriverUpdatePacket extends Packet {
+public class DriverUpdatePacket extends AbstractPacket {
 
     private Collection<ServiceTask> groups;
     private Collection<TaskGroup> parentGroups;
@@ -37,7 +37,7 @@ public class DriverUpdatePacket extends Packet {
     private Collection<Node> connectedNodes;
 
 
-    public static void publishUpdate(PacketSender sender) {
+    public static void publishUpdate(IPacketExecutor sender) {
         sender.sendPacket(new DriverUpdatePacket());
 
         Logger.constantInstance().debug("Published Update using {}", sender);

@@ -3,9 +3,10 @@ package cloud.hytora.driver.networking.protocol.wrapped;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
+import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.networking.protocol.packets.QueryState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 
 import java.util.function.Consumer;
 
@@ -23,6 +24,6 @@ public interface ChanneledPacketAction<R> {
 
     ChanneledPacketAction<R> receivers(ConnectionType... types);
 
-    Task<R> execute(Packet packet);
+    Task<R> execute(IPacket packet);
 
 }

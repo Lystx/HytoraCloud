@@ -2,7 +2,6 @@ package cloud.hytora.driver.networking.protocol.codec.buf;
 
 import cloud.hytora.common.collection.WrappedException;
 import cloud.hytora.common.misc.CollectionUtils;
-import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.common.misc.ZipUtils;
 import cloud.hytora.document.Document;
@@ -414,7 +413,7 @@ public class DefaultPacketBuffer implements PacketBuffer {
 	}
 
 	@Override
-	public PacketBuffer writePacket(Packet packet) throws IOException {
+	public PacketBuffer writePacket(IPacket packet) throws IOException {
 		int id = PacketProvider.getPacketId(packet.getClass());
 
 		if (id == -1) {
@@ -432,7 +431,7 @@ public class DefaultPacketBuffer implements PacketBuffer {
 		this.writeInt(id);
 
 		//writing destination channel
-		this.writeString(packet.destinationChannel());
+		this.writeString(packet.getDestinationChannel());
 
 		//writing header
 		this.writeDocument(packet.transferInfo().getDocument());
@@ -452,7 +451,7 @@ public class DefaultPacketBuffer implements PacketBuffer {
 
 
 	@SuppressWarnings("unchecked")
-	public <T extends Packet> T readPacket() throws IOException {
+	public <T extends IPacket> T readPacket() throws IOException {
 
 		PacketBuffer buffer = this.readBuffer();
 
@@ -463,7 +462,7 @@ public class DefaultPacketBuffer implements PacketBuffer {
 		String name = this.readString();
 		ConnectionType type = this.readEnum(ConnectionType.class);
 
-		Class<? extends Packet> packetClass = PacketProvider.getPacketClass(index);
+		Class<? extends IPacket> packetClass = PacketProvider.getPacketClass(index);
 
 		if (packetClass == null) {
 			return null;
@@ -475,8 +474,8 @@ public class DefaultPacketBuffer implements PacketBuffer {
 			throw new IllegalStateException("Couldn't construct packet for class " + packetClass);
 		}
 
-		((Packet)packet).transferInfo(new SimplePacketTransferInfo(uniqueId, new SimpleNetworkComponent(name, type), header));
-		((Packet)packet).buffer(buffer);
+		((AbstractPacket)packet).transferInfo(new SimplePacketTransferInfo(uniqueId, new SimpleNetworkComponent(name, type), header));
+		((AbstractPacket)packet).buffer(buffer);
 
 		packet.applyBuffer(BufferState.READ, this);
 		return packet;
@@ -626,12 +625,12 @@ public class DefaultPacketBuffer implements PacketBuffer {
 	@Nonnull
 	@Override
 	public PacketBuffer writeDocumentArray(@Nonnull Document[] documents) {
-		return writeObjectArray(CollectionUtils.convertCollection(Arrays.asList(documents), ProtocolDocument::new).toArray(new Bufferable[0]));
+		return writeObjectArray(CollectionUtils.convertCollection(Arrays.asList(documents), ProtocolDocument::new).toArray(new IBufferObject[0]));
 	}
 
 	@Nonnull
 	@Override
-	public <T extends Bufferable> T readObject(@Nonnull Class<T> objectClass) {
+	public <T extends IBufferObject> T readObject(@Nonnull Class<T> objectClass) {
 		try {
 			T empty = ReflectionUtils.createEmpty(objectClass);
 			empty.applyBuffer(BufferState.READ, this);
@@ -643,7 +642,7 @@ public class DefaultPacketBuffer implements PacketBuffer {
 
 	@Nonnull
 	@Override
-	public PacketBuffer writeObject(@Nonnull Bufferable object) {
+	public PacketBuffer writeObject(@Nonnull IBufferObject object) {
 		try {
 			object.applyBuffer(BufferState.WRITE, this);
 		} catch (IOException e) {
@@ -654,42 +653,42 @@ public class DefaultPacketBuffer implements PacketBuffer {
 
 	@Nullable
 	@Override
-	public <T extends Bufferable> T readOptionalObject(@Nonnull Class<T> objectClass) {
+	public <T extends IBufferObject> T readOptionalObject(@Nonnull Class<T> objectClass) {
 		return readOptional(() -> readObject(objectClass));
 	}
 
 	@Nonnull
 	@Override
-	public PacketBuffer writeOptionalObject(@Nullable Bufferable object) {
+	public PacketBuffer writeOptionalObject(@Nullable IBufferObject object) {
 		return writeOptional(object, this::writeObject);
 	}
 
 	@Nonnull
 	@Override
-	public <T extends Bufferable> Collection<T> readObjectCollection(@Nonnull Class<T> objectClass) {
+	public <T extends IBufferObject> Collection<T> readObjectCollection(@Nonnull Class<T> objectClass) {
 		return readCollection(() -> readObject(objectClass));
 	}
 
 	@NotNull
-	public <T extends Bufferable, W extends T> Collection<T> readWrapperObjectCollection(Class<W> objectClass) {
+	public <T extends IBufferObject, W extends T> Collection<T> readWrapperObjectCollection(Class<W> objectClass) {
 		return new ArrayList<>(readObjectCollection(objectClass));
 	}
 
 	@Nonnull
 	@Override
-	public PacketBuffer writeObjectCollection(@Nonnull Collection<? extends Bufferable> objects) {
+	public PacketBuffer writeObjectCollection(@Nonnull Collection<? extends IBufferObject> objects) {
 		return writeCollection(objects, this::writeObject);
 	}
 
 	@Nonnull
 	@Override
-	public <T extends Bufferable> T[] readObjectArray(@Nonnull Class<T> objectClass) {
+	public <T extends IBufferObject> T[] readObjectArray(@Nonnull Class<T> objectClass) {
 		return readArray(objectClass, () -> readObject(objectClass));
 	}
 
 	@Nonnull
 	@Override
-	public <T extends Bufferable> PacketBuffer writeObjectArray(@Nonnull T[] objects) {
+	public <T extends IBufferObject> PacketBuffer writeObjectArray(@Nonnull T[] objects) {
 		return writeArray(objects, this::writeObject);
 	}
 

@@ -1,11 +1,11 @@
 package cloud.hytora.driver.services;
 
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
-public interface ServicePingProperties extends Bufferable {
+public interface ServicePingProperties extends IBufferObject {
 
     void setMotd(@NotNull String motd);
 

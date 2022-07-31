@@ -3,7 +3,7 @@ package cloud.hytora.modules.ingame;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.PacketProvider;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.permission.PermissionGroup;
@@ -89,7 +89,7 @@ public class RemotePermissionManager extends DefaultPermissionManager implements
     @Override
     public PermissionPlayer getPlayerByUniqueIdOrNull(@NotNull UUID uniqueId) {
         return this.allCachedPermissionPlayers.stream().filter(p -> p.getUniqueId().equals(uniqueId)).findFirst().orElseGet(() -> {
-            return new PermsPlayerRequestPacket(null, uniqueId).publishAsQuery().syncUninterruptedly().get().buffer().readObject(DefaultPermissionPlayer.class);
+            return new PermsPlayerRequestPacket(null, uniqueId).awaitResponse().syncUninterruptedly().get().buffer().readObject(DefaultPermissionPlayer.class);
         });
     }
 
@@ -98,7 +98,7 @@ public class RemotePermissionManager extends DefaultPermissionManager implements
     @Override
     public PermissionPlayer getPlayerByNameOrNull(@NotNull String name) {
         return this.allCachedPermissionPlayers.stream().filter(p -> p.getName().equalsIgnoreCase(name)).findFirst().orElseGet(() -> {
-            return new PermsPlayerRequestPacket(name, null).publishAsQuery().syncUninterruptedly().get().buffer().readObject(DefaultPermissionPlayer.class);
+            return new PermsPlayerRequestPacket(name, null).awaitResponse().syncUninterruptedly().get().buffer().readObject(DefaultPermissionPlayer.class);
         });
     }
 
@@ -109,7 +109,7 @@ public class RemotePermissionManager extends DefaultPermissionManager implements
         PermissionPlayer player = this.allCachedPermissionPlayers.stream().filter(p -> p.getUniqueId().equals(uniqueId)).findFirst().orElse(null);
         if (player == null) {
             PermsPlayerRequestPacket packet = new PermsPlayerRequestPacket(null, uniqueId);
-            packet.publishAsQuery().thenAccept(bufferedResponse -> {
+            packet.awaitResponse().thenAccept(bufferedResponse -> {
                 DefaultPermissionPlayer defaultPermissionPlayer = bufferedResponse.buffer().readObject(DefaultPermissionPlayer.class);
                 task.setResult(defaultPermissionPlayer);
             });
@@ -126,7 +126,7 @@ public class RemotePermissionManager extends DefaultPermissionManager implements
         PermissionPlayer player = this.allCachedPermissionPlayers.stream().filter(p -> p.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
         if (player == null) {
              PermsPlayerRequestPacket packet = new PermsPlayerRequestPacket(name, null);
-             packet.publishAsQuery().thenAccept(bufferedResponse -> {
+             packet.awaitResponse().thenAccept(bufferedResponse -> {
                  DefaultPermissionPlayer defaultPermissionPlayer = bufferedResponse.buffer().readObject(DefaultPermissionPlayer.class);
                  task.setResult(defaultPermissionPlayer);
              });
@@ -138,7 +138,7 @@ public class RemotePermissionManager extends DefaultPermissionManager implements
 
     @Override
     public void updatePermissionPlayer(PermissionPlayer player) {
-        Packet packet = new PermsPlayerUpdatePacket(player);
+        AbstractPacket packet = new PermsPlayerUpdatePacket(player);
         packet.publishAsync();
     }
 

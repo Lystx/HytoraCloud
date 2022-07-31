@@ -1,9 +1,10 @@
 package cloud.hytora.driver.networking.protocol.wrapped;
 
-import cloud.hytora.driver.networking.PacketSender;
+import cloud.hytora.driver.networking.IPacketExecutor;
 import cloud.hytora.driver.networking.protocol.packets.BufferedResponse;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
+import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import io.netty.channel.ChannelHandlerContext;
 import cloud.hytora.driver.networking.NetworkExecutor;
 
@@ -11,7 +12,7 @@ import java.net.InetSocketAddress;
 import java.util.Optional;
 import java.util.Set;
 
-public interface PacketChannel extends PacketSender {
+public interface PacketChannel extends IPacketExecutor {
 
     /**
      * If a connection has been built up before
@@ -31,7 +32,7 @@ public interface PacketChannel extends PacketSender {
      *
      * @param packet the packet to send
      */
-    void flushPacket(Packet packet);
+    void flushPacket(IPacket packet);
 
     /**
      * Closes this context

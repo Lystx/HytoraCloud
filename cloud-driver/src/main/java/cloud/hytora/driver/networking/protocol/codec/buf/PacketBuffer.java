@@ -3,9 +3,10 @@ package cloud.hytora.driver.networking.protocol.codec.buf;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.NetworkExecutor;
+import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
@@ -69,9 +70,9 @@ public interface PacketBuffer {
 
 	void read(@Nonnull OutputStream out, int length) throws IOException;
 
-	<T extends Packet> T readPacket() throws IOException;
+	<T extends IPacket> T readPacket() throws IOException;
 
-	PacketBuffer writePacket(Packet packet) throws IOException;
+	PacketBuffer writePacket(IPacket packet) throws IOException;
 
 	@Nonnull
 	PacketBuffer write(@Nonnull byte[] bytes);
@@ -227,31 +228,31 @@ public interface PacketBuffer {
 	PacketBuffer writeDocumentArray(@Nonnull Document[] documents);
 
 	@Nonnull
-	<T extends Bufferable> T readObject(@Nonnull Class<T> objectClass);
+	<T extends IBufferObject> T readObject(@Nonnull Class<T> objectClass);
 
 	@Nonnull
-	PacketBuffer writeObject(@Nonnull Bufferable object);
+	PacketBuffer writeObject(@Nonnull IBufferObject object);
 
 	@Nullable
-	<T extends Bufferable> T readOptionalObject(@Nonnull Class<T> objectClass);
+	<T extends IBufferObject> T readOptionalObject(@Nonnull Class<T> objectClass);
 
 	@Nonnull
-	PacketBuffer writeOptionalObject(@Nullable Bufferable object);
+	PacketBuffer writeOptionalObject(@Nullable IBufferObject object);
 
 	@Nonnull
-	<T extends Bufferable> Collection<T> readObjectCollection(@Nonnull Class<T> objectClass);
+	<T extends IBufferObject> Collection<T> readObjectCollection(@Nonnull Class<T> objectClass);
 
 	@Nonnull
-	<T extends Bufferable, W extends T> Collection<T> readWrapperObjectCollection(Class<W> objectClass);
+	<T extends IBufferObject, W extends T> Collection<T> readWrapperObjectCollection(Class<W> objectClass);
 
 	@Nonnull
-	PacketBuffer writeObjectCollection(@Nonnull Collection<? extends Bufferable> objects);
+	PacketBuffer writeObjectCollection(@Nonnull Collection<? extends IBufferObject> objects);
 
 	@Nonnull
-	<T extends Bufferable> T[] readObjectArray(@Nonnull Class<T> objectClass);
+	<T extends IBufferObject> T[] readObjectArray(@Nonnull Class<T> objectClass);
 
 	@Nonnull
-	<T extends Bufferable> PacketBuffer writeObjectArray(@Nonnull T[] objects);
+	<T extends IBufferObject> PacketBuffer writeObjectArray(@Nonnull T[] objects);
 
 	@Nonnull
 	<E extends Enum<?>> E readEnum(@Nonnull Class<E> enumClass);

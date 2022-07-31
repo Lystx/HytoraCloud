@@ -2,9 +2,7 @@ package cloud.hytora.node.impl.command.impl;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
-import cloud.hytora.driver.command.annotation.Command;
-import cloud.hytora.driver.command.annotation.CommandDescription;
-import cloud.hytora.driver.command.annotation.SubCommand;
+import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.annotation.data.RegisteredCommand;
 import cloud.hytora.driver.command.sender.CommandSender;
 
@@ -12,15 +10,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@Command(
-        name = {"help", "?"},
-        scope = CommandScope.CONSOLE_AND_INGAME,
-        permission = "cloud.command.use"
-)
+@Command({"help", "?"})
+@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
+@CommandPermission("cloud.command.use")
 @CommandDescription("Shows this help menu")
 public class HelpCommand {
 
-    @SubCommand("")
+    @Root
     public void onHelpCommand(CommandSender sender) {
         sender.sendMessage("§8");
         sender.sendMessage("§7Commands§8:");

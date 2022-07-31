@@ -1,7 +1,7 @@
 package cloud.hytora.driver.player.connection;
 
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import lombok.AllArgsConstructor;
@@ -15,7 +15,7 @@ import java.io.IOException;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class DefaultPlayerConnection implements PlayerConnection, Bufferable {
+public class DefaultPlayerConnection implements PlayerConnection, IBufferObject {
 
     private String proxyName;
     private ProtocolAddress address;

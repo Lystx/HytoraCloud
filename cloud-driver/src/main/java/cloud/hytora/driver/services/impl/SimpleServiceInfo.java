@@ -1,20 +1,21 @@
 package cloud.hytora.driver.services.impl;
 
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
+import cloud.hytora.driver.common.IClusterObject;
 import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
 import cloud.hytora.driver.exception.IncompatibleDriverEnvironment;
 import cloud.hytora.driver.networking.packets.services.CloudServerCommandPacket;
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
-import cloud.hytora.driver.networking.protocol.packets.QueryState;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
+import cloud.hytora.driver.networking.protocol.packets.IPacket;
+import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.services.NodeServiceInfo;
 import cloud.hytora.driver.services.ServicePingProperties;
 import cloud.hytora.driver.services.task.ServiceTask;
@@ -28,7 +29,6 @@ import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
-import org.zeroturnaround.exec.ProcessResult;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,7 +39,7 @@ import java.util.function.Consumer;
 @Getter
 @NoArgsConstructor
 @Setter
-public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
+public class SimpleServiceInfo implements NodeServiceInfo, IBufferObject {
 
     private ServiceTask task;
     private int serviceID;
@@ -156,7 +156,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
     }
 
     @Override
-    public void sendPacket(Packet packet) {
+    public void sendPacket(IPacket packet) {
         CloudDriver.getInstance().getServiceManager().sendPacketToService(this, packet);
     }
 
@@ -200,18 +200,18 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
     }
 
     @Override
-    public void cloneInternally(ServiceInfo from, ServiceInfo to) {
+    public void clone(ServiceInfo from) {
 
-        to.setServiceState(from.getServiceState());
-        to.setServiceVisibility(from.getServiceVisibility());
+        this.setServiceState(from.getServiceState());
+        this.setServiceVisibility(from.getServiceVisibility());
 
-        to.setMaxPlayers(from.getMaxPlayers());
-        to.setMotd(from.getMotd());
-        to.setUniqueId(from.getUniqueId());
-        to.setReady(from.isReady());
-        ((SimpleServiceInfo)to).setCreationTimeStamp(from.getCreationTimestamp());
-        ((SimpleServiceInfo)to).setPingProperties((DefaultPingProperties) from.getPingProperties());
-        to.setProperties(from.getProperties());
+        this.setMaxPlayers(from.getMaxPlayers());
+        this.setMotd(from.getMotd());
+        this.setUniqueId(from.getUniqueId());
+        this.setReady(from.isReady());
+        this.setCreationTimeStamp(from.getCreationTimestamp());
+        this.setPingProperties((DefaultPingProperties) from.getPingProperties());
+        this.setProperties(from.getProperties());
     }
 
     @Override
@@ -288,4 +288,8 @@ public class SimpleServiceInfo implements NodeServiceInfo, Bufferable {
         }
     }
 
+    @Override
+    public String getMainIdentity() {
+        return null;
+    }
 }

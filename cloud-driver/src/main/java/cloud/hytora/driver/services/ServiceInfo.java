@@ -2,12 +2,10 @@ package cloud.hytora.driver.services;
 
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.common.MessagePlaceholder;
-import cloud.hytora.driver.common.SelfCloneable;
+import cloud.hytora.driver.common.IClusterObject;
 import cloud.hytora.driver.exception.IncompatibleDriverEnvironment;
 import cloud.hytora.driver.networking.NetworkComponent;
-import cloud.hytora.driver.networking.PacketSender;
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.IPacketExecutor;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
@@ -22,7 +20,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public interface ServiceInfo extends Bufferable, SelfCloneable<ServiceInfo>, NetworkComponent, PacketSender, MessagePlaceholder {
+public interface ServiceInfo extends IClusterObject<ServiceInfo>, NetworkComponent, IPacketExecutor {
 
     NodeServiceInfo asCloudServer() throws IncompatibleDriverEnvironment;
 

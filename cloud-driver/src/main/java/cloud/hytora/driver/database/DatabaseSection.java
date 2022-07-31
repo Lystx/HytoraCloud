@@ -2,8 +2,8 @@ package cloud.hytora.driver.database;
 
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
-import cloud.hytora.driver.common.IdentityHolder;
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.common.IdentityObject;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Getter
-public class DatabaseSection<T extends Bufferable> {
+public class DatabaseSection<T extends IBufferObject> {
 
     /**
      * The database
@@ -33,7 +33,7 @@ public class DatabaseSection<T extends Bufferable> {
         database.insert(collectionName, key, DocumentFactory.newJsonDocument(value));
     }
 
-    public <E extends IdentityHolder> void insert(E value) {
+    public <E extends IdentityObject> void insert(E value) {
         database.insert(collectionName, value.getMainIdentity(), DocumentFactory.newJsonDocument(value));
     }
 
@@ -49,7 +49,7 @@ public class DatabaseSection<T extends Bufferable> {
         }
     }
 
-    public <E extends IdentityHolder> void upsert(E value) {
+    public <E extends IdentityObject> void upsert(E value) {
         this.upsert(value.getMainIdentity(), (T) value);
     }
 

@@ -65,7 +65,7 @@ public class ProgressBar {
     /**
      * The current step of this progress
      */
-    private int current;
+    private long current;
 
     /**
      * The maximum percentage
@@ -151,7 +151,7 @@ public class ProgressBar {
      *
      * @param n the number to step to
      */
-    public void stepTo(int n) {
+    public void stepTo(long n) {
         this.current = n;
 
         if (printAutomatically) {

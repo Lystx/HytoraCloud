@@ -3,7 +3,7 @@ package cloud.hytora.driver.networking.packets.group;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.task.DefaultServiceTask;
 
@@ -17,7 +17,7 @@ import java.io.IOException;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ServiceTaskExecutePacket extends Packet {
+public class ServiceTaskExecutePacket extends AbstractPacket {
 
     private ServiceTask serviceTask;
     private ExecutionPayLoad payLoad;

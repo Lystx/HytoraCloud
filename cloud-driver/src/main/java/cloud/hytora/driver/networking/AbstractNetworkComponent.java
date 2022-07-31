@@ -2,10 +2,8 @@ package cloud.hytora.driver.networking;
 
 import cloud.hytora.common.collection.ThreadRunnable;
 import cloud.hytora.driver.networking.protocol.SimpleNetworkComponent;
-import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
-import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
+import cloud.hytora.driver.networking.protocol.packets.*;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
@@ -52,7 +50,7 @@ public abstract class AbstractNetworkComponent<T extends AbstractNetworkComponen
     }
 
     @Override
-    public <E extends Packet> void registerPacketHandler(@NotNull PacketHandler<E> packetHandler) {
+    public <E extends IPacket> void registerPacketHandler(@NotNull PacketHandler<E> packetHandler) {
         this.registerChannelHandler("global_packet_channel", packetHandler);
     }
 
@@ -62,7 +60,7 @@ public abstract class AbstractNetworkComponent<T extends AbstractNetworkComponen
     }
 
     @Override
-    public <P extends Packet> void registerSelfDestructivePacketHandler(@NotNull PacketHandler<P> packetHandler) {
+    public <P extends IPacket> void registerSelfDestructivePacketHandler(@NotNull PacketHandler<P> packetHandler) {
         this.registerPacketHandler((PacketHandler<P>) (wrapper, packet) -> {
             packetHandler.handle(wrapper, packet);
             unRegisterChannelHandler("global_packet_channel", packetHandler);
@@ -70,7 +68,7 @@ public abstract class AbstractNetworkComponent<T extends AbstractNetworkComponen
     }
 
     @Override
-    public <T extends Packet> void unRegisterChannelHandler(@NotNull String channelName, @NotNull PacketHandler<T> packetHandler) {
+    public <T extends IPacket> void unRegisterChannelHandler(@NotNull String channelName, @NotNull PacketHandler<T> packetHandler) {
         List<PacketHandler<?>> packetHandlers = this.channelPacketHandlers.get(channelName);
         if (packetHandlers != null) {
             packetHandlers.remove(packetHandler);
@@ -78,7 +76,7 @@ public abstract class AbstractNetworkComponent<T extends AbstractNetworkComponen
     }
 
     @Override
-    public <P extends Packet> void registerChannelHandler(@NotNull String channelName, @NotNull PacketHandler<P> packetHandler) {
+    public <P extends IPacket> void registerChannelHandler(@NotNull String channelName, @NotNull PacketHandler<P> packetHandler) {
         List<PacketHandler<?>> packetHandlers = this.channelPacketHandlers.get(channelName);
         if (packetHandlers == null) {
             packetHandlers = new ArrayList<>();
@@ -95,10 +93,10 @@ public abstract class AbstractNetworkComponent<T extends AbstractNetworkComponen
     }
 
     @Override
-    public <P extends Packet> void handlePacket(PacketChannel wrapper, @NotNull P packet) {
+    public <P extends IPacket> void handlePacket(PacketChannel wrapper, @NotNull P packet) {
         ThreadRunnable runnable = new ThreadRunnable(() -> {
 
-            List<PacketHandler<?>> packetHandlers = this.channelPacketHandlers.get(packet.destinationChannel());
+            List<PacketHandler<?>> packetHandlers = this.channelPacketHandlers.get(packet.getDestinationChannel());
 
             for (PacketHandler packetHandler : new ArrayList<>(packetHandlers)) {
                 try {

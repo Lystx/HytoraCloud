@@ -3,7 +3,7 @@ package cloud.hytora.driver.component.event.click;
 
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import lombok.Data;
@@ -14,7 +14,7 @@ import java.io.IOException;
 
 @Data
 @NoArgsConstructor
-public class ClickEvent implements Bufferable {
+public class ClickEvent implements IBufferObject {
 
     /**
      * The action that triggers this click event

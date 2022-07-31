@@ -16,18 +16,17 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@Command(
-        name = {"perms", "perm", "permissions"},
-        scope = CommandScope.CONSOLE_AND_INGAME,
-        permission = "cloud.module.perms.command.use"
-)
 @CommandDescription("Manages the perms-module")
+@Command({"perms", "perm"})
+@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
+@CommandPermission("cloud.module.perms.command.use")
 @CommandAutoHelp
 public class PermsCommand {
 
 
-    @SubCommand("user <player> info")
-    public void onPlayerInfo(CommandSender sender, @CommandArgument("player") PermissionPlayer player) {
+    @Command("user")
+    @Syntax("<player> info")
+    public void onPlayerInfo(CommandSender sender, @Argument("player") PermissionPlayer player) {
 
         if (player == null) {
             sender.sendMessage("§cThere is no such player registered in the modules' database!");
@@ -43,8 +42,9 @@ public class PermsCommand {
         sender.sendMessage("§8");
     }
 
-    @SubCommand("user <player> createManually")
-    public void onPlayerCreate(CommandSender sender, @CommandArgument("player") CloudOfflinePlayer player) {
+    @Command("user")
+    @Syntax("<player> createManually")
+    public void onPlayerCreate(CommandSender sender, @Argument("player") CloudOfflinePlayer player) {
         if (player == null) {
             sender.sendMessage("§cThe player has to have at least joined the network yet!");
             return;
@@ -55,8 +55,9 @@ public class PermsCommand {
         sender.sendMessage("Successfully created User[name={}, uuid={}]", pp.getName(), pp.getUniqueId());
     }
 
-    @SubCommand("user <player> group add <group>")
-    public void onPlayerGroupAdd(CommandSender sender, @CommandArgument("player") PermissionPlayer player, @CommandArgument("group") PermissionGroup group) {
+    @Command("user")
+    @Syntax("<player> group add <group>")
+    public void onPlayerGroupAdd(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("group") PermissionGroup group) {
 
         if (player == null) {
             sender.sendMessage("§cThe player has to have at least joined the network yet!");
@@ -72,8 +73,9 @@ public class PermsCommand {
         sender.sendMessage("Successfully added {} to group {} [PERMANENT]", player.getName(), group.getName());
     }
 
-    @SubCommand("user <player> group addTemp <group> <time> <unit>")
-    public void onPlayerGroupAddTemporary(CommandSender sender, @CommandArgument("player") PermissionPlayer player, @CommandArgument("group") PermissionGroup group, @CommandArgument("time") long time, @CommandArgument("unit") String unit) {
+    @Command("user")
+    @Syntax("<player> group addTemp <group> <time> <unit>")
+    public void onPlayerGroupAddTemporary(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("group") PermissionGroup group, @Argument("time") long time, @Argument("unit") String unit) {
 
         if (player == null) {
             sender.sendMessage("§cThe player has to have at least joined the network yet!");
@@ -100,8 +102,9 @@ public class PermsCommand {
 
     }
 
-    @SubCommand("user <player> group remove <group>")
-    public void onPlayerGroupRemove(CommandSender sender, @CommandArgument("player") PermissionPlayer player, @CommandArgument("group") PermissionGroup group) {
+    @Command("user")
+    @Syntax("<player> group remove <group>")
+    public void onPlayerGroupRemove(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("group") PermissionGroup group) {
 
         if (player == null) {
             sender.sendMessage("§cThe player has to have at least joined the network yet!");
@@ -122,8 +125,9 @@ public class PermsCommand {
         sender.sendMessage("Successfully removed {} from group {}!", player.getName(), group.getName());
     }
 
-    @SubCommand("user <player> perms add <permission>")
-    public void onPlayerPermissionAdd(CommandSender sender, @CommandArgument("player") PermissionPlayer player, @CommandArgument("permission") String permission) {
+    @Command("user")
+    @Syntax("<player> perms add <permission>")
+    public void onPlayerPermissionAdd(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("permission") String permission) {
 
         if (player == null) {
             sender.sendMessage("§cThe player has to have at least joined the network yet!");
@@ -140,8 +144,9 @@ public class PermsCommand {
         sender.sendMessage("Successfully added permission {} to player {} [PERMANENT]", permission, player.getName());
     }
 
-    @SubCommand("user <player> perms addTemp <permission> <time> <unit>")
-    public void onPlayerPermissionAddTemporary(CommandSender sender, @CommandArgument("player") PermissionPlayer player, @CommandArgument("permission") String permission, @CommandArgument("time") long time, @CommandArgument("unit") String unit) {
+    @Command("user")
+    @Syntax("<player> perms addTemp <permission> <time> <unit>")
+    public void onPlayerPermissionAddTemporary(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("permission") String permission, @Argument("time") long time, @Argument("unit") String unit) {
 
         if (player == null) {
             sender.sendMessage("§cThe player has to have at least joined the network yet!");
@@ -169,8 +174,9 @@ public class PermsCommand {
 
     }
 
-    @SubCommand("user <player> perms remove <permission>")
-    public void onPlayerPermissionRemove(CommandSender sender, @CommandArgument("player") PermissionPlayer player, @CommandArgument("permission") String permission) {
+    @Command("user")
+    @Syntax("<player> perms remove <permission>")
+    public void onPlayerPermissionRemove(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("permission") String permission) {
 
         if (player == null) {
             sender.sendMessage("§cThe player has to have at least joined the network yet!");
@@ -191,8 +197,9 @@ public class PermsCommand {
 
 
 
-    @SubCommand("group <group> info")
-    public void onGroupInfo(CommandSender sender, @CommandArgument("group") PermissionGroup group) {
+    @Command("group")
+    @Syntax("<group> info")
+    public void onGroupInfo(CommandSender sender, @Argument("group") PermissionGroup group) {
 
         if (group == null) {
             sender.sendMessage("§cThere is no such group registered in the module database!");
@@ -214,8 +221,9 @@ public class PermsCommand {
         sender.sendMessage("§8");
     }
 
-    @SubCommand("group create")
-    @SubCommandScope(CommandScope.CONSOLE)
+    @Command("group")
+    @Syntax("create")
+    @CommandExecutionScope(cloud.hytora.driver.command.CommandScope.CONSOLE)
     public void onGroupCreate(CommandSender sender) {
         PermissionManager permissionManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class);
         new GroupSetup().start((setup, state) -> {
@@ -254,8 +262,9 @@ public class PermsCommand {
     }
 
 
-    @SubCommand("group <group> delete")
-    public void onGroupDelete(CommandSender sender, @CommandArgument("group") PermissionGroup group) {
+    @Command("group")
+    @Syntax("<group> delete")
+    public void onGroupDelete(CommandSender sender, @Argument("group") PermissionGroup group) {
         if (group == null) {
             sender.sendMessage("§cThere is no such group in the module database registered");
             return;
@@ -267,8 +276,9 @@ public class PermsCommand {
 
 
 
-    @SubCommand("group <group> perms add <permission>")
-    public void onGroupPermissionAdd(CommandSender sender, @CommandArgument("group") PermissionGroup group, @CommandArgument("permission") String permission) {
+    @Command("group")
+    @Syntax("<group> perms add <permission>")
+    public void onGroupPermissionAdd(CommandSender sender, @Argument("group") PermissionGroup group, @Argument("permission") String permission) {
 
         if (group == null) {
             sender.sendMessage("§cThere is no such group in the module database registered");
@@ -285,8 +295,9 @@ public class PermsCommand {
         sender.sendMessage("Successfully added permission {} to group {} [PERMANENT]", permission, group.getName());
     }
 
-    @SubCommand("group <group> perms addTemp <permission> <time> <unit>")
-    public void onPlayerPermissionAddTemporary(CommandSender sender, @CommandArgument("group") PermissionGroup group, @CommandArgument("permission") String permission, @CommandArgument("time") long time, @CommandArgument("unit") String unit) {
+    @Command("group")
+    @Syntax("<group> perms addTemp <permission> <time> <unit>")
+    public void onPlayerPermissionAddTemporary(CommandSender sender, @Argument("group") PermissionGroup group, @Argument("permission") String permission, @Argument("time") long time, @Argument("unit") String unit) {
 
         if (group == null) {
             sender.sendMessage("§cThere is no such group in the module database registered");
@@ -313,8 +324,9 @@ public class PermsCommand {
 
     }
 
-    @SubCommand("group <group> perms remove <permission>")
-    public void onGroupPermissionRemove(CommandSender sender, @CommandArgument("group") PermissionGroup group, @CommandArgument("permission") String permission) {
+    @Command("group")
+    @Syntax("<group> perms remove <permission>")
+    public void onGroupPermissionRemove(CommandSender sender, @Argument("group") PermissionGroup group, @Argument("permission") String permission) {
 
         if (group == null) {
             sender.sendMessage("§cThere is no such group in the module database registered");

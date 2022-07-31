@@ -82,7 +82,7 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
     }
 
     @Override
-    public Task<R> execute(Packet packet) {
+    public Task<R> execute(IPacket packet) {
         Task<R> task = Task.empty();
         task.denyNull();
         NetworkExecutor executor = this.wrapper.executor();
@@ -145,7 +145,7 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
         return task;
     }
 
-    private void sendPacket(Packet packet) {
+    private void sendPacket(IPacket packet) {
 
         NetworkExecutor executor = wrapper.executor();
 

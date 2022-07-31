@@ -7,11 +7,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface SubCommand {
+public @interface CommandPermission {
 
+
+	/**
+	 * Only when the command can be executed ingame.
+	 * Empty string for no permission required.
+	 */
 	@Nonnull
-	String[] value() default {""};
+	String value() default "";
 
 }

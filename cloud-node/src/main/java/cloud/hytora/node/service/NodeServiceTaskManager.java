@@ -64,7 +64,7 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
         }
 
         CloudDriver.getInstance().getLogger().trace("Updated Task {}", task.getName());
-        task.cloneInternally(packetTask, task);
+        task.clone(packetTask);
         CloudDriver.getInstance().getEventManager().callEventOnlyPacketBased(new TaskUpdateEvent(task));
 
         NodeDriver.getInstance().getServiceQueue().dequeue();

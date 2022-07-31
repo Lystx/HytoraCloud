@@ -1,12 +1,13 @@
 package cloud.hytora.driver.node;
 
+import cloud.hytora.driver.common.IClusterObject;
 import cloud.hytora.driver.networking.NetworkExecutor;
 import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.services.ServiceInfo;
 
 import java.util.List;
 
-public interface Node extends NetworkExecutor {
+public interface Node extends IClusterObject<Node>, NetworkExecutor {
 
     List<ServiceInfo> getRunningServers();
 

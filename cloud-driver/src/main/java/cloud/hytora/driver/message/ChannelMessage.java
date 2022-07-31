@@ -2,12 +2,11 @@ package cloud.hytora.driver.message;
 
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.networking.NetworkComponent;
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 
-import java.io.Serializable;
 import java.util.UUID;
 
-public interface ChannelMessage extends Bufferable {
+public interface ChannelMessage extends IBufferObject {
 
     /**
      * Creates a new builder

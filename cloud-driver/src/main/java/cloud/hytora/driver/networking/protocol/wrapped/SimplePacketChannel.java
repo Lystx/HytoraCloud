@@ -1,5 +1,6 @@
 package cloud.hytora.driver.networking.protocol.wrapped;
 
+import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundInvoker;
@@ -10,7 +11,7 @@ import lombok.Setter;
 import cloud.hytora.driver.networking.NetworkExecutor;
 import cloud.hytora.driver.networking.protocol.packets.BufferedResponse;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 
 import java.net.InetSocketAddress;
 import java.util.Optional;
@@ -92,7 +93,7 @@ public class SimplePacketChannel implements PacketChannel {
     }
 
     @Override
-    public void flushPacket(Packet packet) {
+    public void flushPacket(IPacket packet) {
         ChannelOutboundInvoker invoker = this.wrapped.channel() == null ? this.wrapped : this.wrapped.channel();
         invoker.writeAndFlush(packet).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
     }
@@ -123,7 +124,7 @@ public class SimplePacketChannel implements PacketChannel {
     }
 
     @Override
-    public void sendPacket(Packet packet) {
+    public void sendPacket(IPacket packet) {
         this.flushPacket(packet);
     }
 }

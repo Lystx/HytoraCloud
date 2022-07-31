@@ -2,7 +2,7 @@ package cloud.hytora.driver.networking.packets.services;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +13,7 @@ import java.io.IOException;
 @NoArgsConstructor
 @Getter
 @AllArgsConstructor
-public class CloudServerCommandPacket extends Packet {
+public class CloudServerCommandPacket extends AbstractPacket {
 
     private String command;
 

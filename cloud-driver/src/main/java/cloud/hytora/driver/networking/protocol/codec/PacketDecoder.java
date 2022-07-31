@@ -2,7 +2,7 @@ package cloud.hytora.driver.networking.protocol.codec;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.DefaultPacketBuffer;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.networking.NetworkExecutor;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -25,7 +25,7 @@ public class PacketDecoder extends ByteToMessageDecoder {
 
         try {
             PacketBuffer buf = new DefaultPacketBuffer(byteBuf, this.participant);
-            Packet packet = buf.readPacket();
+            AbstractPacket packet = buf.readPacket();
             if (packet == null) {
                 System.out.println("Couldn't decode Packet");
                 return;

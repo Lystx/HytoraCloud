@@ -4,20 +4,17 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.node.Node;
 import cloud.hytora.node.NodeDriver;
 
-@Command(
-        name = {"cluster", "cl", "c"},
-        scope = CommandScope.CONSOLE_AND_INGAME,
-        permission = "cloud.command.use"
-)
+@Command({"cluster", "cl"})
+@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
+@CommandPermission("cloud.command.use")
 @CommandDescription("Manages the Cluster")
 @CommandAutoHelp
 public class ClusterCommand {
 
-    @SubCommand("shutdown")
+    @Command("shutdown")
     @CommandDescription("Shuts down the whole cluster")
     public void executeShutdown(CommandSender sender) {
         sender.sendMessage("Sending Shutdown-Request to every ClusterParticipant and then shutting down HeadNode after 1 second...");
@@ -36,13 +33,13 @@ public class ClusterCommand {
     }
 
 
-    @SubCommand("publish all")
+    @Command("publish all")
     @CommandDescription("Publishes every data to the whole cluster")
     public void executePublishAll(CommandSender sender) {
 
     }
 
-    @SubCommand("publish modules")
+    @Command("publish modules")
     @CommandDescription("Publishes all modules to the whole cluster")
     public void executePublishModules(CommandSender sender) {
 

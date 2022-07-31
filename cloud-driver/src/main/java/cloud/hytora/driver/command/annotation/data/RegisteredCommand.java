@@ -14,6 +14,7 @@ public class RegisteredCommand {
 
 	private final String[] names;
 	private final String path;
+	private final String syntax;
 	private final String[] allPaths;
 	private final String permission;
 	private final String description;
@@ -23,6 +24,9 @@ public class RegisteredCommand {
 	private final Method method;
 	private final Object instance;
 
+	public String getPath() {
+		return path + ((syntax == null || syntax.trim().isEmpty()) ? "" : " " + syntax);
+	}
 
 	@Nonnull
 	public RegisteredCommandArgument getArgument(@Nonnull String name) {

@@ -4,7 +4,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.defaults.driver.DriverStorageUpdateEvent;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,7 +15,7 @@ import java.io.IOException;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class StorageUpdatePacket extends Packet {
+public class StorageUpdatePacket extends AbstractPacket {
 
     private StoragePayLoad payLoad;
     private cloud.hytora.document.Document storage;

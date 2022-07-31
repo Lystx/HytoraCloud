@@ -2,7 +2,7 @@ package cloud.hytora.driver.networking.packets.player;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +13,7 @@ import java.util.UUID;
 import static cloud.hytora.driver.networking.packets.player.OfflinePlayerRequestPacket.PayLoad.*;
 
 
-public class OfflinePlayerRequestPacket extends Packet {
+public class OfflinePlayerRequestPacket extends AbstractPacket {
 
     public OfflinePlayerRequestPacket() {
         super(buf -> buf.writeEnum(GET_ALL));

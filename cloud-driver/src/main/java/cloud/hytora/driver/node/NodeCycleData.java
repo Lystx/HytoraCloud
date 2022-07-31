@@ -1,11 +1,10 @@
 package cloud.hytora.driver.node;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import com.sun.management.OperatingSystemMXBean;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +16,7 @@ import java.lang.management.ManagementFactory;
 
 @NoArgsConstructor
 @Getter
-public class NodeCycleData implements Bufferable {
+public class NodeCycleData implements IBufferObject {
 
 	public static final int PUBLISH_INTERVAL = 5_000; // publish all 5 seconds
 	public static final int CYCLE_TIMEOUT = 5; // node time-outs after 25 seconds

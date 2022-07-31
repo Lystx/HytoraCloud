@@ -48,15 +48,17 @@ public final class ReflectionUtils {
 		return annotatedMethods;
 	}
 
+	@SafeVarargs
 	@Nonnull
-	public static Collection<Method> getMethodsAnnotatedWith(@Nonnull Class<?> clazz, @Nonnull Class<? extends Annotation> annotationClass) {
+	public static Collection<Method> getMethodsAnnotatedWith(@Nonnull Class<?> clazz, @Nonnull Class<? extends Annotation>... annotationClass) {
 		List<Method> annotatedMethods = new ArrayList<>();
 		for (Class<?> currentClass : ClassWalker.walk(clazz)) {
 			for (Method method : currentClass.getDeclaredMethods()) {
-				if (method.getAnnotation(annotationClass) == null) {
-					continue;
+				for (Class<? extends Annotation> aClass : annotationClass) {
+					if (method.getAnnotation(aClass) != null) {
+						annotatedMethods.add(method);
+					}
 				}
-				annotatedMethods.add(method);
 			}
 		}
 		return annotatedMethods;

@@ -1,6 +1,6 @@
 package cloud.hytora.driver.services.task;
 
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import lombok.AllArgsConstructor;
@@ -13,7 +13,7 @@ import java.io.IOException;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class TaskDownloadEntry implements Bufferable {
+public class TaskDownloadEntry implements IBufferObject {
 
     private String url;
     private String destination;

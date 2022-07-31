@@ -1,8 +1,6 @@
 package cloud.hytora.remote.impl;
 
 
-import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.task.TaskUpdateEvent;
 import cloud.hytora.driver.services.task.DefaultServiceTaskManager;
@@ -23,7 +21,7 @@ public class RemoteServiceTaskManager extends DefaultServiceTaskManager {
     public void handleUpdate(TaskUpdateEvent event) {
         ServiceTask packetTask = event.getTask();
         ServiceTask task = getTaskByNameOrNull(packetTask.getName());
-        task.cloneInternally(packetTask, task);
+        task.clone(packetTask);
     }
 
 }

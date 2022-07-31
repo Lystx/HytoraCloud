@@ -3,29 +3,24 @@ package cloud.hytora.node.impl.command.impl;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
-import cloud.hytora.driver.command.annotation.data.RegisteredCommand;
 import cloud.hytora.driver.command.completer.NodeCompleter;
 import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.node.Node;
 import cloud.hytora.driver.node.NodeManager;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-@Command(
-        name = {"node", "nodes", "n"},
-        scope = CommandScope.CONSOLE_AND_INGAME,
-        permission = "cloud.command.use"
-)
+@Command({"nodes", "node"})
+@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
+@CommandPermission("cloud.command.use")
 @CommandAutoHelp
 @CommandDescription("Manages all Nodes")
 public class NodeCommand {
 
     private final NodeManager nodeManager = CloudDriver.getInstance().getNodeManager();
 
-    @SubCommand("list")
+    @Command("list")
     @CommandDescription("Lists all nodes")
     public void executeList(CommandSender sender) {
         List<Node> allConnectedNodes = nodeManager.getAllConnectedNodes();
@@ -45,9 +40,10 @@ public class NodeCommand {
     }
 
 
-    @SubCommand("info <name>")
+    @Command("info")
+    @Syntax("<name>")
     @CommandDescription("Gives info on a Node")
-    public void executeInfo(CommandSender sender, @CommandArgument(value = "name", completer = NodeCompleter.class) Node node) {
+    public void executeInfo(CommandSender sender, @Argument(value = "name", completer = NodeCompleter.class) Node node) {
         if (node == null) {
             sender.sendMessage("§cThere is no such connected Node!");
             return;
@@ -65,9 +61,10 @@ public class NodeCommand {
     }
 
 
-    @SubCommand("stop <name>")
+    @Command("stop")
+    @Syntax("<name>")
     @CommandDescription("Stops a Node")
-    public void executeStop(CommandSender sender, @CommandArgument(value = "name", completer = NodeCompleter.class) Node node) {
+    public void executeStop(CommandSender sender, @Argument(value = "name", completer = NodeCompleter.class) Node node) {
         if (node == null) {
             sender.sendMessage("§cThere is no such connected Node!");
             return;

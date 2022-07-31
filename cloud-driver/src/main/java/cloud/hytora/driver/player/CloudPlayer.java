@@ -1,11 +1,8 @@
 package cloud.hytora.driver.player;
 
-import cloud.hytora.document.Document;
-import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.command.sender.PlayerCommandSender;
-import cloud.hytora.driver.common.SelfCloneable;
+import cloud.hytora.driver.common.ICloneableObject;
 import cloud.hytora.driver.exception.ModuleNeededException;
-import cloud.hytora.driver.exception.PlayerNotOnlineException;
 import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.driver.player.connection.PlayerConnection;
 import cloud.hytora.driver.services.ServiceInfo;
@@ -14,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public interface CloudPlayer extends CloudOfflinePlayer, PlayerCommandSender, SelfCloneable<CloudPlayer> {
+public interface CloudPlayer extends CloudOfflinePlayer, PlayerCommandSender, ICloneableObject<CloudPlayer> {
 
     /**
      * The current Proxy-Server this player is currently on

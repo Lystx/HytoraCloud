@@ -25,6 +25,8 @@ import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 import cloud.hytora.driver.services.utils.version.VersionFile;
 import cloud.hytora.driver.services.utils.version.VersionType;
+import cloud.hytora.node.console.progressbar.ProgressBar;
+import cloud.hytora.node.console.progressbar.ProgressBarStyle;
 import cloud.hytora.node.impl.config.MainConfiguration;
 import cloud.hytora.node.service.NodeServiceManager;
 import cloud.hytora.node.NodeDriver;
@@ -257,7 +259,7 @@ public class CloudServerProcessWorker {
             return;
         }
 
-        CloudDriver.getInstance().getLogger().info("§7Downloading §bVersion§7... (§3" + version.getTitle() + "§7)");
+        CloudDriver.getInstance().getLogger().info("§6=> §7Requiring to download §b" + version.getJar() + "§8!");
 
         file.getParentFile().mkdirs();
 
@@ -283,7 +285,7 @@ public class CloudServerProcessWorker {
             CloudDriver.getInstance().getLogger().error("§cFailed to download version§7... (§3" + version.getTitle() + "§7)");
             return;
         }
-        CloudDriver.getInstance().getLogger().info("Downloading of (§3" + version.getTitle() + "§7)§a successfully §7completed.");
+        CloudDriver.getInstance().getLogger().info("§a=> §7Downloaded §b" + version.getJar() + "§8!");
     }
 
 

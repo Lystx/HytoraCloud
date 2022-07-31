@@ -1,14 +1,10 @@
 package cloud.hytora.driver.networking;
 
 import cloud.hytora.driver.networking.protocol.SimpleNetworkComponent;
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
-import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
-import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
-
-public interface NetworkComponent extends Bufferable {
+public interface NetworkComponent extends IBufferObject {
 
     static NetworkComponent of(String name, ConnectionType type) {
         return new SimpleNetworkComponent(name, type);

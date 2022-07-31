@@ -2,7 +2,7 @@ package cloud.hytora.driver.networking.packets.player;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,7 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class CloudPlayerPlainMessagePacket extends Packet {
+public class CloudPlayerPlainMessagePacket extends AbstractPacket {
 
     private UUID uuid;
     private String message;

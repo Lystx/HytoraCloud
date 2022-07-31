@@ -1,10 +1,10 @@
 package cloud.hytora.driver.services.task;
 
-import cloud.hytora.driver.common.MessagePlaceholder;
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
-import cloud.hytora.driver.common.SelfCloneable;
+import cloud.hytora.driver.common.IPlaceHolderObject;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
+import cloud.hytora.driver.common.ICloneableObject;
 import cloud.hytora.driver.node.Node;
-import cloud.hytora.driver.property.PropertyHolder;
+import cloud.hytora.driver.property.IPropertyObject;
 import cloud.hytora.driver.services.ConfigurableService;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
@@ -15,8 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 
-public interface ServiceTask extends Bufferable, MessagePlaceholder, PropertyHolder, SelfCloneable<ServiceTask> {
-
+public interface ServiceTask extends IBufferObject, IPlaceHolderObject, IPropertyObject, ICloneableObject<ServiceTask> {
 
     ConfigurableService configureFutureService();
 

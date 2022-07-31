@@ -1,6 +1,6 @@
 package cloud.hytora.driver.node.config;
 
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import lombok.AllArgsConstructor;
@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class ServiceCrashPrevention implements Bufferable {
+public class ServiceCrashPrevention implements IBufferObject {
 
     private boolean enabled;
     private long time;

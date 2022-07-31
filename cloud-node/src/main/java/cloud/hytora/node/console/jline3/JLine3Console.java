@@ -76,7 +76,7 @@ public class JLine3Console implements Console {
     public Console writeEntry(@NotNull LogEntry entry) {
         String formatted = ColoredMessageFormatter.format(entry);
 
-        if (!formatted.endsWith(System.lineSeparator())) {
+        if (!formatted.endsWith(System.lineSeparator()) && !entry.getMessage().startsWith("\r")) {
             formatted += System.lineSeparator();
         }
         ScreenManager sm = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
@@ -93,7 +93,7 @@ public class JLine3Console implements Console {
     @Nonnull
     @Override
     public Console writeLine(@Nonnull String text) {
-        if (!text.endsWith(System.lineSeparator())) {
+        if (!text.endsWith(System.lineSeparator()) && !text.startsWith("\r")) {
             text += System.lineSeparator();
         }
         ScreenManager sm = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
@@ -109,8 +109,12 @@ public class JLine3Console implements Console {
 
     @Override
     public Console forceWrite(String text) {
-        if (!text.endsWith(System.lineSeparator())) {
+        if (!text.endsWith(System.lineSeparator()) && !text.startsWith("\r")) {
             text += System.lineSeparator();
+        }
+        if (text.startsWith("\r")) {
+            print(text);
+            return this;
         }
         print(Ansi.ansi().eraseLine(Ansi.Erase.ALL).toString() + '\r' + text + Ansi.ansi().reset().toString());
         return this;
@@ -177,10 +181,7 @@ public class JLine3Console implements Console {
         lineReader.getTerminal().writer().print(text);
         lineReader.getTerminal().writer().flush();
 
-        redisplay();
-    }
 
-    private void redisplay() {
         if (!lineReader.isReading()) {
             return;
         }
@@ -188,6 +189,7 @@ public class JLine3Console implements Console {
         lineReader.callWidget(LineReader.REDRAW_LINE);
         lineReader.callWidget(LineReader.REDISPLAY);
     }
+
 
     @Nonnull
     public LineReader getLineReader() {

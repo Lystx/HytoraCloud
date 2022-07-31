@@ -4,10 +4,6 @@ import cloud.hytora.common.collection.WrappedException;
 
 import java.util.function.BiConsumer;
 
-/**
-
- * @since 1.2.2
- */
 @FunctionalInterface
 public interface ExceptionallyBiConsumer<T, U> extends BiConsumer<T, U> {
 

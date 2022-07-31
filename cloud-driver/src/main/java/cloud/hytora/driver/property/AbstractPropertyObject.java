@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Getter
 @Setter
-public abstract class AbstractPropertyHolder implements PropertyHolder {
+public abstract class AbstractPropertyObject implements IPropertyObject {
 
     /**
      * The properties

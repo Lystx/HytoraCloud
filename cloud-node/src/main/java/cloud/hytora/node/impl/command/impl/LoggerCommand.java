@@ -9,26 +9,22 @@ import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.config.MainConfiguration;
 import org.jetbrains.annotations.NotNull;
-import sun.reflect.generics.tree.ArrayTypeSignature;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-@Command(
-        name = {"logger", "log"},
-        scope = CommandScope.CONSOLE
-)
+@CommandExecutionScope(CommandScope.CONSOLE)
+@Command("logger")
+@CommandPermission("cloud.command.use")
 @CommandDescription("Changes the level of Logger")
 @CommandAutoHelp
 public class LoggerCommand {
 
-    @SubCommand("setLevel <level>")
-    public void executeClear(
-            CommandSender sender,
-            @CommandArgument(value = "level", completer = Completer.class) LogLevel level
-            ) {
+    @Command("setLevel")
+    @Syntax("<level>")
+    public void executeClear(CommandSender sender, @Argument(value = "level", completer = Completer.class) LogLevel level) {
 
         try {
             MainConfiguration instance = MainConfiguration.getInstance();

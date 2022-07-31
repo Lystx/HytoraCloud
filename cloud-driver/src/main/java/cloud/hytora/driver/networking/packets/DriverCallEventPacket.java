@@ -6,7 +6,7 @@ import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.event.ProtocolTansferableEvent;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,7 +17,7 @@ import java.io.IOException;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class DriverCallEventPacket extends Packet {
+public class DriverCallEventPacket extends AbstractPacket {
 
     private ProtocolTansferableEvent event;
 

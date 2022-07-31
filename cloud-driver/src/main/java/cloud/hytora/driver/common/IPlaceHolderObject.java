@@ -7,7 +7,7 @@ package cloud.hytora.driver.common;
  * @author Lystx
  * @since SNAPSHOT-1.3
  */
-public interface MessagePlaceholder {
+public interface IPlaceHolderObject {
 
     /**
      * Applies the placeholders to the text

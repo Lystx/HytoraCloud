@@ -1,6 +1,6 @@
 package cloud.hytora.driver.services.task.bundle;
 
-import cloud.hytora.driver.networking.protocol.codec.buf.Bufferable;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.services.task.TaskDownloadEntry;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
@@ -9,7 +9,7 @@ import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 
 import java.util.Collection;
 
-public interface TaskGroup extends Bufferable {
+public interface TaskGroup extends IBufferObject {
 
     String getName();
     String[] getJavaArguments();

@@ -5,9 +5,7 @@ import javax.annotation.Nullable;
 
 /**
  * This class is used to rethrow signed exception as unsigned exceptions.
- *
-
- */
+ **/
 public class WrappedException extends RuntimeException {
 
 	public static class SilentWrappedException extends WrappedException {

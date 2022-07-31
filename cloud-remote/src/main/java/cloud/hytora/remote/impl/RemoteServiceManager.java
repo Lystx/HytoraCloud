@@ -9,10 +9,11 @@ import cloud.hytora.driver.event.defaults.server.ServiceUpdateEvent;
 import cloud.hytora.driver.networking.packets.RedirectPacket;
 import cloud.hytora.driver.networking.packets.services.ServiceForceShutdownPacket;
 import cloud.hytora.driver.networking.packets.services.ServiceRequestShutdownPacket;
+import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.services.ServiceInfo;
 import cloud.hytora.driver.services.impl.DefaultServiceManager;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 
 import cloud.hytora.remote.Remote;
@@ -77,7 +78,7 @@ public class RemoteServiceManager extends DefaultServiceManager {
     }
 
     @Override
-    public void sendPacketToService(ServiceInfo service, Packet packet) {
+    public void sendPacketToService(ServiceInfo service, IPacket packet) {
         if (service.getName().equalsIgnoreCase(Remote.getInstance().thisService().getName())) {
             CloudDriver.getInstance().getExecutor().handlePacket(null, packet);
             return;

@@ -6,7 +6,7 @@ import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
 import cloud.hytora.driver.networking.packets.message.ChannelMessageExecutePacket;
-import cloud.hytora.driver.networking.protocol.packets.Packet;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.node.HytoraNode;
 
@@ -21,7 +21,7 @@ public class NodeChannelMessenger extends DefaultChannelMessenger {
     @Override
     public void sendChannelMessage(ChannelMessage message, NetworkComponent[] receiver) {
         HytoraNode executor = NodeDriver.getInstance().getExecutor();
-        Packet packet = new ChannelMessageExecutePacket(message);
+        AbstractPacket packet = new ChannelMessageExecutePacket(message);
 
         if (receiver.length > 0) {
             for (NetworkComponent messageReceiver : receiver) {
