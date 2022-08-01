@@ -16,6 +16,7 @@ import org.jline.reader.Candidate;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This class is used for Setup purposes.
@@ -96,7 +97,9 @@ public abstract class Setup<T extends Setup<?>> {
     /**
      * To identify console screen
      */
-    private String uniqueSetupName;
+    private final String uniqueSetupName;
+
+    private final Collection<String> cachedCommandHistory;
     
     /**
      * If this setup is allowed to be cancelled
@@ -119,7 +122,7 @@ public abstract class Setup<T extends Setup<?>> {
         this.uniqueSetupName = "setup#" + UUID.randomUUID();
         
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class).registerScreen(uniqueSetupName, false);
-  
+        this.cachedCommandHistory = getSetupScreen().getHistory();
     }
     
     public Screen getSetupScreen() {
@@ -165,8 +168,13 @@ public abstract class Setup<T extends Setup<?>> {
     @SuppressWarnings("unchecked")
     private void exit(boolean success) {
         ScreenManager unchecked = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
+        getSetupScreen().setHistory(this.cachedCommandHistory);
+
+
         unchecked.leaveCurrentScreen();
         unchecked.unregisterScreen(this.uniqueSetupName);
+
+
 
 
         //If already exited by another code line
@@ -353,6 +361,21 @@ public abstract class Setup<T extends Setup<?>> {
             this.printHeader(getClass().getSimpleName() + " at " + new SimpleDateFormat("HH:mm:ss").format(System.currentTimeMillis()));
         }
 
+        if (entry.getSuggestedAnswer() != null) {
+            String value = entry.getSuggestedAnswer().value();
+            this.getSetupScreen().suggestInput(value);
+        }
+
+        if (entry.getRequiresEnum() != null) {
+            List<String> collect = Arrays.stream(entry.getRequiresEnum().value().getEnumConstants()).map(Enum::name).collect(Collectors.toList());
+            this.getSetupScreen().setHistory(collect);
+        }
+
+        if (entry.getAnswers() != null) {
+            List<String> collect = Arrays.stream(entry.getAnswers().only()).collect(Collectors.toList());
+            this.getSetupScreen().setHistory(collect);
+        }
+
         //Sending first question without any input
 
         StringBuilder sb = new StringBuilder(entry.getQuestion().question() + (entry.getQuestionTip() == null ? "" : " (Tip: " + entry.getQuestionTip().value() + ")"));
@@ -365,10 +388,6 @@ public abstract class Setup<T extends Setup<?>> {
             this.getSetupScreen().writeLine("§7Possible Answers§8: §b" + Arrays.toString(entry.getRequiresEnum().value().getEnumConstants()).replace("]", "§8)").replace("[", "§8(§b").replace(",", "§8, §b"));
         }
 
-        if (entry.getSuggestedAnswer() != null) {
-            String value = entry.getSuggestedAnswer().value();
-            //this.console.setCommandInputValue(value);
-        }
 
     }
 

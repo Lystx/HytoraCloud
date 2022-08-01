@@ -7,7 +7,7 @@ import cloud.hytora.common.misc.ZipUtils;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.networking.protocol.packets.*;
-import cloud.hytora.driver.networking.NetworkExecutor;
+import cloud.hytora.driver.networking.INetworkExecutor;
 import cloud.hytora.driver.networking.PacketProvider;
 import cloud.hytora.driver.networking.protocol.SimpleNetworkComponent;
 import io.netty.buffer.ByteBuf;
@@ -40,7 +40,7 @@ import java.util.function.Supplier;
 public class DefaultPacketBuffer implements PacketBuffer {
 
 	private final ByteBuf buffer;
-	private final NetworkExecutor participant;
+	private final INetworkExecutor participant;
 
 	@Override
 	public ByteBuf nettyBuffer() {

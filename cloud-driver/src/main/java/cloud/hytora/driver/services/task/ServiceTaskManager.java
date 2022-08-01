@@ -45,7 +45,7 @@ public interface ServiceTaskManager {
 
     default @NotNull List<ServiceTask> getTasksByNode(@NotNull String node) {
         return this.getAllCachedTasks().stream()
-            .filter(it -> it.getNode().equalsIgnoreCase(node))
+            .filter(it -> it.getPossibleNodes().contains(node))
             .collect(Collectors.toList());
     }
 

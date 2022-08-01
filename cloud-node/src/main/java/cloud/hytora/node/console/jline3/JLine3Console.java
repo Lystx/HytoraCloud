@@ -16,6 +16,7 @@ import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 import org.jetbrains.annotations.NotNull;
 import org.jline.reader.Completer;
+import org.jline.reader.History;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReader.Option;
 import org.jline.reader.impl.LineReaderImpl;
@@ -24,6 +25,7 @@ import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.InfoCmp;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.Map.Entry;
@@ -62,10 +64,33 @@ public class JLine3Console implements Console {
     }
 
     @Override
+    public void setCommandHistory(List<String> history) {
+        try {
+            this.lineReader.getHistory().purge();
+        } catch (IOException exception) {
+            exception.printStackTrace();
+        }
+
+        if (history != null) {
+            for (String s : history) {
+                this.lineReader.getHistory().add(s);
+            }
+        }
+    }
+    @Override
     public void setCommandInputValue(@Nonnull String commandInputValue) {
         lineReader.getBuffer().write(commandInputValue);
     }
 
+    @Override
+    public @NotNull List<String> getCommandHistory() {
+        List<String> result = new ArrayList<>();
+        for (History.Entry entry : this.lineReader.getHistory()) {
+            result.add(entry.line());
+        }
+
+        return result;
+    }
 
     @Override
     public String readLineOrNull() {

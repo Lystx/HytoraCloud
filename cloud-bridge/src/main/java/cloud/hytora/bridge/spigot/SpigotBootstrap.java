@@ -1,7 +1,9 @@
 package cloud.hytora.bridge.spigot;
 
-import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.document.DocumentFactory;
+import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.IServiceCycleData;
+import cloud.hytora.driver.services.impl.DefaultServiceCycleData;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.driver.services.utils.ServiceProcessType;
 import cloud.hytora.driver.services.utils.ServiceState;
@@ -10,9 +12,6 @@ import cloud.hytora.bridge.PluginBridge;
 import cloud.hytora.remote.Remote;
 import cloud.hytora.remote.adapter.RemoteAdapter;
 import org.bukkit.Bukkit;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class SpigotBootstrap extends JavaPlugin implements PluginBridge, RemoteAdapter {
@@ -35,10 +34,10 @@ public class SpigotBootstrap extends JavaPlugin implements PluginBridge, RemoteA
 
     @Override
     public void onDisable() {
-        ServiceInfo serviceInfo = Remote.getInstance().thisService();
-        serviceInfo.setServiceState(ServiceState.STOPPING);
-        serviceInfo.setServiceVisibility(ServiceVisibility.INVISIBLE);
-        serviceInfo.update();
+        ICloudServer cloudServer = Remote.getInstance().thisService();
+        cloudServer.setServiceState(ServiceState.STOPPING);
+        cloudServer.setServiceVisibility(ServiceVisibility.INVISIBLE);
+        cloudServer.update();
     }
 
     @Override
@@ -49,5 +48,10 @@ public class SpigotBootstrap extends JavaPlugin implements PluginBridge, RemoteA
     @Override
     public void executeCommand(String command) {
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+    }
+
+    @Override
+    public IServiceCycleData createCycleData() {
+        return new DefaultServiceCycleData(DocumentFactory.newJsonDocument()); // TODO: 01.08.2022 add bukkit info 
     }
 }

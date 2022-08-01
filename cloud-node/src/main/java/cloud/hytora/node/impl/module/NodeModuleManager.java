@@ -50,7 +50,7 @@ public class NodeModuleManager implements ModuleManager {
         }
         modules.clear();
 
-        if (NodeDriver.getInstance().getConfig().isRemote()) { //deleting so can be received
+        if (NodeDriver.getInstance().getNode().getConfig().isRemote()) { //deleting so can be received
             FileUtils.delete(NodeDriver.MODULE_FOLDER.toPath());
         }
     }
@@ -62,7 +62,7 @@ public class NodeModuleManager implements ModuleManager {
         unregisterModules();
         FileUtils.createDirectory(directory);
 
-        if (NodeDriver.getInstance().getConfig().isRemote()) {
+        if (NodeDriver.getInstance().getNode().getConfig().isRemote()) {
             //is remote
             PacketBuffer buffer = NodeDriver.getInstance()
                     .getExecutor()

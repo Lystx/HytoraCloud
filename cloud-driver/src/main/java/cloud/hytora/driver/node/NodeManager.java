@@ -4,35 +4,30 @@ import cloud.hytora.common.task.Task;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
 import java.util.List;
 
 public interface NodeManager {
 
     /**
-     * All connected nodes (excluding the own if executed on node-side)
+     * All connected nodes
      */
-    List<Node> getAllConnectedNodes();
+    List<INode> getAllCachedNodes();
 
-    /**
-     * All nodes including the main node
-     */
-    Collection<Node> getAllNodes();
 
-    void setAllConnectedNodes(List<Node> nodes);
+    void setAllCachedNodes(List<INode> nodes);
 
-    @NotNull Task<Node> getNode(@NotNull String username);
+    @NotNull Task<INode> getNode(@NotNull String username);
 
-    @Nullable Node getNodeByNameOrNull(@NotNull String username);
+    @Nullable INode getNodeByNameOrNull(@NotNull String username);
 
-    void registerNode(@NotNull Node node);
+    void registerNode(@NotNull INode node);
 
-    void unRegisterNode(@NotNull Node node);
+    void unRegisterNode(@NotNull INode node);
 
     /**
      * The head node that manages everything
      */
-    Node getHeadNode();
+    INode getHeadNode();
 
     /**
      * If the current process is the headNode

@@ -8,10 +8,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import cloud.hytora.driver.networking.NetworkExecutor;
+import cloud.hytora.driver.networking.INetworkExecutor;
 import cloud.hytora.driver.networking.protocol.packets.BufferedResponse;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionState;
-import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 
 import java.net.InetSocketAddress;
 import java.util.Optional;
@@ -33,7 +32,7 @@ public class SimplePacketChannel implements PacketChannel {
     /**
      * The participant
      */
-    private NetworkExecutor participant;
+    private INetworkExecutor participant;
 
     /**
      * The state of this context
@@ -51,7 +50,7 @@ public class SimplePacketChannel implements PacketChannel {
     }
 
     @Override
-    public NetworkExecutor executor() {
+    public INetworkExecutor executor() {
         return participant;
     }
 
@@ -61,7 +60,7 @@ public class SimplePacketChannel implements PacketChannel {
     }
 
     @Override
-    public PacketChannel overrideExecutor(NetworkExecutor executor) {
+    public PacketChannel overrideExecutor(INetworkExecutor executor) {
         participant = executor;
         return this;
     }

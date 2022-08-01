@@ -70,7 +70,7 @@ public interface Task<T> extends Serializable {
             return unitPromise;
         }
         for (Task<?> promise : tasks) {
-            promise.thenAccept(o -> {
+            promise.onTaskSucess(o -> {
                 if (Arrays.stream(tasks).allMatch(Task::isPresent) && !unitPromise.isPresent()) {
                     unitPromise.setResult(true);
                 }
@@ -149,6 +149,7 @@ public interface Task<T> extends Serializable {
     static Task<Void> runAsyncExceptionally(@Nonnull ExceptionallyRunnable runnable) {
         return runAsync(runnable);
     }
+
 
     static <V> Task<V> callAsync(@Nonnull Callable<V> callable) {
         Task<V> task = empty();
@@ -315,6 +316,7 @@ public interface Task<T> extends Serializable {
 
     void ifPresentOrElse(Consumer<T> ifPresent, Runnable orElse);
 
+
     T getOrPerform(Predicate<Task<T>> predicate, Consumer<Task<T>> ifTrue, Consumer<Task<T>> ifFalse);
 
     /**
@@ -414,7 +416,11 @@ public interface Task<T> extends Serializable {
      * @param listener the listener as consumer to add
      * @return current value instance
      */
-    Task<T> addUpdateListener(Consumer<Task<T>> listener);
+    Task<T> registerListener(Consumer<Task<T>> listener);
+
+    Task<T> onTaskFailed(Consumer<Throwable> e);
+
+    Task<T> onTaskFailedOrNull(Consumer<Throwable> e);
 
     /**
      * Adds a simple updating listener as {@link Consumer} to this value
@@ -422,7 +428,7 @@ public interface Task<T> extends Serializable {
      * @param listener the listener as consumer to add
      * @return current value instance
      */
-    Task<T> thenAccept(Consumer<T> listener);
+    Task<T> onTaskSucess(Consumer<T> listener);
 
     /**
      * Waits until a value is provided in this value

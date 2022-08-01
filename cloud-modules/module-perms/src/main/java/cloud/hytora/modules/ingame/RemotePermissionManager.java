@@ -109,7 +109,7 @@ public class RemotePermissionManager extends DefaultPermissionManager implements
         PermissionPlayer player = this.allCachedPermissionPlayers.stream().filter(p -> p.getUniqueId().equals(uniqueId)).findFirst().orElse(null);
         if (player == null) {
             PermsPlayerRequestPacket packet = new PermsPlayerRequestPacket(null, uniqueId);
-            packet.awaitResponse().thenAccept(bufferedResponse -> {
+            packet.awaitResponse().onTaskSucess(bufferedResponse -> {
                 DefaultPermissionPlayer defaultPermissionPlayer = bufferedResponse.buffer().readObject(DefaultPermissionPlayer.class);
                 task.setResult(defaultPermissionPlayer);
             });
@@ -126,7 +126,7 @@ public class RemotePermissionManager extends DefaultPermissionManager implements
         PermissionPlayer player = this.allCachedPermissionPlayers.stream().filter(p -> p.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
         if (player == null) {
              PermsPlayerRequestPacket packet = new PermsPlayerRequestPacket(name, null);
-             packet.awaitResponse().thenAccept(bufferedResponse -> {
+             packet.awaitResponse().onTaskSucess(bufferedResponse -> {
                  DefaultPermissionPlayer defaultPermissionPlayer = bufferedResponse.buffer().readObject(DefaultPermissionPlayer.class);
                  task.setResult(defaultPermissionPlayer);
              });

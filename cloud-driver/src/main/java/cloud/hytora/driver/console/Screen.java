@@ -12,6 +12,12 @@ public interface Screen {
 
     void registerTabCompleter(TabCompleter completer);
 
+    void suggestInput(String input);
+
+    Collection<String> getHistory();
+
+    void setHistory(Collection<String> history);
+
     TabCompleter getCurrentTabCompleter();
 
     void addInputHandler(@Nonnull Consumer<? super String> handler);

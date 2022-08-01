@@ -1,8 +1,8 @@
 package cloud.hytora.node.service;
 
-import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.console.Screen;
 import cloud.hytora.driver.console.ScreenManager;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
@@ -10,16 +10,15 @@ import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUpdateEvent;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
-import cloud.hytora.driver.networking.protocol.packets.QueryState;
-import cloud.hytora.driver.node.Node;
+import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.node.config.ServiceCrashPrevention;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.impl.DefaultServiceManager;
 import cloud.hytora.node.NodeDriver;
-import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 
+import cloud.hytora.node.impl.config.MainConfiguration;
 import cloud.hytora.node.service.helper.CloudServerProcessWorker;
 import lombok.Getter;
 import org.apache.commons.io.FileUtils;
@@ -27,7 +26,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystemException;
 import java.util.*;
 
 @Getter
@@ -49,12 +47,12 @@ public class NodeServiceManager extends DefaultServiceManager {
     }
 
     @Override
-    public List<String> getScreenOutput(ServiceInfo service) {
+    public List<String> getScreenOutput(ICloudServer service) {
         return cachedServiceOutputs.getOrDefault(service.getName(), new ArrayList<>());
     }
 
     @Override
-    public void registerService(ServiceInfo service) {
+    public void registerService(ICloudServer service) {
         super.registerService(service);
 
         ScreenManager screenManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
@@ -66,13 +64,13 @@ public class NodeServiceManager extends DefaultServiceManager {
 
 
     @Override
-    public void unregisterService(ServiceInfo service) {
+    public void unregisterService(ICloudServer service) {
         CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceUnregisterEvent(service.getName()));
         super.unregisterService(service);
 
 
         ScreenManager screenManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
-        screenManager.unregisterScreen(service.getName());
+        Screen screen = screenManager.getScreenByNameOrNull(service.getName());
 
         this.cachedServiceOutputs.remove(service.getName());//removing cached screen
         ServiceTask con = service.getTask();
@@ -92,14 +90,13 @@ public class NodeServiceManager extends DefaultServiceManager {
             File crashFile = new File(specificCrashFolders, service.getName() + "_" + UUID.randomUUID().toString() + ".log");
 
             try {
-                cloud.hytora.common.misc.FileUtils.writeToFile(crashFile, service.queryServiceOutput());
+                cloud.hytora.common.misc.FileUtils.writeToFile(crashFile, screen.getAllCachedLines());
                 NodeDriver.getInstance().getLogger().warn("Saving logs to identify crash under {}...", crashFile.getName());
             } catch (IOException e) {
                 e.printStackTrace();
                 NodeDriver.getInstance().getLogger().warn("Couldn't save crash logs...");
             }
-            INodeConfig config = NodeDriver.getInstance().getConfig();
-            ServiceCrashPrevention scp = config.getServiceCrashPrevention();
+            ServiceCrashPrevention scp = MainConfiguration.getInstance().getServiceCrashPrevention();
 
             if (scp.isEnabled()) {
 
@@ -136,35 +133,36 @@ public class NodeServiceManager extends DefaultServiceManager {
             }
         }
 
+        screenManager.unregisterScreen(service.getName());
     }
 
     @Override
-    public Task<ServiceInfo> startService(@NotNull ServiceInfo service) {
+    public Task<ICloudServer> startService(@NotNull ICloudServer service) {
         return worker.processService(service);
     }
 
     @Override
-    public Task<ServiceInfo> thisService() {
+    public Task<ICloudServer> thisService() {
         return Task.empty();
     }
 
     @Override
-    public void sendPacketToService(ServiceInfo service, IPacket packet) {
+    public void sendPacketToService(ICloudServer service, IPacket packet) {
         NodeDriver.getInstance().getExecutor().getAllCachedConnectedClients().stream().filter(it -> it.getName().equals(service.getName())).findAny().ifPresent(it -> it.sendPacket(packet));
     }
 
 
     @Override
-    public void shutdownService(ServiceInfo service) {
-        Node node = service.getTask().findNode();
+    public void shutdownService(ICloudServer service) {
+        INode node = service.getTask().findAnyNode();
         node.stopServer(service);
     }
 
     @Override
-    public void updateService(@NotNull ServiceInfo service) {
+    public void updateService(@NotNull ICloudServer service) {
         this.updateServerInternally(service);
 
-        DriverUpdatePacket.publishUpdate(NodeDriver.getInstance());
+        DriverUpdatePacket.publishUpdate(NodeDriver.getInstance().getNode());
 
         //calling update event on every other side
         CloudDriver.getInstance().getEventManager().callEventOnlyPacketBased(new ServiceUpdateEvent(service));
@@ -173,7 +171,7 @@ public class NodeServiceManager extends DefaultServiceManager {
 
     @EventListener
     public void handleUpdate(ServiceUpdateEvent event) {
-        ServiceInfo server = event.getService();
+        ICloudServer server = event.getService();
 
         this.updateService(server);
     }

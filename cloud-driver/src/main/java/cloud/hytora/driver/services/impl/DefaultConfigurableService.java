@@ -11,10 +11,10 @@ import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
 import cloud.hytora.driver.networking.EndpointNetworkExecutor;
 import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
 import cloud.hytora.driver.networking.packets.services.ServiceConfigPacket;
-import cloud.hytora.driver.node.Node;
+import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.services.ConfigurableService;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
@@ -54,7 +54,7 @@ public class DefaultConfigurableService implements ConfigurableService {
         this.port = -1;
         this.memory = serviceTask.getMemory();
         this.motd = serviceTask.getMotd();
-        this.node = serviceTask.getNode();
+        this.node = serviceTask.getPossibleNodes().stream().findAny().get();
         this.templates = serviceTask.getTemplates();
         this.maxPlayers = serviceTask.getDefaultMaxPlayers();
         this.properties = DocumentFactory.newJsonDocument();
@@ -125,8 +125,8 @@ public class DefaultConfigurableService implements ConfigurableService {
 
 
     @Override
-    public Task<ServiceInfo> start() {
-        Task<ServiceInfo> task = Task.empty();
+    public Task<ICloudServer> start() {
+        Task<ICloudServer> task = Task.empty();
 
 
         Task.runAsync(() -> {
@@ -134,7 +134,7 @@ public class DefaultConfigurableService implements ConfigurableService {
                 EndpointNetworkExecutor executor = (EndpointNetworkExecutor) CloudDriver.getInstance().getExecutor();
 
                 ClusterClientExecutor nodeClient = executor.getClient(node).orElse(null);
-                boolean thisSidesNode = serviceTask.getNode().equalsIgnoreCase(CloudDriver.getInstance().getExecutor().getName());
+                boolean thisSidesNode = serviceTask.getPossibleNodes().contains(CloudDriver.getInstance().getExecutor().getName());
 
                 if (nodeClient == null && !thisSidesNode) {
                     CloudDriver.getInstance().getLogger().info("Tried to start a Service of Task '" + serviceTask.getName() + "' but no Node with name '" + node + "' is connected!");
@@ -150,10 +150,11 @@ public class DefaultConfigurableService implements ConfigurableService {
                     }
                 }
 
-                ServiceInfo service = new SimpleServiceInfo(serviceTask.getName(), newServiceId(), port, address);
+                ICloudServer service = new DriverServiceObject(serviceTask.getName(), newServiceId(), port, address);
                 service.setProperties(properties);
                 service.setMaxPlayers(maxPlayers);
                 service.setUniqueId(uniqueId);
+                service.setRunningNodeName(node);
                 service.setMotd(motd);
 
                 CloudDriver.getInstance().getServiceManager().registerService(service);
@@ -164,7 +165,7 @@ public class DefaultConfigurableService implements ConfigurableService {
                 }
 
                 NodeManager nodeManager = CloudDriver.getInstance().getNodeManager();
-                Task<Node> node = nodeManager.getNode(this.node);
+                Task<INode> node = nodeManager.getNode(this.node);
 
                 node.ifPresent(n -> n.startServer(service));
                 node.ifEmpty(n -> CloudDriver.getInstance().getLogger().error("Tried to start {} but the Node {} for Servers of Configuration {} is not connected!", service.getName(), this.node, serviceTask.getName()));
@@ -187,11 +188,11 @@ public class DefaultConfigurableService implements ConfigurableService {
 
                 CloudDriver.getInstance().getEventManager().registerDestructiveHandler(ServiceReadyEvent.class, (ExceptionallyBiConsumer<ServiceReadyEvent, DestructiveListener>) (event, listener) -> {
 
-                    ServiceInfo serviceInfo = event.getServiceInfo();
-                    System.out.println("eVENT -> " + this.uniqueId + " / " + serviceInfo.getUniqueId());
-                    if (serviceInfo.getUniqueId().equals(this.uniqueId)) {
-                        task.setResult(serviceInfo);
-                        System.out.println("DEBUG " + serviceInfo);
+                    ICloudServer ICloudServer = event.getICloudServer();
+                    System.out.println("eVENT -> " + this.uniqueId + " / " + ICloudServer.getUniqueId());
+                    if (ICloudServer.getUniqueId().equals(this.uniqueId)) {
+                        task.setResult(ICloudServer);
+                        System.out.println("DEBUG " + ICloudServer);
                         listener.destroy();
                     }
                 });
@@ -207,8 +208,8 @@ public class DefaultConfigurableService implements ConfigurableService {
     }
 
     private boolean isPortUsed(int port) {
-        for (ServiceInfo service : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
-            if (service.getTask().getNode().equals(CloudDriver.getInstance().getExecutor().getName())) {
+        for (ICloudServer service : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
+            if (service.getTask().getPossibleNodes().equals(CloudDriver.getInstance().getExecutor().getName())) {
                 if (service.getPort() == port) {
                     return true;
                 }

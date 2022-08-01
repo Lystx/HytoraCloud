@@ -4,7 +4,7 @@ import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import java.io.File;
 
-public interface NodeServiceInfo extends ServiceInfo {
+public interface IProcessCloudServer extends ICloudServer {
 
     @Nonnull
     @CheckReturnValue

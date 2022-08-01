@@ -16,7 +16,7 @@ import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
-import cloud.hytora.driver.node.Node;
+import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.CloudPlayer;
@@ -24,7 +24,7 @@ import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.driver.provider.ProviderRegistry;
 import cloud.hytora.driver.provider.defaults.DefaultProviderRegistry;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.task.ServiceTaskManager;
@@ -53,10 +53,10 @@ import java.util.function.Supplier;
 /**
  * The <b>CloudDriver</b> is the core of the API of HytoraCloud.
  * It allows the System internally and developers to make use of every Manager across the Network
- * For example you can get information about a specific {@link CloudPlayer}, a specific {@link ServiceInfo},
+ * For example you can get information about a specific {@link CloudPlayer}, a specific {@link ICloudServer},
  * a specific {@link ServiceTask}, a specific {@link TaskGroup}. <br>
  * Or you could manage the {@link HttpServer} and create {@link HttpRequest} as you'd like to. <br>
- * Or you could manage all the different connected {@link Node}s and tell them to start or stop a certain Server
+ * Or you could manage all the different connected {@link INode}s and tell them to start or stop a certain Server
  * <br><br>
  * So you see a <b>CloudDriver</b> is the key to everything Code-Related that you wanna do concerning HytoraCloud
  * <br><br>
@@ -66,14 +66,14 @@ import java.util.function.Supplier;
  * @since SNAPSHOT-1.0
  */
 @Getter
-@DriverStatus(version = "SNAPSHOT-1.3", experimental = true, developers = {"Lystx"})
+@DriverStatus(version = "SNAPSHOT-1.4", experimental = true, developers = {"Lystx"})
 public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUtility {
 
     /**
      * The static instance of this Driver
      */
     @Getter
-    private static CloudDriver instance;
+    private static CloudDriver<?> instance;
 
     /**
      * The current driver environment
@@ -132,6 +132,19 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
      * (here: 3 minutes)
      */
     public static final int SERVER_MAX_LOST_CYCLES = 2;
+
+
+    /**
+     * The interval that nodes take to publish their data to the cluster
+     * (here: every 5 seconds)
+     */
+    public static final int NODE_PUBLISH_INTERVAL = 5_000;
+
+    /**
+     * The max lost cycles of a node before it is declared timed out
+     * (here: 25 seconds)
+     */
+    public static final int NODE_MAX_LOST_CYCLES = 5;
 
     /**
      * The public name for the Dashboard to be identified
@@ -275,7 +288,7 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
 
     /**
      * The current {@link NodeManager} instance where
-     * you can manage every {@link Node}
+     * you can manage every {@link INode}
      * @see NodeManager
      */
     @Nonnull
@@ -307,7 +320,7 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
 
     /**
      * The current {@link ServiceManager} instance where
-     * you can manage every {@link ServiceInfo}
+     * you can manage every {@link ICloudServer}
      * @see ServiceManager
      */
     @Nonnull

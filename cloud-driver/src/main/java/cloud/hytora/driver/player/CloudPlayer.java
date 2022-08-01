@@ -5,7 +5,7 @@ import cloud.hytora.driver.common.ICloneableObject;
 import cloud.hytora.driver.exception.ModuleNeededException;
 import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.driver.player.connection.PlayerConnection;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -21,7 +21,7 @@ public interface CloudPlayer extends CloudOfflinePlayer, PlayerCommandSender, IC
      * @return server instance
      */
     @Nonnull
-    ServiceInfo getProxyServer();
+    ICloudServer getProxyServer();
 
     /**
      * The current Sub-Server this player is currently on
@@ -31,21 +31,21 @@ public interface CloudPlayer extends CloudOfflinePlayer, PlayerCommandSender, IC
      * @return server instance or null
      */
     @Nullable
-    ServiceInfo getServer();
+    ICloudServer getServer();
 
     /**
      * Public method to override the proxy server of this player
      *
      * @param service the service to set
      */
-    void setProxyServer(@NotNull ServiceInfo service);
+    void setProxyServer(@NotNull ICloudServer service);
 
     /**
      * Public method to override the sub server of this player
      *
      * @param service the service to set
      */
-    void setServer(@NotNull ServiceInfo service);
+    void setServer(@NotNull ICloudServer service);
 
     /**
      * The current {@link PlayerConnection} of this player

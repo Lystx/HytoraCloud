@@ -1,7 +1,7 @@
 package cloud.hytora.remote.impl;
 
-import cloud.hytora.driver.node.DefaultNodeManager;
-import cloud.hytora.driver.node.Node;
+import cloud.hytora.driver.node.base.DefaultNodeManager;
+import cloud.hytora.driver.node.INode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -9,23 +9,18 @@ import java.util.Collection;
 public class RemoteNodeManager extends DefaultNodeManager {
 
     @Override
-    public Collection<Node> getAllNodes() {
-        return getAllConnectedNodes();
+    public void registerNode(@NotNull INode node) {
+        this.allCachedNodes.add(node);
     }
 
     @Override
-    public void registerNode(@NotNull Node node) {
-        this.allConnectedNodes.add(node);
+    public void unRegisterNode(@NotNull INode node) {
+        this.allCachedNodes.remove(node);
     }
 
     @Override
-    public void unRegisterNode(@NotNull Node node) {
-        this.allConnectedNodes.remove(node);
-    }
-
-    @Override
-    public Node getHeadNode() {
-        return getAllConnectedNodes().stream().filter(node -> !node.getConfig().isRemote()).findFirst().orElse(null);
+    public INode getHeadNode() {
+        return getAllCachedNodes().stream().filter(node -> !node.getConfig().isRemote()).findFirst().orElse(null);
     }
 
 

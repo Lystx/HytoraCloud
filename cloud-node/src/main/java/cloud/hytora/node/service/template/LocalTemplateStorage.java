@@ -1,8 +1,8 @@
 package cloud.hytora.node.service.template;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.services.ServiceInfo;
-import cloud.hytora.driver.services.NodeServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.IProcessCloudServer;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.template.ServiceTemplate;
@@ -81,11 +81,11 @@ public class LocalTemplateStorage implements TemplateStorage {
     }
 
     @Override
-    public void copyTemplate(@NotNull ServiceInfo server, @NotNull ServiceTemplate template, @NotNull File directory) throws Exception {
+    public void copyTemplate(@NotNull ICloudServer server, @NotNull ServiceTemplate template, @NotNull File directory) throws Exception {
         ServiceTask serviceTask = server.getTask();
 
         //do not perform if wrong node
-        if (!serviceTask.getNode().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName())) {
+        if (!server.getRunningNodeName().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName())) {
             return;
         }
 
@@ -104,14 +104,14 @@ public class LocalTemplateStorage implements TemplateStorage {
     }
 
     @Override
-    public void deployService(@NotNull ServiceInfo server, @NotNull ServiceDeployment deployment) {
+    public void deployService(@NotNull ICloudServer server, @NotNull ServiceDeployment deployment) {
 
         //do not perform if wrong node
-        if (!server.getTask().getNode().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName())) {
+        if (!server.getRunningNodeName().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName())) {
             return;
         }
 
-        NodeServiceInfo nodeCloudServer = server.asCloudServer();
+        IProcessCloudServer nodeCloudServer = server.asCloudServer();
         ServiceTemplate template = deployment.getTemplate();
 
         if (template != null && template.getStorage() != null && template.getPrefix() != null && template.getName() != null) {

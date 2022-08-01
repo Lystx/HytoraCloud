@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.UUID;
 
 @AllArgsConstructor
 @Getter
@@ -21,26 +22,21 @@ import java.util.Collection;
 public class DefaultNodeConfig implements INodeConfig {
 
     private String nodeName;
+
+    private UUID uniqueId;
+
+    private ProtocolAddress address;
+
     private String authKey;
-    private String bindAddress;
-    private int bindPort;
+
     private boolean remote;
 
     private int maxBootableServicesAtSameTime;
-
-    private ServiceCrashPrevention serviceCrashPrevention;
-
-    private Collection<SimpleJavaVersion> javaVersions;
+    private long memory;
     private ProtocolAddress[] clusterAddresses;
-    private ProtocolAddress[] httpListeners;
-    private SSLConfiguration sslConfiguration;
-
-    public Collection<JavaVersion> getJavaVersions() {
-        return new ArrayList<>(javaVersions);
-    }
 
     @Override
-    public void markAsRemote() {
+    public void setRemote() {
         this.remote = true;
     }
 
@@ -51,26 +47,24 @@ public class DefaultNodeConfig implements INodeConfig {
 
             case READ:
                 nodeName = buf.readString();
+                uniqueId = buf.readUniqueId();
+                address = buf.readAddress();
                 authKey = buf.readString();
-                bindAddress = buf.readString();
-                maxBootableServicesAtSameTime = buf.readInt();
-                clusterAddresses = buf.readObjectArray(ProtocolAddress.class);
-                bindPort = buf.readInt();
                 remote = buf.readBoolean();
-                serviceCrashPrevention = buf.readObject(ServiceCrashPrevention.class);
-                javaVersions = buf.readObjectCollection(SimpleJavaVersion.class);
+                maxBootableServicesAtSameTime = buf.readInt();
+                memory = buf.readLong();
+                clusterAddresses = buf.readObjectArray(ProtocolAddress.class);
                 break;
 
             case WRITE:
                 buf.writeString(nodeName);
+                buf.writeUniqueId(uniqueId);
+                buf.writeAddress(address);
                 buf.writeString(authKey);
-                buf.writeString(bindAddress);
-                buf.writeInt(maxBootableServicesAtSameTime);
-                buf.writeObjectArray(clusterAddresses);
-                buf.writeInt(bindPort);
                 buf.writeBoolean(remote);
-                buf.writeObject(serviceCrashPrevention);
-                buf.writeObjectCollection(javaVersions);
+                buf.writeInt(maxBootableServicesAtSameTime);
+                buf.writeLong(memory);
+                buf.writeObjectArray(clusterAddresses);
                 break;
         }
     }

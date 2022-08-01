@@ -2,7 +2,6 @@ package cloud.hytora.driver.services;
 
 
 import cloud.hytora.common.task.Task;
-import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
 import cloud.hytora.driver.services.task.ServiceTask;
@@ -20,99 +19,99 @@ import java.util.stream.Collectors;
 public interface ServiceManager {
 
     /**
-     * Returns a {@link List} of all currently cached {@link ServiceInfo}s
+     * Returns a {@link List} of all currently cached {@link ICloudServer}s
      * of your Driver Instance without filtering any kind of services
      *
      * @see #setAllCachedServices(List)
      */
     @NotNull
-    List<ServiceInfo> getAllCachedServices();
+    List<ICloudServer> getAllCachedServices();
 
     /**
-     * Public method to override ALL the currently cached {@link ServiceInfo}
+     * Public method to override ALL the currently cached {@link ICloudServer}
      * <br><br>
      *
      * <b>ATTENTION:</b> Only use this method if you know what you are doing!
      * @param allCachedServices the services to set
      * @see #getAllCachedServices()
      */
-    void setAllCachedServices(List<ServiceInfo> allCachedServices);
+    void setAllCachedServices(List<ICloudServer> allCachedServices);
 
     /**
-     * Registers a given {@link ServiceInfo} into the cache
+     * Registers a given {@link ICloudServer} into the cache
      * of the current Driver Instance
      * <br>
-     * If somehow this {@link ServiceInfo} is already registered on the Node-Side
+     * If somehow this {@link ICloudServer} is already registered on the Node-Side
      * simply nothing will happen and the service won't be registered twice.
      *
      * @param service the service to register
      */
-    void registerService(ServiceInfo service);
+    void registerService(ICloudServer service);
 
     /**
-     * Tries to update down a given {@link ServiceInfo}
+     * Tries to update down a given {@link ICloudServer}
      * <br>
-     * If this {@link ServiceInfo} is not registered for any reason
+     * If this {@link ICloudServer} is not registered for any reason
      * simply nothing will happen and the method just returns
      *
      * @param service the service to update
      */
-    void updateService(ServiceInfo service);
+    void updateService(ICloudServer service);
 
     /**
-     * Tries to unregister a given {@link ServiceInfo}
+     * Tries to unregister a given {@link ICloudServer}
      * <br>
-     * If somehow this {@link ServiceInfo} has not been registered on the Node-Side before
+     * If somehow this {@link ICloudServer} has not been registered on the Node-Side before
      * simply nothing will happen and the service won't be unregistered.
      *
      * @param service the service to unregister
      */
-    void unregisterService(ServiceInfo service);
+    void unregisterService(ICloudServer service);
 
     /**
-     * Tries to shut down a given {@link ServiceInfo}
+     * Tries to shut down a given {@link ICloudServer}
      * <br>
-     * If this {@link ServiceInfo} is not registered for any reason
+     * If this {@link ICloudServer} is not registered for any reason
      * simply nothing will happen and the method just returns
      *
      * @param service the service to stop
      */
-    void shutdownService(ServiceInfo service);
+    void shutdownService(ICloudServer service);
 
 
-    default List<ServiceInfo> getAllServicesByTask(@NotNull ServiceTask serviceTask) {
+    default List<ICloudServer> getAllServicesByTask(@NotNull ServiceTask serviceTask) {
         return this.getAllCachedServices().stream().filter(it -> it.getTask().getName().equalsIgnoreCase(serviceTask.getName())).collect(Collectors.toList());
     }
 
-    default List<ServiceInfo> getAllServicesByState(@NotNull ServiceState serviceState) {
+    default List<ICloudServer> getAllServicesByState(@NotNull ServiceState serviceState) {
         return this.getAllCachedServices().stream().filter(it -> it.getServiceState() == serviceState).collect(Collectors.toList());
     }
 
-    default List<ServiceInfo> getAllServicesByEnvironment(@NotNull SpecificDriverEnvironment environment) {
+    default List<ICloudServer> getAllServicesByEnvironment(@NotNull SpecificDriverEnvironment environment) {
         return this.getAllCachedServices().stream().filter(it -> it.getTask() != null && it.getTask().getTaskGroup() != null && it.getTask().getTaskGroup().getEnvironment() == environment).collect(Collectors.toList());
     }
 
     @NotNull
-    Optional<ServiceInfo> getService(@NotNull String name);
+    Optional<ICloudServer> getService(@NotNull String name);
 
     @Nullable
-    default ServiceInfo getServiceByNameOrNull(@NotNull String name) {
+    default ICloudServer getServiceByNameOrNull(@NotNull String name) {
         return this.getService(name).orElse(null);
     }
 
-    List<String> getScreenOutput(ServiceInfo service);
+    List<String> getScreenOutput(ICloudServer service);
 
-    Task<ServiceInfo> startService(@NotNull ServiceInfo service);
+    Task<ICloudServer> startService(@NotNull ICloudServer service);
 
     @Nonnull
-    Task<ServiceInfo> getFallbackAsService();
+    Task<ICloudServer> getFallbackAsService();
 
-    Task<ServiceInfo> thisService();
+    Task<ICloudServer> thisService();
 
-    ServiceInfo thisServiceOrNull();
+    ICloudServer thisServiceOrNull();
 
     @Nullable
-    default ServiceInfo getFallbackAsServiceOrNull() {
+    default ICloudServer getFallbackAsServiceOrNull() {
         return getFallbackAsService().get();
     }
 
@@ -125,13 +124,13 @@ public interface ServiceManager {
     }
 
     @Nonnull
-    List<ServiceInfo> getAvailableFallbacksAsServices();
+    List<ICloudServer> getAvailableFallbacksAsServices();
 
     @Nonnull
     List<FallbackEntry> getAvailableFallbacks();
 
     /**
-     * Sends a {@link Packet} to a given {@link ServiceInfo}
+     * Sends a {@link Packet} to a given {@link ICloudServer}
      * If this method is executed on Node-Side it will instantly search
      * for the provided service channel and flush the packet into it<br><br>
      *
@@ -141,6 +140,6 @@ public interface ServiceManager {
      * @param service the service to send the packet to
      * @param packet the packet to send
      */
-    void sendPacketToService(ServiceInfo service, IPacket packet);
+    void sendPacketToService(ICloudServer service, IPacket packet);
 
 }

@@ -4,7 +4,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.node.Node;
+import cloud.hytora.driver.node.INode;
 import cloud.hytora.node.NodeDriver;
 
 @Command({"cluster", "cl"})
@@ -18,8 +18,8 @@ public class ClusterCommand {
     @CommandDescription("Shuts down the whole cluster")
     public void executeShutdown(CommandSender sender) {
         sender.sendMessage("Sending Shutdown-Request to every ClusterParticipant and then shutting down HeadNode after 1 second...");
-        Node headNode = CloudDriver.getInstance().getNodeManager().getHeadNode();
-        for (Node node: CloudDriver.getInstance().getNodeManager().getAllConnectedNodes()) {
+        INode headNode = CloudDriver.getInstance().getNodeManager().getHeadNode();
+        for (INode node: CloudDriver.getInstance().getNodeManager().getAllCachedNodes()) {
             if (node.getName().equalsIgnoreCase(headNode.getName())) {
                 continue; //headNode can't be shut down before all other nodes are shut down
             }

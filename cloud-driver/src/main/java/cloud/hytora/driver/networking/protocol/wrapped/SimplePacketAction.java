@@ -6,7 +6,7 @@ import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.networking.packets.RedirectPacket;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
-import cloud.hytora.driver.networking.NetworkExecutor;
+import cloud.hytora.driver.networking.INetworkExecutor;
 import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
 import cloud.hytora.driver.networking.cluster.ClusterExecutor;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
@@ -31,7 +31,7 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
     private ConnectionType[] receiverTypes;
 
     //response values
-    private QueryState state;
+    private NetworkResponseState state;
     private Document data;
     private PacketBuffer buffer;
 
@@ -40,13 +40,13 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
         this.returnTypeClass = returnTypeClass;
         this.identifier = identifier;
 
-        this.state = QueryState.OK;
+        this.state = NetworkResponseState.OK;
         this.data = DocumentFactory.newJsonDocument();
         this.buffer = PacketBuffer.unsafe();
     }
 
     @Override
-    public ChanneledPacketAction<R> state(QueryState state) {
+    public ChanneledPacketAction<R> state(NetworkResponseState state) {
         this.state = state;
         return this;
     }
@@ -85,7 +85,7 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
     public Task<R> execute(IPacket packet) {
         Task<R> task = Task.empty();
         task.denyNull();
-        NetworkExecutor executor = this.wrapper.executor();
+        INetworkExecutor executor = this.wrapper.executor();
 
         if (identifier.equalsIgnoreCase("multiQuery")) {
             if (!(executor instanceof AdvancedNetworkExecutor)) {
@@ -147,7 +147,7 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
 
     private void sendPacket(IPacket packet) {
 
-        NetworkExecutor executor = wrapper.executor();
+        INetworkExecutor executor = wrapper.executor();
 
         if (executor instanceof ClusterExecutor) {
             //no environment provided... sending raw using the provided NetworkParticipant

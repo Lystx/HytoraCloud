@@ -3,7 +3,7 @@ package cloud.hytora.driver.networking.protocol.codec;
 import cloud.hytora.driver.networking.protocol.codec.buf.DefaultPacketBuffer;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
-import cloud.hytora.driver.networking.NetworkExecutor;
+import cloud.hytora.driver.networking.INetworkExecutor;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -14,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 public class PacketDecoder extends ByteToMessageDecoder {
 
-    private final NetworkExecutor participant;
+    private final INetworkExecutor participant;
 
     @Override
     protected void decode(ChannelHandlerContext context, ByteBuf byteBuf, List<Object> list) throws Exception {

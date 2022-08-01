@@ -5,7 +5,11 @@ import cloud.hytora.bridge.proxy.bungee.events.cloud.ProxyRemoteHandler;
 import cloud.hytora.bridge.proxy.bungee.events.server.ProxyCommandListener;
 import cloud.hytora.bridge.proxy.bungee.utils.CloudReconnectHandler;
 
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.common.scheduler.Scheduler;
+import cloud.hytora.document.DocumentFactory;
+import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.IServiceCycleData;
+import cloud.hytora.driver.services.impl.DefaultServiceCycleData;
 import cloud.hytora.driver.services.utils.*;
 import cloud.hytora.bridge.PluginBridge;
 import cloud.hytora.bridge.proxy.bungee.events.server.ProxyEvents;
@@ -53,11 +57,11 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
 
     @Override
     public void onDisable() {
-        ServiceInfo serviceInfo = Remote.getInstance().thisService();
-        serviceInfo.setServiceState(ServiceState.STOPPING);
-        serviceInfo.setReady(false);
-        serviceInfo.setServiceVisibility(ServiceVisibility.INVISIBLE);
-        serviceInfo.update();
+        ICloudServer ICloudServer = Remote.getInstance().thisService();
+        ICloudServer.setServiceState(ServiceState.STOPPING);
+        ICloudServer.setReady(false);
+        ICloudServer.setServiceVisibility(ServiceVisibility.INVISIBLE);
+        ICloudServer.update();
     }
 
     @Override
@@ -72,12 +76,17 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
     }
 
     @Override
+    public IServiceCycleData createCycleData() {
+        return new DefaultServiceCycleData(DocumentFactory.newJsonDocument()); // TODO: 01.08.2022 add infos of bungee
+    }
+
+    @Override
     public Collection<LocalProxyPlayer> getPlayers() {
         return ProxyServer.getInstance().getPlayers().stream().map(BungeeLocalProxyPlayer::new).collect(Collectors.toList());
     }
 
     @Override
-    public void registerService(ServiceInfo server) {
+    public void registerService(ICloudServer server) {
         if (server.getTask().getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY) {
             return;
         }
@@ -99,7 +108,7 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
     }
 
     @Override
-    public void unregisterService(ServiceInfo server) {
+    public void unregisterService(ICloudServer server) {
         if (server.getTask().getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY) {
             return;
         }

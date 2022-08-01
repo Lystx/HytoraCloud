@@ -1,6 +1,6 @@
 package cloud.hytora.driver.networking.protocol.packets;
 
-public enum QueryState {
+public enum NetworkResponseState {
 
     OK,
 

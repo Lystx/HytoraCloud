@@ -1,12 +1,13 @@
 package cloud.hytora.driver.services.task;
 
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.common.IPlaceHolderObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.common.ICloneableObject;
-import cloud.hytora.driver.node.Node;
+import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.property.IPropertyObject;
 import cloud.hytora.driver.services.ConfigurableService;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
 import cloud.hytora.driver.services.template.ServiceTemplate;
@@ -41,19 +42,20 @@ public interface ServiceTask extends IBufferObject, IPlaceHolderObject, IPropert
      */
     void setPermission(String permission);
 
-    /**
-     * @return the node of the group
-     */
-    @NotNull String getNode();
+    @NotNull Collection<String> getPossibleNodes();
 
-    Node findNode();
+    INode findAnyNode();
+
+    Task<INode> findAnyNodeAsync();
+
+    Collection<INode> findPossibleNodes();
 
     /**
      * sets the node of the group
      *
      * @param node the node to set
      */
-    void setNode(@NotNull String node);
+    void setNode(@NotNull String... node);
 
     /**
      * @return the max memory of a service of the group
@@ -123,7 +125,7 @@ public interface ServiceTask extends IBufferObject, IPlaceHolderObject, IPropert
 
     void setMotd(String motd);
 
-    java.util.List<ServiceInfo> getOnlineServices();
+    java.util.List<ICloudServer> getOnlineServices();
 
     /**
      * updates the properties of the group

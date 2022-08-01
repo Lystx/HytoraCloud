@@ -1,15 +1,12 @@
 package cloud.hytora.bridge.proxy.bungee.events.server;
 
-import cloud.hytora.bridge.proxy.bungee.BungeeBootstrap;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.component.ChatColor;
-import cloud.hytora.driver.permission.PermissionChecker;
-import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.player.PlayerManager;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.ServicePingProperties;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.remote.Remote;
@@ -40,8 +37,8 @@ public class ProxyEvents implements Listener {
 
     @EventHandler
     public void handle(PreLoginEvent event) {
-        ServiceInfo serviceInfo = CloudDriver.getInstance().getServiceManager().thisServiceOrNull();
-        ServiceTask serviceTask = serviceInfo.getTask();
+        ICloudServer ICloudServer = CloudDriver.getInstance().getServiceManager().thisServiceOrNull();
+        ServiceTask serviceTask = ICloudServer.getTask();
 
         List<String> whitelistedPlayers = CloudDriver.getInstance().getStorage().getBundle("cloud::whitelist").toInstances(String.class);
 
@@ -53,13 +50,13 @@ public class ProxyEvents implements Listener {
             }
         }
 
-        if (serviceInfo.getOnlinePlayerCount() >= serviceInfo.getMaxPlayers()) {
+        if (ICloudServer.getOnlinePlayerCount() >= ICloudServer.getMaxPlayers()) {
             event.setCancelReason(new TextComponent("§cThis Proxy is currently full!"));
             event.setCancelled(true);
             return;
         }
 
-        Task<ServiceInfo> fallback = CloudDriver.getInstance().getServiceManager().getFallbackAsService();
+        Task<ICloudServer> fallback = CloudDriver.getInstance().getServiceManager().getFallbackAsService();
 
         if (fallback.isNull()) {
             event.setCancelReason(new TextComponent("§cCould not find any fallback to connect you to..."));
@@ -83,7 +80,7 @@ public class ProxyEvents implements Listener {
     }
 
     public void sendToFallback(ProxiedPlayer player) {
-        Task<ServiceInfo> fallback = CloudDriver.getInstance().getServiceManager().getFallbackAsService();
+        Task<ICloudServer> fallback = CloudDriver.getInstance().getServiceManager().getFallbackAsService();
         if (fallback.isPresent()) {
             System.out.println(ProxyServer.getInstance().getServers().values().stream().map(ServerInfo::getName).collect(Collectors.toList()));
             ServerInfo serverInfo = ProxyServer.getInstance().getServerInfo(fallback.get().getName());
@@ -105,7 +102,7 @@ public class ProxyEvents implements Listener {
         ProxiedPlayer player = event.getPlayer();
 
         ServiceManager serviceManager = CloudDriver.getInstance().getServiceManager();
-        ServiceInfo server = serviceManager.getServiceByNameOrNull(target.getName());
+        ICloudServer server = serviceManager.getServiceByNameOrNull(target.getName());
 
         if (server != null && !(server.getTask().getPermission() == null || player.hasPermission(server.getTask().getPermission()))) {
             //kick player
@@ -127,7 +124,7 @@ public class ProxyEvents implements Listener {
         }
 
         //setting new service
-        ServiceInfo service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(server.getInfo().getName());
+        ICloudServer service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(server.getInfo().getName());
         if (service != null) {
             cloudPlayer.setServer(service);
             cloudPlayer.setProxyServer(Remote.getInstance().thisService());
@@ -144,13 +141,13 @@ public class ProxyEvents implements Listener {
     public void handle(ProxyPingEvent event) {
         ServerPing response = event.getResponse();
 
-        ServiceInfo serviceInfo = Remote.getInstance().thisService();
-        ServicePingProperties pingProperties = serviceInfo.getPingProperties();
+        ICloudServer ICloudServer = Remote.getInstance().thisService();
+        ServicePingProperties pingProperties = ICloudServer.getPingProperties();
 
         int maxPlayers, onlinePlayers;
         if (pingProperties.isUsePlayerPropertiesOfService()) {
-            maxPlayers = serviceInfo.getMaxPlayers();
-            onlinePlayers = pingProperties.isCombineAllProxiesIfProxyService() ? CloudDriver.getInstance().getPlayerManager().getCloudPlayerOnlineAmount() : serviceInfo.getOnlinePlayerCount();
+            maxPlayers = ICloudServer.getMaxPlayers();
+            onlinePlayers = pingProperties.isCombineAllProxiesIfProxyService() ? CloudDriver.getInstance().getPlayerManager().getCloudPlayerOnlineAmount() : ICloudServer.getOnlinePlayerCount();
         } else {
             maxPlayers = pingProperties.getCustomMaxPlayers();
             onlinePlayers = pingProperties.getCustomOnlinePlayers();
@@ -192,7 +189,7 @@ public class ProxyEvents implements Listener {
     @EventHandler
     public void handle(ServerKickEvent event) {
         ProxiedPlayer player = event.getPlayer();
-        ServiceInfo fallback = CloudDriver.getInstance().getServiceManager().getFallbackAsServiceOrNull();
+        ICloudServer fallback = CloudDriver.getInstance().getServiceManager().getFallbackAsServiceOrNull();
 
         if (fallback == null) {
             player.disconnect(new TextComponent("§cCould not find any available fallback..."));

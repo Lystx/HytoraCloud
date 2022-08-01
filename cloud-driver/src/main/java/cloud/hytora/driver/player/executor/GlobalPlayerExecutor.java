@@ -3,7 +3,7 @@ package cloud.hytora.driver.player.executor;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.component.ChatComponent;
 import cloud.hytora.driver.player.CloudPlayer;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 
 import java.util.UUID;
 
@@ -46,7 +46,7 @@ public class GlobalPlayerExecutor implements PlayerExecutor {
     }
 
     @Override
-    public void connect(ServiceInfo server) {
+    public void connect(ICloudServer server) {
         for (CloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
             PlayerExecutor.forPlayer(player).connect(server);
         }

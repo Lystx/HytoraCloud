@@ -3,7 +3,8 @@ package cloud.hytora.driver.networking.packets.node;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
-import cloud.hytora.driver.node.NodeCycleData;
+import cloud.hytora.driver.node.data.DefaultNodeData;
+import cloud.hytora.driver.node.data.INodeData;
 import lombok.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,7 +16,7 @@ import java.io.IOException;
 public class NodeCycleDataPacket extends AbstractPacket {
 
     private String nodeName;
-    private NodeCycleData data;
+    private INodeData data;
 
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
@@ -24,7 +25,7 @@ public class NodeCycleDataPacket extends AbstractPacket {
 
             case READ:
                 nodeName = buf.readString();
-                data = buf.readObject(NodeCycleData.class);
+                data = buf.readObject(DefaultNodeData.class);
                 break;
 
             case WRITE:

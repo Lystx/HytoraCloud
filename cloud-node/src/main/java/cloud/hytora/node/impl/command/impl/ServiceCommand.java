@@ -11,13 +11,14 @@ import cloud.hytora.driver.console.Screen;
 import cloud.hytora.driver.console.ScreenManager;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.server.ServiceRequestScreenLeaveEvent;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.deployment.CloudDeployment;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.utils.ServiceState;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -41,7 +42,7 @@ public class ServiceCommand {
     @CommandDescription("Lists all online services")
     public void onListCommand(CommandSender sender) {
         sender.sendMessage("§8");
-        for (ServiceInfo service : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
+        for (ICloudServer service : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
             sender.sendMessage("§b" + service.getName() + " §8[" + service.getServiceState().getName() + " §8/ §7" + service.getServiceVisibility().toString() + "§8] §bSlots §7" + service.getOnlinePlayerCount() + "§8/§7" + service.getMaxPlayers());
         }
         sender.sendMessage("§8");
@@ -52,7 +53,7 @@ public class ServiceCommand {
     @CommandDescription("Copies a service into its template (exclusions are split by ';', use '#' to include all)")
     public void onDeployCommand(
             CommandSender sender,
-            @Argument(value = "service", completer = CloudServerCompleter.class) ServiceInfo service,
+            @Argument(value = "service", completer = CloudServerCompleter.class) ICloudServer service,
             @Argument("templateName") String templateName,
             @Argument("excludes") String excludes
     ) {
@@ -93,7 +94,7 @@ public class ServiceCommand {
                     .ignoreIfLimitOfServicesReached()
                     .maxPlayers(task.getDefaultMaxPlayers())
                     .motd(task.getMotd())
-                    .node(task.getNode())
+                    .node(task.getPossibleNodes().stream().findAny().get())
                     .memory(task.getMemory())
                     .start();
         }
@@ -104,7 +105,7 @@ public class ServiceCommand {
     @Syntax("<service>")
     public void onScreenCommand(
             CommandSender sender,
-            @Argument(value = "service", completer = CloudServerCompleter.class) ServiceInfo service
+            @Argument(value = "service", completer = CloudServerCompleter.class) ICloudServer service
     ) {
         if (service == null) {
             sender.sendMessage("§cThere is no such Server online!");
@@ -140,7 +141,7 @@ public class ServiceCommand {
     @CommandDescription("Stops a service")
     public void onStopCommand(
             CommandSender sender,
-            @Argument(value = "name", completer = CloudServerCompleter.class) ServiceInfo service
+            @Argument(value = "name", completer = CloudServerCompleter.class) ICloudServer service
     ) {
         if (service == null) {
             sender.sendMessage("§cThere is no online service matching this name!");
@@ -162,7 +163,7 @@ public class ServiceCommand {
     @CommandDescription("Shows info about a service")
     public void onInfoCommand(
             CommandSender sender,
-            @Argument(value = "name", completer = CloudServerCompleter.class) ServiceInfo service
+            @Argument(value = "name", completer = CloudServerCompleter.class) ICloudServer service
     ) {
         if (service == null) {
             sender.sendMessage("§cThere is no online service matching this name!");
@@ -179,6 +180,9 @@ public class ServiceCommand {
         sender.sendMessage("§bMotd: §7" + service.getMotd());
         sender.sendMessage("§bReady: §7" + (service.isReady() ? "§aYes" : "§cNo"));
         sender.sendMessage("§bUptime: §7" + service.getReadableUptime());
+        sender.sendMessage("§bLast Sync: §7" + new SimpleDateFormat("HH:mm:ss").format(service.getLastCycleData().getTimestamp()));
+        sender.sendMessage("§bWould time out at: §7" + new SimpleDateFormat("HH:mm:ss").format(service.getLastCycleData().getTimestamp() + CloudDriver.SERVER_PUBLISH_INTERVAL));
+        sender.sendMessage("§bPacket Latency: §7" + service.getLastCycleData().getLatency());
         sender.sendMessage("§8");
 
     }

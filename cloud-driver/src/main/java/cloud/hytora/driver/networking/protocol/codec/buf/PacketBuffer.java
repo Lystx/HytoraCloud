@@ -3,9 +3,8 @@ package cloud.hytora.driver.networking.protocol.codec.buf;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 
-import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.networking.NetworkExecutor;
+import cloud.hytora.driver.networking.INetworkExecutor;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -39,7 +38,7 @@ public interface PacketBuffer {
 		}
 	}
 
-	static PacketBuffer unPooled(NetworkExecutor participant) {
+	static PacketBuffer unPooled(INetworkExecutor participant) {
 		return new DefaultPacketBuffer(Unpooled.buffer(), participant);
 	}
 

@@ -1,9 +1,11 @@
-package cloud.hytora.driver.node;
+package cloud.hytora.driver.node.base;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
+import cloud.hytora.driver.node.INode;
+import cloud.hytora.driver.node.NodeManager;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
@@ -15,20 +17,20 @@ import java.util.List;
 @Getter @Setter
 public abstract class DefaultNodeManager implements NodeManager {
 
-    protected List<Node> allConnectedNodes;
+    protected List<INode> allCachedNodes;
 
     public DefaultNodeManager() {
-        this.allConnectedNodes = new ArrayList<>();
+        this.allCachedNodes = new ArrayList<>();
     }
 
     @Override
-    public @NotNull Task<Node> getNode(@NotNull String username) {
-        return Task.build(getAllConnectedNodes().stream().filter(n -> n.getName().equalsIgnoreCase(username)).findFirst().orElse(null));
+    public @NotNull Task<INode> getNode(@NotNull String username) {
+        return Task.build(getAllCachedNodes().stream().filter(n -> n.getName().equalsIgnoreCase(username)).findFirst().orElse(null));
     }
 
     @Override
-    public @Nullable Node getNodeByNameOrNull(@NotNull String username) {
-        return getAllConnectedNodes().stream().filter(n -> n.getName().equalsIgnoreCase(username)).findFirst().orElse(null);
+    public @Nullable INode getNodeByNameOrNull(@NotNull String username) {
+        return getAllCachedNodes().stream().filter(n -> n.getName().equalsIgnoreCase(username)).findFirst().orElse(null);
     }
 
     @Override
@@ -38,7 +40,7 @@ public abstract class DefaultNodeManager implements NodeManager {
         }
 
         AdvancedNetworkExecutor executor = CloudDriver.getInstance().getExecutor();
-        Node headNode = this.getHeadNode();
+        INode headNode = this.getHeadNode();
 
         if (headNode == null) {
             return false;

@@ -17,7 +17,7 @@ import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 
-public class NettyHttpServer extends NettySSLServer implements HttpServer {
+public class NettyHttpServer implements HttpServer {
 
     protected final EventLoopGroup bossEventLoopGroup = NettyUtils.newEventLoopGroup();
     protected final EventLoopGroup workerEventLoopGroup = NettyUtils.newEventLoopGroup();
@@ -26,11 +26,6 @@ public class NettyHttpServer extends NettySSLServer implements HttpServer {
     protected final HttpAuthRegistry authRegistry = new HttpAuthRegistry();
 
     protected final Collection<WebSocketChannel> websocketChannels = new CopyOnWriteArrayList<>();
-
-    public NettyHttpServer(@Nullable SSLConfiguration sslConfiguration) throws Exception {
-        super(sslConfiguration);
-        initSslContext();
-    }
 
     @Override
     public void addListener(@Nonnull ProtocolAddress address) {

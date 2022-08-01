@@ -15,7 +15,7 @@ import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.IEntry;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.EventListener;
-import cloud.hytora.driver.node.Node;
+import cloud.hytora.driver.node.INode;
 import cloud.hytora.remote.Remote;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import org.kohsuke.github.GHCommit;
@@ -130,10 +130,10 @@ public class StartPanel extends JPanel {
                 });
             }
 
-            Collection<Node> nodes = Remote.getInstance().getNodeManager().getAllNodes();
+            Collection<INode> nodes = Remote.getInstance().getNodeManager().getAllCachedNodes();
 
-            Node highestCpuNode = nodes.stream().max(Comparator.comparingDouble(n -> n.getLastCycleData().getCpuUsage())).orElse(null);
-            Node lowestCpuNode = nodes.stream().min(Comparator.comparingDouble(n -> n.getLastCycleData().getCpuUsage())).orElse(null);
+            INode highestCpuNode = nodes.stream().max(Comparator.comparingDouble(n -> n.getLastCycleData().getCpuUsage())).orElse(null);
+            INode lowestCpuNode = nodes.stream().min(Comparator.comparingDouble(n -> n.getLastCycleData().getCpuUsage())).orElse(null);
 
             if (highestCpuNode != null) {
                 highestCpuUsageBar.setValue((int) highestCpuNode.getLastCycleData().getCpuUsage());

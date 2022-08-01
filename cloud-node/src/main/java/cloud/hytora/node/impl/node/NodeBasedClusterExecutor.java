@@ -14,11 +14,11 @@ import cloud.hytora.driver.networking.packets.node.NodeConnectionDataRequestPack
 import cloud.hytora.driver.networking.packets.node.NodeConnectionDataResponsePacket;
 import cloud.hytora.driver.networking.protocol.packets.*;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
-import cloud.hytora.driver.node.Node;
-import cloud.hytora.driver.node.NodeCycleData;
-import cloud.hytora.driver.node.NodeInfo;
+import cloud.hytora.driver.node.INode;
+import cloud.hytora.driver.node.data.DefaultNodeData;
+import cloud.hytora.driver.node.DriverNodeObject;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.config.MainConfiguration;
 import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
@@ -36,23 +36,23 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 @Getter
-public class HytoraNode extends ClusterExecutor {
+public class NodeBasedClusterExecutor extends ClusterExecutor {
 
-    private final Map<ServiceInfo, Long> bootUpStatistics;
+    private final Map<ICloudServer, Long> bootUpStatistics;
     private final String hostName;
     private final int port;
     private final List<PacketHandler<?>> remoteHandlers;
 
-    public HytoraNode(MainConfiguration mainConfiguration) {
-        super(NodeDriver.getInstance().getConfig().getAuthKey(), mainConfiguration.getNodeConfig().getNodeName());
+    public NodeBasedClusterExecutor(MainConfiguration mainConfiguration) {
+        super(NodeDriver.getInstance().getNode().getConfig().getAuthKey(), mainConfiguration.getNodeConfig().getNodeName());
 
-        this.hostName = mainConfiguration.getNodeConfig().getBindAddress();
-        this.port = mainConfiguration.getNodeConfig().getBindPort();
+        this.hostName = mainConfiguration.getNodeConfig().getAddress().getHost();
+        this.port = mainConfiguration.getNodeConfig().getAddress().getPort();
         this.bootUpStatistics = new ConcurrentHashMap<>();
         this.remoteHandlers = new ArrayList<>();
 
         this.bootAsync().handlePacketsAsync().openConnection(this.hostName, this.port)
-                .addUpdateListener(wrapper -> {
+                .registerListener(wrapper -> {
                     if (wrapper.isSuccess()) {
                         NodeDriver.getInstance().getLogger().debug("Networking was successfully booted up and is ready to accept connections!");
                     } else {
@@ -79,13 +79,13 @@ public class HytoraNode extends ClusterExecutor {
 
             if (state == ConnectionState.CONNECTED) {
                 NodeConnectionDataRequestPacket packet = new NodeConnectionDataRequestPacket();
-                wrapper.overrideExecutor(HytoraNode.this).prepareSingleQuery().execute(packet).thenAccept(new Consumer<BufferedResponse>() {
+                wrapper.overrideExecutor(NodeBasedClusterExecutor.this).prepareSingleQuery().execute(packet).onTaskSucess(new Consumer<BufferedResponse>() {
                     @Override
                     public void accept(BufferedResponse response) {
                         DefaultNodeConfig nodeConfig = response.buffer().readObject(DefaultNodeConfig.class);
-                        NodeCycleData data = response.buffer().readObject(NodeCycleData.class);
+                        DefaultNodeData data = response.buffer().readObject(DefaultNodeData.class);
 
-                        Node currentNode = new NodeInfo(NodeDriver.getInstance().getName(), ConnectionType.NODE, NodeDriver.getInstance().getConfig(), NodeDriver.getInstance().getLastCycleData());
+                        INode currentNode = new DriverNodeObject(NodeDriver.getInstance().getNode().getConfig(), NodeDriver.getInstance().getNode().getLastCycleData());
 
                         if (CloudDriver.getInstance().getNodeManager().getNode(nodeConfig.getNodeName()).isPresent()) {
                             wrapper.sendPacket(new NodeConnectionDataResponsePacket(nodeConfig.getNodeName(), NodeConnectionDataResponsePacket.PayLoad.ALREADY_NODE_EXISTS, currentNode));
@@ -96,11 +96,11 @@ public class HytoraNode extends ClusterExecutor {
                         }
 
                         String authKey = nodeConfig.getAuthKey();
-                        if (authKey.equals(NodeDriver.getInstance().getConfig().getAuthKey())) {
+                        if (authKey.equals(NodeDriver.getInstance().getNode().getConfig().getAuthKey())) {
                             wrapper.sendPacket(new NodeConnectionDataResponsePacket(getNodeName(), NodeConnectionDataResponsePacket.PayLoad.SUCCESS, currentNode));
 
                             //right auth key -> registering node
-                            Node node = new NodeInfo(executor.getName(), ConnectionType.NODE, nodeConfig, data);
+                            INode node = new DriverNodeObject(nodeConfig, data);
                             CloudDriver.getInstance().getNodeManager().registerNode(node);
 
                             NodeDriver.getInstance().getServiceQueue().dequeue();
@@ -112,13 +112,13 @@ public class HytoraNode extends ClusterExecutor {
                     }
                 });
             } else {
-                Task<Node> node = CloudDriver.getInstance().getNodeManager().getNode(executor.getName());
+                Task<INode> node = CloudDriver.getInstance().getNodeManager().getNode(executor.getName());
                 node.ifPresent(CloudDriver.getInstance().getNodeManager()::unRegisterNode);
             }
         } else {
             if (state == ConnectionState.CONNECTED) {
                 // set online
-                ServiceInfo service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(executor.getName());
+                ICloudServer service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(executor.getName());
                 if (service == null) {
                     //other remote connection
 
@@ -156,9 +156,9 @@ public class HytoraNode extends ClusterExecutor {
                     return;
                 }
                 NodeDriver base = NodeDriver.getInstance();
-                ServiceInfo serviceInfo = base.getServiceManager().getServiceByNameOrNull(service);
-                if (serviceInfo != null) {
-                    CloudDriver.getInstance().getServiceManager().unregisterService(serviceInfo);
+                ICloudServer ICloudServer = base.getServiceManager().getServiceByNameOrNull(service);
+                if (ICloudServer != null) {
+                    CloudDriver.getInstance().getServiceManager().unregisterService(ICloudServer);
                 } else {
                     NodeDriver.getInstance().getLogger().warn("§a==> Channel §e{} - {} tried to disconnect but no matching Service was found!", executor.getName(), executor.getChannel());
                 }
@@ -203,7 +203,7 @@ public class HytoraNode extends ClusterExecutor {
             public <T extends IPacket> void handlePacket(PacketChannel wrapper, @NotNull T packet) {
 
 
-                for (PacketHandler packetHandler : new ArrayList<>(HytoraNode.this.remoteHandlers)) {
+                for (PacketHandler packetHandler : new ArrayList<>(NodeBasedClusterExecutor.this.remoteHandlers)) {
                     try {
                         packetHandler.handle(wrapper, packet);
                     } catch (Exception e) {
@@ -219,13 +219,13 @@ public class HytoraNode extends ClusterExecutor {
         };
 
 
-        client.registerPacketHandler((PacketHandler<NodeConnectionDataRequestPacket>) (wrapper1, packet) -> wrapper1.prepareResponse().buffer(buf -> buf.writeObject(NodeDriver.getInstance().getConfig()).writeObject(NodeCycleData.current())).execute(packet));
+        client.registerPacketHandler((PacketHandler<NodeConnectionDataRequestPacket>) (wrapper1, packet) -> wrapper1.prepareResponse().buffer(buf -> buf.writeObject(NodeDriver.getInstance().getNode().getConfig()).writeObject(DefaultNodeData.current())).execute(packet));
         client.registerPacketHandler((PacketHandler<NodeConnectionDataResponsePacket>) (wrapper12, packet) -> {
             NodeConnectionDataResponsePacket.PayLoad payLoad = packet.getPayLoad();
             String node = packet.getNode();
             switch (payLoad) {
                 case SUCCESS:
-                    Node nodeInfo = packet.getNodeInfo();
+                    INode nodeInfo = packet.getNodeInfo();
                     NodeDriver.getInstance().getNodeManager().registerNode(nodeInfo); //registering node that we connected to
                     CloudDriver.getInstance().getLogger().info("This Node §asuccessfully §7connected to §b{}§8.", nodeInfo);
                     break;
@@ -240,7 +240,7 @@ public class HytoraNode extends ClusterExecutor {
                     break;
             }
         });
-        client.openConnection(hostname, port).addUpdateListener(wrap -> {
+        client.openConnection(hostname, port).registerListener(wrap -> {
             if (wrap.isSuccess()) {
                 task.setResult(true);
             } else {
@@ -253,7 +253,7 @@ public class HytoraNode extends ClusterExecutor {
 
     @Override
     public void sendPacketToAll(IPacket packet) {
-        if (NodeDriver.getInstance().getConfig().isRemote()) {
+        if (NodeDriver.getInstance().getNode().getConfig().isRemote()) {
             nodeAsClient.sendPacket(packet);
         }
         super.sendPacketToAll(packet);
@@ -268,11 +268,11 @@ public class HytoraNode extends ClusterExecutor {
         super.sendPacket(packet);
     }
 
-    public void registerStats(ServiceInfo service) {
+    public void registerStats(ICloudServer service) {
         bootUpStatistics.put(service, System.currentTimeMillis());
     }
 
-    public long getStats(ServiceInfo service) {
+    public long getStats(ICloudServer service) {
         long time = System.currentTimeMillis() - bootUpStatistics.getOrDefault(service, (System.currentTimeMillis() - 1));
         bootUpStatistics.remove(service);
         return time;

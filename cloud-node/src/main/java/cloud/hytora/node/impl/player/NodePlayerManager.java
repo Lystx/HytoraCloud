@@ -14,10 +14,8 @@ import cloud.hytora.driver.networking.packets.player.CloudPlayerLoginPacket;
 import cloud.hytora.driver.networking.packets.player.CloudPlayerUpdatePacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.permission.PermissionManager;
-import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.CloudPlayer;
-import cloud.hytora.driver.player.TemporaryProperties;
 import cloud.hytora.driver.player.impl.DefaultPlayerManager;
 import cloud.hytora.driver.player.impl.DefaultCloudPlayer;
 import cloud.hytora.driver.player.impl.DefaultTemporaryProperties;
@@ -43,7 +41,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
             CloudPlayer cloudPlayer = constructPlayer(packet.getUuid(), packet.getUsername());
 
             CloudDriver.getInstance().getProviderRegistry().get(PermissionManager.class).ifPresent(permissionManager -> {
-                permissionManager.getPlayerAsyncByUniqueId(cloudPlayer.getUniqueId()).thenAccept(player -> {
+                permissionManager.getPlayerAsyncByUniqueId(cloudPlayer.getUniqueId()).onTaskSucess(player -> {
                     if (player == null) {
                         player = permissionManager.createPlayer(packet.getUsername(), packet.getUuid());
                         permissionManager.updatePermissionPlayer(player);
@@ -53,7 +51,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
             });
 
             getOfflinePlayerByUniqueIdAsync(cloudPlayer.getUniqueId())
-                    .thenAccept(cloudOfflinePlayer -> {
+                    .onTaskSucess(cloudOfflinePlayer -> {
                         if (cloudOfflinePlayer == null) {
                             //logged in for the first time probably
 
@@ -75,7 +73,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
             this.cachedCloudPlayers.put(packet.getUuid(), cloudPlayer);
             eventManager.callEventGlobally(new CloudPlayerLoginEvent(cloudPlayer));
 
-            DriverUpdatePacket.publishUpdate(NodeDriver.getInstance());
+            DriverUpdatePacket.publishUpdate(NodeDriver.getInstance().getExecutor());
         });
 
         executor.registerPacketHandler((PacketHandler<CloudPlayerDisconnectPacket>) (wrapper, packet) -> {
@@ -86,7 +84,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
                 CloudDriver.getInstance().getLogger().debug("Player[name={}, uuid={}] dissconnected from [proxy={}, server={}]!", cloudPlayer.getName(), cloudPlayer.getUniqueId(), cloudPlayer.getProxyServer().getName(), (cloudPlayer.getServer() == null ? "none" : cloudPlayer.getServer().getName()));
                 this.cachedCloudPlayers.remove(cloudPlayer.getUniqueId());
                 eventManager.callEventGlobally(new CloudPlayerDisconnectEvent(cloudPlayer));
-                DriverUpdatePacket.publishUpdate(NodeDriver.getInstance());
+                DriverUpdatePacket.publishUpdate(NodeDriver.getInstance().getExecutor());
 
             });
         });

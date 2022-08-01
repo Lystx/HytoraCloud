@@ -60,6 +60,7 @@ public class SimpleTask<T> implements Task<T> {
         this();
         this.heldValue = value;
     }
+
     public SimpleTask() {
         this.heldValue = null;
         this.immutable = false;
@@ -222,7 +223,7 @@ public class SimpleTask<T> implements Task<T> {
     }
 
     @Override
-    public Task<T> addUpdateListener(Consumer<Task<T>> listener) {
+    public Task<T> registerListener(Consumer<Task<T>> listener) {
         if (this.isDone()) {
             listener.accept(this);
             return this;
@@ -271,6 +272,7 @@ public class SimpleTask<T> implements Task<T> {
         return this;
     }
 
+
     @Override
     public Task<T> syncUninterruptedly() {
         if (isPresent() || isDone()) {
@@ -303,12 +305,31 @@ public class SimpleTask<T> implements Task<T> {
     }
 
     @Override
-    public Task<T> thenAccept(Consumer<T> listener) {
-        return this.addUpdateListener(v -> {
+    public Task<T> onTaskSucess(Consumer<T> listener) {
+        return this.registerListener(v -> {
             try {
                 listener.accept(this.get());
             } catch (ValueHoldsNoObjectException e) {
                 listener.accept(null);
+            }
+        });
+    }
+
+
+    @Override
+    public Task<T> onTaskFailed(Consumer<Throwable> e) {
+        return this.registerListener(v -> {
+            if (v.error() != null) {
+                e.accept(v.error());
+            }
+        });
+    }
+
+    @Override
+    public Task<T> onTaskFailedOrNull(Consumer<Throwable> e) {
+        return this.registerListener(v -> {
+            if (v.error() != null || v.isNull()) {
+                e.accept(v.error());
             }
         });
     }
@@ -378,7 +399,7 @@ public class SimpleTask<T> implements Task<T> {
             wrapped.denyNull();
         }
 
-        wrapped.addUpdateListener(new Consumer<Task<V>>() {
+        wrapped.registerListener(new Consumer<Task<V>>() {
             @Override
             public void accept(Task<V> result) {
 
@@ -412,7 +433,7 @@ public class SimpleTask<T> implements Task<T> {
         }
         task = Task.build(mapper.apply(this.heldValue));
         Task<V> finalTask = task;
-        this.addUpdateListener(new Consumer<Task<T>>() {
+        this.registerListener(new Consumer<Task<T>>() {
             @Override
             public void accept(Task<T> tTask) {
                 if (tTask.isSuccess()) {

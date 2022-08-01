@@ -207,7 +207,7 @@ public class DefaultEventManager implements EventManager {
 		Task<E> task = Task.empty();
 		RegisteredListener listener = new ActionRegisteredListener<>(eventClass, ((registeredListener, e) -> task.setResult(e)));
 		addListener(listener);
-		task.addUpdateListener(wrapper -> {
+		task.registerListener(wrapper -> {
 			if (wrapper.isSuccess()) {
 				removeListener(listener);
 			}

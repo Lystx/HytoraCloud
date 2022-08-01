@@ -8,7 +8,6 @@ import cloud.hytora.common.logging.internal.factory.ConstantLoggerFactory;
 import cloud.hytora.common.logging.internal.factory.DefaultLoggerFactory;
 import cloud.hytora.common.logging.internal.factory.Slf4jLoggerFactory;
 import cloud.hytora.common.misc.ReflectionUtils;
-import jline.internal.Log;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;

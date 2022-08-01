@@ -4,7 +4,7 @@ import cloud.hytora.driver.component.ChatComponent;
 import cloud.hytora.driver.networking.packets.player.*;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.player.CloudPlayer;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import lombok.AllArgsConstructor;
 
 import java.util.UUID;
@@ -40,12 +40,12 @@ public class CloudPlayerExecutor implements PlayerExecutor {
     }
 
     @Override
-    public void connect(ServiceInfo server) {
+    public void connect(ICloudServer server) {
         this.sendPacketToProxy(new CloudPlayerSendServicePacket(getExecutorUniqueId(), server.getName()));
     }
 
     private void sendPacketToProxy(AbstractPacket packet) {
-        ServiceInfo proxyServer = player.getProxyServer();
+        ICloudServer proxyServer = player.getProxyServer();
         if (proxyServer != null) {
             proxyServer.sendPacket(packet);
         }

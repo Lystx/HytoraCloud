@@ -65,7 +65,22 @@ public class NodeScreen implements Screen {
 
     @Override
     public void clear() {
-        ReflectionUtils.clearConsole();
+        NodeDriver.getInstance().getConsole().clearScreen();}
+
+
+    @Override
+    public void suggestInput(String input) {
+        NodeDriver.getInstance().getConsole().setCommandInputValue(input);
+    }
+
+    @Override
+    public Collection<String> getHistory() {
+        return NodeDriver.getInstance().getConsole().getCommandHistory();
+    }
+
+    @Override
+    public void setHistory(Collection<String> history) {
+        NodeDriver.getInstance().getConsole().setCommandHistory((List<String>) history);
     }
 
     @Override

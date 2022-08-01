@@ -1,7 +1,6 @@
-package cloud.hytora.driver.node;
+package cloud.hytora.driver.node.data;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import com.sun.management.OperatingSystemMXBean;
@@ -16,25 +15,27 @@ import java.lang.management.ManagementFactory;
 
 @NoArgsConstructor
 @Getter
-public class NodeCycleData implements IBufferObject {
+public class DefaultNodeData implements INodeData {
 
-	public static final int PUBLISH_INTERVAL = 5_000; // publish all 5 seconds
-	public static final int CYCLE_TIMEOUT = 5; // node time-outs after 25 seconds
+	private static Long startupTime;
 
 	static {
 		current(); // init management
 	}
 
 	@Nonnull
-	public static NodeCycleData current() {
+	public static DefaultNodeData current() {
 		OperatingSystemMXBean system = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class);
 
 		float cpuUsage = (float) system.getSystemCpuLoad() * 100f;
 		int cores = system.getAvailableProcessors();
 		long maxMemory = system.getTotalPhysicalMemorySize() / 1024 / 1024; // bytes -> kilobytes -> megabytes
 		long freeRam = system.getFreePhysicalMemorySize() / 1024 / 1024; // bytes -> kilobytes -> megabytes
+		if (startupTime == null) {
+			startupTime = System.currentTimeMillis();
+		}
 
-		return new NodeCycleData(cpuUsage, cores, maxMemory, freeRam);
+		return new DefaultNodeData(cpuUsage, cores, maxMemory, freeRam);
 	}
 
 	private float cpuUsage; // cpu usage in percent
@@ -44,7 +45,7 @@ public class NodeCycleData implements IBufferObject {
 	private int latency; // the amount of time it takes to send a packet from the node to the server in ms
 	private long timestamp;
 
-	public NodeCycleData(float cpuUsage, int cores, long maxRam, long freeRam) {
+	public DefaultNodeData(float cpuUsage, int cores, long maxRam, long freeRam) {
 		this.cpuUsage = cpuUsage;
 		this.cores = cores;
 		this.maxRam = maxRam;
@@ -77,14 +78,23 @@ public class NodeCycleData implements IBufferObject {
 		}
 	}
 
+	@Override
+	public long getUpTime() {
+		return System.currentTimeMillis() - getStartupTime();
+	}
+
+	@Override
+	public long getStartupTime() {
+		return startupTime;
+	}
 
 	public boolean hasTimedOut() {
 		long lastCycleDelay = System.currentTimeMillis() - timestamp - 30; // we allow 30ms delay
-		int lostCycles = (int) lastCycleDelay / PUBLISH_INTERVAL;
+		int lostCycles = (int) lastCycleDelay / CloudDriver.NODE_PUBLISH_INTERVAL;
 		if (lostCycles > 0) {
 			CloudDriver.getInstance().getLogger().trace("Node timeout: lost {} cycles ({}ms)", lostCycles, lastCycleDelay);
 		}
-		return lostCycles >= CYCLE_TIMEOUT;
+		return lostCycles >= CloudDriver.NODE_MAX_LOST_CYCLES;
 	}
 
 	@Override

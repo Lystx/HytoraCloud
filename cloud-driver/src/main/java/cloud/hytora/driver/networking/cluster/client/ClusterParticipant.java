@@ -155,7 +155,13 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
 
     @Override
     public void sendPacket(IPacket packet) {
-        this.channel.writeAndFlush(packet).addListener((ChannelFutureListener) future -> {
+        if (this.channel == null) {
+            //re-schedule request
+
+            CloudDriver.getInstance().executeIf(() -> sendPacket(packet), () -> getChannel() != null);
+            return;
+        }
+        this.getChannel().writeAndFlush(packet).addListener((ChannelFutureListener) future -> {
             if (!future.isSuccess()) future.cause().printStackTrace();
         });
     }

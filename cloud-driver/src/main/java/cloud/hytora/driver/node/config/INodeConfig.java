@@ -5,30 +5,28 @@ import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 
 import java.util.Collection;
+import java.util.UUID;
 
 public interface INodeConfig extends IBufferObject {
 
     String getNodeName();
 
-    String getAuthKey();
+    UUID getUniqueId();
 
-    String getBindAddress();
+    ProtocolAddress getAddress();
+
+    String getAuthKey();
 
     int getMaxBootableServicesAtSameTime();
 
-    ProtocolAddress[] getHttpListeners();
+    long getMemory();
 
-    ServiceCrashPrevention getServiceCrashPrevention();
-
-    SSLConfiguration getSslConfiguration();
 
     ProtocolAddress[] getClusterAddresses();
 
-    int getBindPort();
 
     boolean isRemote();
 
-    void markAsRemote();
+    void setRemote();
 
-    Collection<JavaVersion> getJavaVersions();
 }

@@ -46,7 +46,8 @@ public class TaskSetup extends Setup<TaskSetup> {
     @QuestionTip("Minimum = 1")
     private int minServers;
 
-    @Question(id = 9, question = "On which Node should this task run?")
+    @Question(id = 9, question = "On which Node(s) should this task be able to run?")
+    @QuestionTip("Separate multiple Nodes with a \",\"")
     private String node;
 
     @Question(id = 10, question = "Which TemplateStorage should Services of this task use?")

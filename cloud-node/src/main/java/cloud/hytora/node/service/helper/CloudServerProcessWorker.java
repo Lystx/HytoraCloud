@@ -5,30 +5,22 @@ import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.console.Screen;
 import cloud.hytora.driver.console.ScreenManager;
-import cloud.hytora.driver.event.DestructiveListener;
-import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
-import cloud.hytora.driver.event.defaults.server.ServiceRequestScreenLeaveEvent;
-import cloud.hytora.driver.exception.CloudException;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.controller.base.ModuleConfig;
 import cloud.hytora.driver.node.config.INodeConfig;
-import cloud.hytora.driver.node.config.JavaVersion;
-import cloud.hytora.driver.services.impl.SimpleServiceInfo;
+import cloud.hytora.driver.services.impl.DriverServiceObject;
 import cloud.hytora.driver.services.task.TaskDownloadEntry;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.driver.services.utils.ServiceProcessType;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 import cloud.hytora.driver.services.utils.version.VersionFile;
 import cloud.hytora.driver.services.utils.version.VersionType;
-import cloud.hytora.node.console.progressbar.ProgressBar;
-import cloud.hytora.node.console.progressbar.ProgressBarStyle;
 import cloud.hytora.node.impl.config.MainConfiguration;
-import cloud.hytora.node.service.NodeServiceManager;
 import cloud.hytora.node.NodeDriver;
 
 
@@ -50,8 +42,8 @@ import java.util.jar.JarInputStream;
 public class CloudServerProcessWorker {
 
     @SneakyThrows
-    public Task<ServiceInfo> processService(ServiceInfo service) {
-        Task<ServiceInfo> task = Task.empty(ServiceInfo.class).denyNull();
+    public Task<ICloudServer> processService(ICloudServer service) {
+        Task<ICloudServer> task = Task.empty(ICloudServer.class).denyNull();
 
 
         service.setServiceState(ServiceState.STARTING);
@@ -95,8 +87,8 @@ public class CloudServerProcessWorker {
 
         // write property for identify service
         new RemoteIdentity(
-                NodeDriver.getInstance().getConfig().getAuthKey(),
-                service.getTask().getNode(),
+                NodeDriver.getInstance().getNode().getConfig().getAuthKey(),
+                service.getRunningNodeName(),
                 service.getTask().getVersion().getType(),
                 MainConfiguration.getInstance().getServiceProcessType(),
                 NodeDriver.getInstance().getExecutor().getHostName(),
@@ -148,7 +140,7 @@ public class CloudServerProcessWorker {
 
         Process process = result.getProcess();
 
-        SimpleServiceInfo serviceInfo = (SimpleServiceInfo)service;
+        DriverServiceObject serviceInfo = (DriverServiceObject)service;
         serviceInfo.setProcess(process);
         serviceInfo.setWorkingDirectory(folder);
 
@@ -175,7 +167,7 @@ public class CloudServerProcessWorker {
         }
     }
 
-    private String[] args(ServiceInfo service) {
+    private String[] args(ICloudServer service) {
 
         File parent = (service.getTask().getTaskGroup().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
         File folder = new File(parent, service.getName() + "/");
@@ -190,10 +182,7 @@ public class CloudServerProcessWorker {
         List<String> arguments = new ArrayList<>(Collections.singletonList("java"));
 
         if (javaVersion != -1) {
-
-            INodeConfig config = NodeDriver.getInstance().getConfig();
-            config.getJavaVersions().stream().filter(jv -> jv.getId() == javaVersion).findFirst().ifPresent(version -> arguments.add(version.getPath()));
-
+            MainConfiguration.getInstance().getJavaVersions().stream().filter(jv -> jv.getId() == javaVersion).findFirst().ifPresent(version -> arguments.add(version.getPath()));
         }
 
         //adding pre defined arguments

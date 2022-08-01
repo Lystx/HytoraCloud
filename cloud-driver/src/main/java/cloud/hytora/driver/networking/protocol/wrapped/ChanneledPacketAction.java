@@ -4,15 +4,14 @@ import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
-import cloud.hytora.driver.networking.protocol.packets.QueryState;
+import cloud.hytora.driver.networking.protocol.packets.NetworkResponseState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
-import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 
 import java.util.function.Consumer;
 
 public interface ChanneledPacketAction<R> {
 
-    ChanneledPacketAction<R> state(QueryState state);
+    ChanneledPacketAction<R> state(NetworkResponseState state);
 
     ChanneledPacketAction<R> data(Document document);
 

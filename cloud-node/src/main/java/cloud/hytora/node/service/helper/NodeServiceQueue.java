@@ -1,18 +1,15 @@
 package cloud.hytora.node.service.helper;
 
-import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 
 
-import cloud.hytora.driver.node.Node;
-import cloud.hytora.driver.node.NodeManager;
-import cloud.hytora.driver.services.ServiceInfo;
-import cloud.hytora.driver.services.impl.SimpleServiceInfo;
+import cloud.hytora.driver.node.INode;
+import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.impl.DriverServiceObject;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.config.MainConfiguration;
-import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
 import lombok.Getter;
 
 import java.net.InetSocketAddress;
@@ -20,7 +17,6 @@ import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.List;
 
 @Getter
 public class NodeServiceQueue {
@@ -30,7 +26,7 @@ public class NodeServiceQueue {
     private final Collection<String> pausedGroups;
 
     public NodeServiceQueue() {
-        this.maxBootableServices = NodeDriver.getInstance().getConfig().getMaxBootableServicesAtSameTime();
+        this.maxBootableServices = NodeDriver.getInstance().getNode().getConfig().getMaxBootableServicesAtSameTime();
         this.pausedGroups = new ArrayList<>();
 
         this.dequeue();
@@ -47,18 +43,23 @@ public class NodeServiceQueue {
             return;
         }
 
-        List<ServiceInfo> services = CloudDriver.getInstance().getServiceManager().getAllServicesByState(ServiceState.PREPARED);
-
-        if (services.isEmpty()) {
-            CloudDriver.getInstance().getLogger().info("§6There are no more prepared services to start!");
-            return;
-        }
-        ServiceInfo serviceInfo = services.get(0);
-        NodeManager nodeManager = NodeDriver.getInstance().getNodeManager();
-        Task<Node> node = nodeManager.getNode(serviceInfo.getTask().getNode());
-
-        node.ifPresent(n -> n.startServer(serviceInfo));
-        node.ifEmpty(n -> CloudDriver.getInstance().getLogger().error("Tried to start {} but the Node {} for Servers of Configuration {} is not connected!", serviceInfo.getName(), serviceInfo.getTask().getNode(), serviceInfo.getTask().getName()));
+        CloudDriver.getInstance()
+                .getServiceManager()
+                .getAllCachedServices()
+                .stream()
+                .filter(ser -> ser.getServiceState() == ServiceState.PREPARED)
+                .findFirst()
+                .ifPresent(cloudServer -> {
+                    cloudServer
+                            .getTask()
+                            .findAnyNodeAsync()
+                            .onTaskFailed(error -> {
+                                CloudDriver.getInstance().getLogger().error("Tried to start {} but the Node(s) {} for Servers of Configuration {} is not connected!", cloudServer.getName(), cloudServer.getTask().getPossibleNodes(), cloudServer.getTask().getName());
+                            })
+                            .onTaskSucess(node -> {
+                                node.startServer(cloudServer);
+                            });
+                });
 
     }
 
@@ -69,22 +70,20 @@ public class NodeServiceQueue {
                 .sorted(Comparator.comparingInt(ServiceTask::getStartOrder))
                 .forEach(task -> {
 
-                    ClusterClientExecutor nodeClient = NodeDriver.getInstance().getExecutor().getClient(task.getNode()).orElse(null);
-                    boolean thisSidesNode = task.getNode().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName());
+                    INode node = task.findAnyNode();
 
-                    if (nodeClient == null && !thisSidesNode) {
-                        CloudDriver.getInstance().getLogger().info("Tried to start a Service of Group '" + task.getName() + "' but no Node with name '" + task.getNode() + "' is connected!");
+                    if (node == null) {
+                        CloudDriver.getInstance().getLogger().info("Tried to start a Service of Group '" + task.getName() + "' but no Node(s) with name '" + task.getPossibleNodes() + "' is connected!");
                         return;
                     }
-
-                    String address = thisSidesNode ? "127.0.0.1" : ((InetSocketAddress) nodeClient.getChannel().remoteAddress()).getAddress().getHostAddress();
 
                     int port = task.getVersion().isProxy() ? MainConfiguration.getInstance().getProxyStartPort() : MainConfiguration.getInstance().getSpigotStartPort();
                     while (isPortUsed(port)) {
                         port++;
                     }
 
-                    ServiceInfo service = new SimpleServiceInfo(task.getName(), this.getPossibleServiceIDByGroup(task), port, address);
+                    ICloudServer service = new DriverServiceObject(task.getName(), this.getPossibleServiceIDByGroup(task), port, node.getConfig().getAddress().toString());
+                    service.setRunningNodeName(node.getName());
                     CloudDriver.getInstance().getServiceManager().registerService(service);
 
                 });
@@ -114,8 +113,8 @@ public class NodeServiceQueue {
     }
 
     private boolean isPortUsed(int port) {
-        for (ServiceInfo service : NodeDriver.getInstance().getServiceManager().getAllCachedServices()) {
-            if (service.getTask().getNode().equals(NodeDriver.getInstance().getExecutor().getNodeName())) {
+        for (ICloudServer service : NodeDriver.getInstance().getServiceManager().getAllCachedServices()) {
+            if (service.getTask().getPossibleNodes().equals(NodeDriver.getInstance().getExecutor().getNodeName())) {
                 if (service.getPort() == port) {
                     return true;
                 }

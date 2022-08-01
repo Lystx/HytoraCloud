@@ -1,6 +1,6 @@
 package cloud.hytora.driver.services.utils.version.impl;
 
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.utils.version.VersionFile;
 
 import java.io.File;
@@ -10,7 +10,7 @@ import java.io.IOException;
 public class GlowstoneConfiguration extends VersionFile {
 
     @Override
-    public void applyFile(ServiceInfo serviceInfo, File file) throws IOException {
+    public void applyFile(ICloudServer ICloudServer, File file) throws IOException {
 
         FileWriter writer = new FileWriter(file);
         writer.write("# glowstone.yml is the main configuration file for a Glowstone++ server\n" +
@@ -20,11 +20,11 @@ public class GlowstoneConfiguration extends VersionFile {
                 "# For help, join us on Gitter: https://gitter.im/GlowstonePlusPlus/GlowstonePlusPlus\n" +
                 "server:\n" +
                 "  ip: ''\n" +
-                "  port: " + serviceInfo.getPort() + "\n" +
-                "  name: " + serviceInfo.getName() + "\n" +
+                "  port: " + ICloudServer.getPort() + "\n" +
+                "  name: " + ICloudServer.getName() + "\n" +
                 "  log-file: logs/log-%D.txt\n" +
                 "  online-mode: " + false + "\n" +
-                "  max-players: " + serviceInfo.getTask().getDefaultMaxPlayers() + "\n" +
+                "  max-players: " + ICloudServer.getTask().getDefaultMaxPlayers() + "\n" +
                 "  whitelisted: false\n" +
                 "  motd: 'HytoraCloud Minecraft Service'\n" +
                 "  shutdown-message: Server shutting down..\n" +
@@ -94,8 +94,8 @@ public class GlowstoneConfiguration extends VersionFile {
                 "  view-distance: 8\n" +
                 "  gen-structures: true\n" +
                 "  gen-settings: ''\n" +
-                "  allow-nether: " + !serviceInfo.getProperties().fallbackValue(true).getBoolean("gameServer") + "\n" +
-                "  allow-end: " + !serviceInfo.getProperties().fallbackValue(true).getBoolean("gameServer") + "\n" +
+                "  allow-nether: " + !ICloudServer.getProperties().fallbackValue(true).getBoolean("gameServer") + "\n" +
+                "  allow-end: " + !ICloudServer.getProperties().fallbackValue(true).getBoolean("gameServer") + "\n" +
                 "  keep-spawn-loaded: true\n" +
                 "  populate-anchored-chunks: true\n" +
                 "database:\n" +

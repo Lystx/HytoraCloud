@@ -20,6 +20,7 @@ import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.setup.TaskSetup;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;
@@ -48,7 +49,7 @@ public class TaskCommand {
         sender.sendMessage("§bInformation§8: ");
         sender.sendMessage("§bName: §f" + task.getName());
         sender.sendMessage("§bTemplates: §f" + task.getTaskGroup().getTemplates().stream().map(ServiceTemplate::getPrefix).collect(Collectors.toList()));
-        sender.sendMessage("§bNode: §f" + task.getNode());
+        sender.sendMessage("§bNode: §f" + task.getPossibleNodes());
         sender.sendMessage("§bMemory: §f" + task.getMemory() + "MB");
         sender.sendMessage("§bStartOrder: §f" + task.getStartOrder());
         sender.sendMessage("§bJava: §f" + task.getJavaVersion());
@@ -76,6 +77,7 @@ public class TaskCommand {
                 ServiceVersion version = setup.getVersion();
                 int minServers = setup.getMinServers();
                 String node = setup.getNode();
+                String[] nodes = node.split(",");
                 boolean maintenance = setup.isMaintenance();
                 int javaVersion = setup.getJavaVersion();
                 String parentName = setup.getParentName();
@@ -118,7 +120,7 @@ public class TaskCommand {
                 serviceTask.setName(name);
                 serviceTask.setMemory(memory);
                 serviceTask.setVersion(version);
-                serviceTask.setNode(node);
+                serviceTask.setPossibleNodes(Arrays.asList(nodes));
                 serviceTask.setParent(parentName);
                 serviceTask.setMaintenance(maintenance);
                 serviceTask.setPermission(null);

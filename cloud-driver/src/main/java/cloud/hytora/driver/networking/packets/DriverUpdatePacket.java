@@ -6,18 +6,18 @@ import cloud.hytora.driver.networking.IPacketExecutor;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
-import cloud.hytora.driver.node.Node;
-import cloud.hytora.driver.node.NodeInfo;
+import cloud.hytora.driver.node.INode;
+import cloud.hytora.driver.node.DriverNodeObject;
 import cloud.hytora.driver.player.impl.DefaultCloudPlayer;
 import cloud.hytora.driver.CloudDriver;
 
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.task.DefaultServiceTask;
 import cloud.hytora.driver.player.CloudPlayer;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.task.bundle.DefaultTaskGroup;
-import cloud.hytora.driver.services.impl.SimpleServiceInfo;
+import cloud.hytora.driver.services.impl.DriverServiceObject;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
@@ -32,9 +32,9 @@ public class DriverUpdatePacket extends AbstractPacket {
 
     private Collection<ServiceTask> groups;
     private Collection<TaskGroup> parentGroups;
-    private Collection<ServiceInfo> allCachedServices;
+    private Collection<ICloudServer> allCachedServices;
     private Collection<CloudPlayer> cloudPlayers;
-    private Collection<Node> connectedNodes;
+    private Collection<INode> connectedNodes;
 
 
     public static void publishUpdate(IPacketExecutor sender) {
@@ -49,7 +49,7 @@ public class DriverUpdatePacket extends AbstractPacket {
                 CloudDriver.getInstance().getServiceTaskManager().getAllTaskGroups(),
                 CloudDriver.getInstance().getServiceManager().getAllCachedServices(),
                 CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers(),
-                CloudDriver.getInstance().getNodeManager().getAllNodes()
+                CloudDriver.getInstance().getNodeManager().getAllCachedNodes()
         );
     }
 
@@ -68,14 +68,14 @@ public class DriverUpdatePacket extends AbstractPacket {
                 groups = buf.readWrapperObjectCollection(DefaultServiceTask.class);
                 CloudDriver.getInstance().getServiceTaskManager().setAllCachedTasks(groups);
 
-                allCachedServices = buf.readWrapperObjectCollection(SimpleServiceInfo.class);
-                CloudDriver.getInstance().getServiceManager().setAllCachedServices((List<ServiceInfo>) allCachedServices);
+                allCachedServices = buf.readWrapperObjectCollection(DriverServiceObject.class);
+                CloudDriver.getInstance().getServiceManager().setAllCachedServices((List<ICloudServer>) allCachedServices);
 
                 cloudPlayers = buf.readWrapperObjectCollection(DefaultCloudPlayer.class);
                 CloudDriver.getInstance().getPlayerManager().setAllCachedCloudPlayers((List<CloudPlayer>) cloudPlayers);
 
-                connectedNodes = buf.readWrapperObjectCollection(NodeInfo.class);
-                CloudDriver.getInstance().getNodeManager().setAllConnectedNodes((List<Node>) connectedNodes);
+                connectedNodes = buf.readWrapperObjectCollection(DriverNodeObject.class);
+                CloudDriver.getInstance().getNodeManager().setAllCachedNodes((List<INode>) connectedNodes);
 
                 CloudDriver.getInstance().getEventManager().callEventOnlyLocally(new DriverCacheUpdateEvent());
                 break;

@@ -2,12 +2,12 @@ package cloud.hytora.driver.networking.cluster;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
-import cloud.hytora.driver.networking.NetworkExecutor;
+import cloud.hytora.driver.networking.INetworkExecutor;
 
 
 import io.netty.channel.Channel;
 
-public interface ClusterClientExecutor extends NetworkExecutor {
+public interface ClusterClientExecutor extends INetworkExecutor {
 
     Channel getChannel();
 

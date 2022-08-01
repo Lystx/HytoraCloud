@@ -15,14 +15,21 @@ import cloud.hytora.driver.services.utils.ServiceVisibility;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public interface ServiceInfo extends IClusterObject<ServiceInfo>, NetworkComponent, IPacketExecutor {
+public interface ICloudServer extends IClusterObject<ICloudServer>, NetworkComponent, IPacketExecutor {
 
-    NodeServiceInfo asCloudServer() throws IncompatibleDriverEnvironment;
+    IProcessCloudServer asCloudServer() throws IncompatibleDriverEnvironment;
+
+    IServiceCycleData getLastCycleData();
+
+    void setLastCycleData(IServiceCycleData data);
+
+    String getRunningNodeName();
+
+    void setRunningNodeName(String name);
 
     UUID getUniqueId();
 
@@ -32,7 +39,6 @@ public interface ServiceInfo extends IClusterObject<ServiceInfo>, NetworkCompone
 
     void editPingProperties(Consumer<ServicePingProperties> ping);
 
-    List<String> queryServiceOutput();
 
     void deploy(ServiceDeployment... deployments);
 
@@ -109,7 +115,7 @@ public interface ServiceInfo extends IClusterObject<ServiceInfo>, NetworkCompone
         return (int) CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()
                 .stream()
                 .filter(it -> {
-                    ServiceInfo service = getTask().getVersion().isProxy() ? it.getProxyServer() : it.getServer();
+                    ICloudServer service = getTask().getVersion().isProxy() ? it.getProxyServer() : it.getServer();
                     return service != null && service.equals(this);
                 }).count();
     }
@@ -121,7 +127,7 @@ public interface ServiceInfo extends IClusterObject<ServiceInfo>, NetworkCompone
         return CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()
                 .stream()
                 .filter(it -> {
-                    ServiceInfo service = getTask().getVersion().isProxy() ? it.getProxyServer() : it.getServer();
+                    ICloudServer service = getTask().getVersion().isProxy() ? it.getProxyServer() : it.getServer();
                     return service != null && service.equals(this);
                 }).collect(Collectors.toList());
     }
@@ -139,7 +145,7 @@ public interface ServiceInfo extends IClusterObject<ServiceInfo>, NetworkCompone
      *
      * @param serviceConsumer the consumer to change the properties
      */
-    void edit(@NotNull Consumer<ServiceInfo> serviceConsumer);
+    void edit(@NotNull Consumer<ICloudServer> serviceConsumer);
 
     String getMotd();
 

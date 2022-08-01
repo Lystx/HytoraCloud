@@ -1,6 +1,6 @@
 package cloud.hytora.driver.services.utils.version.impl;
 
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.utils.version.VersionFile;
 import org.apache.commons.io.FileUtils;
 
@@ -14,7 +14,7 @@ import java.util.Properties;
 public class MinecraftProperties extends VersionFile {
 
     @Override
-    public void applyFile(ServiceInfo serviceInfo, File file) throws IOException {
+    public void applyFile(ICloudServer ICloudServer, File file) throws IOException {
 
         if (!file.exists()) {
             URL resource = getClass().getResource("/impl/files/server.properties");
@@ -27,13 +27,13 @@ public class MinecraftProperties extends VersionFile {
             FileInputStream stream = new FileInputStream(file);
             Properties properties = new Properties();
             properties.load(stream);
-            properties.setProperty("server-port", String.valueOf(serviceInfo.getPort()));
+            properties.setProperty("server-port", String.valueOf(ICloudServer.getPort()));
             properties.setProperty("server-ip", "127.0.0.1");
-            properties.setProperty("max-players", String.valueOf(serviceInfo.getMaxPlayers()));
-            properties.setProperty("allow-nether", String.valueOf(!serviceInfo.getProperties().fallbackValue(true).getBoolean("gameServer")));
-            properties.setProperty("server-name", serviceInfo.getName());
+            properties.setProperty("max-players", String.valueOf(ICloudServer.getMaxPlayers()));
+            properties.setProperty("allow-nether", String.valueOf(!ICloudServer.getProperties().fallbackValue(true).getBoolean("gameServer")));
+            properties.setProperty("server-name", ICloudServer.getName());
             properties.setProperty("online-mode", "false");
-            properties.setProperty("motd", serviceInfo.getMotd());
+            properties.setProperty("motd", ICloudServer.getMotd());
             FileOutputStream fileOutputStream = new FileOutputStream(file);
             properties.save(fileOutputStream, "Edit by Cloud");
             fileOutputStream.close();

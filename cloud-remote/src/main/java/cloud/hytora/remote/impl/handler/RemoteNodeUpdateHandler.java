@@ -5,9 +5,10 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.packets.node.NodeCycleDataPacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
-import cloud.hytora.driver.node.Node;
-import cloud.hytora.driver.node.NodeCycleData;
+import cloud.hytora.driver.node.INode;
+import cloud.hytora.driver.node.data.DefaultNodeData;
 import cloud.hytora.driver.node.NodeManager;
+import cloud.hytora.driver.node.data.INodeData;
 
 public class RemoteNodeUpdateHandler implements PacketHandler<NodeCycleDataPacket> {
 
@@ -15,11 +16,11 @@ public class RemoteNodeUpdateHandler implements PacketHandler<NodeCycleDataPacke
     public void handle(PacketChannel wrapper, NodeCycleDataPacket packet) {
 
         String name = packet.getNodeName();
-        NodeCycleData data = packet.getData();
+        INodeData data = packet.getData();
         Logger logger = CloudDriver.getInstance().getLogger();
         NodeManager nodeManager = CloudDriver.getInstance().getNodeManager();
 
-        Node node = nodeManager.getNodeByNameOrNull(name);
+        INode node = nodeManager.getNodeByNameOrNull(name);
 
         if (node == null) {
             logger.warn("Tried updating non-existent node {}! Data: {}", name, data);

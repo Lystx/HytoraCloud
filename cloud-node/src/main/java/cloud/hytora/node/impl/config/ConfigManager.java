@@ -2,10 +2,13 @@ package cloud.hytora.node.impl.config;
 
 import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.Logger;
+import cloud.hytora.common.misc.RandomString;
+import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.http.SSLConfiguration;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
+import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.node.config.ServiceCrashPrevention;
 import cloud.hytora.driver.node.config.SimpleJavaVersion;
 import cloud.hytora.driver.services.utils.ServiceProcessType;
@@ -16,6 +19,7 @@ import lombok.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +30,7 @@ public class ConfigManager {
 
     private boolean didExist;
     private MainConfiguration config;
+
 
     public void read() throws IOException {
         Logger.constantInstance().trace("Reading config.json (NodeConfiguration)...");
@@ -38,6 +43,16 @@ public class ConfigManager {
             this.config = new MainConfiguration(
                     LogLevel.INFO,
                     ServiceProcessType.BRIDGE_PLUGIN,
+                    25565,
+                    40000,
+                    Collections.singletonList("Notch"),
+                    new ProtocolAddress[]{new ProtocolAddress("127.0.0.1", 4518)},
+                    new ServiceCrashPrevention(
+                            true,
+                            10,
+                            TimeUnit.SECONDS
+                    ),
+                    new ArrayList<>(),
                     new DatabaseConfiguration(
                             DatabaseType.FILE,
                             "127.0.0.1",
@@ -49,31 +64,19 @@ public class ConfigManager {
                     ),
                     new DefaultNodeConfig(
                             "Node-1",
-                            UUID.randomUUID().toString(),
-                            "127.0.0.1",
-                            8876,
+                            UUID.randomUUID(),
+                            new ProtocolAddress("127.0.0.1", 8876),
+                            new RandomString(10).nextString(),
                             false,
                             2,
-                            new ServiceCrashPrevention(
-                                    true,
-                                    10,
-                                    TimeUnit.SECONDS
-                            ),
-                            Collections.singleton(new SimpleJavaVersion("JAVA_16", "your/path/to/java/version/", 16)),
-                            new ProtocolAddress[0],
-                            new ProtocolAddress[]{new ProtocolAddress("127.0.0.1", 4518)},
-                            new SSLConfiguration(
-                                    false,
-                                    false,
-                                    "/etc/ssl/certificate.pem",
-                                    "/etc/ssl/privateKey.key"
-                            )
-                    ), 25565, 40000, new ArrayList<>());
+                            10000L,
+                            new ProtocolAddress[0]
+                    ));
             Logger.constantInstance().trace("Config-File does not exist ==> Creating and saving default config..");
         }
 
         if (this.config.getNodeConfig().getClusterAddresses().length > 0) {
-            this.config.getNodeConfig().markAsRemote();
+            this.config.getNodeConfig().setRemote();
         }
         Logger.constantInstance().trace("Config loaded successfully!");
     }

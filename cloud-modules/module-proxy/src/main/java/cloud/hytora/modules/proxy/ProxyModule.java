@@ -4,7 +4,6 @@ import cloud.hytora.common.collection.IRandom;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.component.ChatComponent;
 import cloud.hytora.driver.module.controller.DriverModule;
 import cloud.hytora.driver.module.controller.base.ModuleConfiguration;
 import cloud.hytora.driver.module.controller.base.ModuleCopyType;
@@ -13,7 +12,7 @@ import cloud.hytora.driver.module.controller.base.ModuleState;
 import cloud.hytora.driver.module.controller.task.ModuleTask;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 import cloud.hytora.modules.proxy.command.ProxyCommand;
@@ -106,7 +105,7 @@ public class ProxyModule extends DriverModule {
         //setting tabList
         for (CloudPlayer cloudPlayer : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
             PlayerExecutor executor = PlayerExecutor.forPlayer(cloudPlayer);
-            ServiceInfo server = cloudPlayer.getServer();
+            ICloudServer server = cloudPlayer.getServer();
 
             if (server != null) {
                 header = server.replacePlaceHolders(header);
@@ -138,10 +137,10 @@ public class ProxyModule extends DriverModule {
             if (motd == null) {
                 continue;
             }
-            for (ServiceInfo serviceInfo : CloudDriver.getInstance().getServiceManager().getAllServicesByEnvironment(SpecificDriverEnvironment.PROXY)) {
-                serviceInfo.editPingProperties(ping -> {
-                    ping.setMotd(replaceDefault(serviceInfo, (motd.getFirstLine() + "\n" + motd.getSecondLine())));
-                    ping.setVersionText(replaceDefault(serviceInfo, motd.getProtocolText()));
+            for (ICloudServer ICloudServer : CloudDriver.getInstance().getServiceManager().getAllServicesByEnvironment(SpecificDriverEnvironment.PROXY)) {
+                ICloudServer.editPingProperties(ping -> {
+                    ping.setMotd(replaceDefault(ICloudServer, (motd.getFirstLine() + "\n" + motd.getSecondLine())));
+                    ping.setVersionText(replaceDefault(ICloudServer, motd.getProtocolText()));
                     ping.setPlayerInfo(motd.getPlayerInfo().toArray(new String[0]));
                     ping.setCombineAllProxiesIfProxyService(true);
                     ping.setUsePlayerPropertiesOfService(true);
@@ -150,7 +149,7 @@ public class ProxyModule extends DriverModule {
         }
     }
 
-    protected String replaceDefault(ServiceInfo info, String content) {
+    protected String replaceDefault(ICloudServer info, String content) {
         if (content == null) {
             return "";
         }
@@ -159,7 +158,7 @@ public class ProxyModule extends DriverModule {
         int maxPlayers = -1;
         return content
                 .replace("{proxy}", info.getName())
-                .replace("{node}", info.getTask().getNode())
+                .replace("{node}", info.getRunningNodeName())
                 .replace("{players.online}", CloudDriver.getInstance().getPlayerManager().getCloudPlayerOnlineAmount() + "")
                 .replace("{players.max}", maxPlayers + "")
                 ;

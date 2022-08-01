@@ -10,16 +10,13 @@ import cloud.hytora.driver.networking.packets.RedirectPacket;
 import cloud.hytora.driver.networking.packets.services.ServiceForceShutdownPacket;
 import cloud.hytora.driver.networking.packets.services.ServiceRequestShutdownPacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.impl.DefaultServiceManager;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
-import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 
 import cloud.hytora.remote.Remote;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.concurrent.Callable;
 
 public class RemoteServiceManager extends DefaultServiceManager {
 
@@ -34,13 +31,13 @@ public class RemoteServiceManager extends DefaultServiceManager {
 
     @EventListener
     public void handleAdd(ServiceRegisterEvent event) {
-        ServiceInfo server = event.getServiceInfo();
+        ICloudServer server = event.getICloudServer();
         this.registerService(server);
     }
 
     @EventListener
     public void handleRemove(ServiceUnregisterEvent event) {
-        ServiceInfo server = this.getServiceByNameOrNull(event.getService());
+        ICloudServer server = this.getServiceByNameOrNull(event.getService());
         if (server == null) {
             return;
         }
@@ -49,36 +46,36 @@ public class RemoteServiceManager extends DefaultServiceManager {
 
     @EventListener
     public void handleUpdate(ServiceUpdateEvent event) {
-        ServiceInfo server = event.getService();
+        ICloudServer server = event.getService();
 
         this.updateServerInternally(server);
     }
 
     @Override
-    public Task<ServiceInfo> startService(@NotNull ServiceInfo service) {
+    public Task<ICloudServer> startService(@NotNull ICloudServer service) {
         //TODO SEND PACKET
         return Task.empty();
     }
 
     @Override
-    public Task<ServiceInfo> thisService() {
+    public Task<ICloudServer> thisService() {
         return Task.build(getAllCachedServices().stream().filter(s -> s.getName().equalsIgnoreCase(Remote.getInstance().getProperty().getName())).findFirst().orElse(null));
     }
 
     @Override
-    public void shutdownService(ServiceInfo service) {
+    public void shutdownService(ICloudServer service) {
         CloudDriver.getInstance().getExecutor().sendPacket(new ServiceRequestShutdownPacket(service.getName()));
     }
 
 
     @Override
-    public void updateService(@NotNull ServiceInfo service) {
+    public void updateService(@NotNull ICloudServer service) {
         this.updateServerInternally(service);
         CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceUpdateEvent(service));
     }
 
     @Override
-    public void sendPacketToService(ServiceInfo service, IPacket packet) {
+    public void sendPacketToService(ICloudServer service, IPacket packet) {
         if (service.getName().equalsIgnoreCase(Remote.getInstance().thisService().getName())) {
             CloudDriver.getInstance().getExecutor().handlePacket(null, packet);
             return;

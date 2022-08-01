@@ -28,10 +28,14 @@ public class NodeSetup extends Setup<NodeSetup> {
     @QuestionTip("A Remote receives commands and connects to the HeadNode")
     private boolean remote;
 
-    @Question(id = 5, question = "Do you want to create a default Lobby & Proxy Task?")
+    @Question(id = 5, question = "How much memory is this Node allowed to use at maximum?")
+    @QuestionTip("Memory is always in MegaBytes (MB)")
+    private long memory;
+
+    @Question(id = 6, question = "Do you want to create a default Lobby & Proxy Task?")
     private boolean defaultTasks;
 
-    @Question(id = 6, question = "Which database do you want to use?")
+    @Question(id = 7, question = "Which database do you want to use?")
     @QuestionTip("When using multiple Nodes, you should use an online database!")
     @RequiresEnum(DatabaseType.class)
     private DatabaseType databaseType;

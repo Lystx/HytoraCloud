@@ -2,7 +2,7 @@ package cloud.hytora.driver.player;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -60,7 +60,7 @@ public interface PlayerManager {
 
     default int countPlayerCapacity() {
         int capacity = 0;
-        for (ServiceInfo allCachedService : CloudDriver.getInstance().getServiceManager().getAllServicesByEnvironment(SpecificDriverEnvironment.PROXY)) {
+        for (ICloudServer allCachedService : CloudDriver.getInstance().getServiceManager().getAllServicesByEnvironment(SpecificDriverEnvironment.PROXY)) {
             capacity += allCachedService.getMaxPlayers();
         }
         return capacity;

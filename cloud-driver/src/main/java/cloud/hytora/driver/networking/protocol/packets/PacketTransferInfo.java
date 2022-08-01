@@ -2,7 +2,6 @@ package cloud.hytora.driver.networking.protocol.packets;
 
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.networking.NetworkComponent;
-import cloud.hytora.driver.networking.NetworkExecutor;
 
 import java.util.UUID;
 

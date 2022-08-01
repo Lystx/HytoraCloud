@@ -5,7 +5,6 @@ import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
-import cloud.hytora.driver.common.IClusterObject;
 import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
 import cloud.hytora.driver.exception.IncompatibleDriverEnvironment;
 import cloud.hytora.driver.networking.packets.services.CloudServerCommandPacket;
@@ -13,17 +12,16 @@ import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
-import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
-import cloud.hytora.driver.node.Node;
-import cloud.hytora.driver.services.NodeServiceInfo;
+import cloud.hytora.driver.services.IProcessCloudServer;
+import cloud.hytora.driver.services.IServiceCycleData;
 import cloud.hytora.driver.services.ServicePingProperties;
 import cloud.hytora.driver.services.task.ServiceTask;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
 
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import lombok.NoArgsConstructor;
 
 import lombok.Getter;
@@ -32,17 +30,18 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
 @Getter
 @NoArgsConstructor
 @Setter
-public class SimpleServiceInfo implements NodeServiceInfo, IBufferObject {
+public class DriverServiceObject implements IProcessCloudServer, IBufferObject {
 
     private ServiceTask task;
     private int serviceID;
+
+    private String runningNodeName;
 
     private int port;
     private String hostName;
@@ -63,8 +62,9 @@ public class SimpleServiceInfo implements NodeServiceInfo, IBufferObject {
     private boolean ready;
     private Document properties; // custom properties, which are not used internally
     private DefaultPingProperties pingProperties;
+    private IServiceCycleData lastCycleData;
 
-    public SimpleServiceInfo(String group, int id, int port, String hostname) {
+    public DriverServiceObject(String group, int id, int port, String hostname) {
         this.task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(group);
         this.serviceID = id;
         this.port = port;
@@ -75,6 +75,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, IBufferObject {
         this.creationTimestamp = System.currentTimeMillis();
         this.properties = DocumentFactory.newJsonDocument();
         this.uniqueId = UUID.randomUUID();
+        this.runningNodeName = task.findAnyNode() == null ? "UNKNOWN": task.findAnyNode().getName();
 
         this.pingProperties = new DefaultPingProperties();
         this.pingProperties.setMotd(task.getMotd());
@@ -82,6 +83,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, IBufferObject {
         this.pingProperties.setCombineAllProxiesIfProxyService(true);
         this.pingProperties.setPlayerInfo(new String[0]);
         this.pingProperties.setVersionText(null);
+        this.lastCycleData = new DefaultServiceCycleData(DocumentFactory.emptyDocument());
     }
 
     @Override
@@ -93,14 +95,9 @@ public class SimpleServiceInfo implements NodeServiceInfo, IBufferObject {
     }
 
     @Override
-    public NodeServiceInfo asCloudServer() throws IncompatibleDriverEnvironment {
+    public IProcessCloudServer asCloudServer() throws IncompatibleDriverEnvironment {
         IncompatibleDriverEnvironment.throwIfNeeded(DriverEnvironment.NODE);
         return this;
-    }
-
-    @Override
-    public List<String> queryServiceOutput() {
-        return CloudDriver.getInstance().getServiceManager().getScreenOutput(this);
     }
 
     @Override
@@ -110,7 +107,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, IBufferObject {
 
     @Override
     public boolean isTimedOut() {
-        long lastCycleDelay = System.currentTimeMillis() - this.creationTimestamp - 30;
+        long lastCycleDelay = System.currentTimeMillis() - this.lastCycleData.getTimestamp() - 30;
         int lostCycles = (int) lastCycleDelay / CloudDriver.SERVER_PUBLISH_INTERVAL;
         if (lostCycles > 0) {
             CloudDriver.getInstance().getLogger().warn("Service timeout " + this.getName() + ": lost {} cycles ({}ms)", lostCycles, lastCycleDelay);
@@ -124,7 +121,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, IBufferObject {
     }
 
     @Override
-    public void edit(@NotNull Consumer<ServiceInfo> serviceConsumer) {
+    public void edit(@NotNull Consumer<ICloudServer> serviceConsumer) {
         serviceConsumer.accept(this);
         this.update();
     }
@@ -143,7 +140,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, IBufferObject {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        SimpleServiceInfo that = (SimpleServiceInfo) o;
+        DriverServiceObject that = (DriverServiceObject) o;
 
         if (this.serviceID != that.serviceID || this.port != that.port) {
             return false;
@@ -200,10 +197,11 @@ public class SimpleServiceInfo implements NodeServiceInfo, IBufferObject {
     }
 
     @Override
-    public void clone(ServiceInfo from) {
+    public void clone(ICloudServer from) {
 
         this.setServiceState(from.getServiceState());
         this.setServiceVisibility(from.getServiceVisibility());
+        this.setRunningNodeName(from.getRunningNodeName());
 
         this.setMaxPlayers(from.getMaxPlayers());
         this.setMotd(from.getMotd());
@@ -212,6 +210,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, IBufferObject {
         this.setCreationTimeStamp(from.getCreationTimestamp());
         this.setPingProperties((DefaultPingProperties) from.getPingProperties());
         this.setProperties(from.getProperties());
+        this.setLastCycleData(from.getLastCycleData());
     }
 
     @Override
@@ -227,7 +226,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, IBufferObject {
         input = input.replace("{server.port}", String.valueOf(this.getPort()));
         input = input.replace("{server.capacity}", String.valueOf(this.getMaxPlayers()));
 
-        input = input.replace("{server.node}", this.getTask().getNode());
+        input = input.replace("{server.node}", this.getRunningNodeName());
 
         input = input.replace("{server.state}", this.getServiceState().getName());
         input = input.replace("{server.visibility}", this.getServiceVisibility().name());
@@ -246,6 +245,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, IBufferObject {
 
             case READ:
                 this.uniqueId = buf.readUniqueId();
+                this.runningNodeName = buf.readString();
                 this.task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(buf.readString());
                 this.hostName = buf.readString();
                 this.motd = buf.readString();
@@ -262,11 +262,13 @@ public class SimpleServiceInfo implements NodeServiceInfo, IBufferObject {
                 this.creationTimestamp = buf.readLong();
                 this.properties = buf.readDocument();
                 this.pingProperties = buf.readObject(DefaultPingProperties.class);
+                this.lastCycleData = buf.readObject(DefaultServiceCycleData.class);
                 break;
 
             case WRITE:
 
                 buf.writeUniqueId(this.getUniqueId());
+                buf.writeString(this.getRunningNodeName());
 
                 buf.writeString(this.getTask().getName());
                 buf.writeString(this.getHostName());
@@ -284,6 +286,7 @@ public class SimpleServiceInfo implements NodeServiceInfo, IBufferObject {
                 buf.writeLong(this.getCreationTimestamp());
                 buf.writeDocument(this.getProperties());
                 buf.writeObject(this.getPingProperties());
+                buf.writeObject(this.getLastCycleData());
                 break;
         }
     }

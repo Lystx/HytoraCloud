@@ -1,6 +1,6 @@
 package cloud.hytora.driver.services.utils.version.impl;
 
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.utils.version.VersionFile;
 
 import java.io.File;
@@ -10,7 +10,7 @@ import java.io.IOException;
 public class VelocityConfiguration extends VersionFile {
 
     @Override
-    public void applyFile(ServiceInfo serviceInfo, File file) throws IOException {
+    public void applyFile(ICloudServer ICloudServer, File file) throws IOException {
 
         FileWriter writer = new FileWriter(file);
 
@@ -18,7 +18,7 @@ public class VelocityConfiguration extends VersionFile {
                 "config-version = \"1.0\"\n" +
                 "\n" +
                 "# What port should the proxy be bound to? By default, we'll bind to all addresses on port 25577.\n" +
-                "bind = \"0.0.0.0:" + serviceInfo.getPort() + "\"\n" +
+                "bind = \"0.0.0.0:" + ICloudServer.getPort() + "\"\n" +
                 "\n" +
                 "# What should be the MOTD? This gets displayed when the player adds your server to\n" +
                 "# their server list. Legacy color codes and JSON are accepted.\n" +
@@ -26,10 +26,10 @@ public class VelocityConfiguration extends VersionFile {
                 "\n" +
                 "# What should we display for the maximum number of players? (Velocity does not support a cap\n" +
                 "# on the number of players online.)\n" +
-                "show-max-players = " + serviceInfo.getMaxPlayers() + "\n" +
+                "show-max-players = " + ICloudServer.getMaxPlayers() + "\n" +
                 "\n" +
                 "# Should we authenticate players with Mojang? By default, this is on.\n" +
-                "online-mode = " + serviceInfo.getProperties().fallbackValue(true).getBoolean("onlineMode") + "\n" +
+                "online-mode = " + ICloudServer.getProperties().fallbackValue(true).getBoolean("onlineMode") + "\n" +
                 "\n" +
                 "# Should we forward IP addresses and other data to backend servers?\n" +
                 "# Available options:\n" +
@@ -76,7 +76,7 @@ public class VelocityConfiguration extends VersionFile {
                 "read-timeout = 30000\n" +
                 "\n" +
                 "# Enables compatibility with HAProxy.\n" +
-                "proxy-protocol = " + serviceInfo.getProperties().fallbackValue(false).getBoolean("proxyProtocol") + "\n" +
+                "proxy-protocol = " + ICloudServer.getProperties().fallbackValue(false).getBoolean("proxyProtocol") + "\n" +
                 "\n" +
                 "[query]\n" +
                 "# Whether to enable responding to GameSpy 4 query responses or not.\n" +

@@ -3,10 +3,9 @@ package cloud.hytora.driver.networking.protocol.wrapped;
 import cloud.hytora.driver.networking.IPacketExecutor;
 import cloud.hytora.driver.networking.protocol.packets.BufferedResponse;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionState;
-import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import io.netty.channel.ChannelHandlerContext;
-import cloud.hytora.driver.networking.NetworkExecutor;
+import cloud.hytora.driver.networking.INetworkExecutor;
 
 import java.net.InetSocketAddress;
 import java.util.Optional;
@@ -57,7 +56,7 @@ public interface PacketChannel extends IPacketExecutor {
     /**
      * The executor for this packet
      */
-    NetworkExecutor executor();
+    INetworkExecutor executor();
 
     /**
      * The last modification time
@@ -69,7 +68,7 @@ public interface PacketChannel extends IPacketExecutor {
      */
     InetSocketAddress getClientAddress();
 
-    PacketChannel overrideExecutor(NetworkExecutor executor);
+    PacketChannel overrideExecutor(INetworkExecutor executor);
 
     ChanneledPacketAction<Set<BufferedResponse>> prepareMultiQuery();
 

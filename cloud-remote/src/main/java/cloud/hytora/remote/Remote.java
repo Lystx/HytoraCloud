@@ -4,21 +4,15 @@ import cloud.hytora.common.collection.WrappedException;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.handler.HandledAsyncLogger;
-import cloud.hytora.common.logging.handler.HandledLogger;
-import cloud.hytora.common.logging.handler.LogEntry;
-import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.task.Task;
-import cloud.hytora.common.task.TaskHolder;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.command.CommandManager;
 import cloud.hytora.driver.command.DefaultCommandSender;
 import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.command.Console;
 import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
-import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.message.ChannelMessenger;
 import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.networking.NetworkComponent;
@@ -26,11 +20,10 @@ import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.player.PlayerManager;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.task.ServiceTaskManager;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
-import cloud.hytora.driver.services.utils.version.VersionType;
 import cloud.hytora.driver.storage.DriverStorage;
 import cloud.hytora.driver.storage.RemoteDriverStorage;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
@@ -44,31 +37,21 @@ import lombok.Getter;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import sun.applet.AppletThreadGroup;
 
 import javax.annotation.Nonnull;
-import java.io.File;
 import java.lang.instrument.Instrumentation;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.jar.*;
 
 @Getter
-public class Remote extends CloudDriver<ServiceInfo> {
+public class Remote extends CloudDriver<ICloudServer> {
 
     private static Remote instance;
     private final ServiceTaskManager serviceTaskManager;
@@ -101,12 +84,14 @@ public class Remote extends CloudDriver<ServiceInfo> {
 
 
     }
+
     public Remote(RemoteIdentity identity, Logger logger, Instrumentation instrumentation, String[] arguments) {
         super(logger, DriverEnvironment.SERVICE);
 
         instance = this;
         this.instrumentation = instrumentation;
         this.arguments = arguments;
+
 
         this.commandSender = new DefaultCommandSender("Remote", null).function(System.out::println);
         this.property = identity;
@@ -129,6 +114,21 @@ public class Remote extends CloudDriver<ServiceInfo> {
 
         this.storage = new RemoteDriverStorage(this.client);
 
+
+        //service cycle update task
+        this.scheduler.scheduleRepeatingTaskAsync(() -> {
+
+            System.out.println(true);
+            RemoteAdapter remoteAdapter = getAdapter();
+            ICloudServer server = this.thisService();
+
+            if (remoteAdapter == null || server == null) {
+                return;
+            }
+            server.setLastCycleData(remoteAdapter.createCycleData());
+            server.update();
+        }, SERVER_PUBLISH_INTERVAL, SERVER_PUBLISH_INTERVAL);
+
     }
 
     public synchronized void startApplication() throws Exception {
@@ -137,14 +137,15 @@ public class Remote extends CloudDriver<ServiceInfo> {
         logger.debug("Using '{}' as application file..", applicationFileName);
 
         Path applicationFile = Paths.get(applicationFileName);
-        if (Files.notExists(applicationFile)) throw new IllegalStateException("Application file " + applicationFileName + " does not exist");
+        if (Files.notExists(applicationFile))
+            throw new IllegalStateException("Application file " + applicationFileName + " does not exist");
 
         // create our own classloader and load all classes (only load don't initialize)
         // so the parent of the application's classloader is the system classloader, and not the platform classloader
         // but only for spigot servers >= 1.18, bungeecord plugin management will break with this logic, must be loaded with the system classloader directly
         // => "Plugin requires net.md_5.bungee.api.plugin.PluginClassloader"
         if (shouldPreloadClasses(applicationFile)) {
-            applicationClassLoader = new URLClassLoader(new URL[] { applicationFile.toUri().toURL() }, ClassLoader.getSystemClassLoader());
+            applicationClassLoader = new URLClassLoader(new URL[]{applicationFile.toUri().toURL()}, ClassLoader.getSystemClassLoader());
             try (JarInputStream stream = new JarInputStream(Files.newInputStream(applicationFile))) {
                 JarEntry entry;
                 while ((entry = stream.getNextJarEntry()) != null) {
@@ -213,7 +214,7 @@ public class Remote extends CloudDriver<ServiceInfo> {
                 logger.info("Starting application thread..");
                 mainMethod.invoke(
                         null,
-                        new Object[] { new String[0] }
+                        new Object[]{new String[0]}
                 );
             } catch (Exception ex) {
                 logger.error("Unable to start application..", ex);
@@ -224,10 +225,6 @@ public class Remote extends CloudDriver<ServiceInfo> {
         applicationThread.setContextClassLoader(applicationClassLoader);
         applicationThread.start();
 
-        scheduledExecutor.scheduleAtFixedRate(() -> {
-            ServiceInfo serviceInfo = this.thisService();
-            perform(serviceInfo != null, serviceInfo::update);
-        }, 0, SERVER_PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
 
     }
 
@@ -272,8 +269,8 @@ public class Remote extends CloudDriver<ServiceInfo> {
         return perform(adapter instanceof RemoteProxyAdapter, () -> cast(adapter), (Supplier<RemoteProxyAdapter>) () -> null);
     }
 
-    public ServiceInfo thisService() {
-        return this.serviceManager.getAllCachedServices().stream().filter(it -> it.getName().equalsIgnoreCase(this.property.getName())).findAny().orElse(null);
+    public ICloudServer thisService() {
+        return this.serviceManager == null ? null : this.serviceManager.getAllCachedServices().stream().filter(it -> it.getName().equalsIgnoreCase(this.property.getName())).findAny().orElse(null);
     }
 
     @Override
@@ -303,11 +300,9 @@ public class Remote extends CloudDriver<ServiceInfo> {
     }
 
     @Override
-    public ServiceInfo thisSidesClusterParticipant() {
+    public ICloudServer thisSidesClusterParticipant() {
         return thisService();
     }
-
-
 
 
 }

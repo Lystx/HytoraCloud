@@ -7,7 +7,7 @@ import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.modules.notify.NotifyModule;
 import cloud.hytora.modules.notify.config.NotifyConfiguration;
 
@@ -15,28 +15,28 @@ public class ModuleListener {
 
     @EventListener
     public void handleAdd(ServiceRegisterEvent event) {
-        ServiceInfo serviceInfo = event.getServiceInfo();
+        ICloudServer ICloudServer = event.getICloudServer();
 
-        this.notifyNetwork(0, serviceInfo);
+        this.notifyNetwork(0, ICloudServer);
     }
 
 
     @EventListener
     public void handleRemove(ServiceUnregisterEvent event) {
-        ServiceInfo serviceInfo = event.getServiceInfo();
-        if (serviceInfo == null) {
+        ICloudServer ICloudServer = event.getServiceInfo();
+        if (ICloudServer == null) {
             return;
         }
-        this.notifyNetwork(1, serviceInfo);
+        this.notifyNetwork(1, ICloudServer);
     }
 
     @EventListener
     public void handleReady(ServiceReadyEvent event) {
-        ServiceInfo serviceInfo = event.getServiceInfo();
-        if (serviceInfo == null) {
+        ICloudServer ICloudServer = event.getICloudServer();
+        if (ICloudServer == null) {
             return;
         }
-        this.notifyNetwork(2, serviceInfo);
+        this.notifyNetwork(2, ICloudServer);
     }
 
     /**
@@ -44,9 +44,9 @@ public class ModuleListener {
      * receiving notification messages from this module
      *
      * @param state       the state of message (0 = start, 1 = stop, 2 = ready)
-     * @param serviceInfo the server to get info about
+     * @param ICloudServer the server to get info about
      */
-    public void notifyNetwork(int state, ServiceInfo serviceInfo) {
+    public void notifyNetwork(int state, ICloudServer ICloudServer) {
         NotifyConfiguration config = NotifyModule.getInstance().getConfiguration();
 
         //if module is disabled just ignore execution
@@ -74,7 +74,7 @@ public class ModuleListener {
         }
 
         //applying placeholders
-        message = serviceInfo.replacePlaceHolders(message);
+        message = ICloudServer.replacePlaceHolders(message);
 
 
         //iterating through all players

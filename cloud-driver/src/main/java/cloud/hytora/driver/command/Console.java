@@ -15,6 +15,9 @@ public interface Console {
 
 	void resetPrompt();
 
+	void setCommandHistory(List<String> history);
+
+	Collection<String> getCommandHistory();
 
 	void clearScreen();
 

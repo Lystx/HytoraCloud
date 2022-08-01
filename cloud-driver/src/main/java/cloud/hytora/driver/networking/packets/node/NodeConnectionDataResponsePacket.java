@@ -3,8 +3,8 @@ package cloud.hytora.driver.networking.packets.node;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
-import cloud.hytora.driver.node.Node;
-import cloud.hytora.driver.node.NodeInfo;
+import cloud.hytora.driver.node.INode;
+import cloud.hytora.driver.node.DriverNodeObject;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,7 +21,7 @@ public class NodeConnectionDataResponsePacket extends AbstractPacket {
 
     private String node;
     private PayLoad payLoad;
-    private Node nodeInfo;
+    private INode nodeInfo;
 
 
     @Override
@@ -32,7 +32,7 @@ public class NodeConnectionDataResponsePacket extends AbstractPacket {
             case READ:
                 node = buf.readString();
                 payLoad = buf.readEnum(PayLoad.class);
-                nodeInfo = buf.readObject(NodeInfo.class);
+                nodeInfo = buf.readObject(DriverNodeObject.class);
                 break;
 
             case WRITE:

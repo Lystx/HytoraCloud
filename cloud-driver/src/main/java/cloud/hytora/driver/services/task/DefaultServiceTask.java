@@ -1,14 +1,15 @@
 package cloud.hytora.driver.services.task;
 
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.event.defaults.task.TaskMaintenanceChangeEvent;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.node.Node;
+import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.property.ProtocolPropertyObject;
 import cloud.hytora.driver.services.ConfigurableService;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.impl.DefaultConfigurableService;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.fallback.SimpleFallback;
@@ -24,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,7 +36,9 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class DefaultServiceTask extends ProtocolPropertyObject implements ServiceTask, IBufferObject {
 
-    private String name, parent, node, motd, permission;
+    private String name, parent;
+    private Collection<String>possibleNodes;
+    private String motd, permission;
     private int memory, defaultMaxPlayers, minOnlineService, maxOnlineService, startOrder;
     private boolean maintenance;
 
@@ -53,8 +57,34 @@ public class DefaultServiceTask extends ProtocolPropertyObject implements Servic
     }
 
     @Override
-    public Node findNode() {
-        return CloudDriver.getInstance().getNodeManager().getNodeByNameOrNull(this.node);
+    public INode findAnyNode() {
+        return this.possibleNodes.isEmpty() ? null : CloudDriver.getInstance().getNodeManager().getNodeByNameOrNull(this.possibleNodes.stream().findAny().get());
+    }
+
+    @Override
+    public Task<INode> findAnyNodeAsync() {
+        Task<INode> task = Task.empty();
+
+        Task.runAsync(() -> {
+            INode anyNode = findAnyNode();
+            if (anyNode == null) {
+                task.setFailure(new NullPointerException("No connected Node found!"));
+            } else {
+                task.setResult(anyNode);
+            }
+        });
+
+        return task;
+    }
+
+    @Override
+    public Collection<INode> findPossibleNodes() {
+        return null;
+    }
+
+    @Override
+    public void setNode(@NotNull String... node) {
+        this.possibleNodes = new ArrayList<>(Arrays.asList(node));
     }
 
     @Override
@@ -71,7 +101,7 @@ public class DefaultServiceTask extends ProtocolPropertyObject implements Servic
     }
 
     @Override
-    public List<ServiceInfo> getOnlineServices() {
+    public List<ICloudServer> getOnlineServices() {
         return CloudDriver.getInstance().getServiceManager().getAllServicesByTask(this);
     }
 
@@ -90,7 +120,7 @@ public class DefaultServiceTask extends ProtocolPropertyObject implements Servic
                 this.name = buf.readString();
                 this.parent = buf.readString();
                 this.permission = buf.readOptionalString();
-                this.node = buf.readString();
+                this.possibleNodes = buf.readStringCollection();
                 this.motd = buf.readString();
 
                 this.memory = buf.readInt();
@@ -111,7 +141,7 @@ public class DefaultServiceTask extends ProtocolPropertyObject implements Servic
                 buf.writeString(this.getName());
                 buf.writeString(this.parent);
                 buf.writeOptionalString(this.getPermission());
-                buf.writeString(this.getNode());
+                buf.writeStringCollection(this.getPossibleNodes());
                 buf.writeString(this.getMotd());
 
                 buf.writeInt(this.getMemory());
@@ -145,7 +175,7 @@ public class DefaultServiceTask extends ProtocolPropertyObject implements Servic
         this.setName(from.getName());
         this.setPermission(from.getPermission());
         this.setParent(from.getTaskGroup().getName());
-        this.setNode(from.getNode());
+        this.setNode(from.getPossibleNodes().toArray(new String[0]));
         this.setMotd(from.getMotd());
 
         this.setMemory(from.getMemory());
@@ -166,7 +196,7 @@ public class DefaultServiceTask extends ProtocolPropertyObject implements Servic
     public String replacePlaceHolders(String input) {
         input = input.replace("{task.name}", this.getName());
         input = input.replace("{task.motd}", this.getMotd());
-        input = input.replace("{task.node}", this.getNode());
+        input = input.replace("{task.node}", this.findAnyNode().getName());
 
         input = input.replace("{task.memory}", String.valueOf(this.getMemory()));
         input = input.replace("{task.java}", String.valueOf(this.getJavaVersion()));

@@ -11,7 +11,7 @@ public interface BufferedResponse {
     /**
      * The state of this response
      */
-    QueryState state();
+    NetworkResponseState state();
 
     /**
      * The name of the sender of this response

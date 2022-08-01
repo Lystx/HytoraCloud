@@ -5,8 +5,7 @@ import cloud.hytora.driver.event.CloudEvent;
 import cloud.hytora.driver.event.ProtocolTansferableEvent;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.services.ServiceInfo;
-import cloud.hytora.driver.services.impl.SimpleServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 import lombok.AllArgsConstructor;
 
 import lombok.Getter;
@@ -17,7 +16,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 
 /**
- * This {@link CloudEvent} signals that a certain {@link ServiceInfo}
+ * This {@link CloudEvent} signals that a certain {@link ICloudServer}
  * got unregistered within the cache of the current Driver Instance
  * and is now ready to work with
  *
@@ -50,7 +49,7 @@ public class ServiceUnregisterEvent implements ProtocolTansferableEvent {
     }
 
     @Nullable
-    public ServiceInfo getServiceInfo() {
+    public ICloudServer getServiceInfo() {
         return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(this.service);
     }
 }

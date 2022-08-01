@@ -9,8 +9,8 @@ public class NodeRemoteShutdownHandler implements PacketHandler<NodeRequestShutd
 
     @Override
     public void handle(PacketChannel wrapper, NodeRequestShutdownPacket packet) {
-        if (packet.getName().equalsIgnoreCase(NodeDriver.getInstance().getName())) {
-            NodeDriver.getInstance().shutdown();
+        if (packet.getName().equalsIgnoreCase(NodeDriver.getInstance().getNode().getName())) {
+            NodeDriver.getInstance().getNode().shutdown();
         }
     }
 }

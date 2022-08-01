@@ -16,7 +16,7 @@ public class NodeLoggingPacketHandler implements PacketHandler<DriverLoggingPack
         NetworkComponent component = packet.getComponent();
         String message = packet.getMessage();
 
-        if (component.getName().equalsIgnoreCase(NodeDriver.getInstance().getName())) {
+        if (component.getName().equalsIgnoreCase(NodeDriver.getInstance().getNode().getName())) {
             NodeDriver.getInstance().getLogger().info(message);
         } else {
             Optional<ClusterClientExecutor> client = NodeDriver.getInstance().getExecutor().getClient(component.getName());

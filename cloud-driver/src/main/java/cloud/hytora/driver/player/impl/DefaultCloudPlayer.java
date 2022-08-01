@@ -17,7 +17,7 @@ import cloud.hytora.driver.player.TemporaryProperties;
 import cloud.hytora.driver.player.connection.DefaultPlayerConnection;
 import cloud.hytora.driver.player.connection.PlayerConnection;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
-import cloud.hytora.driver.services.ServiceInfo;
+import cloud.hytora.driver.services.ICloudServer;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import lombok.*;
@@ -32,9 +32,9 @@ import java.util.UUID;
 public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements CloudPlayer {
 
     @ExcludeJsonField
-    private ServiceInfo server;
+    private ICloudServer server;
     @ExcludeJsonField
-    private ServiceInfo proxyServer;
+    private ICloudServer proxyServer;
     @ExcludeJsonField
     private PlayerConnection connection;
 
@@ -42,11 +42,11 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements Clo
         this(uuid, name, null, null);
     }
 
-    public DefaultCloudPlayer(UUID uniqueId, String name, ServiceInfo server, ServiceInfo proxyServer) {
+    public DefaultCloudPlayer(UUID uniqueId, String name, ICloudServer server, ICloudServer proxyServer) {
         this(uniqueId, name, System.currentTimeMillis(), System.currentTimeMillis(), server, proxyServer, DocumentFactory.newJsonDocument(), new DefaultTemporaryProperties());
     }
 
-    public DefaultCloudPlayer(UUID uniqueId, String name, long firstLogin, long lastLogin, ServiceInfo server, ServiceInfo proxyServer, Document properties, TemporaryProperties temporaryProperties) {
+    public DefaultCloudPlayer(UUID uniqueId, String name, long firstLogin, long lastLogin, ICloudServer server, ICloudServer proxyServer, Document properties, TemporaryProperties temporaryProperties) {
         super(uniqueId, name,  firstLogin, lastLogin, properties, (DefaultTemporaryProperties) temporaryProperties);
         this.server = server;
         this.proxyServer = proxyServer;

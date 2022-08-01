@@ -1,7 +1,10 @@
 package cloud.hytora.node.impl.config;
 
 import cloud.hytora.common.logging.LogLevel;
+import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
+import cloud.hytora.driver.node.config.JavaVersion;
+import cloud.hytora.driver.node.config.ServiceCrashPrevention;
 import cloud.hytora.driver.services.utils.ServiceProcessType;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.database.config.DatabaseConfiguration;
@@ -9,6 +12,10 @@ import lombok.AllArgsConstructor;
 
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 
 @Getter
@@ -18,12 +25,19 @@ public class MainConfiguration {
 
     private LogLevel logLevel;
     private ServiceProcessType serviceProcessType;
+    private int proxyStartPort, spigotStartPort;
+    private Collection<String> whitelistedPlayers;
+
+    private ProtocolAddress[] httpListeners;
+    private ServiceCrashPrevention serviceCrashPrevention;
+    private Collection<JavaVersion> javaVersions;
+
     private DatabaseConfiguration databaseConfiguration;
     private DefaultNodeConfig nodeConfig;
 
-    private int proxyStartPort;
-    private int spigotStartPort;
-    private java.util.List<String> whitelistedPlayers;
+    public Collection<JavaVersion> getJavaVersions() {
+        return new ArrayList<>(javaVersions);
+    }
 
     public static MainConfiguration getInstance() {
         return NodeDriver.getInstance().getConfigManager().getConfig();
