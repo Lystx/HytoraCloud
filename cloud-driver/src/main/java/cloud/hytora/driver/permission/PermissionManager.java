@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
  * @author Lystx
  * @since SNAPSHOT-1.0
  */
-public interface PermissionManager {
+public interface PermissionManager extends PermissionChecker {
 
 	/**
 	 * Creates a new instance of a {@link Permission} <br>

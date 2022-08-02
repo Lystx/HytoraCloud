@@ -1,5 +1,6 @@
 package cloud.hytora.modules.cloud.command;
 
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
@@ -408,6 +409,13 @@ public class PermsCommand {
             sender.sendMessage("§cPlease provide a time that is bigger than 0!");
         }
 
+        PermissionManager pm = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class);
+
+
+        PermissionPlayer permissionPlayer = pm.getPlayerByNameOrNull("Lystx");
+
+        permissionPlayer.remov(group, TimeUnit.DAYS, 30);
+        permissionPlayer.update();
         try {
             TimeUnit timeUnit = TimeUnit.valueOf(unit);
 
