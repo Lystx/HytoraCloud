@@ -10,7 +10,7 @@ import cloud.hytora.driver.networking.packets.player.CloudPlayerLoginPacket;
 import cloud.hytora.driver.networking.packets.player.CloudPlayerUpdatePacket;
 import cloud.hytora.driver.networking.packets.player.OfflinePlayerRequestPacket;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.impl.DefaultCloudOfflinePlayer;
 import cloud.hytora.driver.player.impl.DefaultPlayerManager;
 import cloud.hytora.driver.player.impl.DefaultCloudPlayer;
@@ -29,7 +29,7 @@ public class RemotePlayerManager extends DefaultPlayerManager {
     }
 
     @Override
-    public CloudPlayer constructPlayer(@NotNull UUID uniqueId, @NotNull String name) {
+    public ICloudPlayer constructPlayer(@NotNull UUID uniqueId, @NotNull String name) {
         return new DefaultCloudPlayer(uniqueId, name);
     }
 
@@ -97,7 +97,7 @@ public class RemotePlayerManager extends DefaultPlayerManager {
 
     @Override
     public void registerCloudPlayer(@NotNull UUID uniqueId, @NotNull String username) {
-        CloudPlayer cloudPlayer = constructPlayer(uniqueId, username);
+        ICloudPlayer cloudPlayer = constructPlayer(uniqueId, username);
         cloudPlayer.setProxyServer(CloudDriver.getInstance().getServiceManager().thisServiceOrNull());
 
         this.cachedCloudPlayers.put(uniqueId, cloudPlayer);
@@ -115,7 +115,7 @@ public class RemotePlayerManager extends DefaultPlayerManager {
     }
 
     @Override
-    public void updateCloudPlayer(@NotNull CloudPlayer cloudPlayer) {
+    public void updateCloudPlayer(@NotNull ICloudPlayer cloudPlayer) {
         Remote.getInstance().getClient().sendPacket(new CloudPlayerUpdatePacket(cloudPlayer));
     }
 

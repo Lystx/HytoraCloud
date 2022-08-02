@@ -10,12 +10,12 @@ import cloud.hytora.driver.event.DestructiveListener;
 import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
 import cloud.hytora.driver.networking.EndpointNetworkExecutor;
 import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
-import cloud.hytora.driver.networking.packets.services.ServiceConfigPacket;
+import cloud.hytora.driver.services.packet.ServiceConfigPacket;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.services.ConfigurableService;
 import cloud.hytora.driver.services.ICloudServer;
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 
@@ -27,7 +27,7 @@ import java.util.UUID;
 
 public class DefaultConfigurableService implements ConfigurableService {
 
-    private final ServiceTask serviceTask;
+    private final IServiceTask serviceTask;
 
     private int port;
     private int memory;
@@ -48,7 +48,7 @@ public class DefaultConfigurableService implements ConfigurableService {
 
     private ServiceVersion version;
 
-    public DefaultConfigurableService(ServiceTask serviceTask) {
+    public DefaultConfigurableService(IServiceTask serviceTask) {
         this.serviceTask = serviceTask;
 
         this.port = -1;
@@ -188,11 +188,9 @@ public class DefaultConfigurableService implements ConfigurableService {
 
                 CloudDriver.getInstance().getEventManager().registerDestructiveHandler(ServiceReadyEvent.class, (ExceptionallyBiConsumer<ServiceReadyEvent, DestructiveListener>) (event, listener) -> {
 
-                    ICloudServer ICloudServer = event.getICloudServer();
-                    System.out.println("eVENT -> " + this.uniqueId + " / " + ICloudServer.getUniqueId());
-                    if (ICloudServer.getUniqueId().equals(this.uniqueId)) {
-                        task.setResult(ICloudServer);
-                        System.out.println("DEBUG " + ICloudServer);
+                    ICloudServer cloudServer = event.getICloudServer();
+                    if (cloudServer.getUniqueId().equals(this.uniqueId)) {
+                        task.setResult(cloudServer);
                         listener.destroy();
                     }
                 });
@@ -209,7 +207,7 @@ public class DefaultConfigurableService implements ConfigurableService {
 
     private boolean isPortUsed(int port) {
         for (ICloudServer service : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
-            if (service.getTask().getPossibleNodes().equals(CloudDriver.getInstance().getExecutor().getName())) {
+            if (service.getTask().getPossibleNodes().contains(CloudDriver.getInstance().getExecutor().getName()) && service.getPort() == port) {
                 if (service.getPort() == port) {
                     return true;
                 }

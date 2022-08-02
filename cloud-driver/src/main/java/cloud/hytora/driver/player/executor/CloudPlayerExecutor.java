@@ -3,7 +3,7 @@ package cloud.hytora.driver.player.executor;
 import cloud.hytora.driver.component.ChatComponent;
 import cloud.hytora.driver.networking.packets.player.*;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.services.ICloudServer;
 import lombok.AllArgsConstructor;
 
@@ -12,7 +12,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CloudPlayerExecutor implements PlayerExecutor {
 
-    private final CloudPlayer player;
+    private final ICloudPlayer player;
 
     @Override
     public UUID getExecutorUniqueId() {

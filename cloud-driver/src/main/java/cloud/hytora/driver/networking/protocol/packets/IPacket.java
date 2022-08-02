@@ -23,4 +23,6 @@ public interface IPacket extends IBufferObject {
     void publishTo(String... receivers);
 
     Task<BufferedResponse> awaitResponse();
+
+    Task<BufferedResponse> awaitResponse(String receiver);
 }

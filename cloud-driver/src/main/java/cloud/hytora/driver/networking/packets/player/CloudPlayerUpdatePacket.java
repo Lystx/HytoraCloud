@@ -4,7 +4,7 @@ import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.player.impl.DefaultCloudPlayer;
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,7 +18,7 @@ import java.io.IOException;
 @AllArgsConstructor
 public class CloudPlayerUpdatePacket extends AbstractPacket {
 
-    private CloudPlayer player;
+    private ICloudPlayer player;
 
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {

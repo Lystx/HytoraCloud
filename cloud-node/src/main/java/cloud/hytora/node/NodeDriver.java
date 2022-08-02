@@ -30,7 +30,9 @@ import cloud.hytora.driver.services.fallback.SimpleFallback;
 import cloud.hytora.driver.services.template.def.CloudTemplate;
 import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
+import cloud.hytora.driver.uuid.DriverUUIDCache;
 import cloud.hytora.node.console.NodeScreenManager;
+import cloud.hytora.node.impl.NodeUUIDCache;
 import cloud.hytora.node.impl.handler.packet.normal.*;
 import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteLoggingHandler;
 import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteServerStartHandler;
@@ -48,17 +50,16 @@ import cloud.hytora.driver.networking.packets.node.NodeCycleDataPacket;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 
 import cloud.hytora.driver.node.INode;
-import cloud.hytora.driver.node.data.DefaultNodeData;
 import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.driver.player.impl.DefaultCloudOfflinePlayer;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.IProcessCloudServer;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.task.ServiceTaskManager;
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.task.DefaultServiceTask;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.task.bundle.DefaultTaskGroup;
@@ -118,6 +119,8 @@ public class NodeDriver extends CloudDriver<INode> {
     private final Console console;
     private final CommandManager commandManager;
     private final CommandSender commandSender;
+
+    private DriverUUIDCache uuidCache;
     private DriverStorage storage;
 
     private INode node;
@@ -284,6 +287,11 @@ public class NodeDriver extends CloudDriver<INode> {
             this.logger.info("§7This Node is a HeadNode §7and boots up the Cluster...");
         }
 
+        this.uuidCache = new NodeUUIDCache();
+        this.uuidCache.setEnabled(MainConfiguration.getInstance().isUniqueIdCaching());
+        this.uuidCache.loadAsync()
+                .onTaskSucess(uuids -> logger.info("Loaded {} UUIDs from cache!", uuids.size()));
+
 
         //creating needed files
         this.logger.trace("Creating needed folders...");
@@ -356,13 +364,15 @@ public class NodeDriver extends CloudDriver<INode> {
         this.commandManager.registerParser(ServiceVersion.class, ServiceVersion::valueOf);
         this.commandManager.registerParser(LogLevel.class, LogLevel::valueOf);
         this.commandManager.registerParser(ICloudServer.class, this.serviceManager::getServiceByNameOrNull);
-        this.commandManager.registerParser(ServiceTask.class, this.serviceTaskManager::getTaskByNameOrNull);
-        this.commandManager.registerParser(CloudPlayer.class, this.playerManager::getCloudPlayerByNameOrNull);
+        this.commandManager.registerParser(IServiceTask.class, this.serviceTaskManager::getTaskByNameOrNull);
+        this.commandManager.registerParser(ICloudPlayer.class, this.playerManager::getCloudPlayerByNameOrNull);
         this.commandManager.registerParser(CloudOfflinePlayer.class, this.playerManager::getOfflinePlayerByNameBlockingOrNull);
         this.commandManager.registerParser(INode.class, this.nodeManager::getNodeByNameOrNull);
 
         this.logger.trace("Registered " + this.commandManager.getCommands().size() + " Commands & " + this.commandManager.getParsers().size() + " Parsers!");
         this.logger.trace("§8");
+
+        this.storage.set("cloud::messages", this.configManager.getConfig().getMessages());
 
         //registering packet handlers
         this.logger.trace("Registering Packets & Handlers...");
@@ -378,10 +388,10 @@ public class NodeDriver extends CloudDriver<INode> {
         this.executor.registerPacketHandler(new NodeServiceConfigureHandler());
 
         //remote packet handlers
-        this.executor.registerRemoteHandler(new NodeRemoteShutdownHandler());
-        this.executor.registerRemoteHandler(new NodeRemoteServerStartHandler());
-        this.executor.registerRemoteHandler(new NodeRemoteServerStopHandler());
-        this.executor.registerRemoteHandler(new NodeRemoteLoggingHandler());
+        this.executor.registerUniversalHandler(new NodeRemoteShutdownHandler());
+        this.executor.registerUniversalHandler(new NodeRemoteServerStartHandler());
+        this.executor.registerUniversalHandler(new NodeRemoteServerStopHandler());
+        this.executor.registerUniversalHandler(new NodeRemoteLoggingHandler());
 
         this.logger.trace("Registered " + PacketProvider.getRegisteredPackets().size() + " Packets & " + this.executor.getRegisteredPacketHandlers().size() + " PacketHandlers.");
         this.logger.trace("§8");
@@ -427,6 +437,11 @@ public class NodeDriver extends CloudDriver<INode> {
         }
         DriverLoggingPacket packet = new DriverLoggingPacket(component, message);
         this.executor.sendPacketToAll(packet);
+    }
+
+    @Override
+    public DriverUUIDCache getUUIDCache() {
+        return uuidCache;
     }
 
     @Override
@@ -544,8 +559,8 @@ public class NodeDriver extends CloudDriver<INode> {
             DefaultTaskGroup proxyGroup = new DefaultTaskGroup("Proxy", SpecificDriverEnvironment.PROXY, ServiceShutdownBehaviour.DELETE, args, new ArrayList<>(), Collections.singleton(new CloudTemplate("Proxy", "default", "local", true)));
             DefaultTaskGroup lobbyGroup = new DefaultTaskGroup("Lobby", SpecificDriverEnvironment.MINECRAFT, ServiceShutdownBehaviour.DELETE, args, new ArrayList<>(), Collections.singleton(new CloudTemplate("Lobby", "default", "local", true)));
 
-            ServiceTask proxyTask = new DefaultServiceTask("Proxy", proxyGroup.getName(), Collections.singletonList(config.getNodeConfig().getNodeName()), "Default HytoraCloud Service", "", 1024, 250, 1, -1, 0, true, -1, new SimpleFallback(false, "", 0), ServiceVersion.BUNGEECORD, new ArrayList<>());
-            ServiceTask lobbyTask = new DefaultServiceTask("Lobby", lobbyGroup.getName(), Collections.singletonList(config.getNodeConfig().getNodeName()), "Default HytoraCloud Service", "", 512, 50, 1, -1, 1, true, -1, new SimpleFallback(true, "", 1), ServiceVersion.SPIGOT_1_8_8, new ArrayList<>());
+            IServiceTask proxyTask = new DefaultServiceTask("Proxy", proxyGroup.getName(), Collections.singletonList(config.getNodeConfig().getNodeName()), "Default HytoraCloud Service", "", 1024, 250, 1, -1, 0, true, -1, new SimpleFallback(false, "", 0), ServiceVersion.BUNGEECORD, new ArrayList<>());
+            IServiceTask lobbyTask = new DefaultServiceTask("Lobby", lobbyGroup.getName(), Collections.singletonList(config.getNodeConfig().getNodeName()), "Default HytoraCloud Service", "", 512, 50, 1, -1, 1, true, -1, new SimpleFallback(true, "", 1), ServiceVersion.SPIGOT_1_8_8, new ArrayList<>());
             lobbyTask.setProperty("gameServer", true);
 
             proxyTask.setProperty("onlineMode", true);

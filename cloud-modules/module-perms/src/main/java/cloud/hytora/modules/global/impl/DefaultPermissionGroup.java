@@ -1,5 +1,6 @@
 package cloud.hytora.modules.global.impl;
 
+import cloud.hytora.common.misc.CollectionUtils;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
@@ -7,6 +8,7 @@ import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.permission.Permission;
 import cloud.hytora.driver.permission.PermissionGroup;
 import cloud.hytora.driver.permission.PermissionManager;
+import cloud.hytora.driver.services.task.IServiceTask;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
@@ -16,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Getter
@@ -72,11 +75,18 @@ public class DefaultPermissionGroup implements PermissionGroup {
      */
     private Map<String, Long> permissions;
 
+    private Collection<String> deniedPermissions;
+
+    private Map<String, Collection<String>> taskPermissions;
+
     public DefaultPermissionGroup() {
         this.permissions = new HashMap<>();
+        this.deniedPermissions = new ArrayList<>();
+        this.taskPermissions = new ConcurrentHashMap<>();
     }
 
     public DefaultPermissionGroup(String name, String color, String chatColor, String namePrefix, String prefix, String suffix, int sortId, boolean defaultGroup, Collection<String> inheritedGroups, Map<String, Long> permissions) {
+        this();
         this.name = name;
         this.color = color;
         this.chatColor = chatColor;
@@ -104,6 +114,8 @@ public class DefaultPermissionGroup implements PermissionGroup {
                 buf.writeBoolean(defaultGroup);
                 buf.writeStringCollection(inheritedGroups);
                 buf.writeObjectCollection(this.getPermissions());
+                buf.writeStringCollection(getDeniedPermissions());
+                buf.writeMap(taskPermissions, PacketBuffer::writeString, PacketBuffer::writeStringCollection);
                 break;
 
             case READ:
@@ -120,8 +132,55 @@ public class DefaultPermissionGroup implements PermissionGroup {
                 for (DefaultPermission perm : buf.readObjectCollection(DefaultPermission.class)) {
                     this.addPermission(perm);
                 }
+                deniedPermissions = buf.readStringCollection();
+                this.taskPermissions = buf.readMap(PacketBuffer::readString, PacketBuffer::readStringCollection);
                 break;
         }
+    }
+
+    @Override
+    public void setTaskPermissions(Map<IServiceTask, Collection<String>> taskPermissions) {
+        for (Map.Entry<IServiceTask, Collection<String>> e : taskPermissions.entrySet()) {
+            this.taskPermissions.put(e.getKey().getName(), e.getValue());
+        }
+    }
+
+    @Override
+    public Map<IServiceTask, Collection<String>> getTaskPermissions() {
+        Map<IServiceTask, Collection<String>> taskPermissions = new ConcurrentHashMap<>();
+        for (Map.Entry<String, Collection<String>> e : this.taskPermissions.entrySet()) {
+            taskPermissions.put(CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(e.getKey()), e.getValue());
+        }
+        return taskPermissions;
+    }
+
+
+    @Override
+    public void addDeniedPermission(String permission) {
+        this.deniedPermissions.add(permission);
+    }
+
+    @Override
+    public void removeDeniedPermission(String permission) {
+        this.deniedPermissions.remove(permission);
+    }
+
+    @Override
+    public void addTaskPermission(IServiceTask task, String permission) {
+        Collection<String> taskPermissions = this.getTaskPermissions(task.getName());
+        if (!taskPermissions.contains(permission)) {
+            taskPermissions.add(permission);
+        }
+        this.taskPermissions.put(task.getName(), taskPermissions);
+    }
+
+    @Override
+    public void removeTaskPermission(IServiceTask task, String permission) {
+
+        Collection<String> taskPermissions = this.getTaskPermissions(task.getName());
+        taskPermissions.remove(permission);
+
+        this.taskPermissions.put(task.getName(), taskPermissions);
     }
 
     @Override
@@ -190,7 +249,7 @@ public class DefaultPermissionGroup implements PermissionGroup {
     }
 
     @Override
-    public boolean hasPermission(Permission permission) { // TODO: 27.07.2022 check this
+    public boolean hasPermission(Permission permission) { //
 
         if (permission.hasExpired()) { //permission has expired ==> removing it and updating
             this.removePermission(permission);
@@ -200,7 +259,7 @@ public class DefaultPermissionGroup implements PermissionGroup {
         if (this.getPermission(permission.getPermission()).isPresent()) {
             return true;
         } else {
-            for (String groupName : getInheritedGroups()) { // TODO: 27.07.2022 check construct here
+            for (String groupName : getInheritedGroups()) {
                 PermissionGroup group = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).getPermissionGroupByNameOrNull(groupName);
                 if (group == null) {
                     continue;

@@ -11,10 +11,9 @@ import cloud.hytora.driver.event.defaults.server.ServiceUpdateEvent;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.node.INode;
-import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.node.config.ServiceCrashPrevention;
 import cloud.hytora.driver.services.ICloudServer;
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.impl.DefaultServiceManager;
 import cloud.hytora.node.NodeDriver;
 
@@ -73,7 +72,7 @@ public class NodeServiceManager extends DefaultServiceManager {
         Screen screen = screenManager.getScreenByNameOrNull(service.getName());
 
         this.cachedServiceOutputs.remove(service.getName());//removing cached screen
-        ServiceTask con = service.getTask();
+        IServiceTask con = service.getTask();
 
         File parent = (con.getTaskGroup().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
         File folder = new File(parent, service.getName() + "/");

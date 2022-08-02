@@ -9,8 +9,10 @@ import cloud.hytora.driver.permission.PermissionGroup;
 import cloud.hytora.driver.permission.PermissionManager;
 import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.modules.cloud.setup.GroupSetup;
 import cloud.hytora.modules.global.impl.DefaultPermissionPlayer;
+import org.checkerframework.checker.units.qual.A;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -196,6 +198,100 @@ public class PermsCommand {
     }
 
 
+    @Command("user")
+    @Syntax("<player> perms addTask <taskName> <permission>")
+    @CommandDescription("Adds the provided permission for a given task to a player")
+    public void onPlayerTaskPermissionAdd(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("taskName") IServiceTask task, @Argument("permission") String permission) {
+
+        if (player == null) {
+            sender.sendMessage("§cThe player has to have at least joined the network yet!");
+            return;
+        }
+        if (task == null) {
+            sender.sendMessage("§cThere is no such task!");
+            return;
+        }
+
+        if (task.getVersion().isProxy()) {
+            sender.sendMessage("§cTask-Permissions don't work on Proxy-Servers!");
+            return;
+        }
+
+        if (player.getTaskPermissions(task.getName()).contains(permission)) {
+            sender.sendMessage("§cThe player already has this taskPermission!");
+            return;
+        }
+
+        player.addTaskPermission(task, permission);
+        player.update();
+        sender.sendMessage("Successfully added permission {} to player {} for task {}!", permission, player.getName(), task.getName());
+    }
+
+    @Command("user")
+    @Syntax("<player> perms removeTask <taskName> <permission>")
+    @CommandDescription("Removes the provided permission for a given task from a player")
+    public void onPlayerTaskPermissionRemove(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("taskName") IServiceTask task, @Argument("permission") String permission) {
+
+        if (player == null) {
+            sender.sendMessage("§cThe player has to have at least joined the network yet!");
+            return;
+        }
+        if (task.getVersion().isProxy()) {
+            sender.sendMessage("§cTask-Permissions don't work on Proxy-Servers!");
+            return;
+        }
+
+
+        if (!player.getTaskPermissions(task.getName()).contains(permission)) {
+            sender.sendMessage("§cThe player does not have this taskPermission!");
+            return;
+        }
+
+        player.removeTaskPermission(task, permission);
+        player.update();
+        sender.sendMessage("Successfully removed permission {} from player {} for task {}!", permission, player.getName(), task.getName());
+    }
+
+
+    @Command("user")
+    @Syntax("<player> perms allowPermission <permission>")
+    @CommandDescription("Removes the provided permission from the DeniedPermissions-List")
+    public void onPlayerPermissionAllow(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("permission") String permission) {
+
+        if (player == null) {
+            sender.sendMessage("§cThere is no such player in the module database registered");
+            return;
+        }
+        if (!player.getDeniedPermissions().contains(permission)) {
+            sender.sendMessage("§cThe player is already forbidden to have this permission!");
+            return;
+        }
+
+        player.removeDeniedPermission(permission);
+        player.update();
+        sender.sendMessage("Successfully allowed permission {} for player {} !", permission, player.getName());
+    }
+
+    @Command("user")
+    @Syntax("<player> perms denyPermission <permission>")
+    @CommandDescription("Denies the provided permission for a player")
+    public void onPlayerPermissionDeny(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("permission") String permission) {
+
+        if (player == null) {
+            sender.sendMessage("§cThere is no such player in the module database registered");
+            return;
+        }
+        if (player.getDeniedPermissions().contains(permission)) {
+            sender.sendMessage("§cThe player is already forbidden to have this permission!");
+            return;
+        }
+
+        player.addDeniedPermission(permission);
+        player.update();
+        sender.sendMessage("Successfully denied permission {} for player {} !", permission, player.getName());
+    }
+
+
 
     @Command("group")
     @Syntax("<group> info")
@@ -325,7 +421,97 @@ public class PermsCommand {
     }
 
     @Command("group")
+    @Syntax("<group> perms addTask <taskName> <permission>")
+    @CommandDescription("Adds the provided permission for a given task to a group")
+    public void onGroupTaskPermissionAdd(CommandSender sender, @Argument("group") PermissionGroup group, @Argument("taskName") IServiceTask task, @Argument("permission") String permission) {
+
+        if (group == null) {
+            sender.sendMessage("§cThere is no such group in the module database registered");
+            return;
+        }
+
+        if (task.getVersion().isProxy()) {
+            sender.sendMessage("§cTask-Permissions don't work on Proxy-Servers!");
+            return;
+        }
+
+        if (group.getTaskPermissions(task.getName()).contains(permission)) {
+            sender.sendMessage("§cThe group already has this taskPermission!");
+            return;
+        }
+
+        group.addTaskPermission(task, permission);
+        group.update();
+        sender.sendMessage("Successfully added permission {} to group {} for task {}!", permission, group.getName(), task.getName());
+    }
+
+    @Command("group")
+    @Syntax("<group> perms removeTask <taskName> <permission>")
+    @CommandDescription("Removes the provided permission for a given task from a group")
+    public void onGroupTaskPermissionRemove(CommandSender sender, @Argument("group") PermissionGroup group, @Argument("taskName") IServiceTask task, @Argument("permission") String permission) {
+
+        if (group == null) {
+            sender.sendMessage("§cThere is no such group in the module database registered");
+            return;
+        }
+
+        if (task.getVersion().isProxy()) {
+            sender.sendMessage("§cTask-Permissions don't work on Proxy-Servers!");
+            return;
+        }
+
+        if (!group.getTaskPermissions(task.getName()).contains(permission)) {
+            sender.sendMessage("§cThe group does not have this taskPermission!");
+            return;
+        }
+
+        group.removeTaskPermission(task, permission);
+        group.update();
+        sender.sendMessage("Successfully removed permission {} from group {} for task {}!", permission, group.getName(), task.getName());
+    }
+
+
+    @Command("group")
+    @Syntax("<group> perms allowPermission <permission>")
+    @CommandDescription("Removes the provided permission from the DeniedPermissions-List")
+    public void onGroupPermissionAllow(CommandSender sender, @Argument("group") PermissionGroup group, @Argument("permission") String permission) {
+
+        if (group == null) {
+            sender.sendMessage("§cThere is no such group in the module database registered");
+            return;
+        }
+        if (!group.getDeniedPermissions().contains(permission)) {
+            sender.sendMessage("§cThe group is allowed to have this permission!");
+            return;
+        }
+
+        group.removeDeniedPermission(permission);
+        group.update();
+        sender.sendMessage("Successfully allowed permission {} for group {} !", permission, group.getName());
+    }
+
+    @Command("group")
+    @Syntax("<group> perms denyPermission <permission>")
+    @CommandDescription("Denies the provided permission for a group")
+    public void onGroupPermissionDeny(CommandSender sender, @Argument("group") PermissionGroup group, @Argument("permission") String permission) {
+
+        if (group == null) {
+            sender.sendMessage("§cThere is no such group in the module database registered");
+            return;
+        }
+        if (group.getDeniedPermissions().contains(permission)) {
+            sender.sendMessage("§cThe group is already forbidden to have this permission!");
+            return;
+        }
+
+        group.addDeniedPermission(permission);
+        group.update();
+        sender.sendMessage("Successfully denied permission {} for group {} !", permission, group.getName());
+    }
+
+    @Command("group")
     @Syntax("<group> perms remove <permission>")
+    @CommandDescription("Removes the provided permission from a group")
     public void onGroupPermissionRemove(CommandSender sender, @Argument("group") PermissionGroup group, @Argument("permission") String permission) {
 
         if (group == null) {

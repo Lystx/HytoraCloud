@@ -2,11 +2,11 @@ package cloud.hytora.node.impl.handler.packet.normal;
 
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.networking.packets.services.ServiceConfigPacket;
+import cloud.hytora.driver.services.packet.ServiceConfigPacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.services.ConfigurableService;
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 
@@ -18,7 +18,7 @@ public class NodeServiceConfigureHandler implements PacketHandler<ServiceConfigP
     @Override
     public void handle(PacketChannel wrapper, ServiceConfigPacket packet) {
 
-        ServiceTask serviceTask = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(packet.getServiceTask());
+        IServiceTask serviceTask = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(packet.getServiceTask());
         UUID uniqueId = packet.getUniqueId();
         Document properties = packet.getProperties();
         Collection<ServiceTemplate> templates = packet.getTemplates();

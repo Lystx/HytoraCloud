@@ -2,7 +2,7 @@ package cloud.hytora.driver.permission;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -11,7 +11,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
- * This class represents a Database entry for a specific {@link CloudPlayer}
+ * This class represents a Database entry for a specific {@link ICloudPlayer}
  * That is being put all together into a {@link PermissionPlayer} to access
  * this data set and add data to this player and later on save it to the database again
  *
@@ -42,13 +42,13 @@ public interface PermissionPlayer extends PermissionEntity {
 	UUID getUniqueId();
 
 	/**
-	 * Tries to get the {@link CloudPlayer} player of this permission
+	 * Tries to get the {@link ICloudPlayer} player of this permission
 	 * database entry<br>
 	 *
 	 * @return the player if online -> otherwise null
 	 */
 	@Nullable
-	CloudPlayer toOnlinePlayer();
+    ICloudPlayer toOnlinePlayer();
 
 	/**
 	 * Tries to get the {@link CloudOfflinePlayer} player of this permission

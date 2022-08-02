@@ -1,7 +1,7 @@
 package cloud.hytora.driver.event.defaults.player;
 
 import cloud.hytora.driver.event.CloudEvent;
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 import lombok.AllArgsConstructor;
 
 import lombok.Getter;
@@ -10,6 +10,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public abstract class DefaultPlayerEvent implements CloudEvent {
 
-    private CloudPlayer cloudPlayer;
+    private ICloudPlayer cloudPlayer;
 
 }

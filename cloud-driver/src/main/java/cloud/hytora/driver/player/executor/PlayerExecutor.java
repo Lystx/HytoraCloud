@@ -1,10 +1,15 @@
 package cloud.hytora.driver.player.executor;
 
+import cloud.hytora.common.function.ExceptionallyConsumer;
+import cloud.hytora.common.function.ExceptionallyRunnable;
+import cloud.hytora.common.task.Task;
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.component.ChatComponent;
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.services.ICloudServer;
 
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public interface PlayerExecutor {
 
@@ -12,7 +17,7 @@ public interface PlayerExecutor {
         return GlobalPlayerExecutor.INSTANCE;
     }
 
-    public static PlayerExecutor forPlayer(CloudPlayer player) {
+    public static PlayerExecutor forPlayer(ICloudPlayer player) {
         return new CloudPlayerExecutor(player);
     }
 
@@ -31,4 +36,12 @@ public interface PlayerExecutor {
 
     void connect(ICloudServer server);
 
+    default void sendToFallback() {
+
+        Task<ICloudServer> fallback = CloudDriver.getInstance().getServiceManager().getFallbackAsService();
+        fallback.ifPresentOrElse(
+                (ExceptionallyConsumer<ICloudServer>) this::connect,
+                (ExceptionallyRunnable) () -> sendMessage("§cCould not find any available fallback...")
+                );
+    }
 }

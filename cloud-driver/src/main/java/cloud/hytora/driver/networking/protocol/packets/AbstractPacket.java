@@ -82,4 +82,9 @@ public abstract class AbstractPacket implements IPacket {
     public Task<BufferedResponse> awaitResponse() {
         return CloudDriver.getInstance().getExecutor().getPacketChannel().prepareSingleQuery().execute(this);
     }
+
+    @Override
+    public Task<BufferedResponse> awaitResponse(String receiver) {
+        return CloudDriver.getInstance().getExecutor().getPacketChannel().prepareSingleQuery().receivers(receiver).execute(this);
+    }
 }

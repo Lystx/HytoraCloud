@@ -7,10 +7,8 @@ import cloud.hytora.driver.exception.PlayerNotOnlineException;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.TemporaryProperties;
-import cloud.hytora.driver.player.connection.DefaultPlayerConnection;
-import cloud.hytora.driver.player.connection.PlayerConnection;
 import lombok.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -67,7 +65,7 @@ public class DefaultCloudOfflinePlayer implements CloudOfflinePlayer {
     }
 
     @Override
-    public CloudPlayer asOnlinePlayer() throws PlayerNotOnlineException {
+    public ICloudPlayer asOnlinePlayer() throws PlayerNotOnlineException {
         if (this.isOnline()) {
             return CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(this.uniqueId);
         }

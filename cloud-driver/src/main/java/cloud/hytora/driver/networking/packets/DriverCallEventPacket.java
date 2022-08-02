@@ -38,8 +38,6 @@ public class DriverCallEventPacket extends AbstractPacket {
                     ProtocolTansferableEvent event = ReflectionUtils.createEmpty(eventClass);
                     if (event != null) {
                         event.applyBuffer(BufferState.READ, buf);
-
-                        // TODO: 12.06.2022 check
                         if (allowProtocolCall) {
                             CloudDriver.getInstance().getEventManager().callEventGlobally(event); //make sure to prevent packet-transfer cycle
                         } else {

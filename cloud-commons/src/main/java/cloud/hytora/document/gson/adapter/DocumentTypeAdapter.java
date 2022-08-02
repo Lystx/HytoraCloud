@@ -22,13 +22,6 @@ public class DocumentTypeAdapter implements GsonTypeAdapter<Document> {
 			return;
 		}
 
-		// TODO here
-//		Document copiedDocument = document.copyJson();
-//		if (copiedDocument instanceof GsonDocument) {
-//			GsonDocument gsonDocument = (GsonDocument) copiedDocument;
-//			TypeAdapters.JSON_ELEMENT.write(writer, gsonDocument.getJsonObject());
-//			return;
-//		}
 
 		GsonDocument gsonDocument = new GsonDocument(document.values());
 		TypeAdapters.JSON_ELEMENT.write(writer, gsonDocument.getJsonObject());

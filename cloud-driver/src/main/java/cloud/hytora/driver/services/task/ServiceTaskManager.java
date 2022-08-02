@@ -27,28 +27,28 @@ public interface ServiceTaskManager {
         return this.getTaskGroupByName(name).orElse(null);
     }
 
-    @NotNull Collection<ServiceTask> getAllCachedTasks();
+    @NotNull Collection<IServiceTask> getAllCachedTasks();
 
-    void setAllCachedTasks(Collection<ServiceTask> tasks);
+    void setAllCachedTasks(Collection<IServiceTask> tasks);
 
-    void addTask(@NotNull ServiceTask task);
+    void addTask(@NotNull IServiceTask task);
 
-    void removeTask(@NotNull ServiceTask task);
+    void removeTask(@NotNull IServiceTask task);
 
-    default @NotNull Optional<ServiceTask> getTaskByName(@NotNull String name) {
+    default @NotNull Optional<IServiceTask> getTaskByName(@NotNull String name) {
         return this.getAllCachedTasks().stream().filter(it -> it.getName().equalsIgnoreCase(name)).findAny();
     }
 
-    default @Nullable ServiceTask getTaskByNameOrNull(@NotNull String name) {
+    default @Nullable IServiceTask getTaskByNameOrNull(@NotNull String name) {
         return this.getTaskByName(name).orElse(null);
     }
 
-    default @NotNull List<ServiceTask> getTasksByNode(@NotNull String node) {
+    default @NotNull List<IServiceTask> getTasksByNode(@NotNull String node) {
         return this.getAllCachedTasks().stream()
             .filter(it -> it.getPossibleNodes().contains(node))
             .collect(Collectors.toList());
     }
 
-    void update(@NotNull ServiceTask task);
+    void update(@NotNull IServiceTask task);
 
 }

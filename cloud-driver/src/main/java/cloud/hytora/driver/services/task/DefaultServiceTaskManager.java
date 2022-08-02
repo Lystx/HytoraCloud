@@ -1,10 +1,5 @@
 package cloud.hytora.driver.services.task;
 
-import cloud.hytora.driver.DriverEnvironment;
-import cloud.hytora.driver.event.EventListener;
-import cloud.hytora.driver.event.defaults.task.TaskUpdateEvent;
-
-import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.CloudDriver;
 
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
@@ -19,7 +14,7 @@ import java.util.Collection;
 @Setter
 public abstract class DefaultServiceTaskManager implements ServiceTaskManager {
 
-    protected Collection<ServiceTask> allCachedTasks = new ArrayList<>();
+    protected Collection<IServiceTask> allCachedTasks = new ArrayList<>();
     protected Collection<TaskGroup> allTaskGroups = new ArrayList<>();
 
     public DefaultServiceTaskManager() {
@@ -32,11 +27,11 @@ public abstract class DefaultServiceTaskManager implements ServiceTaskManager {
     }
 
     @Override
-    public void addTask(@NotNull ServiceTask task) {
+    public void addTask(@NotNull IServiceTask task) {
         this.allCachedTasks.add(task);
     }
 
-    public void removeTask(@NotNull ServiceTask task) {
+    public void removeTask(@NotNull IServiceTask task) {
         this.allCachedTasks.remove(task);
     }
 

@@ -26,6 +26,8 @@ public class ResponsePacket extends AbstractPacket implements BufferedResponse {
      */
     private String responderName;
 
+    private Throwable error;
+
     /**
      * The state of this response
      */
@@ -47,6 +49,7 @@ public class ResponsePacket extends AbstractPacket implements BufferedResponse {
 
             case READ:
                 responderName = buf.readString();
+                error = buf.readOptionalThrowable();
                 this.state = buf.readEnum(NetworkResponseState.class);
                 data = buf.readOptionalDocument();
 
@@ -55,6 +58,7 @@ public class ResponsePacket extends AbstractPacket implements BufferedResponse {
 
             case WRITE:
                 buf.writeString(responderName);
+                buf.writeOptionalThrowable(error);
                 buf.writeEnum(state);
                 buf.writeOptionalDocument(data);
                 buf.writeBuffer(buffer);
@@ -65,6 +69,11 @@ public class ResponsePacket extends AbstractPacket implements BufferedResponse {
     @Override
     public PacketBuffer buffer() {
         return buffer;
+    }
+
+    @Override
+    public Throwable error() {
+        return error;
     }
 
     @Override

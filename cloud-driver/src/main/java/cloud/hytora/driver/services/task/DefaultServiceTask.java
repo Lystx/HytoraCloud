@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class DefaultServiceTask extends ProtocolPropertyObject implements ServiceTask, IBufferObject {
+public class DefaultServiceTask extends ProtocolPropertyObject implements IServiceTask, IBufferObject {
 
     private String name, parent;
     private Collection<String>possibleNodes;
@@ -170,7 +170,7 @@ public class DefaultServiceTask extends ProtocolPropertyObject implements Servic
     }
 
     @Override
-    public void clone(ServiceTask from) {
+    public void clone(IServiceTask from) {
 
         this.setName(from.getName());
         this.setPermission(from.getPermission());

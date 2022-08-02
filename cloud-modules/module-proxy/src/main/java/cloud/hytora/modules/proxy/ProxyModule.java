@@ -10,10 +10,10 @@ import cloud.hytora.driver.module.controller.base.ModuleCopyType;
 import cloud.hytora.driver.module.controller.base.ModuleEnvironment;
 import cloud.hytora.driver.module.controller.base.ModuleState;
 import cloud.hytora.driver.module.controller.task.ModuleTask;
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
 import cloud.hytora.driver.services.ICloudServer;
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 import cloud.hytora.modules.proxy.command.ProxyCommand;
 import cloud.hytora.modules.proxy.config.*;
@@ -103,7 +103,7 @@ public class ProxyModule extends DriverModule {
         String footer = tabList[1];
 
         //setting tabList
-        for (CloudPlayer cloudPlayer : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
+        for (ICloudPlayer cloudPlayer : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
             PlayerExecutor executor = PlayerExecutor.forPlayer(cloudPlayer);
             ICloudServer server = cloudPlayer.getServer();
 
@@ -131,7 +131,7 @@ public class ProxyModule extends DriverModule {
     }
 
     public void updateMotd() {
-        for (ServiceTask serviceTask : CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks().stream().filter(t -> t.getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY).collect(Collectors.toList())) {
+        for (IServiceTask serviceTask : CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks().stream().filter(t -> t.getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY).collect(Collectors.toList())) {
 
             MotdLayOut motd = selectMotd(serviceTask);
             if (motd == null) {
@@ -165,7 +165,7 @@ public class ProxyModule extends DriverModule {
     }
 
     @Nullable
-    public MotdLayOut selectMotd(ServiceTask task) {
+    public MotdLayOut selectMotd(IServiceTask task) {
         List<MotdLayOut> elements = task.isMaintenance() ? proxyConfig.getMotd().getMaintenances() : proxyConfig.getMotd().getDefaults();
         if (elements.isEmpty()) {
             return null;

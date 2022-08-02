@@ -7,14 +7,16 @@ import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUpdateEvent;
 import cloud.hytora.driver.networking.packets.RedirectPacket;
-import cloud.hytora.driver.networking.packets.services.ServiceForceShutdownPacket;
-import cloud.hytora.driver.networking.packets.services.ServiceRequestShutdownPacket;
+import cloud.hytora.driver.networking.packets.node.NodeRequestServerStartPacket;
+import cloud.hytora.driver.services.packet.ServiceForceShutdownPacket;
+import cloud.hytora.driver.services.packet.ServiceRequestShutdownPacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.impl.DefaultServiceManager;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 
+import cloud.hytora.driver.services.packet.ServiceStartPacket;
 import cloud.hytora.remote.Remote;
 import org.jetbrains.annotations.NotNull;
 
@@ -51,10 +53,12 @@ public class RemoteServiceManager extends DefaultServiceManager {
         this.updateServerInternally(server);
     }
 
+
     @Override
     public Task<ICloudServer> startService(@NotNull ICloudServer service) {
-        //TODO SEND PACKET
-        return Task.empty();
+
+        new NodeRequestServerStartPacket(service, false).publishTo(service.getRunningNodeName());
+        return Task.build(service);
     }
 
     @Override

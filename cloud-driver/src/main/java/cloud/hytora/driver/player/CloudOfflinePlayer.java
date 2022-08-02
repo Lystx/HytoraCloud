@@ -26,7 +26,7 @@ public interface CloudOfflinePlayer extends IBufferObject, IdentityObject {
     /**
      * Tries to get this player as online player
      */
-    CloudPlayer asOnlinePlayer() throws PlayerNotOnlineException;
+    ICloudPlayer asOnlinePlayer() throws PlayerNotOnlineException;
 
     /**
      * Overrides the name of this cached player entry

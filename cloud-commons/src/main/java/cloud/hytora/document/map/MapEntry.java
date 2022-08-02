@@ -17,10 +17,7 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 
 public class MapEntry implements IEntry {
@@ -38,7 +35,7 @@ public class MapEntry implements IEntry {
 
 	@Override
 	public boolean isBundle() {
-		return value instanceof Bundle || value instanceof Collection; // TODO arrays & iterables & iterators
+		return value instanceof Bundle || value instanceof Collection || value instanceof Iterable || value instanceof Iterator || value.getClass().isArray();
 	}
 
 	@Override

@@ -6,7 +6,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.impl.DriverServiceObject;
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.config.MainConfiguration;
@@ -67,7 +67,7 @@ public class NodeServiceQueue {
         CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks().stream()
                 .filter(con -> this.getAmountOfGroupServices(con) < con.getMinOnlineService())
                 .filter(con -> !pausedGroups.contains(con.getName()))
-                .sorted(Comparator.comparingInt(ServiceTask::getStartOrder))
+                .sorted(Comparator.comparingInt(IServiceTask::getStartOrder))
                 .forEach(task -> {
 
                     INode node = task.findAnyNode();
@@ -82,7 +82,7 @@ public class NodeServiceQueue {
                         port++;
                     }
 
-                    ICloudServer service = new DriverServiceObject(task.getName(), this.getPossibleServiceIDByGroup(task), port, node.getConfig().getAddress().toString());
+                    ICloudServer service = new DriverServiceObject(task.getName(), this.getPossibleServiceIDByGroup(task), port, node.getConfig().getAddress().getHost());
                     service.setRunningNodeName(node.getName());
                     CloudDriver.getInstance().getServiceManager().registerService(service);
 
@@ -97,18 +97,18 @@ public class NodeServiceQueue {
         return CloudDriver.getInstance().getServiceManager().getAllServicesByState(ServiceState.STARTING).size();
     }
 
-    public int getAmountOfGroupServices(ServiceTask serviceGroup) {
+    public int getAmountOfGroupServices(IServiceTask serviceGroup) {
         return (int) CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream()
                 .filter(it -> it.getTask().equals(serviceGroup)).count();
     }
 
-    private int getPossibleServiceIDByGroup(ServiceTask serviceGroup) {
+    private int getPossibleServiceIDByGroup(IServiceTask serviceGroup) {
         int id = 1;
         while (this.isServiceIDAlreadyExists(serviceGroup, id)) id++;
         return id;
     }
 
-    private boolean isServiceIDAlreadyExists(ServiceTask serviceGroup, int id) {
+    private boolean isServiceIDAlreadyExists(IServiceTask serviceGroup, int id) {
         return CloudDriver.getInstance().getServiceManager().getAllServicesByTask(serviceGroup).stream().anyMatch(it -> id == it.getServiceID());
     }
 

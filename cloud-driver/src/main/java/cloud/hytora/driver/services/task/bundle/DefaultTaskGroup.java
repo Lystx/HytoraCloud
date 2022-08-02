@@ -4,7 +4,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.services.task.TaskDownloadEntry;
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.def.CloudTemplate;
 import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
@@ -62,7 +62,7 @@ public class DefaultTaskGroup implements TaskGroup {
     }
 
     @Override
-    public Collection<ServiceTask> getChildren() {
+    public Collection<IServiceTask> getChildren() {
         return CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks().stream().filter(c -> c.getTaskGroup().getName().equals(this.name)).collect(Collectors.toList());
     }
 }

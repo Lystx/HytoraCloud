@@ -1,5 +1,6 @@
 package cloud.hytora.driver.networking.protocol.codec.buf;
 
+import cloud.hytora.common.function.BiSupplier;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 
@@ -17,7 +18,9 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -142,6 +145,11 @@ public interface PacketBuffer {
 
 	@Nonnull
 	String readString();
+
+	<K, V> Map<K,V> readMap(BiSupplier<PacketBuffer, K> keySupplier, BiSupplier<PacketBuffer, V> valueSupplier);
+	<K, V> PacketBuffer writeMap(Map<K,V> map, BiConsumer<PacketBuffer, K> keySupplier, BiConsumer<PacketBuffer, V> valueSupplier);
+
+
 
 	@Nonnull
 	PacketBuffer writeString(@Nonnull String string);
@@ -276,6 +284,14 @@ public interface PacketBuffer {
 
 	@Nonnull
 	PacketBuffer writeThrowable(@Nonnull Throwable value);
+
+	default PacketBuffer writeOptionalThrowable(Throwable value) {
+		return this.writeOptional(value, this::writeThrowable);
+	}
+
+	default Throwable readOptionalThrowable() {
+		return this.readOptional(this::readThrowable);
+	}
 
 	@Nonnull
 	PacketBuffer release();

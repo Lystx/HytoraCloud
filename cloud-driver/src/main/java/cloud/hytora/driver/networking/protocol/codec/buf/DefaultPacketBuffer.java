@@ -1,6 +1,7 @@
 package cloud.hytora.driver.networking.protocol.codec.buf;
 
 import cloud.hytora.common.collection.WrappedException;
+import cloud.hytora.common.function.BiSupplier;
 import cloud.hytora.common.misc.CollectionUtils;
 import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.common.misc.ZipUtils;
@@ -32,6 +33,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -287,6 +290,26 @@ public class DefaultPacketBuffer implements PacketBuffer {
 	@Override
 	public String readString() {
 		return new String(readArray(), StandardCharsets.UTF_8);
+	}
+
+	@Override
+	public <K, V> Map<K, V> readMap(BiSupplier<PacketBuffer, K> keySupplier, BiSupplier<PacketBuffer, V> valueSupplier) {
+		int size = this.readInt();
+		Map<K, V> map = new ConcurrentHashMap<>(size);
+		for (int i = 0; i < size; i++) {
+			map.put(keySupplier.supply(this), valueSupplier.supply(this));
+		}
+		return map;
+	}
+
+	@Override
+	public <K, V> PacketBuffer writeMap(Map<K, V> map, BiConsumer<PacketBuffer, K> keySupplier, BiConsumer<PacketBuffer, V> valueSupplier) {
+		this.writeInt(map.size());
+		for (Map.Entry<K, V> e : map.entrySet()) {
+			keySupplier.accept(this, e.getKey());
+			valueSupplier.accept(this, e.getValue());
+		}
+		return this;
 	}
 
 	@Nonnull

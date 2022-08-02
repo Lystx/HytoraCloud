@@ -7,10 +7,9 @@ import cloud.hytora.driver.console.Screen;
 import cloud.hytora.driver.console.ScreenManager;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.controller.base.ModuleConfig;
-import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.services.impl.DriverServiceObject;
 import cloud.hytora.driver.services.task.TaskDownloadEntry;
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.driver.services.ICloudServer;
@@ -60,7 +59,7 @@ public class CloudServerProcessWorker {
         FileUtils.forceMkdir(serverDir);
 
         // load all current task templates
-        ServiceTask serviceTask = service.getTask();
+        IServiceTask serviceTask = service.getTask();
         ServiceProcessType serviceProcessType = MainConfiguration.getInstance().getServiceProcessType();
 
         //all templates for this service
@@ -91,6 +90,7 @@ public class CloudServerProcessWorker {
                 service.getRunningNodeName(),
                 service.getTask().getVersion().getType(),
                 MainConfiguration.getInstance().getServiceProcessType(),
+                MainConfiguration.getInstance().getPlayerLoginProcessing(),
                 NodeDriver.getInstance().getExecutor().getHostName(),
                 service.getName(),
                 NodeDriver.getInstance().getExecutor().getPort()
@@ -144,6 +144,9 @@ public class CloudServerProcessWorker {
         serviceInfo.setProcess(process);
         serviceInfo.setWorkingDirectory(folder);
 
+
+
+
         task.setResult(serviceInfo);
 
         return task;
@@ -175,7 +178,7 @@ public class CloudServerProcessWorker {
         Path remoteFile = new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "remote.jar").toPath();
         File applicationFile = new File(folder, service.getTask().getVersion().getJar());
 
-        ServiceTask task = service.getTask();
+        IServiceTask task = service.getTask();
         int javaVersion = task.getJavaVersion();
         ServiceProcessType serviceProcessType = MainConfiguration.getInstance().getServiceProcessType();
 

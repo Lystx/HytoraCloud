@@ -5,7 +5,7 @@ import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;
 
 import java.text.SimpleDateFormat;
@@ -24,7 +24,7 @@ public class PlayerCommand {
     @CommandDescription("Lists all players")
     public void executeList(CommandSender sender) {
 
-        List<CloudPlayer> players = CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers();
+        List<ICloudPlayer> players = CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers();
 
         if (players.isEmpty()) {
             sender.sendMessage("§cThere are currently no players online!");
@@ -34,7 +34,7 @@ public class PlayerCommand {
         sender.sendMessage("§8");
         sender.sendMessage("§7Players (" + players.size() + ")§8:");
 
-        for (CloudPlayer player : players) {
+        for (ICloudPlayer player : players) {
             sender.sendMessage("§b" + player.getName() + " §8[§e" + player.getProxyServer() + " | " + player.getServer() + "§8]");
         }
         sender.sendMessage("§8");
@@ -63,7 +63,7 @@ public class PlayerCommand {
         sender.sendMessage("§bProperties: §7" +  player.getProperties().asRawJsonString());
         sender.sendMessage("§bStatus: §7" + (player.isOnline() ? "§aOnline" : "§cOffline"));
         if (player.isOnline()) {
-            CloudPlayer onlinePlayer = player.asOnlinePlayer();
+            ICloudPlayer onlinePlayer = player.asOnlinePlayer();
             sender.sendMessage("§bProxy: §7" + onlinePlayer.getProxyServer());
             sender.sendMessage("§bServer: §7" + onlinePlayer.getServer());
         }

@@ -5,22 +5,22 @@ import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.task.TaskUpdateEvent;
 import cloud.hytora.driver.services.task.DefaultServiceTaskManager;
 
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.remote.Remote;
 import org.jetbrains.annotations.NotNull;
 
 public class RemoteServiceTaskManager extends DefaultServiceTaskManager {
 
     @Override
-    public void update(@NotNull ServiceTask task) {
+    public void update(@NotNull IServiceTask task) {
         Remote.getInstance().getEventManager().callEventGlobally(new TaskUpdateEvent(task));
     }
 
 
     @EventListener
     public void handleUpdate(TaskUpdateEvent event) {
-        ServiceTask packetTask = event.getTask();
-        ServiceTask task = getTaskByNameOrNull(packetTask.getName());
+        IServiceTask packetTask = event.getTask();
+        IServiceTask task = getTaskByNameOrNull(packetTask.getName());
         task.clone(packetTask);
     }
 

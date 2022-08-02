@@ -2,7 +2,7 @@ package cloud.hytora.driver.player.executor;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.component.ChatComponent;
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.services.ICloudServer;
 
 import java.util.UUID;
@@ -19,35 +19,35 @@ public class GlobalPlayerExecutor implements PlayerExecutor {
 
     @Override
     public void sendMessage(String message) {
-        for (CloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
+        for (ICloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
             PlayerExecutor.forPlayer(player).sendMessage(message);
         }
     }
 
     @Override
     public void sendMessage(ChatComponent component) {
-        for (CloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
+        for (ICloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
             PlayerExecutor.forPlayer(player).sendMessage(component);
         }
     }
 
     @Override
     public void disconnect(String reason) {
-        for (CloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
+        for (ICloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
             PlayerExecutor.forPlayer(player).disconnect(reason);
         }
     }
 
     @Override
     public void setTabList(String header, String footer) {
-        for (CloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
+        for (ICloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
             PlayerExecutor.forPlayer(player).setTabList(header, footer);
         }
     }
 
     @Override
     public void connect(ICloudServer server) {
-        for (CloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
+        for (ICloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
             PlayerExecutor.forPlayer(player).connect(server);
         }
     }

@@ -3,7 +3,7 @@ package cloud.hytora.modules.notify.command;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.sender.PlayerCommandSender;
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.modules.notify.NotifyModule;
 import cloud.hytora.modules.notify.config.NotifyConfiguration;
 
@@ -17,7 +17,7 @@ public class NotifyCommand {
     @Command("toggle")
     @CommandDescription("Toggles notifications for players!")
     public void execute(PlayerCommandSender sender) {
-        CloudPlayer player = sender.getPlayer();
+        ICloudPlayer player = sender.getPlayer();
 
         NotifyConfiguration configuration = NotifyModule.getInstance().getConfiguration();
         if (configuration.getEnabledNotifications().contains(player.getUniqueId())) {

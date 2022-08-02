@@ -7,7 +7,7 @@ import cloud.hytora.driver.event.defaults.task.TaskUpdateEvent;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.services.task.DefaultServiceTaskManager;
 import cloud.hytora.driver.networking.packets.group.ServiceTaskExecutePacket;
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
@@ -28,7 +28,7 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
 
         // loading all database groups and configurations
         this.getAllTaskGroups().addAll(this.database.getSection(TaskGroup.class).getAll());
-        this.getAllCachedTasks().addAll(this.database.getSection(ServiceTask.class).getAll());
+        this.getAllCachedTasks().addAll(this.database.getSection(IServiceTask.class).getAll());
 
         if (CloudDriver.getInstance().getExecutor() != null) {
 
@@ -48,7 +48,7 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
             CloudDriver.getInstance().getLogger().warn("Maybe you want to create some?");
         } else {
             CloudDriver.getInstance().getLogger().info("§7Cached following TaskGroups: §b" + this.getAllTaskGroups().stream().map(TaskGroup::getName).collect(Collectors.joining("§8, §b")));
-            CloudDriver.getInstance().getLogger().info("§7Cached following ServiceTasks: §b" + this.getAllCachedTasks().stream().map(ServiceTask::getName).collect(Collectors.joining("§8, §b")));
+            CloudDriver.getInstance().getLogger().info("§7Cached following ServiceTasks: §b" + this.getAllCachedTasks().stream().map(IServiceTask::getName).collect(Collectors.joining("§8, §b")));
         }
 
     }
@@ -56,8 +56,8 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
 
     @EventListener
     public void handle(TaskUpdateEvent event) {
-        ServiceTask packetTask = event.getTask();
-        ServiceTask task = getTaskByNameOrNull(packetTask.getName());
+        IServiceTask packetTask = event.getTask();
+        IServiceTask task = getTaskByNameOrNull(packetTask.getName());
 
         if (task == null) {
             return;
@@ -71,8 +71,8 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
     }
 
     @Override
-    public void addTask(@NotNull ServiceTask task) {
-        this.database.getSection(ServiceTask.class).insert(task.getName(), task);
+    public void addTask(@NotNull IServiceTask task) {
+        this.database.getSection(IServiceTask.class).insert(task.getName(), task);
         if (NodeDriver.getInstance().getExecutor() != null) {
             NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceTaskExecutePacket(task, ServiceTaskExecutePacket.ExecutionPayLoad.CREATE));
         }
@@ -92,8 +92,8 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
     }
 
     @Override
-    public void removeTask(@NotNull ServiceTask task) {
-        this.database.getSection(ServiceTask.class).delete(task.getName());
+    public void removeTask(@NotNull IServiceTask task) {
+        this.database.getSection(IServiceTask.class).delete(task.getName());
         if (NodeDriver.getInstance().getExecutor() != null) {
             NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceTaskExecutePacket(task, ServiceTaskExecutePacket.ExecutionPayLoad.REMOVE));
         }
@@ -101,8 +101,8 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
     }
 
     @Override
-    public void update(@NotNull ServiceTask task) {
-        this.database.getSection(ServiceTask.class).update(task.getName(), task);
+    public void update(@NotNull IServiceTask task) {
+        this.database.getSection(IServiceTask.class).update(task.getName(), task);
         CloudDriver.getInstance().getEventManager().callEventGlobally(new TaskUpdateEvent(task));
     }
 

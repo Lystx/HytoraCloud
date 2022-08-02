@@ -25,6 +25,8 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
     //global values
     private final PacketChannel wrapper;
     private final Class<R> returnTypeClass;
+
+    private Throwable error;
     private final String identifier;
 
     private String[] receivers;
@@ -48,6 +50,12 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
     @Override
     public ChanneledPacketAction<R> state(NetworkResponseState state) {
         this.state = state;
+        return this;
+    }
+
+    @Override
+    public ChanneledPacketAction<R> error(Throwable state) {
+        this.error = error;
         return this;
     }
 
@@ -133,7 +141,7 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
             this.sendPacket(packet);
 
         } else if (identifier.equalsIgnoreCase("response")) {
-            ResponsePacket responsePacket = new ResponsePacket(this.wrapper.executor().getName(), state, data, buffer);
+            ResponsePacket responsePacket = new ResponsePacket(this.wrapper.executor().getName(), error, state, data, buffer);
             responsePacket.transferInfo().setInternalQueryId(packet.transferInfo().getInternalQueryId());
 
             this.sendPacket(responsePacket);

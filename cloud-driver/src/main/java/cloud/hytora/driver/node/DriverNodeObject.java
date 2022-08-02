@@ -1,11 +1,14 @@
 package cloud.hytora.driver.node;
 
+import cloud.hytora.common.function.ExceptionallyConsumer;
+import cloud.hytora.common.function.ExceptionallyFunction;
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
 import cloud.hytora.driver.networking.packets.node.NodeRequestServerStartPacket;
 import cloud.hytora.driver.networking.packets.node.NodeRequestServerStopPacket;
 import cloud.hytora.driver.networking.packets.node.NodeRequestShutdownPacket;
+import cloud.hytora.driver.networking.protocol.packets.BufferedResponse;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.networking.protocol.packets.NetworkResponseState;
 import cloud.hytora.driver.node.base.AbstractNode;
@@ -41,22 +44,34 @@ public class DriverNodeObject extends AbstractNode {
 
     @Override
     public void stopServer(ICloudServer server) {
-        this.sendPacket(new NodeRequestServerStopPacket(server.getName()));
+        this.sendPacket(new NodeRequestServerStopPacket(server.getName(), false));
     }
 
     @Override
     public Task<NetworkResponseState> stopServerAsync(ICloudServer server) {
-        return Task.empty(); // TODO: 01.08.2022
+        return new NodeRequestServerStartPacket(server, true)
+                .awaitResponse(this.getName())
+                .registerListener((ExceptionallyConsumer<Task<BufferedResponse>>) task -> {
+                    if (!task.isPresent()) {
+                        task.setFailure(task.error());
+                    }
+                }).map(BufferedResponse::state);
     }
 
     @Override
     public void startServer(ICloudServer server) {
-        this.sendPacket(new NodeRequestServerStartPacket(server));
+        this.sendPacket(new NodeRequestServerStartPacket(server, false));
     }
 
     @Override
     public Task<NetworkResponseState> startServerAsync(ICloudServer server) {
-        return Task.empty(); // TODO: 01.08.2022
+        return new NodeRequestServerStopPacket(server.getName(), true)
+                .awaitResponse(this.getName())
+                .registerListener((ExceptionallyConsumer<Task<BufferedResponse>>) task -> {
+                    if (!task.isPresent()) {
+                        task.setFailure(task.error());
+                    }
+                }).map(BufferedResponse::state);
     }
 
 }

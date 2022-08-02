@@ -2,7 +2,7 @@ package cloud.hytora.node.impl.node;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.networking.packets.services.ServiceForceShutdownPacket;
+import cloud.hytora.driver.services.packet.ServiceForceShutdownPacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.networking.protocol.packets.NetworkResponseState;
 import cloud.hytora.driver.node.base.AbstractNode;

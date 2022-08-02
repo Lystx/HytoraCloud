@@ -4,6 +4,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.permission.PermissionGroup;
 import cloud.hytora.driver.permission.PermissionManager;
 import cloud.hytora.driver.permission.PermissionPlayer;
+import cloud.hytora.driver.services.ICloudServer;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -88,18 +89,30 @@ public class BukkitCloudPermissible extends PermissibleBase {
             for (cloud.hytora.driver.permission.Permission permission : permissionPlayer.getPermissions()) {
                 perms.put(permission.getPermission(), new PermissionAttachmentInfo(this, permission.getPermission(), null, true));
             }
-        /*for (Map.Entry<String, Collection<String>> entry : permissionPlayer.getTaskPermissions().entrySet()) {
-            for (String permission : entry.getValue()) {
-                permissions.add(new PermissionAttachmentInfo(this, permission, null, true));
+
+            for (String taskPermission : permissionPlayer.getTaskPermissions(CloudDriver.getInstance().thisSidesClusterParticipant(ICloudServer.class).getTask().getName())) {
+                perms.put(taskPermission, new PermissionAttachmentInfo(this, taskPermission, null, true));
             }
-        }*/ // TODO: 28.07.2022 task permissions needed?
+
+            //denied permissions
+            for (String permission : permissionPlayer.getDeniedPermissions()) {
+                perms.put(permission, new PermissionAttachmentInfo(this, permission, null, false));
+            }
+
             for (PermissionGroup group : permissionPlayer.getPermissionGroups()) {
                 for (cloud.hytora.driver.permission.Permission permission : group.getPermissions()) {
                     perms.put(permission.getPermission(), new PermissionAttachmentInfo(this, permission.getPermission(), null, true));
                 }
-            /*for (String permission : group.getDeniedPermissions()) {
-                permissions.add(new PermissionAttachmentInfo(this, permission, null, false));
-            }*/ // TODO: 28.07.2022 needed?
+
+                //denied permissions
+                for (String permission : group.getDeniedPermissions()) {
+                    perms.put(permission, new PermissionAttachmentInfo(this, permission, null, false));
+                }
+
+                for (String taskPermission : group.getTaskPermissions(CloudDriver.getInstance().thisSidesClusterParticipant(ICloudServer.class).getTask().getName())) {
+                    perms.put(taskPermission, new PermissionAttachmentInfo(this, taskPermission, null, true));
+                }
+
             }
         } catch (NullPointerException e) {
             CloudDriver.getInstance().getScheduler().scheduleDelayedTask(this::recalculatePermissions, 5L);

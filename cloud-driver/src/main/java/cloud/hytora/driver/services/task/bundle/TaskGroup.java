@@ -2,7 +2,7 @@ package cloud.hytora.driver.services.task.bundle;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.services.task.TaskDownloadEntry;
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
@@ -19,6 +19,6 @@ public interface TaskGroup extends IBufferObject {
 
     Collection<TaskDownloadEntry> getDownloadEntries();
     Collection<ServiceTemplate> getTemplates();
-    Collection<ServiceTask> getChildren();
+    Collection<IServiceTask> getChildren();
 
 }

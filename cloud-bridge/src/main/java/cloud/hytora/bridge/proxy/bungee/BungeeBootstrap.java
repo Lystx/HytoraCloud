@@ -2,17 +2,18 @@ package cloud.hytora.bridge.proxy.bungee;
 
 import cloud.hytora.bridge.proxy.bungee.adapter.BungeeLocalProxyPlayer;
 import cloud.hytora.bridge.proxy.bungee.events.cloud.ProxyRemoteHandler;
-import cloud.hytora.bridge.proxy.bungee.events.server.ProxyCommandListener;
+import cloud.hytora.bridge.proxy.bungee.events.server.ProxyPlayerCommandListener;
+import cloud.hytora.bridge.proxy.bungee.events.server.ProxyPingListener;
+import cloud.hytora.bridge.proxy.bungee.events.server.ProxyPlayerConnectionListener;
 import cloud.hytora.bridge.proxy.bungee.utils.CloudReconnectHandler;
 
-import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.IServiceCycleData;
 import cloud.hytora.driver.services.impl.DefaultServiceCycleData;
 import cloud.hytora.driver.services.utils.*;
 import cloud.hytora.bridge.PluginBridge;
-import cloud.hytora.bridge.proxy.bungee.events.server.ProxyEvents;
+import cloud.hytora.bridge.proxy.bungee.events.server.ProxyPlayerServerListener;
 import cloud.hytora.remote.Remote;
 import cloud.hytora.remote.adapter.proxy.RemoteProxyAdapter;
 import cloud.hytora.remote.adapter.proxy.LocalProxyPlayer;
@@ -49,8 +50,10 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
         this.bootstrap();
 
         new ProxyRemoteHandler();
-        this.getProxy().getPluginManager().registerListener(this, new ProxyEvents());
-        this.getProxy().getPluginManager().registerListener(this, new ProxyCommandListener());
+        this.getProxy().getPluginManager().registerListener(this, new ProxyPlayerServerListener());
+        this.getProxy().getPluginManager().registerListener(this, new ProxyPlayerConnectionListener(this));
+        this.getProxy().getPluginManager().registerListener(this, new ProxyPlayerCommandListener());
+        this.getProxy().getPluginManager().registerListener(this, new ProxyPingListener());
 
         System.out.println("<=======[ BUNGEECORD ]=========>");
     }
@@ -77,7 +80,19 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
 
     @Override
     public IServiceCycleData createCycleData() {
-        return new DefaultServiceCycleData(DocumentFactory.newJsonDocument()); // TODO: 01.08.2022 add infos of bungee
+        return new DefaultServiceCycleData(DocumentFactory.newJsonDocument(
+                "version", ProxyServer.getInstance().getVersion(),
+                "gameVersion", ProxyServer.getInstance().getGameVersion(),
+                "protocolVersion", ProxyServer.getInstance().getProtocolVersion(),
+                "pluginChannels", ProxyServer.getInstance().getChannels(),
+                "onlineCount", ProxyServer.getInstance().getOnlineCount(),
+                "plugins", ProxyServer.getInstance().getPluginManager().getPlugins().stream().map(p -> p.getDescription().getName()).collect(Collectors.toList()),
+                "onlineMode", ProxyServer.getInstance().getConfig().isOnlineMode(),
+                "ipForward", ProxyServer.getInstance().getConfig().isIpForward(),
+                "favicon", ProxyServer.getInstance().getConfig().getFavicon(),
+                "playerLimit", ProxyServer.getInstance().getConfig().getPlayerLimit(),
+                "serverCount", ProxyServer.getInstance().getConfig().getServers().size()
+        ));
     }
 
     @Override
@@ -98,7 +113,7 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
                 .getInstance()
                 .getServers()
                 .put(server
-                        .getName(),
+                                .getName(),
                         ProxyServer
                                 .getInstance()
                                 .constructServerInfo(

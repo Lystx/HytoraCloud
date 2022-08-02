@@ -4,7 +4,7 @@ package cloud.hytora.driver.services;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.utils.ServiceState;
 
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
@@ -79,7 +79,7 @@ public interface ServiceManager {
     void shutdownService(ICloudServer service);
 
 
-    default List<ICloudServer> getAllServicesByTask(@NotNull ServiceTask serviceTask) {
+    default List<ICloudServer> getAllServicesByTask(@NotNull IServiceTask serviceTask) {
         return this.getAllCachedServices().stream().filter(it -> it.getTask().getName().equalsIgnoreCase(serviceTask.getName())).collect(Collectors.toList());
     }
 

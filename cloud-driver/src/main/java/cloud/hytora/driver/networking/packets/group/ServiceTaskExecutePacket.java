@@ -4,7 +4,7 @@ package cloud.hytora.driver.networking.packets.group;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.task.DefaultServiceTask;
 
 import lombok.AllArgsConstructor;
@@ -19,7 +19,7 @@ import java.io.IOException;
 @AllArgsConstructor
 public class ServiceTaskExecutePacket extends AbstractPacket {
 
-    private ServiceTask serviceTask;
+    private IServiceTask serviceTask;
     private ExecutionPayLoad payLoad;
 
     @Override

@@ -9,14 +9,17 @@ import cloud.hytora.driver.permission.PermissionGroup;
 import cloud.hytora.driver.permission.PermissionManager;
 import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
+import cloud.hytora.driver.services.task.IServiceTask;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -30,13 +33,20 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
 
     private Map<String, Long> groups; //<Name, TimeOut>
 
+    @Setter
+    private Collection<String> deniedPermissions;
+
+    private Map<String, Collection<String>> taskPermissions;
+
     public DefaultPermissionPlayer(String name, UUID uniqueId) {
         this.name = name;
         this.uniqueId = uniqueId;
 
         this.permissions = new HashMap<>();
-        this.groups =  new HashMap<>();
+        this.groups = new HashMap<>();
 
+        this.deniedPermissions = new ArrayList<>();
+        this.taskPermissions = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -51,27 +61,63 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
                 for (DefaultPermission defaultPermission : buf.readObjectCollection(DefaultPermission.class)) {
                     addPermission(defaultPermission);
                 }
-                int size = buf.readInt();
-                this.groups = new HashMap<>();
-                for (int i = 0; i < size; i++) {
-                    String name = buf.readString();
-                    long expirationDate = buf.readLong();
-                    this.groups.put(name, expirationDate);
-                }
+                this.groups = buf.readMap(PacketBuffer::readString, PacketBuffer::readLong);
+                this.deniedPermissions = buf.readStringCollection();
+                this.taskPermissions = buf.readMap(PacketBuffer::readString, PacketBuffer::readStringCollection);
                 break;
 
             case WRITE:
                 buf.writeString(name);
                 buf.writeUniqueId(uniqueId);
                 buf.writeObjectCollection(this.getPermissions());
-
-                buf.writeInt(groups.size());
-                for (String name : groups.keySet()) {
-                    buf.writeString(name);
-                    buf.writeLong(groups.get(name));
-                }
-
+                buf.writeMap(groups, PacketBuffer::writeString, PacketBuffer::writeLong);
+                buf.writeStringCollection(getDeniedPermissions());
+                buf.writeMap(taskPermissions, PacketBuffer::writeString, PacketBuffer::writeStringCollection);
                 break;
+        }
+    }
+
+    @Override
+    public Map<IServiceTask, Collection<String>> getTaskPermissions() {
+        Map<IServiceTask, Collection<String>> taskPermissions = new ConcurrentHashMap<>();
+        for (Map.Entry<String, Collection<String>> e : this.taskPermissions.entrySet()) {
+            taskPermissions.put(CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(e.getKey()), e.getValue());
+        }
+        return taskPermissions;
+    }
+
+    @Override
+    public void addDeniedPermission(String permission) {
+        this.deniedPermissions.add(permission);
+    }
+
+    @Override
+    public void removeDeniedPermission(String permission) {
+        this.deniedPermissions.remove(permission);
+    }
+
+    @Override
+    public void addTaskPermission(IServiceTask task, String permission) {
+        Collection<String> taskPermissions = this.getTaskPermissions(task.getName());
+        if (!taskPermissions.contains(permission)) {
+            taskPermissions.add(permission);
+        }
+        this.taskPermissions.put(task.getName(), taskPermissions);
+    }
+
+    @Override
+    public void removeTaskPermission(IServiceTask task, String permission) {
+
+        Collection<String> taskPermissions = this.getTaskPermissions(task.getName());
+        taskPermissions.remove(permission);
+
+        this.taskPermissions.put(task.getName(), taskPermissions);
+    }
+
+    @Override
+    public void setTaskPermissions(Map<IServiceTask, Collection<String>> taskPermissions) {
+        for (Map.Entry<IServiceTask, Collection<String>> e : taskPermissions.entrySet()) {
+            this.taskPermissions.put(e.getKey().getName(), e.getValue());
         }
     }
 
@@ -94,7 +140,8 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
                 groups.remove(groupName);
             }
         }
-        if (sizeBefore != groups.size()) CloudDriver.getInstance().getLogger().trace("Removed expired groups from {}", this.getName());
+        if (sizeBefore != groups.size())
+            CloudDriver.getInstance().getLogger().trace("Removed expired groups from {}", this.getName());
         return sizeBefore != groups.size();
     }
 
@@ -107,7 +154,8 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
                 permissions.remove(permission);
             }
         }
-        if (sizeBefore != permissions.size()) CloudDriver.getInstance().getLogger().trace("Removed expired perms from {}", this.getName());
+        if (sizeBefore != permissions.size())
+            CloudDriver.getInstance().getLogger().trace("Removed expired perms from {}", this.getName());
         return sizeBefore != permissions.size();
     }
 
@@ -145,7 +193,7 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
         this.checkForExpiredValues();
         Permission perm = this.getPermissionOrNull(permission);
         if (perm == null) {
-            for (PermissionGroup group : getPermissionGroups()) { // TODO: 27.07.2022 check construct here
+            for (PermissionGroup group : getPermissionGroups()) {
                 if (group.hasPermission(permission)) {
                     return true;
                 }
@@ -161,7 +209,7 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
     }
 
     @Override
-    public boolean hasPermission(Permission permission) { // TODO: 27.07.2022 check this
+    public boolean hasPermission(Permission permission) {
 
         this.checkForExpiredValues();
         if (permission.hasExpired()) { //permission has expired ==> removing it and updating
@@ -172,14 +220,15 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
         if (this.getPermission(permission.getPermission()).isPresent()) {
             return true;
         } else {
-            for (PermissionGroup group : getPermissionGroups()) { // TODO: 27.07.2022 check construct here
-                if (group.hasPermission(permission)) {
+            for (PermissionGroup group : getPermissionGroups()) {
+                if (group.hasPermission(permission) && !group.getDeniedPermissions().contains(permission.getPermission())) {
                     return true;
                 }
             }
             return false;
         }
     }
+
     @Override
     public void update() {
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).updatePermissionPlayer(this);
@@ -187,7 +236,7 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
 
     @Nullable
     @Override
-    public CloudPlayer toOnlinePlayer() {
+    public ICloudPlayer toOnlinePlayer() {
         return CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(uniqueId);
     }
 

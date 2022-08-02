@@ -27,6 +27,7 @@ import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.driver.storage.DriverStorage;
 import cloud.hytora.driver.storage.RemoteDriverStorage;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
+import cloud.hytora.driver.uuid.DriverUUIDCache;
 import cloud.hytora.remote.adapter.RemoteAdapter;
 import cloud.hytora.remote.adapter.proxy.RemoteProxyAdapter;
 import cloud.hytora.remote.impl.*;
@@ -57,6 +58,8 @@ public class Remote extends CloudDriver<ICloudServer> {
     private final ServiceTaskManager serviceTaskManager;
     private final ServiceManager serviceManager;
     private final PlayerManager playerManager;
+
+    private final DriverUUIDCache cache;
     private final CommandManager commandManager;
     private final CommandSender commandSender;
     private final DriverStorage storage;
@@ -113,12 +116,12 @@ public class Remote extends CloudDriver<ICloudServer> {
         this.moduleManager = new RemoteModuleManager();
 
         this.storage = new RemoteDriverStorage(this.client);
+        this.cache = new RemoteUUIDCache();
 
 
         //service cycle update task
         this.scheduler.scheduleRepeatingTaskAsync(() -> {
 
-            System.out.println(true);
             RemoteAdapter remoteAdapter = getAdapter();
             ICloudServer server = this.thisService();
 
@@ -218,7 +221,7 @@ public class Remote extends CloudDriver<ICloudServer> {
                 );
             } catch (Exception ex) {
                 logger.error("Unable to start application..", ex);
-                // TODO stop
+                System.exit(0);
             }
         }, "Application-Thread");
 
@@ -261,6 +264,11 @@ public class Remote extends CloudDriver<ICloudServer> {
         return instance;
     }
 
+    @Override
+    public DriverUUIDCache getUUIDCache() {
+        return cache;
+    }
+
     public RemoteProxyAdapter getProxyAdapter() {
         return perform(adapter instanceof RemoteProxyAdapter, () -> cast(adapter), new IllegalStateException("Not a " + RemoteProxyAdapter.class.getSimpleName()));
     }
@@ -275,7 +283,6 @@ public class Remote extends CloudDriver<ICloudServer> {
 
     @Override
     public void shutdown() {
-        // TODO: 06.06.2022
         if (adapter != null) {
             adapter.shutdown();
         }

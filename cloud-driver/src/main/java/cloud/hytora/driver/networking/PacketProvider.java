@@ -8,11 +8,12 @@ import cloud.hytora.driver.networking.packets.module.RemoteModuleControllerPacke
 import cloud.hytora.driver.networking.packets.module.RemoteModuleExecutionPacket;
 import cloud.hytora.driver.networking.packets.node.*;
 import cloud.hytora.driver.networking.packets.player.*;
-import cloud.hytora.driver.networking.packets.services.*;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.networking.protocol.packets.defaults.HandshakePacket;
 import cloud.hytora.driver.networking.protocol.packets.defaults.ResponsePacket;
+import cloud.hytora.driver.services.packet.*;
+import cloud.hytora.driver.uuid.packets.CachedUUIDPacket;
 import lombok.Getter;
 
 import java.util.HashMap;
@@ -49,7 +50,8 @@ public class PacketProvider {
         PacketProvider.autoRegister(ServiceForceShutdownPacket.class);
         PacketProvider.autoRegister(ServiceRequestShutdownPacket.class);
         PacketProvider.autoRegister(ServiceConfigPacket.class);
-        PacketProvider.autoRegister(CloudServerCommandPacket.class);
+        PacketProvider.autoRegister(ServiceCommandPacket.class);
+        PacketProvider.autoRegister(ServiceStartPacket.class);
 
         //updating packet
         PacketProvider.autoRegister(DriverUpdatePacket.class);
@@ -78,6 +80,7 @@ public class PacketProvider {
         PacketProvider.autoRegister(RedirectPacket.class);
         PacketProvider.autoRegister(ResponsePacket.class);
         PacketProvider.autoRegister(DriverLoggingPacket.class);
+        PacketProvider.autoRegister(CachedUUIDPacket.class);
         PacketProvider.autoRegister(DriverCallEventPacket.class);
     }
 

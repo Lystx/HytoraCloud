@@ -19,6 +19,8 @@ public class NodeRequestServerStartPacket extends AbstractPacket {
 
     private ICloudServer server;
 
+    private boolean demandsResponse;
+
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
 
@@ -26,10 +28,12 @@ public class NodeRequestServerStartPacket extends AbstractPacket {
 
             case READ:
                 server = buf.readObject(DriverServiceObject.class);
+                demandsResponse = buf.readBoolean();
                 break;
 
             case WRITE:
                 buf.writeObject(server);
+                buf.writeBoolean(demandsResponse);
                 break;
         }
     }

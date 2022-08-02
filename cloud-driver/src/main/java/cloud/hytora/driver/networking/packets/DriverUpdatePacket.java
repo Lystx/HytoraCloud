@@ -11,9 +11,9 @@ import cloud.hytora.driver.node.DriverNodeObject;
 import cloud.hytora.driver.player.impl.DefaultCloudPlayer;
 import cloud.hytora.driver.CloudDriver;
 
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.task.DefaultServiceTask;
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.task.bundle.DefaultTaskGroup;
@@ -30,10 +30,10 @@ import java.util.List;
 @AllArgsConstructor
 public class DriverUpdatePacket extends AbstractPacket {
 
-    private Collection<ServiceTask> groups;
+    private Collection<IServiceTask> groups;
     private Collection<TaskGroup> parentGroups;
     private Collection<ICloudServer> allCachedServices;
-    private Collection<CloudPlayer> cloudPlayers;
+    private Collection<ICloudPlayer> cloudPlayers;
     private Collection<INode> connectedNodes;
 
 
@@ -72,7 +72,7 @@ public class DriverUpdatePacket extends AbstractPacket {
                 CloudDriver.getInstance().getServiceManager().setAllCachedServices((List<ICloudServer>) allCachedServices);
 
                 cloudPlayers = buf.readWrapperObjectCollection(DefaultCloudPlayer.class);
-                CloudDriver.getInstance().getPlayerManager().setAllCachedCloudPlayers((List<CloudPlayer>) cloudPlayers);
+                CloudDriver.getInstance().getPlayerManager().setAllCachedCloudPlayers((List<ICloudPlayer>) cloudPlayers);
 
                 connectedNodes = buf.readWrapperObjectCollection(DriverNodeObject.class);
                 CloudDriver.getInstance().getNodeManager().setAllCachedNodes((List<INode>) connectedNodes);

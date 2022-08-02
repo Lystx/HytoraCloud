@@ -12,7 +12,7 @@ import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.permission.PermissionChecker;
 import cloud.hytora.driver.permission.PermissionManager;
 import cloud.hytora.driver.permission.PermissionPlayer;
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.TemporaryProperties;
 import cloud.hytora.driver.player.connection.DefaultPlayerConnection;
 import cloud.hytora.driver.player.connection.PlayerConnection;
@@ -29,7 +29,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
-public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements CloudPlayer {
+public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements ICloudPlayer {
 
     @ExcludeJsonField
     private ICloudServer server;
@@ -60,7 +60,7 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements Clo
     }
 
     @Override
-    public CloudPlayer asOnlinePlayer() throws PlayerNotOnlineException {
+    public ICloudPlayer asOnlinePlayer() throws PlayerNotOnlineException {
         return this;
     }
 
@@ -109,7 +109,7 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements Clo
 
 
     @Override
-    public void clone(CloudPlayer from) {
+    public void clone(ICloudPlayer from) {
         this.setProxyServer(from.getProxyServer());
         this.setServer(from.getServer());
 
@@ -128,9 +128,19 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements Clo
         return permissionChecker != null && permissionChecker.hasPermission(this.uniqueId, permission);
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+
+        if (!(obj instanceof ICloudPlayer)) return false;
+        ICloudPlayer cloudPlayer = (ICloudPlayer) obj;
+
+        return cloudPlayer.getName().equalsIgnoreCase(this.name) && cloudPlayer.getUniqueId().equals(this.uniqueId);
+    }
+
     @NotNull
     @Override
-    public CloudPlayer getPlayer() {
+    public ICloudPlayer getPlayer() {
         return this;
     }
 }

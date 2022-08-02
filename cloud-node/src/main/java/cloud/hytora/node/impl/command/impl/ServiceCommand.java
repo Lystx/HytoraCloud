@@ -14,7 +14,7 @@ import cloud.hytora.driver.event.defaults.server.ServiceRequestScreenLeaveEvent;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.deployment.CloudDeployment;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.utils.ServiceState;
 
@@ -79,7 +79,7 @@ public class ServiceCommand {
     @Syntax("<task> <amount>")
     public void onStartCommand(
             CommandSender sender,
-            @Argument(value = "task", completer = TaskCompleter.class) ServiceTask task,
+            @Argument(value = "task", completer = TaskCompleter.class) IServiceTask task,
             @Argument("amount") int amount
 
     ) {
@@ -183,6 +183,7 @@ public class ServiceCommand {
         sender.sendMessage("§bLast Sync: §7" + new SimpleDateFormat("HH:mm:ss").format(service.getLastCycleData().getTimestamp()));
         sender.sendMessage("§bWould time out at: §7" + new SimpleDateFormat("HH:mm:ss").format(service.getLastCycleData().getTimestamp() + CloudDriver.SERVER_PUBLISH_INTERVAL));
         sender.sendMessage("§bPacket Latency: §7" + service.getLastCycleData().getLatency());
+        sender.sendMessage("§bCycle Data: §7" + service.getLastCycleData().getData().asFormattedJsonString());
         sender.sendMessage("§8");
 
     }

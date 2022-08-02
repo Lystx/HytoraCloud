@@ -7,7 +7,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
 import cloud.hytora.driver.exception.IncompatibleDriverEnvironment;
-import cloud.hytora.driver.networking.packets.services.CloudServerCommandPacket;
+import cloud.hytora.driver.services.packet.ServiceCommandPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
@@ -16,7 +16,7 @@ import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.services.IProcessCloudServer;
 import cloud.hytora.driver.services.IServiceCycleData;
 import cloud.hytora.driver.services.ServicePingProperties;
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
@@ -38,7 +38,7 @@ import java.util.function.Consumer;
 @Setter
 public class DriverServiceObject implements IProcessCloudServer, IBufferObject {
 
-    private ServiceTask task;
+    private IServiceTask task;
     private int serviceID;
 
     private String runningNodeName;
@@ -167,7 +167,7 @@ public class DriverServiceObject implements IProcessCloudServer, IBufferObject {
 
     @Override
     public void sendCommand(@NotNull String commandLine) {
-        this.sendPacket(new CloudServerCommandPacket(commandLine));
+        this.sendPacket(new ServiceCommandPacket(commandLine));
     }
 
     @Override

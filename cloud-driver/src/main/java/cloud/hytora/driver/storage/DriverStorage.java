@@ -5,6 +5,7 @@ package cloud.hytora.driver.storage;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Bundle;
 import cloud.hytora.document.Document;
+import cloud.hytora.document.IEntry;
 
 import javax.annotation.Nonnull;
 import java.lang.reflect.Type;
@@ -26,6 +27,10 @@ public interface DriverStorage {
 
 	default <T> T get(@Nonnull String path, @Nonnull Class<T> classOfT) {
 		return getRawData().getInstance(path, classOfT);
+	}
+
+	default IEntry get(@Nonnull String path) {
+		return getRawData().getEntry(path);
 	}
 
 	default <T> T get(@Nonnull String path, @Nonnull Type classOfT) {

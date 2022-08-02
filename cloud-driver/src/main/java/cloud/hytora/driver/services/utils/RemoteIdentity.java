@@ -5,6 +5,7 @@ import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.services.utils.version.VersionType;
+import cloud.hytora.driver.uuid.PlayerLoginProcessing;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,8 +37,12 @@ public class RemoteIdentity {
     /**
      * The processing of the service
      */
-    @Setter
     private ServiceProcessType processType = ServiceProcessType.WRAPPER;
+
+    /**
+     * the processing of players
+     */
+    private PlayerLoginProcessing playerLoginProcessing = PlayerLoginProcessing.UUID_CACHE;
 
     /**
      * The host name of the node this service runs on
@@ -64,7 +69,7 @@ public class RemoteIdentity {
 
 
     public static RemoteIdentity forApplication(ProtocolAddress address) {
-        return new RemoteIdentity(address.getAuthKey(), "", VersionType.BUNGEE, ServiceProcessType.WRAPPER, address.getHost(), CloudDriver.APPLICATION_NAME, address.getPort());
+        return new RemoteIdentity(address.getAuthKey(), "", VersionType.BUNGEE, ServiceProcessType.WRAPPER, PlayerLoginProcessing.WAIT_FOR_UUID, address.getHost(), CloudDriver.APPLICATION_NAME, address.getPort());
     }
 
     public static RemoteIdentity read(File file) {

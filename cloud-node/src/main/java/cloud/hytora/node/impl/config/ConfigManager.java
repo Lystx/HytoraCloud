@@ -3,15 +3,13 @@ package cloud.hytora.node.impl.config;
 import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.misc.RandomString;
-import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.document.DocumentFactory;
-import cloud.hytora.driver.http.SSLConfiguration;
+import cloud.hytora.driver.common.CloudMessages;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
-import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.node.config.ServiceCrashPrevention;
-import cloud.hytora.driver.node.config.SimpleJavaVersion;
 import cloud.hytora.driver.services.utils.ServiceProcessType;
+import cloud.hytora.driver.uuid.PlayerLoginProcessing;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.database.config.DatabaseConfiguration;
 import cloud.hytora.node.impl.database.config.DatabaseType;
@@ -19,7 +17,6 @@ import lombok.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -43,8 +40,10 @@ public class ConfigManager {
             this.config = new MainConfiguration(
                     LogLevel.INFO,
                     ServiceProcessType.BRIDGE_PLUGIN,
+                    PlayerLoginProcessing.UUID_CACHE,
                     25565,
                     40000,
+                    true,
                     Collections.singletonList("Notch"),
                     new ProtocolAddress[]{new ProtocolAddress("127.0.0.1", 4518)},
                     new ServiceCrashPrevention(
@@ -71,7 +70,7 @@ public class ConfigManager {
                             2,
                             10000L,
                             new ProtocolAddress[0]
-                    ));
+                    ), new CloudMessages());
             Logger.constantInstance().trace("Config-File does not exist ==> Creating and saving default config..");
         }
 

@@ -13,6 +13,8 @@ public interface ChanneledPacketAction<R> {
 
     ChanneledPacketAction<R> state(NetworkResponseState state);
 
+    ChanneledPacketAction<R> error(Throwable state);
+
     ChanneledPacketAction<R> data(Document document);
 
     ChanneledPacketAction<R> buffer(Consumer<PacketBuffer> buf);

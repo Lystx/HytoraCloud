@@ -1,6 +1,7 @@
 package cloud.hytora.bridge.proxy.bungee.events.cloud;
 
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.common.CloudMessages;
 import cloud.hytora.driver.component.ChatComponent;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.driver.DriverCacheUpdateEvent;
@@ -10,10 +11,10 @@ import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 import cloud.hytora.driver.event.defaults.task.TaskMaintenanceChangeEvent;
 import cloud.hytora.driver.networking.packets.player.*;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
 import cloud.hytora.driver.services.ICloudServer;
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.remote.Remote;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -30,7 +31,7 @@ public class ProxyRemoteHandler {
 
         //load all current groups
         for (ICloudServer allCachedService : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
-            ServiceTask serviceGroup = allCachedService.getTask();
+            IServiceTask serviceGroup = allCachedService.getTask();
             if (!serviceGroup.getVersion().isProxy()) {
                 registerService(allCachedService);
             }
@@ -49,18 +50,20 @@ public class ProxyRemoteHandler {
 
     @EventListener
     public void handle(TaskMaintenanceChangeEvent event) {
-        ServiceTask task = event.getTask();
+        IServiceTask task = event.getTask();
+        CloudMessages cloudMessages = CloudDriver.getInstance().getStorage().get("cloud::messages").toInstance(CloudMessages.class);
+
         ICloudServer thisService = CloudDriver.getInstance().getServiceManager().thisServiceOrNull();
 
         if (event.isNewMaintenanceValue() && task.getName().equalsIgnoreCase(thisService.getTask().getName())) {
 
             List<String> whitelistedPlayers = CloudDriver.getInstance().getStorage().getBundle("cloud::whitelist").toInstances(String.class);
-            for (CloudPlayer cp : thisService.getOnlinePlayers()) {
+            for (ICloudPlayer cp : thisService.getOnlinePlayers()) {
                 if (whitelistedPlayers.contains(cp.getName())) {
-                    PlayerExecutor.forPlayer(cp).sendMessage("§7Maintenance for your Proxy was enabled but you didn't get kicked because you are whitelisted!");
+                    PlayerExecutor.forPlayer(cp).sendMessage(cloudMessages.getMaintenanceKickByPassedMessage());
                     continue;
                 }
-                PlayerExecutor.forPlayer(cp).disconnect("§cThe network is currently in maintenance!"); // TODO: 25.07.2022 custom message
+                PlayerExecutor.forPlayer(cp).disconnect(cloudMessages.getNetworkCurrentlyInMaintenance());
             }
 
         }
@@ -152,7 +155,6 @@ public class ProxyRemoteHandler {
             if (player == null) {
                 return;
             }
-            // TODO: 22.05.2022 transform component to bungee component
             ChatComponent message = packet.getMessage();
 
             player.sendMessage(ComponentSerializer.parse(message.toString()));

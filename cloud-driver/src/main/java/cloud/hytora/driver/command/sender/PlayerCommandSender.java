@@ -1,6 +1,6 @@
 package cloud.hytora.driver.command.sender;
 
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 
 import javax.annotation.Nonnull;
 import java.util.UUID;
@@ -12,6 +12,6 @@ public interface PlayerCommandSender extends CommandSender {
 	UUID getUniqueId();
 
 	@Nonnull
-    CloudPlayer getPlayer();
+    ICloudPlayer getPlayer();
 
 }

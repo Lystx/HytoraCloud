@@ -17,6 +17,8 @@ public class NodeRequestServerStopPacket extends AbstractPacket {
 
     private String serverName;
 
+    private boolean demandsResponse;
+
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
 
@@ -24,10 +26,12 @@ public class NodeRequestServerStopPacket extends AbstractPacket {
 
             case READ:
                 serverName = buf.readString();
+                demandsResponse = buf.readBoolean();
                 break;
 
             case WRITE:
                 buf.writeString(serverName);
+                buf.writeBoolean(demandsResponse);
                 break;
         }
     }

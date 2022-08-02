@@ -5,7 +5,7 @@ import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.completer.TaskCompleter;
 import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.task.bundle.DefaultTaskGroup;
 import cloud.hytora.driver.services.fallback.SimpleFallback;
 import cloud.hytora.driver.services.task.DefaultServiceTask;
@@ -38,7 +38,7 @@ public class TaskCommand {
     @CommandDescription("Shows info about a task")
     public void execute(CommandSender sender, @Argument(value = "name", completer = TaskCompleter.class) String name) {
 
-        ServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
+        IServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
 
         if (task == null) {
             sender.sendMessage("§cThis ServiceTask does not exists");
@@ -173,7 +173,7 @@ public class TaskCommand {
     @Syntax("<name>")
     @CommandDescription("Deletes a task")
     public void executeDelete(CommandSender sender, @Argument(value = "name", completer = TaskCompleter.class) String name) {
-        ServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
+        IServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
         if (task == null) {
             sender.sendMessage("§cThere is no existing ServiceTask with the name §e" + name + "§c!");
             return;
@@ -188,7 +188,7 @@ public class TaskCommand {
     @Syntax("<name>")
     @CommandDescription("Toggles maintenance mode for a task")
     public void executeToggleMaintenance(CommandSender sender, @Argument(value = "name", completer = TaskCompleter.class) String name) {
-        ServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
+        IServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
         if (task == null) {
             sender.sendMessage("§cThere is no existing ServiceTask with the name §e" + name + "§c!");
             return;
@@ -203,13 +203,13 @@ public class TaskCommand {
     @Command("list")
     @CommandDescription("Lists all configurations")
     public void executeList(CommandSender sender) {
-        Collection<ServiceTask> cachedTasks = CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks();
+        Collection<IServiceTask> cachedTasks = CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks();
         if (cachedTasks.isEmpty()) {
             sender.sendMessage("§cThere are no ServiceTasks cached at the moment!");
             return;
         }
         sender.sendMessage("§8");
-        for (ServiceTask g : cachedTasks) {
+        for (IServiceTask g : cachedTasks) {
             sender.sendMessage("§8=> §b" + g.getName() + " §8(§b" + (g.getVersion().isProxy() ? "PROXY" : "MINECRAFT") + "§8)");
         }
         sender.sendMessage("§8");

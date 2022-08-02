@@ -3,7 +3,7 @@ package cloud.hytora.node.service.template;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.IProcessCloudServer;
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
@@ -54,7 +54,7 @@ public class LocalTemplateStorage implements TemplateStorage {
     }
 
     private void checkIfTemplateFoldersNeeded() {
-        for (ServiceTask con : CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks()) {
+        for (IServiceTask con : CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks()) {
             for (ServiceTemplate template : con.getTaskGroup().getTemplates()) {
                 this.createTemplate(template);
             }
@@ -72,7 +72,7 @@ public class LocalTemplateStorage implements TemplateStorage {
                 if (name.equalsIgnoreCase("GLOBAL") || name.equals("GLOBAL_SERVICE") || name.equals("GLOBAL_PROXY")) {
                     continue;
                 }
-                ServiceTask con = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
+                IServiceTask con = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
                 if (con == null) {
                     FileUtils.deleteDirectory(file);
                 }
@@ -82,7 +82,7 @@ public class LocalTemplateStorage implements TemplateStorage {
 
     @Override
     public void copyTemplate(@NotNull ICloudServer server, @NotNull ServiceTemplate template, @NotNull File directory) throws Exception {
-        ServiceTask serviceTask = server.getTask();
+        IServiceTask serviceTask = server.getTask();
 
         //do not perform if wrong node
         if (!server.getRunningNodeName().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName())) {

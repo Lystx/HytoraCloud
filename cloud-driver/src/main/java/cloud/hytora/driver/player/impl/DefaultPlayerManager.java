@@ -8,7 +8,7 @@ import cloud.hytora.driver.event.defaults.player.CloudPlayerUpdateEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 import cloud.hytora.driver.networking.packets.player.CloudPlayerUpdatePacket;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
@@ -21,13 +21,13 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class DefaultPlayerManager implements PlayerManager {
 
-    protected Map<UUID, CloudPlayer> cachedCloudPlayers = new ConcurrentHashMap<>();
+    protected Map<UUID, ICloudPlayer> cachedCloudPlayers = new ConcurrentHashMap<>();
 
 
     @Override
-    public void setAllCachedCloudPlayers(List<CloudPlayer> allCachedCloudPlayers) {
-        Map<UUID, CloudPlayer> cloudPlayerMap = new ConcurrentHashMap<>();
-        for (CloudPlayer cloudPlayer : allCachedCloudPlayers) {
+    public void setAllCachedCloudPlayers(List<ICloudPlayer> allCachedCloudPlayers) {
+        Map<UUID, ICloudPlayer> cloudPlayerMap = new ConcurrentHashMap<>();
+        for (ICloudPlayer cloudPlayer : allCachedCloudPlayers) {
             cloudPlayerMap.put(cloudPlayer.getUniqueId(), cloudPlayer);
         }
         this.setCachedCloudPlayers(cloudPlayerMap);
@@ -43,7 +43,7 @@ public abstract class DefaultPlayerManager implements PlayerManager {
         }
         executor.registerPacketHandler((PacketHandler<CloudPlayerUpdatePacket>) (wrapper, packet) -> {
 
-            CloudPlayer player = packet.getPlayer();
+            ICloudPlayer player = packet.getPlayer();
 
             this.getCloudPlayer(player.getUniqueId()).ifPresent(cp -> {
                 cp.clone(player);
@@ -70,7 +70,7 @@ public abstract class DefaultPlayerManager implements PlayerManager {
     }
 
 
-    public void setCachedCloudPlayers(Map<UUID, CloudPlayer> cachedCloudPlayers) {
+    public void setCachedCloudPlayers(Map<UUID, ICloudPlayer> cachedCloudPlayers) {
         this.cachedCloudPlayers = cachedCloudPlayers;
     }
 
@@ -93,32 +93,32 @@ public abstract class DefaultPlayerManager implements PlayerManager {
 
     public abstract void unregisterCloudPlayer(@NotNull UUID uuid, @NotNull String name);
 
-    public abstract void updateCloudPlayer(@NotNull CloudPlayer cloudPlayer);
+    public abstract void updateCloudPlayer(@NotNull ICloudPlayer cloudPlayer);
 
-    public abstract CloudPlayer constructPlayer(@NotNull UUID uniqueId, @NotNull String name);
+    public abstract ICloudPlayer constructPlayer(@NotNull UUID uniqueId, @NotNull String name);
 
     @Override
-    public @NotNull List<CloudPlayer> getAllCachedCloudPlayers() {
-        return Arrays.asList(this.cachedCloudPlayers.values().toArray(new CloudPlayer[0]));
+    public @NotNull List<ICloudPlayer> getAllCachedCloudPlayers() {
+        return Arrays.asList(this.cachedCloudPlayers.values().toArray(new ICloudPlayer[0]));
     }
 
     @Override
-    public @NotNull Optional<CloudPlayer> getCloudPlayer(final @NotNull UUID uniqueId) {
+    public @NotNull Optional<ICloudPlayer> getCloudPlayer(final @NotNull UUID uniqueId) {
         return Optional.ofNullable(this.cachedCloudPlayers.get(uniqueId));
     }
 
     @Override
-    public @NotNull Optional<CloudPlayer> getCloudPlayer(final @NotNull String username) {
+    public @NotNull Optional<ICloudPlayer> getCloudPlayer(final @NotNull String username) {
         return this.cachedCloudPlayers.values().stream().filter(it -> it.getName().equalsIgnoreCase(username)).findAny();
     }
 
     @Override
-    public CloudPlayer getCloudPlayerByNameOrNull(@NotNull String username) {
+    public ICloudPlayer getCloudPlayerByNameOrNull(@NotNull String username) {
         return this.getCloudPlayer(username).orElse(null);
     }
 
     @Override
-    public CloudPlayer getCloudPlayerByUniqueIdOrNull(@NotNull UUID uniqueId) {
+    public ICloudPlayer getCloudPlayerByUniqueIdOrNull(@NotNull UUID uniqueId) {
         return this.getCloudPlayer(uniqueId).orElse(null);
     }
 

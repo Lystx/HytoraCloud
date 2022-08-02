@@ -427,20 +427,14 @@ public class SimpleTask<T> implements Task<T> {
 
     @Override
     public <V> Task<V> map(Function<T, V> mapper) {
-        Task<V> task = Task.empty();
-        if (this.isNull()) {
-            return task;
-        }
-        task = Task.build(mapper.apply(this.heldValue));
-        Task<V> finalTask = task;
-        this.registerListener(new Consumer<Task<T>>() {
-            @Override
-            public void accept(Task<T> tTask) {
-                if (tTask.isSuccess()) {
-                    finalTask.setResult((V) tTask.get());
-                } else {
-                    finalTask.setFailure(tTask.error());
-                }
+        Task<V> task = Task.build(this.heldValue == null ? null : mapper.apply(this.heldValue));
+        if (isDone()) return task;
+
+        this.registerListener(tTask -> {
+            if (tTask.isSuccess()) {
+                task.setResult(mapper.apply(this.heldValue));
+            } else {
+                task.setFailure(tTask.error());
             }
         });
         return task;

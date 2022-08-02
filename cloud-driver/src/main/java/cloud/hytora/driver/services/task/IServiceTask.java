@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 
-public interface ServiceTask extends IBufferObject, IPlaceHolderObject, IPropertyObject, ICloneableObject<ServiceTask> {
+public interface IServiceTask extends IBufferObject, IPlaceHolderObject, IPropertyObject, ICloneableObject<IServiceTask> {
 
     ConfigurableService configureFutureService();
 

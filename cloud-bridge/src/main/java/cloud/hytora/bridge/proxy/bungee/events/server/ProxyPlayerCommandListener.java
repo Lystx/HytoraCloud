@@ -1,14 +1,12 @@
 package cloud.hytora.bridge.proxy.bungee.events.server;
 
 import cloud.hytora.document.Bundle;
-import cloud.hytora.document.IEntry;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandObject;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.networking.packets.player.CloudPlayerExecuteCommandPacket;
-import cloud.hytora.driver.player.CloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.storage.DriverStorage;
-import com.google.gson.reflect.TypeToken;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ChatEvent;
 import net.md_5.bungee.api.plugin.Listener;
@@ -16,7 +14,7 @@ import net.md_5.bungee.event.EventHandler;
 
 import java.util.List;
 
-public class ProxyCommandListener implements Listener {
+public class ProxyPlayerCommandListener implements Listener {
 
 
     @EventHandler
@@ -24,7 +22,7 @@ public class ProxyCommandListener implements Listener {
         if (event.isCommand() || event.isProxyCommand()) {
 
             ProxiedPlayer proxiedPlayer = (ProxiedPlayer)event.getSender();
-            CloudPlayer cloudPlayer = CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(proxiedPlayer.getUniqueId());
+            ICloudPlayer cloudPlayer = CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(proxiedPlayer.getUniqueId());
 
             if (cloudPlayer == null) {
                 proxiedPlayer.sendMessage("ERROR");

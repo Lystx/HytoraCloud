@@ -24,6 +24,11 @@ public interface BufferedResponse {
     PacketBuffer buffer();
 
     /**
+     * The error if occurred
+     */
+    Throwable error();
+
+    /**
      * The uuid of this response
      */
     UUID uniqueId();

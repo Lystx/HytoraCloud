@@ -14,22 +14,22 @@ import java.util.UUID;
 
 public interface PlayerManager {
 
-    @NotNull List<CloudPlayer> getAllCachedCloudPlayers();
+    @NotNull List<ICloudPlayer> getAllCachedCloudPlayers();
 
 
-    void setAllCachedCloudPlayers(List<CloudPlayer> allCachedCloudPlayers);
-
-    @NotNull
-    Optional<CloudPlayer> getCloudPlayer(@NotNull UUID uniqueId);
+    void setAllCachedCloudPlayers(List<ICloudPlayer> allCachedCloudPlayers);
 
     @NotNull
-    Optional<CloudPlayer> getCloudPlayer(@NotNull String username);
+    Optional<ICloudPlayer> getCloudPlayer(@NotNull UUID uniqueId);
+
+    @NotNull
+    Optional<ICloudPlayer> getCloudPlayer(@NotNull String username);
 
     @Nullable
-    CloudPlayer getCloudPlayerByUniqueIdOrNull(@NotNull UUID uniqueId);
+    ICloudPlayer getCloudPlayerByUniqueIdOrNull(@NotNull UUID uniqueId);
 
     @Nullable
-    CloudPlayer getCloudPlayerByNameOrNull(@NotNull String username);
+    ICloudPlayer getCloudPlayerByNameOrNull(@NotNull String username);
 
     @NotNull
     Task<Collection<CloudOfflinePlayer>> getAllOfflinePlayersAsync();
@@ -79,7 +79,7 @@ public interface PlayerManager {
      *
      * @param cloudPlayer the unique id of the player
      */
-    void updateCloudPlayer(@NotNull CloudPlayer cloudPlayer);
+    void updateCloudPlayer(@NotNull ICloudPlayer cloudPlayer);
 
     /**
      * unregisters a cloud player

@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public interface CloudPlayer extends CloudOfflinePlayer, PlayerCommandSender, ICloneableObject<CloudPlayer> {
+public interface ICloudPlayer extends CloudOfflinePlayer, PlayerCommandSender, ICloneableObject<ICloudPlayer> {
 
     /**
      * The current Proxy-Server this player is currently on

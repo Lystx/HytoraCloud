@@ -418,7 +418,27 @@ public abstract class DefaultCommandManager implements CommandManager {
 
                 sender.sendMessage("§8");
                 sender.sendMessage("Help for Command '" + annotation.value()[0] + "':");
-                for (RegisteredCommand registeredCommand : CloudDriver.getInstance().getCommandManager().getCommands().stream().filter(c -> Arrays.asList(c.getNames()).stream().anyMatch(s -> Arrays.asList(annotation.value()).contains(s))).collect(Collectors.toList())) {
+                List<RegisteredCommand> registeredCommands = CloudDriver.getInstance()
+                        .getCommandManager().getCommands()
+                        .stream()
+                        .filter(
+                                c -> Arrays.stream(c.getNames())
+                                        .anyMatch(
+                                                s -> Arrays.asList(annotation.value())
+                                                        .contains(s)
+                                        )
+                        ).collect(Collectors.toList());
+
+
+                registeredCommands.sort(new Comparator<RegisteredCommand>() {
+                    @Override
+                    public int compare(RegisteredCommand o1, RegisteredCommand o2) {
+                        // -1 = less , 0 = equal , 1 = higher
+
+                        return o1.getPath().compareTo(o2.getPath());
+                    }
+                });
+                for (RegisteredCommand registeredCommand : registeredCommands) {
                     if (registeredCommand.getPath().trim().isEmpty() || !registeredCommand.getScope().covers(sender)) {
                         continue;
                     }

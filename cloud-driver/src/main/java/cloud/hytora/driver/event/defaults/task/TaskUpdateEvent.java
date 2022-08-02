@@ -4,7 +4,7 @@ import cloud.hytora.driver.event.ProtocolTansferableEvent;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.services.task.DefaultServiceTask;
-import cloud.hytora.driver.services.task.ServiceTask;
+import cloud.hytora.driver.services.task.IServiceTask;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,7 +17,7 @@ import java.io.IOException;
 @NoArgsConstructor
 public class TaskUpdateEvent implements ProtocolTansferableEvent {
 
-    private ServiceTask task;
+    private IServiceTask task;
 
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
