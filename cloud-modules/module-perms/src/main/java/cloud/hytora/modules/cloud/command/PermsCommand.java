@@ -408,14 +408,6 @@ public class PermsCommand {
         if (time <= 0) {
             sender.sendMessage("§cPlease provide a time that is bigger than 0!");
         }
-
-        PermissionManager pm = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class);
-
-
-        PermissionPlayer permissionPlayer = pm.getPlayerByNameOrNull("Lystx");
-
-        permissionPlayer.remov(group, TimeUnit.DAYS, 30);
-        permissionPlayer.update();
         try {
             TimeUnit timeUnit = TimeUnit.valueOf(unit);
 
