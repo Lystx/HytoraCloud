@@ -118,7 +118,7 @@ public class NodeDriver extends CloudDriver<INode> {
     private final Console console;
     private final CommandManager commandManager;
     private final CommandSender commandSender;
-    private final DriverStorage storage;
+    private DriverStorage storage;
 
     private INode node;
 
@@ -173,10 +173,6 @@ public class NodeDriver extends CloudDriver<INode> {
 
         this.logger.setMinLevel(this.configManager.getConfig().getLogLevel());
         this.logger.debug("Set LogLevel to {}", this.logger.getMinLevel().getName());
-
-        //storage managing
-        this.storage = new NodeDriverStorage();
-        this.storage.fetch();
 
         //loading console
         this.console.addInputHandler(s -> CloudDriver.getInstance().getCommandManager().executeCommand(CloudDriver.getInstance().getCommandSender(), s));
@@ -280,11 +276,9 @@ public class NodeDriver extends CloudDriver<INode> {
             this.logger.info("This Node is a SubNode and will now connect to all provided Nodes in Cluster...");
             ProtocolAddress[] clusterAddresses = node.getConfig().getClusterAddresses();
             for (ProtocolAddress address : clusterAddresses) {
-                this.executor.connectToOtherNode(address.getAuthKey(), node.getConfig().getNodeName(), address.getHost(), address.getPort(), DocumentFactory.emptyDocument()).registerListener(b -> {
-                    if (b.isSuccess()) {
-                        this.logger.info("Successfully connected to §a" + address);
-                    }
-                });
+                if (this.executor.connectToOtherNode(address.getAuthKey(), node.getConfig().getNodeName(), address.getHost(), address.getPort(), DocumentFactory.emptyDocument()).syncUninterruptedly().get()) {
+                    this.logger.info("Successfully connected to §a" + address);
+                }
             }
         } else {
             this.logger.info("§7This Node is a HeadNode §7and boots up the Cluster...");
@@ -320,11 +314,6 @@ public class NodeDriver extends CloudDriver<INode> {
         this.moduleManager = new NodeModuleManager();
         this.logger.info("§8");
 
-        //managing and loading modules
-        this.moduleManager.setModulesDirectory(MODULE_FOLDER.toPath());
-        this.moduleManager.resolveModules();
-        this.moduleManager.loadModules();
-
         //checking if directories got deleted meanwhile
         for (TaskGroup parent : this.serviceTaskManager.getAllTaskGroups()) {
 
@@ -346,6 +335,10 @@ public class NodeDriver extends CloudDriver<INode> {
         this.logger.trace("§7Copying files§8...");
         FileUtils.copyResource("/impl/plugin.jar", STORAGE_VERSIONS_FOLDER + "/plugin.jar", getClass());
         FileUtils.copyResource("/impl/remote.jar", STORAGE_VERSIONS_FOLDER + "/remote.jar", getClass());
+
+        //storage managing
+        this.storage = new NodeDriverStorage();
+        this.storage.fetch();
 
         this.logger.trace("Registering Commands & ArgumentParsers...");
         this.commandManager.registerCommand(new ShutdownCommand());
@@ -397,6 +390,11 @@ public class NodeDriver extends CloudDriver<INode> {
         TimeOutChecker check = new TimeOutChecker();
         scheduledExecutor.scheduleAtFixedRate(check, 1, 1, TimeUnit.SECONDS);
 
+        //managing and loading modules
+        this.moduleManager.setModulesDirectory(MODULE_FOLDER.toPath());
+        this.moduleManager.resolveModules();
+        this.moduleManager.loadModules();
+
         //enabling modules after having loaded the database
         this.moduleManager.enableModules();
 
@@ -436,22 +434,6 @@ public class NodeDriver extends CloudDriver<INode> {
         return this.node;
     }
 
-    public void reload() {
-        logger.info("Reloading..");
-
-        logger.info("Loading translations..");
-
-
-        // TODO send files to other nodes on reload
-        logger.info("Reloading modules..");
-        moduleManager.disableModules();
-        moduleManager.unregisterModules();
-        moduleManager.resolveModules();
-        moduleManager.loadModules();
-        moduleManager.enableModules();
-
-        logger.info("Reloading complete");
-    }
 
     private void initConfigs(NodeSetup setup, MySqlSetup mySqlSetup, MongoDBSetup mongoDBSetup) throws IOException {
         MainConfiguration config = configManager.getConfig();

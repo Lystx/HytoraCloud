@@ -2,6 +2,7 @@ package cloud.hytora.driver.command.sender.defaults;
 
 import cloud.hytora.driver.player.CloudPlayer;
 import cloud.hytora.driver.command.sender.PlayerCommandSender;
+import cloud.hytora.driver.player.executor.PlayerExecutor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -16,13 +17,13 @@ public class DefaultPlayerCommandSender implements PlayerCommandSender {
 
 	@Override
 	public void sendMessage(@Nonnull String message) {
-		// TODO: 11.04.2022  send messages to player
+		PlayerExecutor.forPlayer(player).sendMessage(message);
 	}
 
 
 	@Override
 	public boolean hasPermission(@Nonnull String permission) {
-		return false;
+		return player.hasPermission(permission);
 	}
 
 	@Nonnull

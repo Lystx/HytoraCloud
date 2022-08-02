@@ -12,7 +12,7 @@ public class V1StatusRouter {
 
 	@HttpEndpoint(method = HttpMethod.GET)
 	public void getIndex(@Nonnull HttpContext context) {
-		CloudDriver driver = CloudDriver.getInstance();
+		CloudDriver<?> driver = CloudDriver.getInstance();
 
 		context.getResponse()
 			.setHeader("Content-Type", "application/json")

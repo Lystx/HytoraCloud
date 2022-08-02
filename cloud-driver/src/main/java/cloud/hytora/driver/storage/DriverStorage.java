@@ -2,6 +2,7 @@ package cloud.hytora.driver.storage;
 
 
 
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Bundle;
 import cloud.hytora.document.Document;
 
@@ -47,4 +48,6 @@ public interface DriverStorage {
 	 * Fetches the data
 	 */
 	void fetch();
+
+	Task<Document> fetchAsync();
 }

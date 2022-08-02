@@ -168,7 +168,9 @@ public abstract class Setup<T extends Setup<?>> {
     @SuppressWarnings("unchecked")
     private void exit(boolean success) {
         ScreenManager unchecked = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
-        getSetupScreen().setHistory(this.cachedCommandHistory);
+        if (getSetupScreen() != null) {
+            getSetupScreen().setHistory(this.cachedCommandHistory);
+        }
 
 
         unchecked.leaveCurrentScreen();

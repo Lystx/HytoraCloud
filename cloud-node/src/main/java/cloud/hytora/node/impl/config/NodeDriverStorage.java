@@ -1,6 +1,7 @@
 package cloud.hytora.node.impl.config;
 
 import cloud.hytora.common.logging.Logger;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.networking.packets.StorageUpdatePacket;
@@ -39,5 +40,13 @@ public class NodeDriverStorage implements DriverStorage {
 	public void fetch() {
 		rawData = DocumentFactory.newJsonDocument();
 		Logger.constantInstance().trace("DriverStorage is now set up!");
+	}
+
+	@Override
+	public Task<Document> fetchAsync() {
+		return Task.callAsync(() -> {
+			fetch();
+			return rawData;
+		});
 	}
 }

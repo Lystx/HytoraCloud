@@ -347,7 +347,7 @@ public abstract class DefaultCommandManager implements CommandManager {
                     if (dynamicArg) {
                         RegisteredCommandArgument argument = command.getArgument(currentPathArg.replace("<", "").replace(">", ""));
                         if (args.length <= a + argument.getWords()) {
-                            if (argument.isOptional()) continue command; // TODO: 25.02.2022 check
+                            if (argument.isOptional()) continue command;
                         }
                         String[] valueArray = Arrays.copyOfRange(args, a, a + argument.getWords());
                         String value = StringUtils.getArrayAsString(valueArray, " ");
