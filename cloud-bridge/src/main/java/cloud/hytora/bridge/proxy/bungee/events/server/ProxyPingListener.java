@@ -1,7 +1,7 @@
 package cloud.hytora.bridge.proxy.bungee.events.server;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.component.ChatColor;
+import cloud.hytora.driver.component.style.ComponentColor;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.ServicePingProperties;
 import cloud.hytora.remote.Remote;
@@ -38,7 +38,7 @@ public class ProxyPingListener implements Listener {
         String[] playerInfo = pingProperties.getPlayerInfo();
         ServerPing.PlayerInfo[] info = new ServerPing.PlayerInfo[playerInfo.length];
         for (int i = 0; i < playerInfo.length; i++) {
-            info[i] = new ServerPing.PlayerInfo(ChatColor.translateAlternateColorCodes('&', playerInfo[i]), UUID.randomUUID());
+            info[i] = new ServerPing.PlayerInfo(ComponentColor.translateAlternateColorCodes('&', playerInfo[i]), UUID.randomUUID());
         }
 
         //player values
@@ -56,12 +56,12 @@ public class ProxyPingListener implements Listener {
         }
 
         //motd
-        response.setDescriptionComponent(new TextComponent(ChatColor.translateAlternateColorCodes('&', pingProperties.getMotd())));
+        response.setDescriptionComponent(new TextComponent(ComponentColor.translateAlternateColorCodes('&', pingProperties.getMotd())));
 
         //protocol text
         String versionText = pingProperties.getVersionText();
         if (versionText != null && !versionText.trim().isEmpty()) {
-            response.setVersion(new ServerPing.Protocol(ChatColor.translateAlternateColorCodes('&', versionText), -1));
+            response.setVersion(new ServerPing.Protocol(ComponentColor.translateAlternateColorCodes('&', versionText), -1));
         }
 
         event.setResponse(response);

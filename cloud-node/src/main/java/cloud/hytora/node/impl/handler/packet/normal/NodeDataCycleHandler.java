@@ -2,11 +2,10 @@ package cloud.hytora.node.impl.handler.packet.normal;
 
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.networking.packets.node.NodeCycleDataPacket;
+import cloud.hytora.driver.node.packet.NodeCycleDataPacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.node.INode;
-import cloud.hytora.driver.node.data.DefaultNodeData;
 import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.node.data.INodeData;
 

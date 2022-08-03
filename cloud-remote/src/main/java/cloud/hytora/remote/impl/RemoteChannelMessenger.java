@@ -4,7 +4,7 @@ import cloud.hytora.driver.message.ChannelMessage;
 import cloud.hytora.driver.message.DefaultChannelMessenger;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
-import cloud.hytora.driver.networking.packets.message.ChannelMessageExecutePacket;
+import cloud.hytora.driver.message.packet.ChannelMessageExecutePacket;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.networking.protocol.wrapped.ChanneledPacketAction;

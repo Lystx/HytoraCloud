@@ -2,25 +2,29 @@ package cloud.hytora.bridge.proxy.bungee.events.cloud;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.common.CloudMessages;
-import cloud.hytora.driver.component.ChatComponent;
+import cloud.hytora.driver.component.Component;
+import cloud.hytora.driver.component.SimpleComponent;
+import cloud.hytora.driver.component.event.ComponentEvent;
+import cloud.hytora.driver.component.event.click.ClickEvent;
+import cloud.hytora.driver.component.event.hover.HoverEvent;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.driver.DriverCacheUpdateEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 
 import cloud.hytora.driver.event.defaults.task.TaskMaintenanceChangeEvent;
-import cloud.hytora.driver.networking.packets.player.*;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
+import cloud.hytora.driver.player.packet.*;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.remote.Remote;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
-import net.md_5.bungee.chat.ComponentSerializer;
 
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -147,7 +151,37 @@ public class ProxyRemoteHandler {
         }
     }
 
-    private static class ComponentHandler implements PacketHandler<CloudPlayerComponentMessagePacket> {
+
+    /**
+     * Creates a {@link TextComponent} from a {@link SimpleComponent}
+     *
+     * @param chatComponent the cloudComponent
+     * @return built md5 textComponent
+     */
+    private TextComponent createTextComponentFromCloudRecursive(SimpleComponent chatComponent) {
+        TextComponent textComponent = new TextComponent(chatComponent.getContent());
+        ComponentEvent<ClickEvent> clickEvent = chatComponent.getClickEvent();
+        if (clickEvent != null) {
+            textComponent.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.valueOf(clickEvent.getType().name()), clickEvent.getValue()));
+        }
+        ComponentEvent<HoverEvent> hoverEvent = chatComponent.getHoverEvent();
+        if (hoverEvent != null) {
+            textComponent.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.valueOf(hoverEvent.getType().name()), new BaseComponent[]{new TextComponent(hoverEvent.getValue())}));
+        }
+        for (Component cloudComponent : chatComponent.getSubComponents()) {
+            textComponent.addExtra(createTextComponentFromCloudRecursive((SimpleComponent) cloudComponent));
+        }
+
+        textComponent.setBold(chatComponent.isBold());
+        textComponent.setItalic(chatComponent.isItalic());
+        textComponent.setStrikethrough(chatComponent.isStrikeThrough());
+        textComponent.setObfuscated(chatComponent.isObfuscated());
+        textComponent.setUnderlined(chatComponent.isUnderlined());
+
+        return textComponent;
+    }
+
+    private class ComponentHandler implements PacketHandler<CloudPlayerComponentMessagePacket> {
 
         @Override
         public void handle(PacketChannel wrapper, CloudPlayerComponentMessagePacket packet) {
@@ -155,9 +189,9 @@ public class ProxyRemoteHandler {
             if (player == null) {
                 return;
             }
-            ChatComponent message = packet.getMessage();
+            Component message = packet.getMessage();
 
-            player.sendMessage(ComponentSerializer.parse(message.toString()));
+            player.sendMessage(ProxyRemoteHandler.this.createTextComponentFromCloudRecursive((SimpleComponent) message));
         }
     }
 

@@ -46,7 +46,7 @@ import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.PacketProvider;
 import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
-import cloud.hytora.driver.networking.packets.node.NodeCycleDataPacket;
+import cloud.hytora.driver.node.packet.NodeCycleDataPacket;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 
 import cloud.hytora.driver.node.INode;

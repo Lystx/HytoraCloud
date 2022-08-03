@@ -3,7 +3,7 @@ package cloud.hytora.node.impl.handler.packet.normal;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.module.controller.base.ModuleConfig;
-import cloud.hytora.driver.networking.packets.module.RemoteModuleControllerPacket;
+import cloud.hytora.driver.module.packet.RemoteModuleControllerPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;

@@ -4,7 +4,7 @@ import cloud.hytora.common.logging.Logger;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.command.sender.ConsoleCommandSender;
-import cloud.hytora.driver.component.ChatColor;
+import cloud.hytora.driver.component.style.ComponentColor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +29,7 @@ public class DefaultCommandSender implements ConsoleCommandSender {
     @Override
     public void sendMessage(@NotNull String message) {
         if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
-            message = ChatColor.translateAlternateColorCodes('§', message);
+            message = ComponentColor.translateColorCodes('§', message);
         }
         if (messageSending != null) {
             messageSending.accept(message);

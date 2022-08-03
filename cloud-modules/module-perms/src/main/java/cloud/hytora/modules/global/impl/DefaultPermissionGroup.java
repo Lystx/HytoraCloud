@@ -249,7 +249,7 @@ public class DefaultPermissionGroup implements PermissionGroup {
     }
 
     @Override
-    public boolean hasPermission(Permission permission) { //
+    public boolean hasPermission(Permission permission) {
 
         if (permission.hasExpired()) { //permission has expired ==> removing it and updating
             this.removePermission(permission);

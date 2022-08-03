@@ -19,7 +19,7 @@ public abstract class DefaultPermissionManager implements PermissionManager {
 
     @Override
     public boolean hasPermission(UUID playerUniqueId, String permission) {
-        return getPlayerAsyncByUniqueId(playerUniqueId).mapOrElse(p -> p.hasPermission(permission), () -> false);
+        return getPlayerAsyncByUniqueId(playerUniqueId).mapOrElse(p -> p.hasPermission("*") || p.hasPermission(permission), () -> false);
     }
 
     @NotNull

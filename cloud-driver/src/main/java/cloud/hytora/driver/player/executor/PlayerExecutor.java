@@ -4,7 +4,7 @@ import cloud.hytora.common.function.ExceptionallyConsumer;
 import cloud.hytora.common.function.ExceptionallyRunnable;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.component.ChatComponent;
+import cloud.hytora.driver.component.Component;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.services.ICloudServer;
 
@@ -28,7 +28,7 @@ public interface PlayerExecutor {
 
     void sendMessage(String message);
 
-    void sendMessage(ChatComponent component);
+    void sendMessage(Component component);
 
     void setTabList(String header, String footer);
 

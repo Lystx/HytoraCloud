@@ -1,9 +1,9 @@
 package cloud.hytora.driver.player.executor;
 
-import cloud.hytora.driver.component.ChatComponent;
-import cloud.hytora.driver.networking.packets.player.*;
+import cloud.hytora.driver.component.Component;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.player.ICloudPlayer;
+import cloud.hytora.driver.player.packet.*;
 import cloud.hytora.driver.services.ICloudServer;
 import lombok.AllArgsConstructor;
 
@@ -25,7 +25,7 @@ public class CloudPlayerExecutor implements PlayerExecutor {
     }
 
     @Override
-    public void sendMessage(ChatComponent component) {
+    public void sendMessage(Component component) {
         this.sendPacketToProxy(new CloudPlayerComponentMessagePacket(getExecutorUniqueId(), component));
     }
 

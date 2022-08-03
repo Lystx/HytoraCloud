@@ -2,7 +2,7 @@ package cloud.hytora.driver.message;
 
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
-import cloud.hytora.driver.networking.packets.message.ChannelMessageExecutePacket;
+import cloud.hytora.driver.message.packet.ChannelMessageExecutePacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import lombok.Getter;
 

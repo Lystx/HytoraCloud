@@ -149,7 +149,7 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
     public boolean testPerms() {
         int sizeBefore = permissions.size();
         for (String permission : permissions.keySet()) {
-            Permission dp = getPermissionOrNull(permission);
+            Permission dp = Permission.of(permission, permissions.get(permission));
             if (dp.hasExpired()) {
                 permissions.remove(permission);
             }
@@ -200,11 +200,6 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
             }
             return false;
         }
-        if (perm.hasExpired()) { //permission has expired ==> removing it and updating
-            this.removePermission(perm);
-            this.update();
-            return false;
-        }
         return true;
     }
 
@@ -212,11 +207,6 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
     public boolean hasPermission(Permission permission) {
 
         this.checkForExpiredValues();
-        if (permission.hasExpired()) { //permission has expired ==> removing it and updating
-            this.removePermission(permission);
-            this.update();
-            return false;
-        }
         if (this.getPermission(permission.getPermission()).isPresent()) {
             return true;
         } else {

@@ -4,9 +4,15 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.sender.CommandSender;
+import cloud.hytora.driver.component.Component;
+import cloud.hytora.driver.component.event.ComponentEvent;
+import cloud.hytora.driver.component.event.click.ClickAction;
+import cloud.hytora.driver.component.event.hover.HoverAction;
+import cloud.hytora.driver.component.style.ComponentStyle;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;
+import cloud.hytora.driver.player.executor.PlayerExecutor;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -66,6 +72,7 @@ public class PlayerCommand {
             ICloudPlayer onlinePlayer = player.asOnlinePlayer();
             sender.sendMessage("§bProxy: §7" + onlinePlayer.getProxyServer());
             sender.sendMessage("§bServer: §7" + onlinePlayer.getServer());
+
         }
         sender.sendMessage("§8");
     }

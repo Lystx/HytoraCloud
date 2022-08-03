@@ -1,7 +1,7 @@
 package cloud.hytora.driver.player.executor;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.component.ChatComponent;
+import cloud.hytora.driver.component.Component;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.services.ICloudServer;
 
@@ -25,7 +25,7 @@ public class GlobalPlayerExecutor implements PlayerExecutor {
     }
 
     @Override
-    public void sendMessage(ChatComponent component) {
+    public void sendMessage(Component component) {
         for (ICloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
             PlayerExecutor.forPlayer(player).sendMessage(component);
         }

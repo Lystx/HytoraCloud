@@ -4,7 +4,7 @@ import cloud.hytora.document.Bundle;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandObject;
 import cloud.hytora.driver.command.CommandScope;
-import cloud.hytora.driver.networking.packets.player.CloudPlayerExecuteCommandPacket;
+import cloud.hytora.driver.player.packet.CloudPlayerExecuteCommandPacket;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.storage.DriverStorage;
 import net.md_5.bungee.api.connection.ProxiedPlayer;

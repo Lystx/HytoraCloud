@@ -6,7 +6,7 @@ import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.EventManager;
 import cloud.hytora.driver.event.defaults.player.CloudPlayerUpdateEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
-import cloud.hytora.driver.networking.packets.player.CloudPlayerUpdatePacket;
+import cloud.hytora.driver.player.packet.CloudPlayerUpdatePacket;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;

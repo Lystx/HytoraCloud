@@ -1,26 +1,21 @@
-
 package cloud.hytora.driver.component.event.hover;
 
-/**
- * Represents an action done upon hovering over text.
- *
- * @author Lystx
- * @since 0.5-alpha
- */
-
 public enum HoverAction {
+
     /**
-     * Shows text, or a ChatComponent
+     * Shows a text
      */
     SHOW_TEXT,
 
     /**
-     * Shows an achievement
+     * Shows an item
      */
-    SHOW_ACHIEVEMENT,
+    @Deprecated
+    SHOW_ITEM,
 
     /**
-     * Shows an item's metadata
+     * Shows an entity
      */
-    SHOW_ITEM
+    @Deprecated
+    SHOW_ENTITY,
 }

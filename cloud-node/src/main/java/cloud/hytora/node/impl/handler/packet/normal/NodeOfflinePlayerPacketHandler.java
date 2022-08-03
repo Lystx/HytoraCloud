@@ -1,6 +1,6 @@
 package cloud.hytora.node.impl.handler.packet.normal;
 
-import cloud.hytora.driver.networking.packets.player.OfflinePlayerRequestPacket;
+import cloud.hytora.driver.player.packet.OfflinePlayerRequestPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;

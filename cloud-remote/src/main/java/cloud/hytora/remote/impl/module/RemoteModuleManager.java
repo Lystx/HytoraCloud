@@ -2,7 +2,7 @@ package cloud.hytora.remote.impl.module;
 
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.ModuleManager;
-import cloud.hytora.driver.networking.packets.module.RemoteModuleExecutionPacket;
+import cloud.hytora.driver.module.packet.RemoteModuleExecutionPacket;
 import cloud.hytora.remote.Remote;
 import org.jetbrains.annotations.NotNull;
 

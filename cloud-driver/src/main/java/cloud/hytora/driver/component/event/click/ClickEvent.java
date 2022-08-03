@@ -1,84 +1,24 @@
-
 package cloud.hytora.driver.component.event.click;
 
-import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
-import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
-import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
-import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.jetbrains.annotations.NotNull;
+import cloud.hytora.driver.component.event.ComponentEvent;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-import java.io.IOException;
-
-@Data
-@NoArgsConstructor
-public class ClickEvent implements IBufferObject {
+@AllArgsConstructor @Getter
+public class ClickEvent implements ComponentEvent<ClickEvent> {
 
     /**
-     * The action that triggers this click event
+     * The action (e.g. open url)
      */
-    private ClickAction action;
+    private final ClickAction type;
 
     /**
-     * The value of the click
+     * The value provided for the type
      */
-    private String value;
-
-    /**
-     * Creates a new click event with the given action and
-     * value.
-     *
-     * @param action the action that triggered the event
-     * @param value the text value
-     */
-    private ClickEvent(ClickAction action, String value) {
-        this.action = action;
-        this.value = value;
-    }
-
-    /**
-     * Creates a click action with the given action and text.
-     *
-     * @param action The action.
-     * @param text The text.
-     * @return The click action event.
-     */
-    public static ClickEvent of(ClickAction action, String text) {
-        return new ClickEvent(action, text);
-    }
-
-    /**
-     * Parses a click event from the given JSON.
-     *
-     * @param json The JSON.
-     * @return The click event.
-     */
-    public static ClickEvent fromJson(Document json) {
-        return of(ClickAction.valueOf(json.getString("action").toUpperCase()), json.getString("value"));
-    }
-
-    /**
-     * Gets this action performance as JSON, for transmission.
-     *
-     * @return The JSON.
-     */
-    public Document asJson() {
-        Document obj = DocumentFactory.newJsonDocument();
-        obj.set("action", this.action.name().toLowerCase());
-        obj.set("value", this.value);
-        return obj;
-    }
+    private final String value;
 
     @Override
-    public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
-        if (state == BufferState.READ) {
-            this.action = buf.readEnum(ClickAction.class);
-            this.value = buf.readString();
-        } else {
-            buf.writeEnum(this.action);
-            buf.writeString(this.value);
-        }
+    public ClickEvent copy() {
+        return new ClickEvent(type, value);
     }
 }

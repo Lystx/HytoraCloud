@@ -12,7 +12,7 @@ import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.module.controller.base.ModuleConfig;
 import cloud.hytora.driver.module.controller.base.ModuleState;
-import cloud.hytora.driver.networking.packets.module.RemoteModuleControllerPacket;
+import cloud.hytora.driver.module.packet.RemoteModuleControllerPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import lombok.Getter;
