@@ -16,7 +16,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
@@ -58,27 +57,29 @@ public abstract class DefaultServiceManager implements ServiceManager {
     }
 
     @Override
-    public List<String> getScreenOutput(ICloudServer service) {
-        return new ArrayList<>();
+    public ICloudServer getServiceByNameOrNull(@NotNull String name) {
+        return this.allCachedServices.stream().filter(s -> s.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
     }
 
     @Override
-    public @NotNull Optional<ICloudServer> getService(@NotNull String name) {
-        return this.getAllCachedServices().stream().filter(it -> it.getName().equals(name)).findAny();
+    public @NotNull Task<ICloudServer> getServiceByNameOrNullAsync(@NotNull String name) {
+        return Task.callAsync(() -> {
+           return this.allCachedServices.stream().filter(s -> s.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
+        });
     }
 
 
     public void updateServerInternally(ICloudServer service) {
-        Optional<ICloudServer> server = this.getService(service.getName());
+        Task<ICloudServer> server = this.getServiceByNameOrNullAsync(service.getName());
         if (server.isPresent()) {
 
-            DriverServiceObject serviceInfo = (DriverServiceObject) server.get();
+            UniversalCloudServer serviceInfo = (UniversalCloudServer) server.get();
 
             Process process = serviceInfo.getProcess();
             File workingDirectory = serviceInfo.getWorkingDirectory();
 
-            ((DriverServiceObject)service).setProcess(process);
-            ((DriverServiceObject)service).setWorkingDirectory(workingDirectory);
+            ((UniversalCloudServer)service).setProcess(process);
+            ((UniversalCloudServer)service).setWorkingDirectory(workingDirectory);
 
             int i = allCachedServices.indexOf(serviceInfo);
             allCachedServices.set(i, service);

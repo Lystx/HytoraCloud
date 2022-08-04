@@ -4,7 +4,7 @@ import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.services.ICloudServer;
-import cloud.hytora.driver.services.impl.DriverServiceObject;
+import cloud.hytora.driver.services.impl.UniversalCloudServer;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,7 +27,7 @@ public class NodeRequestServerStartPacket extends AbstractPacket {
         switch (state) {
 
             case READ:
-                server = buf.readObject(DriverServiceObject.class);
+                server = buf.readObject(UniversalCloudServer.class);
                 demandsResponse = buf.readBoolean();
                 break;
 

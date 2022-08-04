@@ -1,12 +1,11 @@
 package cloud.hytora.driver.services.impl;
 
 import cloud.hytora.common.misc.StringUtils;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
-import cloud.hytora.driver.exception.IncompatibleDriverEnvironment;
 import cloud.hytora.driver.services.packet.ServiceCommandPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
@@ -36,9 +35,9 @@ import java.util.function.Consumer;
 @Getter
 @NoArgsConstructor
 @Setter
-public class DriverServiceObject implements IProcessCloudServer, IBufferObject {
+public class UniversalCloudServer implements IProcessCloudServer, IBufferObject {
 
-    private IServiceTask task;
+    private String task;
     private int serviceID;
 
     private String runningNodeName;
@@ -64,21 +63,24 @@ public class DriverServiceObject implements IProcessCloudServer, IBufferObject {
     private DefaultPingProperties pingProperties;
     private IServiceCycleData lastCycleData;
 
-    public DriverServiceObject(String group, int id, int port, String hostname) {
-        this.task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(group);
+    public UniversalCloudServer(String taskName, int id, int port, String hostname) {
+        this.task = taskName;
+
+        IServiceTask serviceTask = getTask();
+
         this.serviceID = id;
         this.port = port;
         this.hostName = hostname;
-        this.motd = task == null ? "Default Motd" : task.getMotd();
-        this.maxPlayers = task == null ? 10 : task.getDefaultMaxPlayers();
+        this.motd = task == null ? "Default Motd" : serviceTask.getMotd();
+        this.maxPlayers = task == null ? 10 : serviceTask.getDefaultMaxPlayers();
 
         this.creationTimestamp = System.currentTimeMillis();
         this.properties = DocumentFactory.newJsonDocument();
         this.uniqueId = UUID.randomUUID();
-        this.runningNodeName = task.findAnyNode() == null ? "UNKNOWN": task.findAnyNode().getName();
+        this.runningNodeName = serviceTask.findAnyNode() == null ? "UNKNOWN": serviceTask.findAnyNode().getName();
 
         this.pingProperties = new DefaultPingProperties();
-        this.pingProperties.setMotd(task.getMotd());
+        this.pingProperties.setMotd(this.motd);
         this.pingProperties.setUsePlayerPropertiesOfService(true);
         this.pingProperties.setCombineAllProxiesIfProxyService(true);
         this.pingProperties.setPlayerInfo(new String[0]);
@@ -88,17 +90,9 @@ public class DriverServiceObject implements IProcessCloudServer, IBufferObject {
 
     @Override
     public @NotNull String getName() {
-        if (this.task == null) {
-            return "UNKNOWN" + "-" + this.serviceID;
-        }
-        return this.task.getName() + "-" + this.serviceID;
+        return this.task + "-" + this.serviceID;
     }
 
-    @Override
-    public IProcessCloudServer asCloudServer() throws IncompatibleDriverEnvironment {
-        IncompatibleDriverEnvironment.throwIfNeeded(DriverEnvironment.NODE);
-        return this;
-    }
 
     @Override
     public void deploy(ServiceDeployment... deployments) {
@@ -116,14 +110,24 @@ public class DriverServiceObject implements IProcessCloudServer, IBufferObject {
     }
 
     @Override
-    public void shutdown() {
-        CloudDriver.getInstance().getServiceManager().shutdownService(this);
+    public IServiceTask getTask() {
+        return CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(this.task);
     }
 
     @Override
-    public void edit(@NotNull Consumer<ICloudServer> serviceConsumer) {
-        serviceConsumer.accept(this);
-        this.update();
+    public Task<IServiceTask> getTaskAsync() {
+        return CloudDriver.getInstance().getServiceTaskManager().getTaskByNameAsync(this.task);
+    }
+
+    @Override
+    public boolean isRegisteredAsFallback() {
+        if (getTask() == null) return false;
+        return !getTask().getVersion().isProxy() && getTask().getFallback().isEnabled();
+    }
+
+    @Override
+    public void shutdown() {
+        CloudDriver.getInstance().getServiceManager().shutdownService(this);
     }
 
     @Override
@@ -140,7 +144,7 @@ public class DriverServiceObject implements IProcessCloudServer, IBufferObject {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        DriverServiceObject that = (DriverServiceObject) o;
+        UniversalCloudServer that = (UniversalCloudServer) o;
 
         if (this.serviceID != that.serviceID || this.port != that.port) {
             return false;
@@ -160,7 +164,7 @@ public class DriverServiceObject implements IProcessCloudServer, IBufferObject {
     @Override
     public void setReady(boolean ready) {
         if (!this.ready && ready) { //if not ready yet but parameter is true
-            CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceReadyEvent(this));
+            CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceReadyEvent(this.getName()));
         }
         this.ready = ready;
     }
@@ -237,7 +241,7 @@ public class DriverServiceObject implements IProcessCloudServer, IBufferObject {
         input = input.replace("{server.uptimeDif}", String.valueOf(System.currentTimeMillis() - this.getCreationTimestamp()));
         input = input.replace("{server.properties}", this.getProperties().asRawJsonString());
 
-        return task.replacePlaceHolders(input);
+        return getTask().replacePlaceHolders(input);
     }
 
     @Override
@@ -248,7 +252,7 @@ public class DriverServiceObject implements IProcessCloudServer, IBufferObject {
             case READ:
                 this.uniqueId = buf.readUniqueId();
                 this.runningNodeName = buf.readString();
-                this.task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(buf.readString());
+                this.task = buf.readString();
                 this.hostName = buf.readString();
                 this.motd = buf.readString();
 
@@ -272,7 +276,7 @@ public class DriverServiceObject implements IProcessCloudServer, IBufferObject {
                 buf.writeUniqueId(this.getUniqueId());
                 buf.writeString(this.getRunningNodeName());
 
-                buf.writeString(this.getTask().getName());
+                buf.writeString(this.task);
                 buf.writeString(this.getHostName());
                 buf.writeString(this.getMotd());
 
@@ -295,6 +299,6 @@ public class DriverServiceObject implements IProcessCloudServer, IBufferObject {
 
     @Override
     public String getMainIdentity() {
-        return null;
+        return uniqueId.toString();
     }
 }

@@ -8,7 +8,7 @@ import cloud.hytora.driver.console.ScreenManager;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.controller.base.ModuleConfig;
 import cloud.hytora.driver.module.controller.base.ModuleCopyType;
-import cloud.hytora.driver.services.impl.DriverServiceObject;
+import cloud.hytora.driver.services.impl.UniversalCloudServer;
 import cloud.hytora.driver.services.task.TaskDownloadEntry;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
@@ -141,7 +141,7 @@ public class CloudServerProcessWorker {
 
         Process process = result.getProcess();
 
-        DriverServiceObject serviceInfo = (DriverServiceObject)service;
+        UniversalCloudServer serviceInfo = (UniversalCloudServer)service;
         serviceInfo.setProcess(process);
         serviceInfo.setWorkingDirectory(folder);
 

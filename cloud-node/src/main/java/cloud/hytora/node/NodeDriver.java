@@ -613,7 +613,7 @@ public class NodeDriver extends CloudDriver<INode> {
 
             //shutting down servers
             for (ICloudServer service : new ArrayList<>(this.serviceManager.getAllCachedServices())) {
-                IProcessCloudServer cloudServer = service.asCloudServer();
+                IProcessCloudServer cloudServer = ((IProcessCloudServer) service);
                 Process process = cloudServer.getProcess();
                 if (process != null) {
                     process.destroyForcibly();

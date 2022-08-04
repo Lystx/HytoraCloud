@@ -5,7 +5,7 @@ import cloud.hytora.driver.event.ProtocolTansferableEvent;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.services.ICloudServer;
-import cloud.hytora.driver.services.impl.DriverServiceObject;
+import cloud.hytora.driver.services.impl.UniversalCloudServer;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,7 +36,7 @@ public class ServiceRegisterEvent implements ProtocolTansferableEvent {
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
         switch (state) {
             case READ:
-                ICloudServer = buf.readObject(DriverServiceObject.class);
+                ICloudServer = buf.readObject(UniversalCloudServer.class);
                 break;
             case WRITE:
                 buf.writeObject(ICloudServer);

@@ -4,7 +4,6 @@ import cloud.hytora.common.function.BiSupplier;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.Console;
 import cloud.hytora.driver.setup.Setup;
-import cloud.hytora.driver.setup.SetupHeaderBehaviour;
 import cloud.hytora.driver.setup.annotations.Question;
 import lombok.Getter;
 
@@ -48,7 +47,7 @@ public class MongoDBSetup extends Setup<MongoDBSetup> {
 
         @Override
         public Boolean supply(String name) {
-            return CloudDriver.getInstance().getServiceTaskManager().getTaskByName(name).isPresent();
+            return CloudDriver.getInstance().getServiceTaskManager().getTaskByNameAsync(name).isPresent();
         }
     }
 }

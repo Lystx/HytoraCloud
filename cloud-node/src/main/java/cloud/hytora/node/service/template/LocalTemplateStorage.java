@@ -111,7 +111,7 @@ public class LocalTemplateStorage implements TemplateStorage {
             return;
         }
 
-        IProcessCloudServer nodeCloudServer = server.asCloudServer();
+        IProcessCloudServer nodeCloudServer = (IProcessCloudServer) server;
         ServiceTemplate template = deployment.getTemplate();
 
         if (template != null && template.getStorage() != null && template.getPrefix() != null && template.getName() != null) {

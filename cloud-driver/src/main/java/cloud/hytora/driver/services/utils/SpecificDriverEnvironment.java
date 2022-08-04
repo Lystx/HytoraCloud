@@ -6,7 +6,6 @@ public enum SpecificDriverEnvironment {
     UNKNOWN,
 
     PROXY,
-
     MINECRAFT
 
 }

@@ -3,9 +3,8 @@ package cloud.hytora.driver.services.packet;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.node.base.AbstractNode;
 import cloud.hytora.driver.services.ICloudServer;
-import cloud.hytora.driver.services.impl.DriverServiceObject;
+import cloud.hytora.driver.services.impl.UniversalCloudServer;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,7 +26,7 @@ public class ServiceStartPacket extends AbstractPacket {
                 buf.writeObject(cloudServer);
                 break;
             case READ:
-                cloudServer = buf.readObject(DriverServiceObject.class);
+                cloudServer = buf.readObject(UniversalCloudServer.class);
                 break;
         }
     }

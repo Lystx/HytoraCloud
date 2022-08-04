@@ -342,6 +342,10 @@ public enum ServiceVersion {
         return this.environment == SpecificDriverEnvironment.PROXY;
     }
 
+    public boolean isMinecraft() {
+        return this.environment != SpecificDriverEnvironment.PROXY;
+    }
+
     public String getJar() {
         return this.title + (!this.version.equalsIgnoreCase("latest") ? "-" + this.version : "") + ".jar";
     }

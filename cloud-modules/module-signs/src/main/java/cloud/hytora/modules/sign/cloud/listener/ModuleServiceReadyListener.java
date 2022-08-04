@@ -1,0 +1,20 @@
+package cloud.hytora.modules.sign.cloud.listener;
+
+import cloud.hytora.driver.event.EventListener;
+import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
+import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.modules.sign.api.CloudSignAPI;
+
+public class ModuleServiceReadyListener {
+
+    @EventListener
+    public void handle(ServiceReadyEvent event) {
+        event.getCloudServerAsync()
+                .onTaskSucess(cloudServer -> {
+                   if (cloudServer.isRegisteredAsFallback()) {
+                       CloudSignAPI.getInstance().getSignManager().update();
+                       CloudSignAPI.getInstance().publishConfiguration();
+                   }
+                });
+    }
+}

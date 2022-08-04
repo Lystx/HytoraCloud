@@ -1,6 +1,8 @@
-package cloud.hytora.modules.sign.api;
+package cloud.hytora.modules.sign.spigot.manager;
 
 
+import cloud.hytora.modules.sign.api.ICloudSign;
+import cloud.hytora.modules.sign.api.def.UniversalCloudSign;
 import lombok.Getter;
 
 import java.util.Collection;
@@ -23,12 +25,12 @@ import java.util.Map;
  *
  * It's simple to understand the logic of this
  * To sort the Signs in the SignSelector in Bukkit
- * the Signs in the {@link CloudSignGroup} are already
+ * the Signs in the {@link BukkitCloudSignGroup} are already
  * declared with an ID to iterate through all the signs
  * easily
  */
 @Getter
-public class CloudSignGroup {
+public class BukkitCloudSignGroup {
 
     /**
      * The name of the sign group
@@ -38,21 +40,21 @@ public class CloudSignGroup {
     /**
      * The cloud signs stored in cache
      */
-    private Map<Integer, CloudSign> cloudSigns;
+    private Map<Integer, ICloudSign> cloudSigns;
 
-    public CloudSignGroup(String name) {
+    public BukkitCloudSignGroup(String name) {
         this.name = name;
         this.cloudSigns = new HashMap<>();
     }
 
-    public CloudSignGroup(String name, Collection<CloudSign> cloudSigns) {
+    public BukkitCloudSignGroup(String name, Collection<ICloudSign> cloudSigns) {
         this.name = name;
         this.cloudSigns = new HashMap<>();
 
-        Map<Integer, CloudSign> map = new HashMap<>();
+        Map<Integer, ICloudSign> map = new HashMap<>();
         int count = 1;
-        for (CloudSign cloudSign : cloudSigns) {
-            if (cloudSign.getTask().equalsIgnoreCase(name)) {
+        for (ICloudSign cloudSign : cloudSigns) {
+            if (cloudSign.getTaskName().equalsIgnoreCase(name)) {
                 map.put(count, cloudSign);
                 count++;
             }
@@ -65,7 +67,7 @@ public class CloudSignGroup {
      *
      * @param cloudSigns the cloudSigns
      */
-    public void setCloudSigns(Map<Integer, CloudSign> cloudSigns) {
+    public void setCloudSigns(Map<Integer, ICloudSign> cloudSigns) {
         this.cloudSigns = cloudSigns;
     }
 

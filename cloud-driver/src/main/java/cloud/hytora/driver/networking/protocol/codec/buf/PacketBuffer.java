@@ -1,6 +1,8 @@
 package cloud.hytora.driver.networking.protocol.codec.buf;
 
 import cloud.hytora.common.function.BiSupplier;
+import cloud.hytora.common.location.ModifiableLocation;
+import cloud.hytora.common.location.impl.DefaultLocation;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 
@@ -24,7 +26,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-// TODO: 01.03.2022 documentation
+// TODO: 01.03.2022 documentation and recode
 public interface PacketBuffer {
 
 
@@ -150,6 +152,18 @@ public interface PacketBuffer {
 	<K, V> PacketBuffer writeMap(Map<K,V> map, BiConsumer<PacketBuffer, K> keySupplier, BiConsumer<PacketBuffer, V> valueSupplier);
 
 
+	default ModifiableLocation<Integer> readLocation() {
+		return new DefaultLocation<>(readInt(), readInt(), readInt(), readString());
+	}
+
+	default PacketBuffer writeLocation(ModifiableLocation<Integer> location) {
+		writeInt(location.getX());
+		writeInt(location.getY());
+		writeInt(location.getZ());
+		writeString(location.getWorld());
+		return this;
+	}
+
 
 	@Nonnull
 	PacketBuffer writeString(@Nonnull String string);
@@ -180,6 +194,9 @@ public interface PacketBuffer {
 
 	@Nonnull
 	UUID readUniqueId();
+
+
+
 
 	default PacketBuffer append(@Nullable Consumer<? super PacketBuffer> handler) {
 		if (handler == null) {

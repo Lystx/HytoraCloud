@@ -32,7 +32,7 @@ public class ModuleListener {
 
     @EventListener
     public void handleReady(ServiceReadyEvent event) {
-        ICloudServer ICloudServer = event.getICloudServer();
+        ICloudServer ICloudServer = event.getCloudServer();
         if (ICloudServer == null) {
             return;
         }

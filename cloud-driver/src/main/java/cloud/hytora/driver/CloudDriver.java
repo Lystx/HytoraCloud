@@ -13,7 +13,7 @@ import cloud.hytora.driver.http.api.HttpRequest;
 import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.message.ChannelMessage;
 import cloud.hytora.driver.message.ChannelMessenger;
-import cloud.hytora.driver.module.Module;
+import cloud.hytora.driver.module.IModule;
 import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
@@ -332,7 +332,7 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
 
     /**
      * The current {@link ModuleManager} instance where
-     * you can manage every {@link Module}
+     * you can manage every {@link IModule}
      * @see ModuleManager
      */
     @Nonnull

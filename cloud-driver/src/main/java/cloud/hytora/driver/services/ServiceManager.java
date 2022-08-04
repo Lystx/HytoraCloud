@@ -13,9 +13,9 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
+// TODO: 04.08.2022 rework documentation
 public interface ServiceManager {
 
     /**
@@ -92,14 +92,9 @@ public interface ServiceManager {
     }
 
     @NotNull
-    Optional<ICloudServer> getService(@NotNull String name);
+    Task<ICloudServer> getServiceByNameOrNullAsync(@NotNull String name);
 
-    @Nullable
-    default ICloudServer getServiceByNameOrNull(@NotNull String name) {
-        return this.getService(name).orElse(null);
-    }
-
-    List<String> getScreenOutput(ICloudServer service);
+    ICloudServer getServiceByNameOrNull(@NotNull String name);
 
     Task<ICloudServer> startService(@NotNull ICloudServer service);
 

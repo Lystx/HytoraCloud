@@ -1,5 +1,7 @@
 package cloud.hytora.driver.services;
 
+import cloud.hytora.common.identification.ModifiableUUIDHolder;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.common.IClusterObject;
@@ -19,26 +21,26 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public interface ICloudServer extends IClusterObject<ICloudServer>, NetworkComponent, IPacketExecutor {
-
-    IProcessCloudServer asCloudServer() throws IncompatibleDriverEnvironment;
+// TODO: 04.08.2022 documentation
+public interface ICloudServer extends IClusterObject<ICloudServer>, NetworkComponent, IPacketExecutor, ModifiableUUIDHolder {
 
     IServiceCycleData getLastCycleData();
+
+    boolean isRegisteredAsFallback();
+
+    ServicePingProperties getPingProperties();
+
+    Document getProperties();
+
+    void setProperties(Document properties);
+
+    void editPingProperties(Consumer<ServicePingProperties> ping);
 
     void setLastCycleData(IServiceCycleData data);
 
     String getRunningNodeName();
 
     void setRunningNodeName(String name);
-
-    UUID getUniqueId();
-
-    void setUniqueId(UUID uniqueId);
-
-    ServicePingProperties getPingProperties();
-
-    void editPingProperties(Consumer<ServicePingProperties> ping);
-
 
     void deploy(ServiceDeployment... deployments);
 
@@ -71,6 +73,8 @@ public interface ICloudServer extends IClusterObject<ICloudServer>, NetworkCompo
      * @return the group of the service
      */
     IServiceTask getTask();
+
+    Task<IServiceTask> getTaskAsync();
 
     /**
      * @return the state of the service
@@ -139,14 +143,6 @@ public interface ICloudServer extends IClusterObject<ICloudServer>, NetworkCompo
         return this.getOnlinePlayerCount() >= this.getMaxPlayers();
     }
 
-
-    /**
-     * edits the properties of the service and update then
-     *
-     * @param serviceConsumer the consumer to change the properties
-     */
-    void edit(@NotNull Consumer<ICloudServer> serviceConsumer);
-
     String getMotd();
 
     void setMotd(String motd);
@@ -157,7 +153,4 @@ public interface ICloudServer extends IClusterObject<ICloudServer>, NetworkCompo
 
     long getCreationTimestamp();
 
-    Document getProperties();
-
-    void setProperties(Document properties);
 }

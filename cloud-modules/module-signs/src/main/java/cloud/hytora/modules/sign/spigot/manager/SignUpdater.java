@@ -6,13 +6,14 @@ import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
-import cloud.hytora.modules.sign.api.CloudSign;
-import cloud.hytora.modules.sign.api.CloudSignGroup;
+import cloud.hytora.modules.sign.api.ICloudSign;
+import cloud.hytora.modules.sign.api.def.UniversalCloudSign;
+import cloud.hytora.modules.sign.api.CloudSignAPI;
 import cloud.hytora.modules.sign.api.config.SignAnimation;
 import cloud.hytora.modules.sign.api.config.SignConfiguration;
 import cloud.hytora.modules.sign.api.config.SignKnockbackConfig;
 import cloud.hytora.modules.sign.api.config.SignLayout;
-import cloud.hytora.modules.sign.spigot.BukkitCloudSignsPlugin;
+import cloud.hytora.modules.sign.spigot.BukkitBootstrap;
 import lombok.Getter;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -21,26 +22,20 @@ import org.bukkit.block.Sign;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
-import java.io.IOException;
 import java.util.*;
 
 @Getter
 public class SignUpdater implements Runnable {
 
     /**
-     * The signManager instance
-     */
-    private final SignManager plugin;
-
-    /**
      * All free signs
      */
-    private final Map<String , Map<Integer, CloudSign>> freeSigns;
+    private final Map<String , Map<Integer, ICloudSign>> freeSigns;
 
     /**
      * The cache services
      */
-    private final Map<CloudSign, String> serviceMap;
+    private final Map<ICloudSign, String> serviceMap;
 
     /**
      * Scheduler stuff
@@ -48,8 +43,7 @@ public class SignUpdater implements Runnable {
     private int animationsTick = 0;
     private int animationScheduler;
 
-    public SignUpdater(SignManager plugin) {
-        this.plugin = plugin;
+    public SignUpdater() {
         this.freeSigns = new HashMap<>();
         this.serviceMap = new HashMap<>();
 
@@ -62,14 +56,14 @@ public class SignUpdater implements Runnable {
      */
     @Override
     public void run() {
-        long repeat = plugin.getConfiguration().getLoadingLayout().getRepeatingTick();
+        long repeat = CloudSignAPI.getInstance().getSignConfiguration().getLoadingLayout().getRepeatingTick();
         if (animationScheduler != 0) {
             Bukkit.getScheduler().cancelTask(this.animationScheduler);
         }
-        this.animationScheduler = Bukkit.getScheduler().scheduleSyncRepeatingTask(BukkitCloudSignsPlugin.getInstance(), () -> {
+        this.animationScheduler = Bukkit.getScheduler().scheduleSyncRepeatingTask(BukkitBootstrap.getInstance(), () -> {
 
             try {
-                SignConfiguration configuration = BukkitCloudSignsPlugin.getInstance().getSignManager().getConfiguration();
+                SignConfiguration configuration = CloudSignAPI.getInstance().getSignConfiguration();
 
                 freeSigns.clear();
                 serviceMap.clear();
@@ -90,20 +84,20 @@ public class SignUpdater implements Runnable {
                 e.printStackTrace();
             }
 
-            SignConfiguration configuration = BukkitCloudSignsPlugin.getInstance().getSignManager().getConfiguration();
+            SignConfiguration configuration = CloudSignAPI.getInstance().getSignConfiguration();
             SignKnockbackConfig knockBackConfig = configuration.getKnockBackConfig();
             if (!knockBackConfig.isEnabled()) {
                 return;
             }
             double strength = knockBackConfig.getStrength();
             double distance = knockBackConfig.getDistance();
-            Bukkit.getScheduler().runTask(BukkitCloudSignsPlugin.getInstance(), () -> {
-                for (CloudSign sign : BukkitCloudSignsPlugin.getInstance().getSignManager().getCloudSigns()) {
-                    World world = Bukkit.getWorld(sign.getWorld());
+            Bukkit.getScheduler().runTask(BukkitBootstrap.getInstance(), () -> {
+                for (ICloudSign sign : CloudSignAPI.getInstance().getSignManager().getAllCachedCloudSigns()) {
+                    World world = Bukkit.getWorld(sign.getLocation().getWorld());
                     if (world == null) {
                         return;
                     }
-                    Location location = new Location(world, sign.getX(), sign.getY(), sign.getZ());
+                    Location location = new Location(world, sign.getLocation().getX(), sign.getLocation().getY(), sign.getLocation().getZ());
                     for (Entity entity : location.getWorld().getNearbyEntities(location, distance, distance, distance)) {
                         if (entity instanceof Player && !entity.hasPermission(knockBackConfig.getByPassPermission()) && location.getBlock().getState() instanceof Sign) {
                             entity.setVelocity(new org.bukkit.util.Vector(entity.getLocation().getX() - location.getX(), entity.getLocation().getY() - location.getY(), entity.getLocation().getZ() - location.getZ()).normalize().multiply(strength).setY(0.2D));
@@ -125,36 +119,36 @@ public class SignUpdater implements Runnable {
         }
 
         Task.runAsync(() -> {
-            CloudSignGroup signGroup = new CloudSignGroup(current.getTask().getName(), BukkitCloudSignsPlugin.getInstance().getSignManager().getCloudSigns());
-            Map<Integer, CloudSign> signs = signGroup.getCloudSigns();
-            CloudSign cloudSign = signs.get(current.getServiceID());
+            BukkitCloudSignGroup signGroup = new BukkitCloudSignGroup(current.getTask().getName(), CloudSignAPI.getInstance().getSignManager().getAllCachedCloudSigns());
+            Map<Integer, ICloudSign> signs = signGroup.getCloudSigns();
+            ICloudSign cloudSign = signs.get(current.getServiceID());
 
             this.serviceMap.put(cloudSign, current.getName());
 
             if (this.freeSigns.containsKey(current.getTask().getName())) {
-                Map<Integer, CloudSign> onlineSigns = this.freeSigns.get(current.getTask().getName());
+                Map<Integer, ICloudSign> onlineSigns = this.freeSigns.get(current.getTask().getName());
                 onlineSigns.put(current.getServiceID(), cloudSign);
                 this.freeSigns.replace(current.getTask().getName(), onlineSigns);
             } else {
-                Map<Integer, CloudSign> onlineSins = new HashMap<>();
-                onlineSins.put(current.getServiceID(), cloudSign);
-                this.freeSigns.put(current.getTask().getName(), onlineSins);
+                Map<Integer, ICloudSign> onlineSigns = new HashMap<>();
+                onlineSigns.put(current.getServiceID(), cloudSign);
+                this.freeSigns.put(current.getTask().getName(), onlineSigns);
             }
 
             //Sets offline signs for current group
-            Bukkit.getScheduler().runTask(BukkitCloudSignsPlugin.getInstance(), () -> {
+            Bukkit.getScheduler().runTask(BukkitBootstrap.getInstance(), () -> {
 
                 String group = current.getTask().getName();
-                Collection<CloudSign> offlineSigns = this.getOfflineSigns(group);
+                Collection<ICloudSign> offlineSigns = this.getOfflineSigns(group);
 
-                for (CloudSign sign : offlineSigns) {
+                for (ICloudSign sign : offlineSigns) {
                     try {
 
-                        Location bukkitLocation = new Location(Bukkit.getWorld(sign.getWorld()), sign.getX(), sign.getY(), sign.getZ());
-                        if (!bukkitLocation.getWorld().getName().equalsIgnoreCase(sign.getWorld())) {
+                        Location bukkitLocation = new Location(Bukkit.getWorld(sign.getLocation().getWorld()), sign.getLocation().getX(), sign.getLocation().getY(), sign.getLocation().getZ());
+                        if (!bukkitLocation.getWorld().getName().equalsIgnoreCase(sign.getLocation().getWorld())) {
                             return;
                         }
-                        Block blockAt = Bukkit.getServer().getWorld(sign.getWorld()).getBlockAt(bukkitLocation);
+                        Block blockAt = Bukkit.getServer().getWorld(sign.getLocation().getWorld()).getBlockAt(bukkitLocation);
 
                         if (!blockAt.getType().equals(Material.WALL_SIGN) || blockAt.getType().equals(Material.AIR)) {
                             return;
@@ -166,9 +160,9 @@ public class SignUpdater implements Runnable {
                             return;
                         }
 
-                        SignAnimation loadingLayout = BukkitCloudSignsPlugin.getInstance().getSignManager().getConfiguration().getLoadingLayout();
+                        SignAnimation loadingLayout = CloudSignAPI.getInstance().getSignConfiguration().getLoadingLayout();
                         SignLayout signLayout;
-                        if (animationsTick >= BukkitCloudSignsPlugin.getInstance().getSignManager().getConfiguration().getLoadingLayout().size()) {
+                        if (animationsTick >= CloudSignAPI.getInstance().getSignConfiguration().getLoadingLayout().size()) {
                             animationsTick = 0;
                             signLayout = loadingLayout.get(0);
                         } else {
@@ -178,7 +172,7 @@ public class SignUpdater implements Runnable {
                             bukkitSign.setLine(i, ChatColor.translateAlternateColorCodes('&', current.getTask().replacePlaceHolders(signLayout.getLines()[i])));
                         }
                         bukkitSign.update(true);
-                        Bukkit.getScheduler().runTask(BukkitCloudSignsPlugin.getInstance(), () -> this.setBlock(signLayout, bukkitSign.getLocation(), null));
+                        Bukkit.getScheduler().runTask(BukkitBootstrap.getInstance(), () -> this.setBlock(signLayout, bukkitSign.getLocation(), null));
                     } catch (NullPointerException e) {
                         e.printStackTrace();
                     }
@@ -186,13 +180,13 @@ public class SignUpdater implements Runnable {
 
                 if (cloudSign != null) {
                     try {
-                        Location bukkitLocation = new Location(Bukkit.getWorld(cloudSign.getWorld()), cloudSign.getX(), cloudSign.getY(), cloudSign.getZ());
+                        Location bukkitLocation = new Location(Bukkit.getWorld(cloudSign.getLocation().getWorld()), cloudSign.getLocation().getX(), cloudSign.getLocation().getY(), cloudSign.getLocation().getZ());
 
-                        if (!bukkitLocation.getWorld().getName().equalsIgnoreCase(cloudSign.getWorld())) {
+                        if (!bukkitLocation.getWorld().getName().equalsIgnoreCase(cloudSign.getLocation().getWorld())) {
                             return;
                         }
 
-                        Block blockAt = Bukkit.getServer().getWorld(cloudSign.getWorld()).getBlockAt(bukkitLocation);
+                        Block blockAt = Bukkit.getServer().getWorld(cloudSign.getLocation().getWorld()).getBlockAt(bukkitLocation);
                         if (!blockAt.getType().equals(Material.WALL_SIGN)) {
                             return;
                         }
@@ -216,9 +210,9 @@ public class SignUpdater implements Runnable {
      * @param name the name of the group
      * @return list
      */
-    public Collection<CloudSign> getOfflineSigns(String name) {
+    public Collection<ICloudSign> getOfflineSigns(String name) {
 
-        Set<Integer> allSigns = new CloudSignGroup(name, BukkitCloudSignsPlugin.getInstance().getSignManager().getCloudSigns()).getCloudSigns().keySet();
+        Set<Integer> allSigns = new BukkitCloudSignGroup(name, CloudSignAPI.getInstance().getSignManager().getAllCachedCloudSigns()).getCloudSigns().keySet();
         Set<Integer> onlineSigns = freeSigns.get(name).keySet();
 
         if (onlineSigns.size() == allSigns.size()) {
@@ -228,10 +222,10 @@ public class SignUpdater implements Runnable {
                 allSigns.remove(onlineSign);
             }
 
-            Collection<CloudSign> offlineSigns = new ArrayList<>();
+            Collection<ICloudSign> offlineSigns = new ArrayList<>();
             for (Integer count : allSigns) {
-                CloudSign sign = new CloudSignGroup(name, BukkitCloudSignsPlugin.getInstance().getSignManager().getCloudSigns()).getCloudSigns().get(count);
-                ICloudServer s = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(sign.getTask() + "-" + count);
+                ICloudSign sign = new BukkitCloudSignGroup(name, CloudSignAPI.getInstance().getSignManager().getAllCachedCloudSigns()).getCloudSigns().get(count);
+                ICloudServer s = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(sign.getTaskName() + "-" + count);
                 if (s == null || s.getServiceVisibility().equals(ServiceVisibility.INVISIBLE) || s.getServiceState().equals(ServiceState.STOPPING)) {
                     offlineSigns.add(sign);
                 }
@@ -253,16 +247,16 @@ public class SignUpdater implements Runnable {
         SignLayout signLayout;
         ServiceState state;
         if (service.getTask().isMaintenance()) {
-            signLayout = BukkitCloudSignsPlugin.getInstance().getSignManager().getConfiguration().getMaintenanceLayout();
+            signLayout = CloudSignAPI.getInstance().getSignConfiguration().getMaintenanceLayout();
             state = service.getServiceState();
         } else if (service.getServiceState().equals(ServiceState.STARTING)) {
-            signLayout = BukkitCloudSignsPlugin.getInstance().getSignManager().getConfiguration().getStartingLayOut();
+            signLayout = CloudSignAPI.getInstance().getSignConfiguration().getStartingLayOut();
             state = ServiceState.STARTING;
         } else if (service.getOnlinePlayerCount() >= service.getMaxPlayers()) {
-            signLayout = BukkitCloudSignsPlugin.getInstance().getSignManager().getConfiguration().getFullLayout();
+            signLayout = CloudSignAPI.getInstance().getSignConfiguration().getFullLayout();
             state = service.getServiceState();
         } else {
-            signLayout = BukkitCloudSignsPlugin.getInstance().getSignManager().getConfiguration().getOnlineLayout();
+            signLayout = CloudSignAPI.getInstance().getSignConfiguration().getOnlineLayout();
             state = ServiceState.ONLINE;
         }
 
@@ -271,7 +265,7 @@ public class SignUpdater implements Runnable {
             sign.setLine(i, ChatColor.translateAlternateColorCodes('&', service.replacePlaceHolders(signLayout.getLines()[i])));
         }
         sign.update(true);
-        Bukkit.getScheduler().runTask(BukkitCloudSignsPlugin.getInstance(), () ->  this.setBlock(signLayout, sign.getLocation(), state));
+        Bukkit.getScheduler().runTask(BukkitBootstrap.getInstance(), () ->  this.setBlock(signLayout, sign.getLocation(), state));
     }
 
 
@@ -304,33 +298,29 @@ public class SignUpdater implements Runnable {
                 block.setData((byte) layout.getSubId());
             } catch (Exception e) {
                 block.setType(Material.STAINED_CLAY);
-                block.setData(getBlockId(state));
+                block.setData((byte) 14);
+                e.printStackTrace();
             }
         }
     }
 
-    private byte getBlockId(ServiceState state) {
-        switch (state) {
-            case ONLINE:
-                return 4;
-            case PREPARED:
-                return 3;
-            case STOPPING:
-                return 5;
-            case STARTING:
-                return 2;
-            default:
-                return 1; //null state => offline
-        }
-    }
 
     /**
-     * Filters for a {@link CloudSign} by bukkit-location
+     * Filters for a {@link UniversalCloudSign} by bukkit-location
      *
      * @param location the location
      * @return sign or null
      */
-    public CloudSign getCloudSign(Location location) {
-        return BukkitCloudSignsPlugin.getInstance().getSignManager().getCloudSigns().stream().filter(cloudSign -> cloudSign.getX() == location.getBlockX() && cloudSign.getY() == location.getBlockY() && cloudSign.getZ() == location.getBlockZ() && cloudSign.getWorld().equalsIgnoreCase(location.getWorld().getName())).findFirst().orElse(null);
+    public ICloudSign getCloudSign(Location location) {
+        return CloudSignAPI.getInstance()
+                .getSignManager()
+                .getAllCachedCloudSigns()
+                .stream()
+                .filter(cloudSign -> cloudSign.getLocation().getX() == location.getBlockX())
+                .filter(cloudSign -> cloudSign.getLocation().getY() == location.getBlockY())
+                .filter(cloudSign -> cloudSign.getLocation().getZ() == location.getBlockZ())
+                .filter(cloudSign -> cloudSign.getLocation().getWorld().equalsIgnoreCase(location.getWorld().getName()))
+                .findFirst()
+                .orElse(null);
     }
 }

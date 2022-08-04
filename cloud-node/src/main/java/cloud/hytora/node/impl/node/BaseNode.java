@@ -2,6 +2,7 @@ package cloud.hytora.node.impl.node;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.services.IProcessCloudServer;
 import cloud.hytora.driver.services.packet.ServiceForceShutdownPacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.networking.protocol.packets.NetworkResponseState;
@@ -72,7 +73,7 @@ public class BaseNode extends AbstractNode {
     public void stopServer(ICloudServer server) {
         server.sendPacket(new ServiceForceShutdownPacket(server.getName()));
         Task.runTaskLater(() -> {
-            Process process = server.asCloudServer().getProcess();
+            Process process = ((IProcessCloudServer)server).getProcess();
             if (process == null) {
                 return;
             }

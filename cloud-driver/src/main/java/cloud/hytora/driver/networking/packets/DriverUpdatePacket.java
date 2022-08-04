@@ -17,7 +17,7 @@ import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.task.bundle.DefaultTaskGroup;
-import cloud.hytora.driver.services.impl.DriverServiceObject;
+import cloud.hytora.driver.services.impl.UniversalCloudServer;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
@@ -68,7 +68,7 @@ public class DriverUpdatePacket extends AbstractPacket {
                 groups = buf.readWrapperObjectCollection(DefaultServiceTask.class);
                 CloudDriver.getInstance().getServiceTaskManager().setAllCachedTasks(groups);
 
-                allCachedServices = buf.readWrapperObjectCollection(DriverServiceObject.class);
+                allCachedServices = buf.readWrapperObjectCollection(UniversalCloudServer.class);
                 CloudDriver.getInstance().getServiceManager().setAllCachedServices((List<ICloudServer>) allCachedServices);
 
                 cloudPlayers = buf.readWrapperObjectCollection(DefaultCloudPlayer.class);

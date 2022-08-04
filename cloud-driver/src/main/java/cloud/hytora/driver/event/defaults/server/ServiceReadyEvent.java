@@ -1,11 +1,12 @@
 package cloud.hytora.driver.event.defaults.server;
 
+import cloud.hytora.common.task.Task;
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.CloudEvent;
 import cloud.hytora.driver.event.ProtocolTansferableEvent;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.services.ICloudServer;
-import cloud.hytora.driver.services.impl.DriverServiceObject;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,17 +30,25 @@ public class ServiceReadyEvent implements ProtocolTansferableEvent {
     /**
      * The server that is now ready
      */
-    private ICloudServer ICloudServer;
+    private String name;
 
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
         switch (state) {
             case READ:
-                ICloudServer = buf.readObject(DriverServiceObject.class);
+                name = buf.readString();
                 break;
             case WRITE:
-                buf.writeObject(ICloudServer);
+                buf.writeString(name);
                 break;
         }
+    }
+
+    public ICloudServer getCloudServer() {
+        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(this.name);
+    }
+
+    public Task<ICloudServer> getCloudServerAsync() {
+        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNullAsync(this.name);
     }
 }

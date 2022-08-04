@@ -1,5 +1,6 @@
 package cloud.hytora.driver.services.task;
 
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+// TODO: 04.08.2022 documentation and remove Optionals (Tasks)
 public interface ServiceTaskManager {
 
     Collection<TaskGroup> getAllTaskGroups();
@@ -35,12 +37,14 @@ public interface ServiceTaskManager {
 
     void removeTask(@NotNull IServiceTask task);
 
-    default @NotNull Optional<IServiceTask> getTaskByName(@NotNull String name) {
-        return this.getAllCachedTasks().stream().filter(it -> it.getName().equalsIgnoreCase(name)).findAny();
+    default @NotNull Task<IServiceTask> getTaskByNameAsync(@NotNull String name) {
+        return Task.callAsync(() -> {
+            return this.getAllCachedTasks().stream().filter(it -> it.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
+        });
     }
 
     default @Nullable IServiceTask getTaskByNameOrNull(@NotNull String name) {
-        return this.getTaskByName(name).orElse(null);
+        return this.getTaskByNameAsync(name).orElse(null);
     }
 
     default @NotNull List<IServiceTask> getTasksByNode(@NotNull String node) {

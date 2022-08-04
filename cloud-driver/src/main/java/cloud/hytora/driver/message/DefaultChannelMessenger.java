@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 @Getter
 public abstract class DefaultChannelMessenger implements ChannelMessenger {
 
-    private final Map<String, Consumer<ChannelMessage>> cache;
+    private final Map<String, ChannelMessageListener> cache;
     protected final AdvancedNetworkExecutor executor;
 
     public DefaultChannelMessenger(AdvancedNetworkExecutor executor) {
@@ -27,14 +27,14 @@ public abstract class DefaultChannelMessenger implements ChannelMessenger {
             NetworkComponent[] receivers = message.getReceivers();
             if (receivers == null || Arrays.stream(receivers).anyMatch(r -> r.matches(executor))) {
                 String channel = message.getChannel();
-                Consumer<ChannelMessage> handler = cache.get(channel);
-                handler.accept(message);
+                ChannelMessageListener handler = cache.get(channel);
+                handler.handleIncoming(message);
             }
         });
     }
 
     @Override
-    public void registerChannel(String channel, Consumer<ChannelMessage> consumer) {
+    public void registerChannel(String channel, ChannelMessageListener consumer) {
         this.cache.put(channel, consumer);
     }
 

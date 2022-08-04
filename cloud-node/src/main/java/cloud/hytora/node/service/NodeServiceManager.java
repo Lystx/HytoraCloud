@@ -31,23 +31,13 @@ import java.util.*;
 public class NodeServiceManager extends DefaultServiceManager {
 
     /**
-     * All the process output from services stored by their name
-     */
-    private final Map<String, List<String>> cachedServiceOutputs;
-
-    /**
      * The worker to start service
      */
     private final CloudServerProcessWorker worker;
 
     public NodeServiceManager() {
-        this.cachedServiceOutputs = new HashMap<>();
-        this.worker = new CloudServerProcessWorker();
-    }
 
-    @Override
-    public List<String> getScreenOutput(ICloudServer service) {
-        return cachedServiceOutputs.getOrDefault(service.getName(), new ArrayList<>());
+        this.worker = new CloudServerProcessWorker();
     }
 
     @Override
@@ -57,7 +47,6 @@ public class NodeServiceManager extends DefaultServiceManager {
         ScreenManager screenManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
         screenManager.registerScreen(service.getName(), false);
 
-        this.cachedServiceOutputs.put(service.getName(), new ArrayList<>());
         CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceRegisterEvent(service));
     }
 
@@ -70,8 +59,6 @@ public class NodeServiceManager extends DefaultServiceManager {
 
         ScreenManager screenManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
         Screen screen = screenManager.getScreenByNameOrNull(service.getName());
-
-        this.cachedServiceOutputs.remove(service.getName());//removing cached screen
         IServiceTask con = service.getTask();
 
         File parent = (con.getTaskGroup().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);

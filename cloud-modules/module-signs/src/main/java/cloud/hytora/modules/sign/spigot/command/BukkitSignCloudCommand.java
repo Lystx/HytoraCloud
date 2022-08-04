@@ -1,16 +1,16 @@
 package cloud.hytora.modules.sign.spigot.command;
 
+import cloud.hytora.common.location.ModifiableLocation;
+import cloud.hytora.common.location.impl.DefaultLocation;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.message.ChannelMessage;
-import cloud.hytora.driver.message.DefaultChannelMessage;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
-import cloud.hytora.modules.sign.api.CloudSign;
-import cloud.hytora.modules.sign.api.protocol.SignProtocolType;
-import cloud.hytora.modules.sign.cloud.CloudSignsModule;
-import cloud.hytora.modules.sign.spigot.BukkitCloudSignsPlugin;
+import cloud.hytora.modules.sign.api.ICloudSign;
+import cloud.hytora.modules.sign.api.def.UniversalCloudSign;
+import cloud.hytora.modules.sign.api.CloudSignAPI;
+import cloud.hytora.modules.sign.spigot.BukkitCloudSignAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -19,16 +19,17 @@ import org.bukkit.block.Sign;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Command("sign")
 @CommandPermission("cloud.modules.sign.command.use")
 @CommandExecutionScope(CommandScope.INGAME)
 @CommandAutoHelp
-public class SignCommand {
-
+public class BukkitSignCloudCommand {
 
     @Command("create")
     @Syntax("<task>")
+    @CommandDescription("Creates a new cloudSign!")
     public void createSign(CommandSender sender, @Argument("task") IServiceTask task) {
         if (task != null) {
             if (task.getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY) {
@@ -41,19 +42,21 @@ public class SignCommand {
             Location location = Bukkit.getPlayer(sender.getName()).getTargetBlock(materials, 5).getLocation();
             if (location.getBlock().getType().equals(Material.WALL_SIGN)) {
 
-                CloudSign sign = new CloudSign((int) location.getX(), (int) location.getY(), (int) location.getZ(), task.getName(), location.getWorld().getName());
-                if (BukkitCloudSignsPlugin.getInstance().getSignManager().getSignUpdater().getCloudSign(location) == null) {
-                    Block block = Bukkit.getWorld(sign.getWorld()).getBlockAt(sign.getX(), sign.getY(), sign.getZ());
+                ModifiableLocation<Integer> loc = new DefaultLocation<>((int) location.getX(), (int) location.getY(), (int) location.getZ(), location.getWorld().getName());
+                UniversalCloudSign sign = new UniversalCloudSign(UUID.randomUUID(), task.getName(), loc);
+
+
+                if (((BukkitCloudSignAPI)CloudSignAPI.getInstance()).getSignUpdater().getCloudSign(location) == null) {
+                    Block block = Bukkit.getWorld(sign.getLocation().getWorld()).getBlockAt(sign.getLocation().getX(), sign.getLocation().getY(), sign.getLocation().getZ());
                     Sign signBlock = (Sign) block.getState();
                     signBlock.setLine(0, "§8§m------");
                     signBlock.setLine(1, "§b" + task.getName().toUpperCase());
                     signBlock.setLine(2, "RELOADING...");
                     signBlock.setLine(3, "§8§m------");
                     signBlock.update(true);
-                    BukkitCloudSignsPlugin.getInstance().getSignManager().getCloudSigns().add(sign);
 
-                    ChannelMessage message = ChannelMessage.builder().channel(CloudSignsModule.CHANNEL_NAME).buffer(buf -> buf.writeEnum(SignProtocolType.ADD_SIGN).writeObject(sign)).build();
-                    message.send();
+
+                    CloudSignAPI.getInstance().getSignManager().addCloudSign(sign);
                     sender.sendMessage("§7You created a CloudSign for the task §b" + task.getName());
                 } else {
                     sender.sendMessage("§cThe §eCloudSign §calready exists!");
@@ -66,30 +69,28 @@ public class SignCommand {
         }
     }
     @Command("remove")
-    public void createSign(CommandSender sender) {
+    @CommandDescription("Removes the sign you're looking at!")
+    public void onRemoveCloudSign(CommandSender sender) {
         Set<Material> materials = new HashSet<>();
         materials.add(Material.AIR);
         Location location = Bukkit.getPlayer(sender.getName()).getTargetBlock(materials, 5).getLocation();
 
         if (location.getBlock().getType().equals(Material.WALL_SIGN)) {
-            CloudSign cloudSign = BukkitCloudSignsPlugin.getInstance().getSignManager().getSignUpdater().getCloudSign(location);
+            ICloudSign cloudSign = ((BukkitCloudSignAPI)CloudSignAPI.getInstance()).getSignUpdater().getCloudSign(location);
             if (cloudSign == null) {
                 sender.sendMessage("§cThis §eCloudSign §cseems not to be registered!");
                 return;
             }
-            Block block = Bukkit.getWorld(cloudSign.getWorld()).getBlockAt(cloudSign.getX(), cloudSign.getY(), cloudSign.getZ());
+            Block block = Bukkit.getWorld(cloudSign.getLocation().getWorld()).getBlockAt(cloudSign.getLocation().getX(), cloudSign.getLocation().getY(), cloudSign.getLocation().getZ());
             Sign signBlock = (Sign) block.getState();
             signBlock.setLine(0, "§8§m------");
             signBlock.setLine(1, "§4⚠⚠⚠⚠⚠");
             signBlock.setLine(2, "§8» §cRemoved");
             signBlock.setLine(3, "§8§m------");
             signBlock.update(true);
-            BukkitCloudSignsPlugin.getInstance().getSignManager().getCloudSigns().remove(cloudSign);
+            CloudSignAPI.getInstance().getSignManager().removeCloudSign(cloudSign);
 
-            ChannelMessage message = ChannelMessage.builder().channel(CloudSignsModule.CHANNEL_NAME).buffer(buf -> buf.writeEnum(SignProtocolType.REMOVE_SIGN).writeObject(cloudSign)).build();
-            message.send();
-
-            sender.sendMessage("§7You removed a CloudSign for the task §b" + cloudSign.getTask().toUpperCase());
+            sender.sendMessage("§7You removed a CloudSign for the task §b" + cloudSign.getTaskName().toUpperCase());
 
         } else {
             sender.sendMessage("§cThe block you are looking at, is not a sign!");

@@ -150,7 +150,7 @@ public class DefaultConfigurableService implements ConfigurableService {
                     }
                 }
 
-                ICloudServer service = new DriverServiceObject(serviceTask.getName(), newServiceId(), port, address);
+                ICloudServer service = new UniversalCloudServer(serviceTask.getName(), newServiceId(), port, address);
                 service.setProperties(properties);
                 service.setMaxPlayers(maxPlayers);
                 service.setUniqueId(uniqueId);
@@ -188,7 +188,7 @@ public class DefaultConfigurableService implements ConfigurableService {
 
                 CloudDriver.getInstance().getEventManager().registerDestructiveHandler(ServiceReadyEvent.class, (ExceptionallyBiConsumer<ServiceReadyEvent, DestructiveListener>) (event, listener) -> {
 
-                    ICloudServer cloudServer = event.getICloudServer();
+                    ICloudServer cloudServer = event.getCloudServer();
                     if (cloudServer.getUniqueId().equals(this.uniqueId)) {
                         task.setResult(cloudServer);
                         listener.destroy();

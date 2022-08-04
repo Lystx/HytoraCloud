@@ -6,7 +6,7 @@ import cloud.hytora.driver.event.ProtocolTansferableEvent;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.services.ICloudServer;
-import cloud.hytora.driver.services.impl.DriverServiceObject;
+import cloud.hytora.driver.services.impl.UniversalCloudServer;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -41,7 +41,7 @@ public class ServiceUpdateEvent extends DriverUtility implements ProtocolTansfer
                 break;
 
             case READ:
-                service = buf.readObject(DriverServiceObject.class);
+                service = buf.readObject(UniversalCloudServer.class);
                 break;
         }
     }

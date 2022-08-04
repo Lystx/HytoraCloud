@@ -16,7 +16,7 @@ public interface ChannelMessenger {
      * @param channel the channel
      * @param consumer the listener as consumer
      */
-    void registerChannel(String channel, Consumer<ChannelMessage> consumer);
+    void registerChannel(String channel, ChannelMessageListener consumer);
 
     /**
      * Unregisters a channel to listen for
@@ -56,5 +56,5 @@ public interface ChannelMessenger {
      *
      * @return cache
      */
-    Map<String, Consumer<ChannelMessage>> getCache();
+    Map<String, ChannelMessageListener> getCache();
 }

@@ -2,7 +2,7 @@ package cloud.hytora.driver.module.controller;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.http.api.HttpServer;
-import cloud.hytora.driver.module.Module;
+import cloud.hytora.driver.module.IModule;
 import cloud.hytora.driver.module.ModuleController;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +10,7 @@ import lombok.Setter;
 
 @NoArgsConstructor
 @Getter
-public abstract class DriverModule implements Module {
+public abstract class DriverModule implements IModule {
 
 	/**
 	 * The controller for this module (is being set when being loaded)

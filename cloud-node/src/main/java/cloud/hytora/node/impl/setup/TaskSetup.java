@@ -5,7 +5,6 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.Console;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 import cloud.hytora.driver.setup.Setup;
-import cloud.hytora.driver.setup.SetupHeaderBehaviour;
 import cloud.hytora.driver.setup.annotations.*;
 import cloud.hytora.driver.setup.suggesters.BooleanSuggester;
 import cloud.hytora.driver.setup.suggesters.EnumSuggester;
@@ -99,7 +98,7 @@ public class TaskSetup extends Setup<TaskSetup> {
 
         @Override
         public Boolean supply(String name) {
-            return CloudDriver.getInstance().getServiceTaskManager().getTaskByName(name).isPresent();
+            return CloudDriver.getInstance().getServiceTaskManager().getTaskByNameAsync(name).isPresent();
         }
     }
 

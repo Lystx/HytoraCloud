@@ -5,7 +5,7 @@ import cloud.hytora.driver.CloudDriver;
 
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.services.ICloudServer;
-import cloud.hytora.driver.services.impl.DriverServiceObject;
+import cloud.hytora.driver.services.impl.UniversalCloudServer;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.node.NodeDriver;
@@ -82,7 +82,7 @@ public class NodeServiceQueue {
                         port++;
                     }
 
-                    ICloudServer service = new DriverServiceObject(task.getName(), this.getPossibleServiceIDByGroup(task), port, node.getConfig().getAddress().getHost());
+                    ICloudServer service = new UniversalCloudServer(task.getName(), this.getPossibleServiceIDByGroup(task), port, node.getConfig().getAddress().getHost());
                     service.setRunningNodeName(node.getName());
                     CloudDriver.getInstance().getServiceManager().registerService(service);
 
