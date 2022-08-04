@@ -3,6 +3,7 @@ package cloud.hytora.driver.message;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
+import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 
 import java.util.UUID;
 
@@ -50,6 +51,11 @@ public interface ChannelMessage extends IBufferObject {
      * @return data
      */
     Document getDocument();
+
+    /**
+     * The network buffer
+     */
+    PacketBuffer buffer();
 
     /**
      * The receiver of this message

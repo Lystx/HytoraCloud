@@ -1,6 +1,5 @@
 package cloud.hytora.driver.node.config;
 
-import cloud.hytora.driver.http.SSLConfiguration;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
@@ -11,8 +10,6 @@ import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.UUID;
 
 @AllArgsConstructor

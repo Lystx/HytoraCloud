@@ -225,6 +225,8 @@ public class DriverServiceObject implements IProcessCloudServer, IBufferObject {
         input = input.replace("{server.id}", String.valueOf(this.getServiceID()));
         input = input.replace("{server.port}", String.valueOf(this.getPort()));
         input = input.replace("{server.capacity}", String.valueOf(this.getMaxPlayers()));
+        input = input.replace("{server.max}", String.valueOf(this.getMaxPlayers()));
+        input = input.replace("{server.online}", String.valueOf(this.getOnlinePlayerCount()));
 
         input = input.replace("{server.node}", this.getRunningNodeName());
 

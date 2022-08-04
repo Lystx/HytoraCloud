@@ -38,7 +38,7 @@ public interface ChannelMessenger {
      * Sends a {@link ChannelMessage} to a given {@link NetworkComponent} receiver
      *
      * @param message the message
-     * @param receiver the receiver
+     * @param receivers the receivers
      */
     void sendChannelMessage(ChannelMessage message, NetworkComponent[] receivers);
 

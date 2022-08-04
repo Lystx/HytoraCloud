@@ -12,6 +12,8 @@ public enum ModuleCopyType {
 	NODE,
 	PROXY,
 	SERVER,
+	SERVER_FALLBACK,
+
 	NONE;
 
 	public boolean applies(@Nonnull SpecificDriverEnvironment type) {

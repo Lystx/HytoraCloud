@@ -1,6 +1,7 @@
 package cloud.hytora.driver.networking;
 
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.message.packet.ChannelMessageExecutePacket;
 import cloud.hytora.driver.networking.packets.*;
 import cloud.hytora.driver.node.packet.*;
 import cloud.hytora.driver.services.task.packet.ServiceTaskExecutePacket;
@@ -81,6 +82,7 @@ public class PacketProvider {
         PacketProvider.autoRegister(ResponsePacket.class);
         PacketProvider.autoRegister(DriverLoggingPacket.class);
         PacketProvider.autoRegister(CachedUUIDPacket.class);
+        PacketProvider.autoRegister(ChannelMessageExecutePacket.class);
         PacketProvider.autoRegister(DriverCallEventPacket.class);
     }
 

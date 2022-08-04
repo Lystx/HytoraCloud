@@ -1,0 +1,5 @@
+name: CloudSigns
+version: SNAPSHOT-1.0
+main: cloud.hytora.modules.sign.spigot.BukkitCloudSignsPlugin
+depends:
+  - HytoraCloud-Bridge

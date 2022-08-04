@@ -1,5 +1,6 @@
 package cloud.hytora.bridge.spigot;
 
+import cloud.hytora.bridge.spigot.listener.BukkitPlayerCommandListener;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.IServiceCycleData;
@@ -30,6 +31,8 @@ public class SpigotBootstrap extends JavaPlugin implements PluginBridge, RemoteA
     @Override
     public void onEnable() {
         this.bootstrap();
+
+        Bukkit.getPluginManager().registerEvents(new BukkitPlayerCommandListener(), this);
     }
 
     @Override

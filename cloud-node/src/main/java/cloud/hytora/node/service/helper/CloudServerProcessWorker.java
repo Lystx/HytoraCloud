@@ -7,6 +7,7 @@ import cloud.hytora.driver.console.Screen;
 import cloud.hytora.driver.console.ScreenManager;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.controller.base.ModuleConfig;
+import cloud.hytora.driver.module.controller.base.ModuleCopyType;
 import cloud.hytora.driver.services.impl.DriverServiceObject;
 import cloud.hytora.driver.services.task.TaskDownloadEntry;
 import cloud.hytora.driver.services.task.IServiceTask;
@@ -106,7 +107,7 @@ public class CloudServerProcessWorker {
         //copying modules
         for (ModuleController module : CloudDriver.getInstance().getModuleManager().getModules()) {
             ModuleConfig config = module.getModuleConfig();
-            if (config.getCopyType().applies(serviceTask.getTaskGroup().getEnvironment())) {
+            if (config.getCopyType().applies(serviceTask.getTaskGroup().getEnvironment()) || (config.getCopyType() == ModuleCopyType.SERVER_FALLBACK && service.getTask().getFallback().isEnabled())) {
                 Path jarFile = module.getJarFile();
                 FileUtils.copyFile(jarFile.toFile(), new File(new File(serverDir, "plugins/"), jarFile.toFile().getName()));
             }

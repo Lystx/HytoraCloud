@@ -2,7 +2,6 @@ package cloud.hytora.driver.http.impl;
 
 import cloud.hytora.common.collection.pair.Tuple;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.http.SSLConfiguration;
 import cloud.hytora.driver.http.api.*;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import io.netty.bootstrap.ServerBootstrap;

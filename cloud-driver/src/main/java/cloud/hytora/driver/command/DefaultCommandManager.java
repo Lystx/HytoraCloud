@@ -40,7 +40,7 @@ public abstract class DefaultCommandManager implements CommandManager {
 
 
     public DefaultCommandManager() {
-
+        this.active = true;
         this.registerParser(int.class, Integer::parseInt);
         this.registerParser(double.class, Double::parseDouble);
         this.registerParser(long.class, Long::parseLong);

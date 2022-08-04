@@ -1,10 +1,8 @@
 package cloud.hytora.driver.node.config;
 
-import cloud.hytora.driver.http.SSLConfiguration;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 
-import java.util.Collection;
 import java.util.UUID;
 
 public interface INodeConfig extends IBufferObject {

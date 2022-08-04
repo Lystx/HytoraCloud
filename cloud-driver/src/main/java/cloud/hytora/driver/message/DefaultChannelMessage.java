@@ -33,6 +33,8 @@ public class DefaultChannelMessage implements ChannelMessage {
      */
     private Document document;
 
+    private PacketBuffer buffer =  PacketBuffer.unsafe();
+
     /**
      * The receiver
      */
@@ -59,6 +61,11 @@ public class DefaultChannelMessage implements ChannelMessage {
     }
 
     @Override
+    public PacketBuffer buffer() {
+        return buffer;
+    }
+
+    @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
 
         switch (state) {
@@ -70,6 +77,7 @@ public class DefaultChannelMessage implements ChannelMessage {
                 receivers = buf.readObjectArray(SimpleNetworkComponent.class);
                 sender = buf.readOptionalObject(SimpleNetworkComponent.class);
                 id = buf.readUniqueId();
+                buffer = buf.readBuffer();
                 break;
 
             case WRITE:
@@ -79,6 +87,7 @@ public class DefaultChannelMessage implements ChannelMessage {
                 buf.writeObjectArray(receivers);
                 buf.writeOptionalObject(sender);
                 buf.writeUniqueId(id);
+                buf.writeBuffer(buffer);
                 break;
         }
     }

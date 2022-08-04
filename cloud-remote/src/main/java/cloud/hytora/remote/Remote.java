@@ -18,12 +18,17 @@ import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
+import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.NodeManager;
+import cloud.hytora.driver.player.CloudOfflinePlayer;
+import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.ServiceManager;
+import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.task.ServiceTaskManager;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
+import cloud.hytora.driver.services.utils.version.ServiceVersion;
 import cloud.hytora.driver.storage.DriverStorage;
 import cloud.hytora.driver.storage.RemoteDriverStorage;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
@@ -117,6 +122,15 @@ public class Remote extends CloudDriver<ICloudServer> {
 
         this.storage = new RemoteDriverStorage(this.client);
         this.cache = new RemoteUUIDCache();
+
+        //registering command argument parsers
+        this.commandManager.registerParser(ServiceVersion.class, ServiceVersion::valueOf);
+        this.commandManager.registerParser(LogLevel.class, LogLevel::valueOf);
+        this.commandManager.registerParser(ICloudServer.class, this.serviceManager::getServiceByNameOrNull);
+        this.commandManager.registerParser(IServiceTask.class, this.serviceTaskManager::getTaskByNameOrNull);
+        this.commandManager.registerParser(ICloudPlayer.class, this.playerManager::getCloudPlayerByNameOrNull);
+        this.commandManager.registerParser(CloudOfflinePlayer.class, this.playerManager::getOfflinePlayerByNameBlockingOrNull);
+        this.commandManager.registerParser(INode.class, this.nodeManager::getNodeByNameOrNull);
 
 
         //service cycle update task
