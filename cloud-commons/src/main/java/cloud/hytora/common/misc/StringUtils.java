@@ -41,6 +41,9 @@ public final class StringUtils {
 
         if (days == 0) {
             if (hours == 0) {
+                if (minutes == 0) {
+                    return formatInt((int) seconds) + " sec";
+                }
                 return formatInt((int) minutes) + ":" + formatInt((int) seconds) + " min";
             } else {
                 return formatInt((int) hours) + ":" + formatInt((int) minutes) + ":" + formatInt((int) seconds) + " h";
