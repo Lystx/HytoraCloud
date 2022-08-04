@@ -76,7 +76,7 @@ public class ProxyRemoteHandler {
 
     @EventListener
     public void handle(ServiceRegisterEvent event) {
-        ICloudServer ICloudServer = event.getICloudServer();
+        ICloudServer ICloudServer = event.getCloudServer();
         if (!ICloudServer.getTask().getVersion().isProxy()) {
             this.registerService(ICloudServer);
         }

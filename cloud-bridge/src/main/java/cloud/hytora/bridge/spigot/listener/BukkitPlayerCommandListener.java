@@ -60,6 +60,7 @@ public class BukkitPlayerCommandListener implements Listener {
             String command = event.getMessage().substring(1).split(" ")[0];
             RegisteredCommand registeredCommand = CloudDriver.getInstance().getCommandManager().getCommands().stream().filter(c -> Arrays.stream(c.getNames()).anyMatch(s -> s.equalsIgnoreCase(command))).findFirst().orElse(null);
             if (registeredCommand != null) {
+                event.setCancelled(true);
                 CloudDriver.getInstance().getCommandManager().executeCommand(cloudPlayer, commandLine);
             }
         }

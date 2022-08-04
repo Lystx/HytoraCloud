@@ -1,6 +1,7 @@
 package cloud.hytora.driver.message;
 
 import cloud.hytora.document.Document;
+import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.protocol.SimpleNetworkComponent;
@@ -15,13 +16,13 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.UUID;
 
-@Getter @Setter @AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter @Setter @AllArgsConstructor
 public class DefaultChannelMessage implements ChannelMessage {
 
     /**
      * The key of this message
      */
-    private String key;
+    private String key = "";
 
     /**
      * The channel it should be send to
@@ -31,7 +32,7 @@ public class DefaultChannelMessage implements ChannelMessage {
     /**
      * The document
      */
-    private Document document;
+    private Document document = DocumentFactory.emptyDocument();
 
     private PacketBuffer buffer =  PacketBuffer.unsafe();
 

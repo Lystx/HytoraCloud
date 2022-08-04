@@ -4,6 +4,8 @@ public enum SignProtocolType {
 
     SYNC_CACHE,
 
+    REQUEST_DATA,
+
     SYNC_CONFIG,
 
 

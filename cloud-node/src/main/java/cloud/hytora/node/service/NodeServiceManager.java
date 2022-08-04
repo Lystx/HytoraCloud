@@ -1,6 +1,10 @@
 package cloud.hytora.node.service;
 
 import cloud.hytora.common.task.Task;
+import cloud.hytora.document.Document;
+import cloud.hytora.document.DocumentFactory;
+import cloud.hytora.document.gson.GsonDocument;
+import cloud.hytora.document.gson.GsonHelper;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.console.Screen;
 import cloud.hytora.driver.console.ScreenManager;
@@ -13,6 +17,7 @@ import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.config.ServiceCrashPrevention;
 import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.impl.UniversalCloudServer;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.impl.DefaultServiceManager;
 import cloud.hytora.node.NodeDriver;
@@ -133,6 +138,11 @@ public class NodeServiceManager extends DefaultServiceManager {
     }
 
     @Override
+    public ICloudServer thisServiceOrNull() {
+        return null;
+    }
+
+    @Override
     public void sendPacketToService(ICloudServer service, IPacket packet) {
         NodeDriver.getInstance().getExecutor().getAllCachedConnectedClients().stream().filter(it -> it.getName().equals(service.getName())).findAny().ifPresent(it -> it.sendPacket(packet));
     }
@@ -146,6 +156,7 @@ public class NodeServiceManager extends DefaultServiceManager {
 
     @Override
     public void updateService(@NotNull ICloudServer service) {
+        CloudDriver.getInstance().getLogger().debug("Updated Server {}", service.getName());
         this.updateServerInternally(service);
 
         DriverUpdatePacket.publishUpdate(NodeDriver.getInstance().getNode());
@@ -154,11 +165,18 @@ public class NodeServiceManager extends DefaultServiceManager {
         CloudDriver.getInstance().getEventManager().callEventOnlyPacketBased(new ServiceUpdateEvent(service));
     }
 
+    @EventListener
+    public void handleStop(ServiceUnregisterEvent event) {
+        ScreenManager sm = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
+        if (sm.isScreenActive(event.getService())) {
+            sm.leaveCurrentScreen();
+        }
+
+    }
 
     @EventListener
     public void handleUpdate(ServiceUpdateEvent event) {
         ICloudServer server = event.getService();
-
         this.updateService(server);
     }
 

@@ -27,6 +27,7 @@ import net.md_5.bungee.event.EventPriority;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class ProxyPlayerConnectionListener implements Listener {
 

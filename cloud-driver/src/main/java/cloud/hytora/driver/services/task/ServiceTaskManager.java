@@ -44,7 +44,7 @@ public interface ServiceTaskManager {
     }
 
     default @Nullable IServiceTask getTaskByNameOrNull(@NotNull String name) {
-        return this.getTaskByNameAsync(name).orElse(null);
+        return this.getAllCachedTasks().stream().filter(it -> it.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
     }
 
     default @NotNull List<IServiceTask> getTasksByNode(@NotNull String node) {

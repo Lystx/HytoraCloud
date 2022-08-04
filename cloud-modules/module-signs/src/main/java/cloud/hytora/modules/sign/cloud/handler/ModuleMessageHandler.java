@@ -21,10 +21,18 @@ public class ModuleMessageHandler implements ChannelMessageListener {
                 ICloudSign cloudSign = buffer.readObject(UniversalCloudSign.class);
                 signManager.addCloudSign(cloudSign);
                 break;
+            case REQUEST_DATA:
+                CloudSignAPI.getInstance().publishConfiguration();
+                CloudSignAPI.getInstance().getSignManager().update();
             case REMOVE_SIGN:
-                ICloudSign sign = buffer.readObject(UniversalCloudSign.class);
-                ICloudSign safeSign = signManager.getCloudSignOrNull(sign.getUniqueId());
-                signManager.removeCloudSign(safeSign);
+                try {
+
+                    ICloudSign sign = buffer.readObject(UniversalCloudSign.class);
+                    ICloudSign safeSign = signManager.getCloudSignOrNull(sign.getUniqueId());
+                    signManager.removeCloudSign(safeSign);
+                } catch (Exception e) {
+                    //ignore
+                }
                 break;
         }
     }

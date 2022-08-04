@@ -52,15 +52,5 @@ public abstract class CloudSignAPI {
     public abstract ICloudSignManager getSignManager();
 
 
-    public void performProtocolAction(SignProtocolType type, Consumer<PacketBuffer> buffer) {
-
-        ChannelMessage message = ChannelMessage
-                .builder()
-                .channel(CloudSignAPI.CHANNEL_NAME)
-                .buffer(buf -> {
-                    buf.writeEnum(type);
-                    buf.append(buffer);
-                }).build();
-        message.send();
-    }
+    public abstract void performProtocolAction(SignProtocolType type, Consumer<PacketBuffer> buffer);
 }

@@ -39,7 +39,23 @@ public final class StringUtils {
         long minutes = diff.get(TimeUnit.MINUTES);
         long seconds = diff.get(TimeUnit.SECONDS);
 
-        return days + "days | " + hours + " h, " + minutes + "min, " + seconds + "sec";
+        if (days == 0) {
+            if (hours == 0) {
+                return formatInt((int) minutes) + ":" + formatInt((int) seconds) + " min";
+            } else {
+                return formatInt((int) hours) + ":" + formatInt((int) minutes) + ":" + formatInt((int) seconds) + " h";
+            }
+        } else {
+            return days + "days | " + hours + ":" + minutes + ":" + seconds + "h";
+        }
+    }
+
+
+    private static String formatInt(int i) {
+        if (i < 10) {
+            return "0" + i;
+        }
+        return String.valueOf(i);
     }
 
     public static Map<TimeUnit, Long> getMillisDifference(long date1, long date2) {

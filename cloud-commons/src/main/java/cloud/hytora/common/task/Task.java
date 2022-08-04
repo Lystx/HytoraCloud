@@ -165,6 +165,24 @@ public interface Task<T> extends Serializable {
         return task;
     }
 
+    static <V> Task<V> callAsyncNonNull(@Nonnull Callable<V> callable) {
+        Task<V> task = empty();
+        task.denyNull();
+        SERVICE.execute(() -> {
+            try {
+                V call = callable.call();
+                if (call == null) {
+                    task.setFailure(new NullPointerException());
+                } else {
+                    task.setResult(call);
+                }
+            } catch (Exception e) {
+                task.setFailure(e);
+            }
+        });
+        return task;
+    }
+
     static <V> Task<V> callSync(@Nonnull Callable<V> callable) {
         Task<V> task = empty();
         task.denyNull();

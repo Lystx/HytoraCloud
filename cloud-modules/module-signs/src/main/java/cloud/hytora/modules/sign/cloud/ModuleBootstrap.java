@@ -10,6 +10,7 @@ import cloud.hytora.driver.module.controller.base.ModuleState;
 import cloud.hytora.driver.module.controller.task.ModuleTask;
 import cloud.hytora.modules.sign.api.CloudSignAPI;
 import cloud.hytora.modules.sign.api.config.SignConfiguration;
+import cloud.hytora.modules.sign.cloud.command.ModuleCloudSignCommand;
 import cloud.hytora.modules.sign.cloud.handler.ModuleMessageHandler;
 import cloud.hytora.modules.sign.cloud.listener.ModuleServiceReadyListener;
 
@@ -50,6 +51,7 @@ public class ModuleBootstrap extends DriverModule {
     public void enable() {
         CloudDriver.getInstance().getChannelMessenger().registerChannel(CloudSignAPI.CHANNEL_NAME, new ModuleMessageHandler());
         CloudDriver.getInstance().getEventManager().registerListener(new ModuleServiceReadyListener());
+        CloudDriver.getInstance().getCommandManager().registerCommand(new ModuleCloudSignCommand());
 
 
         CloudSignAPI.getInstance().publishConfiguration();
@@ -59,6 +61,7 @@ public class ModuleBootstrap extends DriverModule {
 
     @ModuleTask(id = 4, state = ModuleState.DISABLED)
     public void disable() {
+        CloudDriver.getInstance().getCommandManager().unregisterCommand(ModuleCloudSignCommand.class);
         CloudDriver.getInstance().getChannelMessenger().unregisterChannel(CloudSignAPI.CHANNEL_NAME);
     }
 

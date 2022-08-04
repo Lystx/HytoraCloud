@@ -1,6 +1,7 @@
 package cloud.hytora.modules.sign.api.def;
 
 import cloud.hytora.common.location.ModifiableLocation;
+import cloud.hytora.common.location.impl.DefaultLocation;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
@@ -33,7 +34,7 @@ public class UniversalCloudSign implements ICloudSign {
     /**
      * The location of the sign
      */
-    private ModifiableLocation<Integer> location;
+    private DefaultLocation<Integer> location;
 
 
     @Override
@@ -42,7 +43,7 @@ public class UniversalCloudSign implements ICloudSign {
             case READ:
                 this.uniqueId = buf.readUniqueId();
                 this.taskName = buf.readString();
-                this.location = buf.readLocation();
+                this.location = (DefaultLocation<Integer>) buf.readLocation();
                 break;
             case WRITE:
                 buf.writeUniqueId(uniqueId);

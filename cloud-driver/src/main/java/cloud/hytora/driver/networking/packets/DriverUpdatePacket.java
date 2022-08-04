@@ -30,7 +30,7 @@ import java.util.List;
 @AllArgsConstructor
 public class DriverUpdatePacket extends AbstractPacket {
 
-    private Collection<IServiceTask> groups;
+    private Collection<IServiceTask> serviceTasks;
     private Collection<TaskGroup> parentGroups;
     private Collection<ICloudServer> allCachedServices;
     private Collection<ICloudPlayer> cloudPlayers;
@@ -65,8 +65,8 @@ public class DriverUpdatePacket extends AbstractPacket {
                 parentGroups = buf.readWrapperObjectCollection(DefaultTaskGroup.class);
                 CloudDriver.getInstance().getServiceTaskManager().setAllTaskGroups(parentGroups);
 
-                groups = buf.readWrapperObjectCollection(DefaultServiceTask.class);
-                CloudDriver.getInstance().getServiceTaskManager().setAllCachedTasks(groups);
+                serviceTasks = buf.readWrapperObjectCollection(DefaultServiceTask.class);
+                CloudDriver.getInstance().getServiceTaskManager().setAllCachedTasks(serviceTasks);
 
                 allCachedServices = buf.readWrapperObjectCollection(UniversalCloudServer.class);
                 CloudDriver.getInstance().getServiceManager().setAllCachedServices((List<ICloudServer>) allCachedServices);
@@ -82,7 +82,7 @@ public class DriverUpdatePacket extends AbstractPacket {
 
             case WRITE:
                 buf.writeObjectCollection(parentGroups);
-                buf.writeObjectCollection(groups);
+                buf.writeObjectCollection(serviceTasks);
                 buf.writeObjectCollection(allCachedServices);
                 buf.writeObjectCollection(cloudPlayers);
                 buf.writeObjectCollection(connectedNodes);

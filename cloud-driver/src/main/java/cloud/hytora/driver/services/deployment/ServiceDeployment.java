@@ -9,5 +9,7 @@ public interface ServiceDeployment extends IBufferObject {
 
     ServiceTemplate getTemplate();
 
+    Collection<String> getOnlyIncludedFiles();
+
     Collection<String> getExclusionFiles();
 }

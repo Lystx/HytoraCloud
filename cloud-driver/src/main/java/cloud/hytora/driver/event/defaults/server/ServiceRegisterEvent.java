@@ -30,16 +30,16 @@ public class ServiceRegisterEvent implements ProtocolTansferableEvent {
     /**
      * The server that is being registered
      */
-    private ICloudServer ICloudServer;
+    private ICloudServer cloudServer;
 
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
         switch (state) {
             case READ:
-                ICloudServer = buf.readObject(UniversalCloudServer.class);
+                cloudServer = buf.readObject(UniversalCloudServer.class);
                 break;
             case WRITE:
-                buf.writeObject(ICloudServer);
+                buf.writeObject(cloudServer);
                 break;
         }
     }

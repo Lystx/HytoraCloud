@@ -33,6 +33,7 @@ public class DriverCallEventPacket extends AbstractPacket {
             case READ:
                 String className = buf.readString();
                 boolean allowProtocolCall = buf.readBoolean();
+                CloudDriver.getInstance().getLogger().debug("Received ProtocolTransferableEvent [{}]", className);
                 try {
                     Class<? extends ProtocolTansferableEvent> eventClass = (Class<? extends ProtocolTansferableEvent>) Class.forName(className);
                     ProtocolTansferableEvent event = ReflectionUtils.createEmpty(eventClass);

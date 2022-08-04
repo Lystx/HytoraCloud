@@ -16,11 +16,6 @@ public interface IProcessCloudServer extends ICloudServer {
 
     void setWorkingDirectory(@Nonnull File workingDirectory);
 
-    @CheckReturnValue
-    boolean isScreenServer();
-
-    void setScreenServer(boolean value);
-
     void setCreationTimeStamp(long creationTime);
 
     void setProcess(@Nonnull Process process);

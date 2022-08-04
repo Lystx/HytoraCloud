@@ -29,7 +29,6 @@ public class ModuleCloudSignManager implements ICloudSignManager {
 
     public ModuleCloudSignManager(Path dataFolder) {
         this.allCachedCloudSigns = new ArrayList<>();
-
         this.signFile = dataFolder.resolve("signs.json").toFile();
     }
 

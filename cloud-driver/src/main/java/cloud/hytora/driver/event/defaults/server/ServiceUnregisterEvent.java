@@ -1,5 +1,6 @@
 package cloud.hytora.driver.event.defaults.server;
 
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.CloudEvent;
 import cloud.hytora.driver.event.ProtocolTansferableEvent;
@@ -48,8 +49,11 @@ public class ServiceUnregisterEvent implements ProtocolTansferableEvent {
         }
     }
 
-    @Nullable
-    public ICloudServer getServiceInfo() {
+    public ICloudServer getCloudServer() {
         return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(this.service);
+    }
+
+    public Task<ICloudServer> getCloudServerAsync() {
+        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNullAsync(this.service);
     }
 }

@@ -15,28 +15,28 @@ public class ModuleListener {
 
     @EventListener
     public void handleAdd(ServiceRegisterEvent event) {
-        ICloudServer ICloudServer = event.getICloudServer();
+        ICloudServer cloudServer = event.getCloudServer();
 
-        this.notifyNetwork(0, ICloudServer);
+        this.notifyNetwork(0, cloudServer);
     }
 
 
     @EventListener
     public void handleRemove(ServiceUnregisterEvent event) {
-        ICloudServer ICloudServer = event.getServiceInfo();
-        if (ICloudServer == null) {
+        ICloudServer cloudServer = event.getCloudServer();
+        if (cloudServer == null) {
             return;
         }
-        this.notifyNetwork(1, ICloudServer);
+        this.notifyNetwork(1, cloudServer);
     }
 
     @EventListener
     public void handleReady(ServiceReadyEvent event) {
-        ICloudServer ICloudServer = event.getCloudServer();
-        if (ICloudServer == null) {
+        ICloudServer cloudServer = event.getCloudServer();
+        if (cloudServer == null) {
             return;
         }
-        this.notifyNetwork(2, ICloudServer);
+        this.notifyNetwork(2, cloudServer);
     }
 
     /**

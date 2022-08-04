@@ -40,11 +40,4 @@ public class MySqlSetup extends Setup<MySqlSetup> {
         return true;
     }
 
-    public static class Checker implements BiSupplier<String, Boolean> {
-
-        @Override
-        public Boolean supply(String name) {
-            return CloudDriver.getInstance().getServiceTaskManager().getTaskByNameAsync(name).isPresent();
-        }
-    }
 }

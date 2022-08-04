@@ -25,9 +25,12 @@ public abstract class DefaultChannelMessenger implements ChannelMessenger {
             ChannelMessage message = packet.getChannelMessage();
 
             NetworkComponent[] receivers = message.getReceivers();
-            if (receivers == null || Arrays.stream(receivers).anyMatch(r -> r.matches(executor))) {
+            if (receivers == null || receivers.length == 0 || Arrays.stream(receivers).anyMatch(r -> r.matches(executor))) {
                 String channel = message.getChannel();
                 ChannelMessageListener handler = cache.get(channel);
+                if (handler == null) {
+                    return;
+                }
                 handler.handleIncoming(message);
             }
         });

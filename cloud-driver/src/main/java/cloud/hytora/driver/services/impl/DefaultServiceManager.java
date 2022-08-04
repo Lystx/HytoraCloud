@@ -70,10 +70,10 @@ public abstract class DefaultServiceManager implements ServiceManager {
 
 
     public void updateServerInternally(ICloudServer service) {
-        Task<ICloudServer> server = this.getServiceByNameOrNullAsync(service.getName());
-        if (server.isPresent()) {
+        ICloudServer server = this.getServiceByNameOrNull(service.getName());
+        if (server != null) {
 
-            UniversalCloudServer serviceInfo = (UniversalCloudServer) server.get();
+            UniversalCloudServer serviceInfo = (UniversalCloudServer) server;
 
             Process process = serviceInfo.getProcess();
             File workingDirectory = serviceInfo.getWorkingDirectory();
@@ -85,11 +85,6 @@ public abstract class DefaultServiceManager implements ServiceManager {
             allCachedServices.set(i, service);
         }
 
-    }
-
-    @Override
-    public ICloudServer thisServiceOrNull() {
-        return thisService().orElse(null);
     }
 
     @Override

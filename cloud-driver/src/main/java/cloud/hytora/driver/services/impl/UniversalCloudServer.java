@@ -4,6 +4,7 @@ import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
+import cloud.hytora.document.gson.adapter.ExcludeJsonField;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
 import cloud.hytora.driver.services.packet.ServiceCommandPacket;
@@ -49,7 +50,9 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
     private int maxPlayers;
     private String motd;
 
+    @ExcludeJsonField
     private Process process;
+    @ExcludeJsonField
     private File workingDirectory;
 
     private ServiceState serviceState = ServiceState.PREPARED;
@@ -57,10 +60,12 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
 
 
     private long creationTimestamp; // the timestamp this ServiceInfo was created (changing any property will not influence this timestamp)
-    private boolean screenServer;
     private boolean ready;
+    @ExcludeJsonField
     private Document properties; // custom properties, which are not used internally
+    @ExcludeJsonField
     private DefaultPingProperties pingProperties;
+    @ExcludeJsonField
     private IServiceCycleData lastCycleData;
 
     public UniversalCloudServer(String taskName, int id, int port, String hostname) {
@@ -71,13 +76,13 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
         this.serviceID = id;
         this.port = port;
         this.hostName = hostname;
-        this.motd = task == null ? "Default Motd" : serviceTask.getMotd();
-        this.maxPlayers = task == null ? 10 : serviceTask.getDefaultMaxPlayers();
+        this.motd = serviceTask == null ? "Default Motd" : serviceTask.getMotd();
+        this.maxPlayers = serviceTask == null ? 10 : serviceTask.getDefaultMaxPlayers();
 
         this.creationTimestamp = System.currentTimeMillis();
         this.properties = DocumentFactory.newJsonDocument();
         this.uniqueId = UUID.randomUUID();
-        this.runningNodeName = serviceTask.findAnyNode() == null ? "UNKNOWN": serviceTask.findAnyNode().getName();
+        this.runningNodeName = getTask().findAnyNode() == null ? "UNKNOWN": getTask().findAnyNode().getName();
 
         this.pingProperties = new DefaultPingProperties();
         this.pingProperties.setMotd(this.motd);
@@ -275,7 +280,6 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
 
                 buf.writeUniqueId(this.getUniqueId());
                 buf.writeString(this.getRunningNodeName());
-
                 buf.writeString(this.task);
                 buf.writeString(this.getHostName());
                 buf.writeString(this.getMotd());

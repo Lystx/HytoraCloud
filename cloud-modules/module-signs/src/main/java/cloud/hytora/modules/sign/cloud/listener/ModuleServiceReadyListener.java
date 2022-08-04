@@ -9,12 +9,7 @@ public class ModuleServiceReadyListener {
 
     @EventListener
     public void handle(ServiceReadyEvent event) {
-        event.getCloudServerAsync()
-                .onTaskSucess(cloudServer -> {
-                   if (cloudServer.isRegisteredAsFallback()) {
-                       CloudSignAPI.getInstance().getSignManager().update();
-                       CloudSignAPI.getInstance().publishConfiguration();
-                   }
-                });
+        CloudSignAPI.getInstance().getSignManager().update();
+        CloudSignAPI.getInstance().publishConfiguration();
     }
 }

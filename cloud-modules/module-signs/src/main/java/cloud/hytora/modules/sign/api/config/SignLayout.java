@@ -8,11 +8,6 @@ import lombok.Getter;
 public class SignLayout {
 
     /**
-     * The name of this animation
-     */
-    private final String name;
-
-    /**
      * The lines
      */
     private final String[] lines;

@@ -21,6 +21,7 @@ import cloud.hytora.driver.services.utils.ServiceState;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 
 @CommandDescription("Manages all services")
 @Command({"service", "ser"})
@@ -50,7 +51,7 @@ public class ServiceCommand {
 
     @Command("deploy")
     @Syntax("<service> <templateName> <excludes>")
-    @CommandDescription("Copies a service into its template (exclusions are split by ';', use '#' to include all)")
+    @CommandDescription("Copies a service into its template (exclusions are split by ',', put '#' infront for excluded files, '.' for all files and '!' for only these files)")
     public void onDeployCommand(
             CommandSender sender,
             @Argument(value = "service", completer = CloudServerCompleter.class) ICloudServer service,
@@ -69,7 +70,19 @@ public class ServiceCommand {
             return;
         }
 
-        ServiceDeployment deployment = new CloudDeployment(serviceTemplate, (excludes.equals("#") ? new ArrayList<>() : Arrays.asList(excludes.split(";"))));
+        Collection<String> onlyIncludes = new ArrayList<>();
+        Collection<String> excludedFiles = new ArrayList<>();
+        if (excludes.startsWith("!")) {
+            onlyIncludes = Arrays.asList(excludes.replace("!", "").split(","));
+            sender.sendMessage("§8> §7Only including " + onlyIncludes.toString());
+        } else if (excludes.startsWith("$")) {
+            onlyIncludes = Arrays.asList(excludes.replace("$", "").split(","));
+            sender.sendMessage("§8> §7Excluding " + excludedFiles.toString());
+        } else if (excludes.equalsIgnoreCase(".")) {
+            sender.sendMessage("§8> §7Including every file");
+        }
+
+        ServiceDeployment deployment = new CloudDeployment(serviceTemplate, excludedFiles, onlyIncludes);
         service.deploy(deployment);
         sender.sendMessage("§7Deployed §b" + service.getName() + "§8!");
     }

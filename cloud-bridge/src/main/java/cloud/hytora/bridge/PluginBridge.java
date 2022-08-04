@@ -12,16 +12,19 @@ import java.io.File;
 public interface PluginBridge {
 
     default void bootstrap() {
-
         //updating service
-        ICloudServer service = Remote.getInstance().thisService();
-        service.setServiceVisibility(ServiceVisibility.VISIBLE);
-        service.setServiceState(ServiceState.ONLINE);
-        service.setReady(true);
-        service.update();
-
-        CloudDriver.getInstance().getLogger().info("Service = CloudServer[name={}, port={}, state={}, visibility={}]", service.getName(), service.getPort(), service.getServiceState(), service.getServiceVisibility());
-
+        CloudDriver.getInstance()
+                .getServiceManager()
+                .thisService()
+                .onTaskSucess(cloudServer -> {
+                    cloudServer.setServiceVisibility(ServiceVisibility.VISIBLE);
+                    cloudServer.setServiceState(ServiceState.ONLINE);
+                    cloudServer.setReady(true);
+                    cloudServer.update();
+                    CloudDriver.getInstance().getLogger().info("Service = CloudServer[name={}, port={}, state={}, visibility={}]", cloudServer.getName(), cloudServer.getPort(), cloudServer.getServiceState(), cloudServer.getServiceVisibility());
+                }).onTaskFailed(e -> {
+                    System.out.println("HUGE MISTAKE");
+                });
     }
 
     default RemoteIdentity getIdentity() {

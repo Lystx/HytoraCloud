@@ -26,11 +26,12 @@ public class BukkitCloudSignManager implements ICloudSignManager {
 
     @Override
     public void loadCloudSignsSync() {
-        //not needed on spigot side
+        CloudSignAPI.getInstance().performProtocolAction(SignProtocolType.REQUEST_DATA, buffer -> {});
     }
 
     @Override
     public Task<Collection<ICloudSign>> loadCloudSignsAsync() {
+        loadCloudSignsSync();
         return Task.empty(); //not needed on spigot side
     }
 
@@ -76,7 +77,7 @@ public class BukkitCloudSignManager implements ICloudSignManager {
         CloudSignAPI.getInstance()
                 .performProtocolAction(
                         SignProtocolType.REMOVE_SIGN,
-                        buf -> buf.writeObject(sign)
+                        buf -> buf.writeObject(safeSign)
                 );
     }
 

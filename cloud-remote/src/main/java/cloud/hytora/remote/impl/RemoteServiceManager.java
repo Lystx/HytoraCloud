@@ -32,7 +32,7 @@ public class RemoteServiceManager extends DefaultServiceManager {
 
     @EventListener
     public void handleAdd(ServiceRegisterEvent event) {
-        ICloudServer server = event.getICloudServer();
+        ICloudServer server = event.getCloudServer();
         this.registerService(server);
     }
 
@@ -61,8 +61,13 @@ public class RemoteServiceManager extends DefaultServiceManager {
     }
 
     @Override
+    public ICloudServer thisServiceOrNull() {
+        return getAllCachedServices().stream().filter(s -> s.getName().equalsIgnoreCase(Remote.getInstance().getProperty().getName())).findFirst().orElse(null);
+    }
+
+    @Override
     public Task<ICloudServer> thisService() {
-        return Task.build(getAllCachedServices().stream().filter(s -> s.getName().equalsIgnoreCase(Remote.getInstance().getProperty().getName())).findFirst().orElse(null));
+        return Task.callAsyncNonNull(() -> getAllCachedServices().stream().filter(s -> s.getName().equalsIgnoreCase(Remote.getInstance().getProperty().getName())).findFirst().orElse(null));
     }
 
     @Override

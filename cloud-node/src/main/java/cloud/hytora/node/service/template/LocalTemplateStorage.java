@@ -125,6 +125,9 @@ public class LocalTemplateStorage implements TemplateStorage {
             if (files != null) {
                 for (File file : files) {
                     String fileName = file.getName();
+                    if (!deployment.getOnlyIncludedFiles().isEmpty() && !deployment.getOnlyIncludedFiles().contains(fileName)) {
+                        continue;
+                    }
                     if (deployment.getExclusionFiles().contains(fileName) || fileName.equalsIgnoreCase("remote.jar") || fileName.equalsIgnoreCase("plugin.jar")) {
                         continue;
                     }

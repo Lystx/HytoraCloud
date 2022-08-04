@@ -19,17 +19,21 @@ public class CloudDeployment implements ServiceDeployment {
     private ServiceTemplate template;
     private Collection<String> exclusionFiles;
 
+    private Collection<String> onlyIncludedFiles;
+
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
         switch (state) {
             case WRITE:
                 buf.writeObject(this.template);
                 buf.writeStringCollection(this.exclusionFiles);
+                buf.writeStringCollection(this.onlyIncludedFiles);
                 break;
 
             case READ:
                 this.template = buf.readObject(ServiceTemplate.class);
                 this.exclusionFiles = buf.readStringCollection();
+                this.onlyIncludedFiles = buf.readStringCollection();
                 break;
         }
     }

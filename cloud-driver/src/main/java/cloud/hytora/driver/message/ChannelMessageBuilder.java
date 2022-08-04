@@ -1,6 +1,7 @@
 package cloud.hytora.driver.message;
 
 import cloud.hytora.document.Document;
+import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
@@ -22,12 +23,12 @@ public class ChannelMessageBuilder {
     /**
      * The key
      */
-    private String key;
+    private String key = "";
 
     /**
      * The data
      */
-    private Document document;
+    private Document document = DocumentFactory.newJsonDocument();
 
     /**
      * The receiver
@@ -36,6 +37,11 @@ public class ChannelMessageBuilder {
 
     private PacketBuffer buffer = PacketBuffer.unsafe();
 
+
+    public ChannelMessageBuilder receivers(NetworkComponent... receivers) {
+        this.receivers = receivers;
+        return this;
+    }
 
     public ChannelMessageBuilder buffer(Consumer<PacketBuffer> buffer) {
         this.buffer.append(buffer);

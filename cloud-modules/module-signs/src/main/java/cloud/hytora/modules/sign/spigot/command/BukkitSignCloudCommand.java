@@ -42,7 +42,7 @@ public class BukkitSignCloudCommand {
             Location location = Bukkit.getPlayer(sender.getName()).getTargetBlock(materials, 5).getLocation();
             if (location.getBlock().getType().equals(Material.WALL_SIGN)) {
 
-                ModifiableLocation<Integer> loc = new DefaultLocation<>((int) location.getX(), (int) location.getY(), (int) location.getZ(), location.getWorld().getName());
+                DefaultLocation<Integer> loc = new DefaultLocation<>((int) location.getX(), (int) location.getY(), (int) location.getZ(), location.getWorld().getName());
                 UniversalCloudSign sign = new UniversalCloudSign(UUID.randomUUID(), task.getName(), loc);
 
 
