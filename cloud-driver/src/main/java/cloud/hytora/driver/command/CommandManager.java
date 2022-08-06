@@ -26,6 +26,8 @@ public interface CommandManager {
 
 	void registerCommand(@Nonnull Object command);
 
+	void registerCommand(Class<?> commandClass);
+
 	void setInActiveHandler(BiConsumer<CommandSender, String> handler);
 
 	<T> void registerParser(Class<T> typeClass, ArgumentParser<T> parser);

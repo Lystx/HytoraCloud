@@ -6,6 +6,8 @@ import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.task.Task;
+import cloud.hytora.context.ApplicationContext;
+import cloud.hytora.context.IApplicationContext;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
@@ -63,6 +65,8 @@ public class Remote extends CloudDriver<ICloudServer> {
     private static Remote instance;
     private final ServiceTaskManager serviceTaskManager;
     private final ServiceManager serviceManager;
+
+    private final IApplicationContext applicationContext;
     private final PlayerManager playerManager;
     private final DriverUUIDCache cache;
     private final CommandManager commandManager;
@@ -99,6 +103,7 @@ public class Remote extends CloudDriver<ICloudServer> {
         instance = this;
         this.instrumentation = instrumentation;
         this.arguments = arguments;
+        this.applicationContext = new ApplicationContext(this);
 
 
         this.commandSender = new DefaultCommandSender("Remote", null).function(System.out::println);

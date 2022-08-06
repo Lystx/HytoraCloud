@@ -33,7 +33,6 @@ public class ContextProcessorJson implements IPostProcessor {
                 String key = jsonContext.key();
                 Document document = DocumentFactory.newJsonDocument(new File(file));
 
-
                 Object value;
 
                 if (declaredField.getType().isAssignableFrom(List.class)) {

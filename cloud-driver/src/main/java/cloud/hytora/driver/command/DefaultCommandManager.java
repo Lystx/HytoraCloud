@@ -2,6 +2,7 @@ package cloud.hytora.driver.command;
 
 import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.common.misc.StringUtils;
+import cloud.hytora.context.ApplicationContext;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.annotation.data.RegisteredCommand;
@@ -56,6 +57,10 @@ public abstract class DefaultCommandManager implements CommandManager {
         this.handler = handler;
     }
 
+    @Override
+    public void registerCommand(Class<?> commandClass) {
+        this.registerCommand(ApplicationContext.getCurrent().getInstance(commandClass));
+    }
 
     @Override
     public void registerCommand(@Nonnull Object command) {

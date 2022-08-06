@@ -31,6 +31,9 @@ public class DefaultProviderRegistry implements ProviderRegistry {
             CloudDriver.getInstance().getEventManager().registerListener(provider);
         }
         this.entries.put(service, new DefaultProviderEntry<>(service, provider, immutable, needsReplacement));
+        CloudDriver.getInstance().executeIf(() -> {
+            CloudDriver.getInstance().getApplicationContext().setInstance(service.getSimpleName(), provider);
+        }, () -> CloudDriver.getInstance().getApplicationContext() != null);
         return Task.build(provider);
     }
 

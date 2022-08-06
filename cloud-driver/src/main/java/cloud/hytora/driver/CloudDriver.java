@@ -4,6 +4,7 @@ import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.collection.NamedThreadFactory;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.task.Task;
+import cloud.hytora.context.IApplicationContext;
 import cloud.hytora.driver.command.CommandManager;
 import cloud.hytora.driver.common.IClusterObject;
 import cloud.hytora.driver.event.EventManager;
@@ -351,6 +352,8 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
      */
     @Nonnull
     public abstract ServiceTaskManager getServiceTaskManager();
+
+    public abstract IApplicationContext getApplicationContext();
 
     /**
      * The current {@link AdvancedNetworkExecutor} instance

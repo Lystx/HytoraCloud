@@ -52,6 +52,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
         this.bootUpStatistics = new ConcurrentHashMap<>();
         this.remoteHandlers = new ArrayList<>();
 
+        System.out.println(hostName + ":" + port);
         this.bootAsync().handlePacketsAsync().openConnection(this.hostName, this.port)
                 .registerListener(wrapper -> {
                     if (wrapper.isSuccess()) {

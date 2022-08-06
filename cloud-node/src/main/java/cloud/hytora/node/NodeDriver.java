@@ -8,6 +8,8 @@ import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.common.logging.Logger;
+import cloud.hytora.context.ApplicationContext;
+import cloud.hytora.context.IApplicationContext;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
@@ -112,10 +114,12 @@ public class NodeDriver extends CloudDriver<INode> {
     @Getter
     private static NodeDriver instance;
 
-    private final ConfigManager configManager;
-    private final Console console;
-    private final CommandManager commandManager;
-    private final CommandSender commandSender;
+    private ConfigManager configManager;
+    private Console console;
+    private CommandManager commandManager;
+    private CommandSender commandSender;
+
+    private IApplicationContext context;
 
     private DriverUUIDCache uuidCache;
     private DriverStorage storage;
@@ -156,7 +160,6 @@ public class NodeDriver extends CloudDriver<INode> {
         this.running = true;
         this.console = console;
 
-
         //setting node screen manager
         this.providerRegistry.setProvider(ScreenManager.class, new NodeScreenManager());
 
@@ -167,257 +170,265 @@ public class NodeDriver extends CloudDriver<INode> {
         screenManager.joinScreen(consoleScreen);
 
 
-        //loading config
-        this.configManager = new ConfigManager();
-        this.configManager.read();
 
-        this.logger.setMinLevel(this.configManager.getConfig().getLogLevel());
-        this.logger.debug("Set LogLevel to {}", this.logger.getMinLevel().getName());
+        Task.callAsync(() -> {
+            logger.warn("Loading ApplicationContext...");
+            NodeDriver.this.context = new ApplicationContext(this);
+            return context;
+        }).onTaskSucess((ExceptionallyConsumer<IApplicationContext>) c -> {
+            logger.warn("Successfully loaded ApplicationContext!");
+            Thread.sleep(1000);
+            consoleScreen.clear();
 
-        //loading console
-        this.console.addInputHandler(s -> CloudDriver.getInstance().getCommandManager().executeCommand(CloudDriver.getInstance().getCommandSender(), s));
+            //loading config
+            this.configManager = new ConfigManager();
+            this.configManager.read();
 
-        this.commandSender = new DefaultCommandSender(this.configManager.getConfig().getNodeConfig().getNodeName(), this.console).forceFunction((ExceptionallyConsumer<String>) s -> console.forceWrite(ColoredMessageFormatter.format(new LogEntry(Instant.now(), "node", s, LogLevel.INFO, null))));
-        this.commandManager = new NodeCommandManager();
+            this.logger.setMinLevel(this.configManager.getConfig().getLogLevel());
+            this.logger.debug("Set LogLevel to {}", this.logger.getMinLevel().getName());
 
-        //checking if setup required
-        if (!this.configManager.isDidExist()) {
+            //loading console
+            this.console.addInputHandler(s -> CloudDriver.getInstance().getCommandManager().executeCommand(CloudDriver.getInstance().getCommandSender(), s));
 
-            new NodeSetup().start((setup, setupControlState) -> {
+            this.commandSender = new DefaultCommandSender(this.configManager.getConfig().getNodeConfig().getNodeName(), this.console).forceFunction((ExceptionallyConsumer<String>) s -> console.forceWrite(ColoredMessageFormatter.format(new LogEntry(Instant.now(), "node", s, LogLevel.INFO, null))));
+            this.commandManager = new NodeCommandManager();
 
-                if (setupControlState != SetupControlState.FINISHED) return;
-                switch (setup.getDatabaseType()) {
-                    case FILE:
-                        initConfigs(setup, null, null);
-                        break;
-                    case MYSQL:
-                        new MySqlSetup(NodeDriver.getInstance().getConsole()).start((mySqlSetup, setupControlState1) -> {
-                            if (setupControlState1 != SetupControlState.FINISHED) return;
-                            initConfigs(setup, mySqlSetup, null);
-                        });
-                        break;
-                    case MONGODB:
-                        new MongoDBSetup(NodeDriver.getInstance().getConsole()).start((mongoDBSetup, setupControlState1) -> {
-                            if (setupControlState1 != SetupControlState.FINISHED) return;
-                            initConfigs(setup, null, mongoDBSetup);
-                        });
-                        break;
-                }
+            //checking if setup required
+            if (!this.configManager.isDidExist()) {
 
+                new NodeSetup().start((setup, setupControlState) -> {
+
+                    if (setupControlState != SetupControlState.FINISHED) return;
+                    switch (setup.getDatabaseType()) {
+                        case FILE:
+                            initConfigs(setup, null, null);
+                            break;
+                        case MYSQL:
+                            new MySqlSetup(NodeDriver.getInstance().getConsole()).start((mySqlSetup, setupControlState1) -> {
+                                if (setupControlState1 != SetupControlState.FINISHED) return;
+                                initConfigs(setup, mySqlSetup, null);
+                            });
+                            break;
+                        case MONGODB:
+                            new MongoDBSetup(NodeDriver.getInstance().getConsole()).start((mongoDBSetup, setupControlState1) -> {
+                                if (setupControlState1 != SetupControlState.FINISHED) return;
+                                initConfigs(setup, null, mongoDBSetup);
+                            });
+                            break;
+                    }
+
+                });
+                return;
+            } else {
+                this.logger.trace("Setup already done ==> Skipping...");
+            }
+
+            this.commandManager.setActive(true);
+
+            if (devMode) {
+                this.logger.debug("DevMode is activated!");
+                //in dev mode player "Lystx" has every permission
+                this.providerRegistry.setProvider(PermissionChecker.class, (playerUniqueId, permission) -> playerUniqueId.toString().equalsIgnoreCase("82e8f5a2-4077-407b-af8b-e8325cad7191"));
+            }
+
+            //avoid log4j errors
+            org.apache.log4j.BasicConfigurator.configure(new AppenderSkeleton() {
+                @Override
+                protected void append(LoggingEvent loggingEvent) {}
+                @Override
+                public void close(){}
+                @Override
+                public boolean requiresLayout() {return false;}
             });
-            return;
-        } else {
-            this.logger.trace("Setup already done ==> Skipping...");
-        }
 
-        this.commandManager.setActive(true);
+            DriverStatus status = status();
 
-        if (devMode) {
-            this.logger.debug("DevMode is activated!");
-            //in dev mode player "Lystx" has every permission
-            this.providerRegistry.setProvider(PermissionChecker.class, (playerUniqueId, permission) -> playerUniqueId.toString().equalsIgnoreCase("82e8f5a2-4077-407b-af8b-e8325cad7191"));
-        }
+            this.logger.info("§8");
+            this.logger.info("§8");
+            this.logger.info("§b    __  __      __                   ________                __");
+            this.logger.info("§b   / / / /_  __/ /_____  _________ _/ ____/ /___  __  ______/ /");
+            this.logger.info("§b  / /_/ / / / / __/ __ \\/ ___/ __ `/ /   / / __ \\/ / / / __  / ");
+            this.logger.info("§b / __  / /_/ / /_/ /_/ / /  / /_/ / /___/ / /_/ / /_/ / /_/ /  ");
+            this.logger.info("§b/_/ /_/\\__, _____\\____/_/   \\__,_/\\____________/\\________,_/   ");
+            this.logger.info("§b      /____/ ___/____ ___  __  _______/ __/  | |  / <  /       ");
+            this.logger.info("§b ______    \\__ \\/ __ `__ \\/ / / / ___/ /_    | | / // /  ______");
+            this.logger.info("§b/_____/   ___/ / / / / / / /_/ / /  / __/    | |/ // /  /_____/");
+            this.logger.info("§b         /____/_/ /_/ /_/\\__,_/_/  /_/       |___//_/          ");
+            this.logger.info("§8");
+            this.logger.info("§bVersion §7: {}", (status.version() + " " + (status.experimental() ? "§8[§6Experimental§8]" : "§8[§aStable§8]")));
+            this.logger.info("§bDeveloper(s) §7: {}", (Arrays.toString(status.developers()).replace("[", "").replace("]", "")));
+            this.logger.info("§8==================================================");
+            this.logger.info("§8");
+            this.logger.info("§8");
+            this.logger.info("§8");
 
-        //avoid log4j errors
-        org.apache.log4j.BasicConfigurator.configure(new AppenderSkeleton() {
-            @Override
-            protected void append(LoggingEvent loggingEvent) {
+            this.node = new BaseNode(configManager);
+
+            //starting web-server
+            this.webServer = new NettyHttpServer();
+            for (ProtocolAddress address : configManager.getConfig().getHttpListeners()) {
+                this.webServer.addListener(address);
             }
 
-            @Override
-            public void close() {
+            //registering default web api handlers
+            this.webServer.getHandlerRegistry().registerHandlers("v1", new V1PingRouter(), new V1StatusRouter());
+
+            this.executor = new NodeBasedClusterExecutor(this.configManager.getConfig());
+
+            this.databaseManager = new DefaultDatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType(), MainConfiguration.getInstance().getDatabaseConfiguration());
+            this.providerRegistry.setProvider(IDatabaseManager.class, this.databaseManager);
+
+            SectionedDatabase database = this.databaseManager.getDatabase();
+            database.registerSection("players", DefaultCloudOfflinePlayer.class);
+            database.registerSection("tasks", UniversalServiceTask.class);
+            database.registerSection("groups", DefaultTaskGroup.class);
+
+            this.serviceTaskManager = new NodeServiceTaskManager();
+            this.serviceManager = new NodeServiceManager();
+            this.playerManager = new NodePlayerManager(this.eventManager);
+            this.channelMessenger = new NodeChannelMessenger(executor);
+            this.nodeManager = new NodeNodeManager();
+            this.moduleManager = new NodeModuleManager();
+            this.logger.info("§8");
+
+            if (node.getConfig().getClusterAddresses() != null && node.getConfig().getClusterAddresses().length > 0) {
+                node.getConfig().setRemote();
             }
 
-            @Override
-            public boolean requiresLayout() {
-                return false;
+            if (this.node.getConfig().isRemote()) {
+                this.executor.connectToAllOtherNodes(node.getName(), node.getConfig().getClusterAddresses()).syncUninterruptedly(); //wait till complete
+            } else {
+                this.logger.info("§7This Node is a HeadNode §7and boots up the Cluster...");
             }
+
+            this.uuidCache = new NodeUUIDCache();
+            this.uuidCache.setEnabled(MainConfiguration.getInstance().isUniqueIdCaching());
+            this.uuidCache.loadAsync()
+                    .onTaskSucess(uuids -> logger.info("Loaded {} UUIDs from cache!", uuids.size()));
+
+
+            //creating needed files
+            this.logger.trace("Creating needed folders...");
+            NodeDriver.NODE_FOLDER.mkdirs();
+
+            NodeDriver.STORAGE_FOLDER.mkdirs();
+            NodeDriver.STORAGE_VERSIONS_FOLDER.mkdirs();
+
+            NodeDriver.SERVICE_DIR.mkdirs();
+            NodeDriver.SERVICE_DIR_STATIC.mkdirs();
+            NodeDriver.SERVICE_DIR_DYNAMIC.mkdirs();
+            this.logger.trace("Required folders created!");
+
+
+            //checking if directories got deleted meanwhile
+            for (TaskGroup parent : this.serviceTaskManager.getAllTaskGroups()) {
+
+                //creating templates
+                for (ServiceTemplate template : parent.getTemplates()) {
+                    TemplateStorage storage = template.getStorage();
+                    if (storage != null) {
+                        storage.createTemplate(template);
+                    }
+                }
+            }
+
+            FileUtils.setTempDirectory(Paths.get(".temp"));
+
+            //registering template storage
+            this.templateManager.registerStorage(new LocalTemplateStorage());
+
+            //copying files
+            this.logger.trace("§7Copying files§8...");
+            FileUtils.copyResource("/impl/plugin.jar", STORAGE_VERSIONS_FOLDER + "/plugin.jar", getClass());
+            FileUtils.copyResource("/impl/remote.jar", STORAGE_VERSIONS_FOLDER + "/remote.jar", getClass());
+
+            //storage managing
+            this.storage = new NodeDriverStorage();
+            this.storage.fetch();
+
+            this.logger.trace("Registering Commands & ArgumentParsers...");
+            this.commandManager.registerCommand(ShutdownCommand.class);
+            this.commandManager.registerCommand(HelpCommand.class);
+            this.commandManager.registerCommand(NodeCommand.class);
+            this.commandManager.registerCommand(TaskCommand.class);
+            this.commandManager.registerCommand(ClearCommand.class);
+            this.commandManager.registerCommand(ServiceCommand.class);
+            this.commandManager.registerCommand(PlayerCommand.class);
+            this.commandManager.registerCommand(TickCommand.class);
+            this.commandManager.registerCommand(ClusterCommand.class);
+            this.commandManager.registerCommand(LoggerCommand.class);
+
+            //registering command argument parsers
+            this.commandManager.registerParser(ServiceVersion.class, ServiceVersion::valueOf);
+            this.commandManager.registerParser(LogLevel.class, LogLevel::valueOf);
+            this.commandManager.registerParser(ICloudServer.class, this.serviceManager::getServiceByNameOrNull);
+            this.commandManager.registerParser(IServiceTask.class, this.serviceTaskManager::getTaskByNameOrNull);
+            this.commandManager.registerParser(ICloudPlayer.class, this.playerManager::getCloudPlayerByNameOrNull);
+            this.commandManager.registerParser(CloudOfflinePlayer.class, this.playerManager::getOfflinePlayerByNameBlockingOrNull);
+            this.commandManager.registerParser(INode.class, this.nodeManager::getNodeByNameOrNull);
+
+            this.logger.trace("Registered " + this.commandManager.getCommands().size() + " Commands & " + this.commandManager.getParsers().size() + " Parsers!");
+            this.logger.trace("§8");
+
+            this.storage.set("cloud::messages", this.configManager.getConfig().getMessages());
+
+            //registering packet handlers
+            this.logger.trace("Registering Packets & Handlers...");
+            this.executor.registerPacketHandler(new NodeRedirectPacketHandler());
+            this.executor.registerPacketHandler(new NodeDataCycleHandler());
+            this.executor.registerPacketHandler(new NodeOfflinePlayerPacketHandler());
+            this.executor.registerPacketHandler(new NodeModulePacketHandler());
+            this.executor.registerPacketHandler(new NodeModuleControllerPacketHandler());
+            this.executor.registerPacketHandler(new NodeStoragePacketHandler());
+            this.executor.registerPacketHandler(new NodeLoggingPacketHandler());
+            this.executor.registerPacketHandler(new NodeServiceShutdownHandler());
+            this.executor.registerPacketHandler(new NodePlayerCommandHandler());
+            this.executor.registerPacketHandler(new NodeServiceConfigureHandler());
+
+            //remote packet handlers
+            this.executor.registerUniversalHandler(new NodeRemoteShutdownHandler());
+            this.executor.registerUniversalHandler(new NodeRemoteServerStartHandler());
+            this.executor.registerUniversalHandler(new NodeRemoteServerStopHandler());
+            this.executor.registerUniversalHandler(new NodeRemoteLoggingHandler());
+            this.executor.registerRemoteHandler(new NodeRemoteCacheHandler());
+
+            this.logger.trace("Registered " + PacketProvider.getRegisteredPackets().size() + " Packets & " + this.executor.getRegisteredPacketHandlers().size() + " PacketHandlers.");
+            this.logger.trace("§8");
+
+            //heart-beat execution for time out checking
+            TimeOutChecker check = new TimeOutChecker();
+            scheduledExecutor.scheduleAtFixedRate(check, 1, 1, TimeUnit.SECONDS);
+
+            //managing and loading modules
+            this.moduleManager.setModulesDirectory(MODULE_FOLDER.toPath());
+            this.moduleManager.resolveModules();
+            this.moduleManager.loadModules();
+
+            //enabling modules after having loaded the database
+            this.moduleManager.enableModules();
+
+
+            // print finish successfully message
+            this.logger.info("§8");
+            this.logger.info("§8");
+            this.logger.info("This Node has successfully booted up and is now ready for personal use!");
+            this.logger.info("=> Thanks for using HytoraCloud");
+            this.logger.info("§8");
+            this.logger.info("§8");
+
+            //starting service queue
+            this.serviceQueue = new NodeServiceQueue();
+
+            //add node cycle data
+            scheduledExecutor.scheduleAtFixedRate(() -> executor.sendPacketToAll(new NodeCycleDataPacket(this.node.getConfig().getNodeName(), this.node.getLastCycleData())), 1_000, NODE_PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
+            scheduledExecutor.scheduleAtFixedRate(() -> this.executor.getClient("Application").ifPresent(DriverUpdatePacket::publishUpdate), 1_000, 1, TimeUnit.SECONDS);
+
+            // add a shutdown hook for fast closes
+            Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
         });
 
-        DriverStatus status = status();
-
-        this.logger.info("§8");
-        this.logger.info("§8");
-        this.logger.info("§b    __  __      __                   ________                __");
-        this.logger.info("§b   / / / /_  __/ /_____  _________ _/ ____/ /___  __  ______/ /");
-        this.logger.info("§b  / /_/ / / / / __/ __ \\/ ___/ __ `/ /   / / __ \\/ / / / __  / ");
-        this.logger.info("§b / __  / /_/ / /_/ /_/ / /  / /_/ / /___/ / /_/ / /_/ / /_/ /  ");
-        this.logger.info("§b/_/ /_/\\__, _____\\____/_/   \\__,_/\\____________/\\________,_/   ");
-        this.logger.info("§b      /____/ ___/____ ___  __  _______/ __/  | |  / <  /       ");
-        this.logger.info("§b ______    \\__ \\/ __ `__ \\/ / / / ___/ /_    | | / // /  ______");
-        this.logger.info("§b/_____/   ___/ / / / / / / /_/ / /  / __/    | |/ // /  /_____/");
-        this.logger.info("§b         /____/_/ /_/ /_/\\__,_/_/  /_/       |___//_/          ");
-        this.logger.info("§8");
-        this.logger.info("§bVersion §7: {}", (status.version() + " " + (status.experimental() ? "§8[§6Experimental§8]" : "§8[§aStable§8]")));
-        this.logger.info("§bDeveloper(s) §7: {}", (Arrays.toString(status.developers()).replace("[", "").replace("]", "")));
-        this.logger.info("§8==================================================");
-        this.logger.info("§8");
-        this.logger.info("§8");
-        this.logger.info("§8");
-
-        this.node = new BaseNode(configManager);
-
-        //starting web-server
-        this.webServer = new NettyHttpServer();
-        for (ProtocolAddress address : configManager.getConfig().getHttpListeners()) {
-            this.webServer.addListener(address);
-        }
-
-        //registering default web api handlers
-        this.webServer.getHandlerRegistry().registerHandlers("v1", new V1PingRouter(), new V1StatusRouter());
-
-        this.executor = new NodeBasedClusterExecutor(this.configManager.getConfig());
-
-        this.databaseManager = new DefaultDatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType(), MainConfiguration.getInstance().getDatabaseConfiguration());
-        this.providerRegistry.setProvider(IDatabaseManager.class, this.databaseManager);
-
-        SectionedDatabase database = this.databaseManager.getDatabase();
-        database.registerSection("players", DefaultCloudOfflinePlayer.class);
-        database.registerSection("tasks", UniversalServiceTask.class);
-        database.registerSection("groups", DefaultTaskGroup.class);
-
-        this.serviceTaskManager = new NodeServiceTaskManager();
-        this.serviceManager = new NodeServiceManager();
-        this.playerManager = new NodePlayerManager(this.eventManager);
-        this.channelMessenger = new NodeChannelMessenger(executor);
-        this.nodeManager = new NodeNodeManager();
-        this.moduleManager = new NodeModuleManager();
-        this.logger.info("§8");
-
-        if (node.getConfig().getClusterAddresses() != null && node.getConfig().getClusterAddresses().length > 0) {
-            node.getConfig().setRemote();
-        }
-
-        if (this.node.getConfig().isRemote()) {
-            this.executor.connectToAllOtherNodes(node.getName(), node.getConfig().getClusterAddresses()).syncUninterruptedly(); //wait till complete
-        } else {
-            this.logger.info("§7This Node is a HeadNode §7and boots up the Cluster...");
-        }
-
-        this.uuidCache = new NodeUUIDCache();
-        this.uuidCache.setEnabled(MainConfiguration.getInstance().isUniqueIdCaching());
-        this.uuidCache.loadAsync()
-                .onTaskSucess(uuids -> logger.info("Loaded {} UUIDs from cache!", uuids.size()));
 
 
-        //creating needed files
-        this.logger.trace("Creating needed folders...");
-        NodeDriver.NODE_FOLDER.mkdirs();
-
-        NodeDriver.STORAGE_FOLDER.mkdirs();
-        NodeDriver.STORAGE_VERSIONS_FOLDER.mkdirs();
-
-        NodeDriver.SERVICE_DIR.mkdirs();
-        NodeDriver.SERVICE_DIR_STATIC.mkdirs();
-        NodeDriver.SERVICE_DIR_DYNAMIC.mkdirs();
-        this.logger.trace("Required folders created!");
-
-
-        //checking if directories got deleted meanwhile
-        for (TaskGroup parent : this.serviceTaskManager.getAllTaskGroups()) {
-
-            //creating templates
-            for (ServiceTemplate template : parent.getTemplates()) {
-                TemplateStorage storage = template.getStorage();
-                if (storage != null) {
-                    storage.createTemplate(template);
-                }
-            }
-        }
-
-        FileUtils.setTempDirectory(Paths.get(".temp"));
-
-        //registering template storage
-        this.templateManager.registerStorage(new LocalTemplateStorage());
-
-        //copying files
-        this.logger.trace("§7Copying files§8...");
-        FileUtils.copyResource("/impl/plugin.jar", STORAGE_VERSIONS_FOLDER + "/plugin.jar", getClass());
-        FileUtils.copyResource("/impl/remote.jar", STORAGE_VERSIONS_FOLDER + "/remote.jar", getClass());
-
-        //storage managing
-        this.storage = new NodeDriverStorage();
-        this.storage.fetch();
-
-        this.logger.trace("Registering Commands & ArgumentParsers...");
-        this.commandManager.registerCommand(new ShutdownCommand());
-        this.commandManager.registerCommand(new HelpCommand());
-        this.commandManager.registerCommand(new NodeCommand());
-        this.commandManager.registerCommand(new TaskCommand());
-        this.commandManager.registerCommand(new ClearCommand());
-        this.commandManager.registerCommand(new ServiceCommand());
-        this.commandManager.registerCommand(new PlayerCommand());
-        this.commandManager.registerCommand(new TickCommand());
-        this.commandManager.registerCommand(new ClusterCommand());
-        this.commandManager.registerCommand(new LoggerCommand());
-
-        //registering command argument parsers
-        this.commandManager.registerParser(ServiceVersion.class, ServiceVersion::valueOf);
-        this.commandManager.registerParser(LogLevel.class, LogLevel::valueOf);
-        this.commandManager.registerParser(ICloudServer.class, this.serviceManager::getServiceByNameOrNull);
-        this.commandManager.registerParser(IServiceTask.class, this.serviceTaskManager::getTaskByNameOrNull);
-        this.commandManager.registerParser(ICloudPlayer.class, this.playerManager::getCloudPlayerByNameOrNull);
-        this.commandManager.registerParser(CloudOfflinePlayer.class, this.playerManager::getOfflinePlayerByNameBlockingOrNull);
-        this.commandManager.registerParser(INode.class, this.nodeManager::getNodeByNameOrNull);
-
-        this.logger.trace("Registered " + this.commandManager.getCommands().size() + " Commands & " + this.commandManager.getParsers().size() + " Parsers!");
-        this.logger.trace("§8");
-
-        this.storage.set("cloud::messages", this.configManager.getConfig().getMessages());
-
-        //registering packet handlers
-        this.logger.trace("Registering Packets & Handlers...");
-        this.executor.registerPacketHandler(new NodeRedirectPacketHandler());
-        this.executor.registerPacketHandler(new NodeDataCycleHandler());
-        this.executor.registerPacketHandler(new NodeOfflinePlayerPacketHandler());
-        this.executor.registerPacketHandler(new NodeModulePacketHandler());
-        this.executor.registerPacketHandler(new NodeModuleControllerPacketHandler());
-        this.executor.registerPacketHandler(new NodeStoragePacketHandler());
-        this.executor.registerPacketHandler(new NodeLoggingPacketHandler());
-        this.executor.registerPacketHandler(new NodeServiceShutdownHandler());
-        this.executor.registerPacketHandler(new NodePlayerCommandHandler());
-        this.executor.registerPacketHandler(new NodeServiceConfigureHandler());
-
-        //remote packet handlers
-        this.executor.registerUniversalHandler(new NodeRemoteShutdownHandler());
-        this.executor.registerUniversalHandler(new NodeRemoteServerStartHandler());
-        this.executor.registerUniversalHandler(new NodeRemoteServerStopHandler());
-        this.executor.registerUniversalHandler(new NodeRemoteLoggingHandler());
-        this.executor.registerRemoteHandler(new NodeRemoteCacheHandler());
-
-        this.logger.trace("Registered " + PacketProvider.getRegisteredPackets().size() + " Packets & " + this.executor.getRegisteredPacketHandlers().size() + " PacketHandlers.");
-        this.logger.trace("§8");
-
-        //heart-beat execution for time out checking
-        TimeOutChecker check = new TimeOutChecker();
-        scheduledExecutor.scheduleAtFixedRate(check, 1, 1, TimeUnit.SECONDS);
-
-        //managing and loading modules
-        this.moduleManager.setModulesDirectory(MODULE_FOLDER.toPath());
-        this.moduleManager.resolveModules();
-        this.moduleManager.loadModules();
-
-        //enabling modules after having loaded the database
-        this.moduleManager.enableModules();
-
-
-        // print finish successfully message
-        this.logger.info("§8");
-        this.logger.info("§8");
-        this.logger.info("This Node has successfully booted up and is now ready for personal use!");
-        this.logger.info("=> Thanks for using HytoraCloud");
-        this.logger.info("§8");
-        this.logger.info("§8");
-
-        //starting service queue
-        this.serviceQueue = new NodeServiceQueue();
-
-        //add node cycle data
-        scheduledExecutor.scheduleAtFixedRate(() -> executor.sendPacketToAll(new NodeCycleDataPacket(this.node.getConfig().getNodeName(), this.node.getLastCycleData())), 1_000, NODE_PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
-        scheduledExecutor.scheduleAtFixedRate(() -> this.executor.getClient("Application").ifPresent(DriverUpdatePacket::publishUpdate), 1_000, 1, TimeUnit.SECONDS);
-
-        // add a shutdown hook for fast closes
-        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
     }
 
     @Override
@@ -576,6 +587,10 @@ public class NodeDriver extends CloudDriver<INode> {
         System.exit(0);
     }
 
+    @Override
+    public IApplicationContext getApplicationContext() {
+        return context;
+    }
 
     @Override
     public void shutdown() {
