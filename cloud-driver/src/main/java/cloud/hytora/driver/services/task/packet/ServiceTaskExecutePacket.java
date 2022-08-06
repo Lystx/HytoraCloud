@@ -5,7 +5,7 @@ import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.task.DefaultServiceTask;
+import cloud.hytora.driver.services.task.UniversalServiceTask;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -28,7 +28,7 @@ public class ServiceTaskExecutePacket extends AbstractPacket {
         switch (state) {
 
             case READ:
-                this.serviceTask = buf.readObject(DefaultServiceTask.class);
+                this.serviceTask = buf.readObject(UniversalServiceTask.class);
                 this.payLoad = buf.readEnum(ExecutionPayLoad.class);
                 break;
 

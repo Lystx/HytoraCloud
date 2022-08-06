@@ -19,9 +19,9 @@ import lombok.*;
 @Getter
 @NoArgsConstructor
 @Setter
-public class DriverNodeObject extends AbstractNode {
+public class UniversalNode extends AbstractNode {
 
-    public DriverNodeObject(INodeConfig config, INodeData lastCycleData) {
+    public UniversalNode(INodeConfig config, INodeData lastCycleData) {
         super(config, lastCycleData);
     }
 
@@ -29,7 +29,6 @@ public class DriverNodeObject extends AbstractNode {
     public void sendPacket(IPacket packet) {
         packet.publishTo(this.getName());
     }
-
 
     @Override
     public void shutdown() {

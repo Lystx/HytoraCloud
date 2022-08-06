@@ -8,7 +8,9 @@ import cloud.hytora.driver.command.sender.CommandSender;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Command({"help", "?"})
 @CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
@@ -23,7 +25,7 @@ public class HelpCommand {
 
         java.util.List<String> duplicates = new ArrayList<String>();
 
-        for (RegisteredCommand command : CloudDriver.getInstance().getCommandManager().getCommands()) {
+        for (RegisteredCommand command : CloudDriver.getInstance().getCommandManager().getCommands().stream().sorted(Comparator.comparing(RegisteredCommand::getPath)).collect(Collectors.toList())) {
             if (!command.getScope().covers(sender)) {
                 continue;
             }

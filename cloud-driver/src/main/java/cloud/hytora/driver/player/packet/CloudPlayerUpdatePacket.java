@@ -3,7 +3,7 @@ package cloud.hytora.driver.player.packet;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
-import cloud.hytora.driver.player.impl.DefaultCloudPlayer;
+import cloud.hytora.driver.player.impl.UniversalCloudPlayer;
 import cloud.hytora.driver.player.ICloudPlayer;
 
 import lombok.AllArgsConstructor;
@@ -26,7 +26,7 @@ public class CloudPlayerUpdatePacket extends AbstractPacket {
         switch (state) {
 
             case READ:
-                player = buf.readObject(DefaultCloudPlayer.class);
+                player = buf.readObject(UniversalCloudPlayer.class);
                 break;
 
             case WRITE:

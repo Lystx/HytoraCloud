@@ -21,6 +21,8 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.ToIntFunction;
+import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 
 @Getter
@@ -44,6 +46,26 @@ public abstract class AbstractNode implements INode {
                         it.getServiceState() == ServiceState.ONLINE &&
                             it.getRunningNodeName().equalsIgnoreCase(this.getName())
                 ).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean hasEnoughMemoryToStart(ICloudServer cloudServer) {
+        return getConfig().getMemory() >= (config.getMemory() + cloudServer.getTask().getMemory());
+    }
+
+
+    @Override
+    public long getUsedMemoryByServices() {
+        long memory = 0L;
+
+        for (ICloudServer cloudServer : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
+            if (!cloudServer.getRunningNodeName().equalsIgnoreCase(this.getName())) {
+                continue;
+            }
+            memory += cloudServer.getTask().getMemory();
+        }
+
+        return memory;
     }
 
     @Override

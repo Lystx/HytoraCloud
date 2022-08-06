@@ -1,5 +1,6 @@
 package cloud.hytora.driver.services.utils;
 
+import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
@@ -40,6 +41,11 @@ public class RemoteIdentity {
     private ServiceProcessType processType = ServiceProcessType.WRAPPER;
 
     /**
+     * The logLevel of the cloud
+     */
+    private LogLevel logLevel = LogLevel.INFO;
+
+    /**
      * the processing of players
      */
     private PlayerLoginProcessing playerLoginProcessing = PlayerLoginProcessing.UUID_CACHE;
@@ -69,7 +75,7 @@ public class RemoteIdentity {
 
 
     public static RemoteIdentity forApplication(ProtocolAddress address) {
-        return new RemoteIdentity(address.getAuthKey(), "", VersionType.BUNGEE, ServiceProcessType.WRAPPER, PlayerLoginProcessing.WAIT_FOR_UUID, address.getHost(), CloudDriver.APPLICATION_NAME, address.getPort());
+        return new RemoteIdentity(address.getAuthKey(), "", VersionType.BUNGEE, ServiceProcessType.WRAPPER, LogLevel.INFO, PlayerLoginProcessing.WAIT_FOR_UUID, address.getHost(), CloudDriver.APPLICATION_NAME, address.getPort());
     }
 
     public static RemoteIdentity read(File file) {

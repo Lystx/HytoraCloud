@@ -1,5 +1,6 @@
 package cloud.hytora.driver.networking.protocol;
 
+import cloud.hytora.document.gson.adapter.ExcludeIfNull;
 import cloud.hytora.document.gson.adapter.ExcludeJsonField;
 import cloud.hytora.driver.exception.CloudException;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
@@ -24,7 +25,7 @@ public class ProtocolAddress implements IBufferObject {
     private String host;
     private int port;
 
-    @ExcludeJsonField
+    @ExcludeIfNull
     private String authKey;
 
     public ProtocolAddress(String host, int port) {

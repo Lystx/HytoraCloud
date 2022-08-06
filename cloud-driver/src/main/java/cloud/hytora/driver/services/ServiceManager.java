@@ -80,7 +80,7 @@ public interface ServiceManager {
 
 
     default List<ICloudServer> getAllServicesByTask(@NotNull IServiceTask serviceTask) {
-        return this.getAllCachedServices().stream().filter(it -> it.getTask().getName().equalsIgnoreCase(serviceTask.getName())).collect(Collectors.toList());
+        return this.getAllCachedServices().stream().filter(it -> it.getTask() != null && it.getTask().getName().equalsIgnoreCase(serviceTask.getName())).collect(Collectors.toList());
     }
 
     default List<ICloudServer> getAllServicesByState(@NotNull ServiceState serviceState) {

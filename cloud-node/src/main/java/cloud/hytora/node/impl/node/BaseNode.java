@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 public class BaseNode extends AbstractNode {
 
     private final ConfigManager configManager;
-
     public BaseNode(ConfigManager configManager) {
         super(configManager.getConfig().getNodeConfig(), DefaultNodeData.current());
         this.configManager = configManager;

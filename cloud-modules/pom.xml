@@ -19,6 +19,7 @@
         <module>module-notify</module>
         <module>module-perms</module>
         <module>module-npc</module>
+        <module>module-hubcommand</module>
     </modules>
 
     <properties>

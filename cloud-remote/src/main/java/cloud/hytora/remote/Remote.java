@@ -42,6 +42,7 @@ import cloud.hytora.remote.impl.module.RemoteModuleManager;
 import lombok.Getter;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import lombok.Setter;
+import lombok.val;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -63,7 +64,6 @@ public class Remote extends CloudDriver<ICloudServer> {
     private final ServiceTaskManager serviceTaskManager;
     private final ServiceManager serviceManager;
     private final PlayerManager playerManager;
-
     private final DriverUUIDCache cache;
     private final CommandManager commandManager;
     private final CommandSender commandSender;

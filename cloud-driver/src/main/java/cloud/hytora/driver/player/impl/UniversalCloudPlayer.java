@@ -5,6 +5,7 @@ import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.gson.adapter.ExcludeJsonField;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.common.CloudMessages;
 import cloud.hytora.driver.exception.ModuleNeededException;
 import cloud.hytora.driver.exception.PlayerNotOnlineException;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
@@ -22,6 +23,7 @@ import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import lombok.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -29,27 +31,25 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
-public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements ICloudPlayer {
+public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements ICloudPlayer {
 
-    @ExcludeJsonField
-    private ICloudServer server;
-    @ExcludeJsonField
-    private ICloudServer proxyServer;
+    private String serverName;
+    private String proxyName;
     @ExcludeJsonField
     private PlayerConnection connection;
 
-    public DefaultCloudPlayer(UUID uuid, String name) {
+    public UniversalCloudPlayer(UUID uuid, String name) {
         this(uuid, name, null, null);
     }
 
-    public DefaultCloudPlayer(UUID uniqueId, String name, ICloudServer server, ICloudServer proxyServer) {
+    public UniversalCloudPlayer(UUID uniqueId, String name, ICloudServer server, ICloudServer proxyServer) {
         this(uniqueId, name, System.currentTimeMillis(), System.currentTimeMillis(), server, proxyServer, DocumentFactory.newJsonDocument(), new DefaultTemporaryProperties());
     }
 
-    public DefaultCloudPlayer(UUID uniqueId, String name, long firstLogin, long lastLogin, ICloudServer server, ICloudServer proxyServer, Document properties, TemporaryProperties temporaryProperties) {
+    public UniversalCloudPlayer(UUID uniqueId, String name, long firstLogin, long lastLogin, ICloudServer server, ICloudServer proxyServer, Document properties, TemporaryProperties temporaryProperties) {
         super(uniqueId, name,  firstLogin, lastLogin, properties, (DefaultTemporaryProperties) temporaryProperties);
-        this.server = server;
-        this.proxyServer = proxyServer;
+        this.serverName = server == null ? "" : server.getName();
+        this.proxyName = proxyServer == null ? "" :proxyServer.getName();
 
         this.connection = new DefaultPlayerConnection(proxyServer == null ? "UNKNOWN" : proxyServer.getName(), new ProtocolAddress("127.0.0.1", -1), -1, true, false);
     }
@@ -62,6 +62,39 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements ICl
     @Override
     public ICloudPlayer asOnlinePlayer() throws PlayerNotOnlineException {
         return this;
+    }
+
+
+    @Nullable
+    @Override
+    public ICloudServer getServer() {
+        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(this.serverName);
+    }
+
+    @NotNull
+    @Override
+    public ICloudServer getProxyServer() {
+        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(this.proxyName);
+    }
+
+    @Override
+    public Task<ICloudServer> getServerAsync() {
+        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNullAsync(this.serverName);
+    }
+
+    @Override
+    public Task<ICloudServer> getProxyServerAsync() {
+        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNullAsync(this.proxyName);
+    }
+
+    @Override
+    public void setProxyServer(@NotNull ICloudServer service) {
+        this.proxyName = service.getName();
+    }
+
+    @Override
+    public void setServer(@NotNull ICloudServer service) {
+        this.serverName = service.getName();
     }
 
     @Override
@@ -88,11 +121,9 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements ICl
                 this.name = buf.readString();
                 this.connection = buf.readOptionalObject(DefaultPlayerConnection.class);
 
-                String proxyName = buf.readOptionalString();
-                String serverName = buf.readOptionalString();
+                this.proxyName = buf.readOptionalString();
+                this.serverName = buf.readOptionalString();
 
-                this.proxyServer = proxyName == null ? null : CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(proxyName);
-                this.server = serverName == null ? null : CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(serverName);
                 break;
 
             case WRITE:
@@ -101,8 +132,8 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements ICl
 
                 buf.writeOptionalObject(this.connection);
 
-                buf.writeOptionalString(this.proxyServer == null ? null : this.proxyServer.getName());
-                buf.writeOptionalString(this.server == null ? null : this.server.getName());
+                buf.writeOptionalString(this.proxyName);
+                buf.writeOptionalString(this.serverName);
                 break;
         }
     }
@@ -119,7 +150,7 @@ public class DefaultCloudPlayer extends DefaultCloudOfflinePlayer implements ICl
 
     @Override
     public void sendMessage(@NotNull String message) {
-        PlayerExecutor.forPlayer(this).sendMessage(message);
+        PlayerExecutor.forPlayer(this).sendMessage(CloudMessages.getInstance().getPrefix() + " " + message);
     }
 
     @Override

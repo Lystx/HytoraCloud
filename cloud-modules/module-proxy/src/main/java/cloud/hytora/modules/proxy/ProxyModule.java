@@ -71,7 +71,8 @@ public class ProxyModule extends DriverModule {
 
     @ModuleTask(id = 3, state = ModuleState.DISABLED)
     public void disable() {
-
+        CloudDriver.getInstance().getEventManager().unregisterListener(ModuleListener.class);
+        CloudDriver.getInstance().getCommandManager().unregisterCommand(ProxyCommand.class);
     }
 
 
@@ -99,33 +100,36 @@ public class ProxyModule extends DriverModule {
 
     public void updateTabList() {
         String[] tabList = selectTabList();
-        String header = tabList[0];
-        String footer = tabList[1];
+        final String[] header = {tabList[0]};
+        final String[] footer = {tabList[1]};
 
         //setting tabList
         for (ICloudPlayer cloudPlayer : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
-            PlayerExecutor executor = PlayerExecutor.forPlayer(cloudPlayer);
-            ICloudServer server = cloudPlayer.getServer();
+            cloudPlayer.getProxyServerAsync().onTaskSucess(proxyServer -> {
 
-            if (server != null) {
-                header = server.replacePlaceHolders(header);
-                footer = server.replacePlaceHolders(footer);
-            }
+                PlayerExecutor executor = PlayerExecutor.forPlayer(cloudPlayer);
+                ICloudServer server = cloudPlayer.getServer();
 
-            //proxy place holder
-            header = header.replace("{proxy}", (cloudPlayer.getProxyServer() == null ? "UNKNOWN" : cloudPlayer.getProxyServer().getName()));
-            footer = footer.replace("{proxy}", (cloudPlayer.getProxyServer() == null ? "UNKNOWN" : cloudPlayer.getProxyServer().getName()));
+                if (server != null) {
+                    header[0] = server.replacePlaceHolders(header[0]);
+                    footer[0] = server.replacePlaceHolders(footer[0]);
+                }
 
-            header = header.replace("{service}", (cloudPlayer.getServer() == null ? "UNKNOWN" : cloudPlayer.getServer().getName()));
-            footer = footer.replace("{service}", (cloudPlayer.getServer() == null ? "UNKNOWN" : cloudPlayer.getServer().getName()));
+                //proxy place holder
+                header[0] = header[0].replace("{proxy}", proxyServer.getName());
+                footer[0] = footer[0].replace("{proxy}", proxyServer.getName());
 
-            //player placeholder
-            header = header.replace("{players.online}", "" + CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers().size());
-            footer = footer.replace("{players.online}", "" + CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers().size());
-            footer = footer.replace("{players.max}", "" + CloudDriver.getInstance().getPlayerManager().countPlayerCapacity());
-            header = header.replace("{players.max}", "" + CloudDriver.getInstance().getPlayerManager().countPlayerCapacity());
+                header[0] = header[0].replace("{service}", (cloudPlayer.getServer() == null ? "UNKNOWN" : cloudPlayer.getServer().getName()));
+                footer[0] = footer[0].replace("{service}", (cloudPlayer.getServer() == null ? "UNKNOWN" : cloudPlayer.getServer().getName()));
 
-            executor.setTabList(header, footer);
+                //player placeholder
+                header[0] = header[0].replace("{players.online}", "" + CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers().size());
+                footer[0] = footer[0].replace("{players.online}", "" + CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers().size());
+                footer[0] = footer[0].replace("{players.max}", "" + CloudDriver.getInstance().getPlayerManager().countPlayerCapacity());
+                header[0] = header[0].replace("{players.max}", "" + CloudDriver.getInstance().getPlayerManager().countPlayerCapacity());
+
+                executor.setTabList(header[0], footer[0]);
+            });
         }
 
     }

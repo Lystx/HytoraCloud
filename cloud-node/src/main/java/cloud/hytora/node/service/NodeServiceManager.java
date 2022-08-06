@@ -53,6 +53,10 @@ public class NodeServiceManager extends DefaultServiceManager {
         screenManager.registerScreen(service.getName(), false);
 
         CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceRegisterEvent(service));
+
+        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        }
     }
 
 
@@ -125,6 +129,10 @@ public class NodeServiceManager extends DefaultServiceManager {
         }
 
         screenManager.unregisterScreen(service.getName());
+
+        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        }
     }
 
     @Override
@@ -159,10 +167,11 @@ public class NodeServiceManager extends DefaultServiceManager {
         CloudDriver.getInstance().getLogger().debug("Updated Server {}", service.getName());
         this.updateServerInternally(service);
 
-        DriverUpdatePacket.publishUpdate(NodeDriver.getInstance().getNode());
-
         //calling update event on every other side
         CloudDriver.getInstance().getEventManager().callEventOnlyPacketBased(new ServiceUpdateEvent(service));
+        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        }
     }
 
     @EventListener

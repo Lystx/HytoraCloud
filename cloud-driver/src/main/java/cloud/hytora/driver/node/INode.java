@@ -23,6 +23,10 @@ public interface INode extends IClusterObject<INode>, INetworkExecutor {
 
     void setLastCycleData(INodeData lastCycleData);
 
+    boolean hasEnoughMemoryToStart(ICloudServer cloudServer);
+
+    long getUsedMemoryByServices();
+
     void shutdown();
 
     void stopServer(ICloudServer server);

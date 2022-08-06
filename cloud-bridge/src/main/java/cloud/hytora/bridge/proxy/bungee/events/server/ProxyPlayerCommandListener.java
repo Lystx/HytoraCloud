@@ -5,6 +5,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandObject;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.data.RegisteredCommand;
+import cloud.hytora.driver.common.CloudMessages;
 import cloud.hytora.driver.player.packet.CloudPlayerExecuteCommandPacket;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.storage.DriverStorage;
@@ -27,7 +28,7 @@ public class ProxyPlayerCommandListener implements Listener {
             ICloudPlayer cloudPlayer = CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(proxiedPlayer.getUniqueId());
 
             if (cloudPlayer == null) {
-                proxiedPlayer.sendMessage("ERROR");
+                proxiedPlayer.disconnect(CloudMessages.getInstance().getPrefix() + " §cCouldn't find your CloudPlayer. Please rejoin!");
                 return;
             }
 

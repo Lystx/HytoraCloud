@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class DefaultServiceTask extends ProtocolPropertyObject implements IServiceTask, IBufferObject {
+public class UniversalServiceTask extends ProtocolPropertyObject implements IServiceTask {
 
     private String name, parent;
     private Collection<String>possibleNodes;

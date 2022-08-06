@@ -13,7 +13,7 @@ import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.impl.DefaultCloudOfflinePlayer;
 import cloud.hytora.driver.player.impl.DefaultPlayerManager;
-import cloud.hytora.driver.player.impl.DefaultCloudPlayer;
+import cloud.hytora.driver.player.impl.UniversalCloudPlayer;
 import cloud.hytora.remote.Remote;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,7 +30,7 @@ public class RemotePlayerManager extends DefaultPlayerManager {
 
     @Override
     public ICloudPlayer constructPlayer(@NotNull UUID uniqueId, @NotNull String name) {
-        return new DefaultCloudPlayer(uniqueId, name);
+        return new UniversalCloudPlayer(uniqueId, name);
     }
 
     @Override

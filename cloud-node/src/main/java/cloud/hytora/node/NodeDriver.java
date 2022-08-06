@@ -34,10 +34,7 @@ import cloud.hytora.driver.uuid.DriverUUIDCache;
 import cloud.hytora.node.console.NodeScreenManager;
 import cloud.hytora.node.impl.NodeUUIDCache;
 import cloud.hytora.node.impl.handler.packet.normal.*;
-import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteLoggingHandler;
-import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteServerStartHandler;
-import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteServerStopHandler;
-import cloud.hytora.node.impl.handler.packet.remote.NodeRemoteShutdownHandler;
+import cloud.hytora.node.impl.handler.packet.remote.*;
 import cloud.hytora.node.impl.handler.packet.normal.NodeDataCycleHandler;
 import cloud.hytora.node.impl.handler.packet.normal.NodeLoggingPacketHandler;
 import cloud.hytora.node.impl.handler.packet.normal.NodeStoragePacketHandler;
@@ -60,7 +57,7 @@ import cloud.hytora.driver.services.IProcessCloudServer;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.task.ServiceTaskManager;
 import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.task.DefaultServiceTask;
+import cloud.hytora.driver.services.task.UniversalServiceTask;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.task.bundle.DefaultTaskGroup;
 import cloud.hytora.driver.services.template.ServiceTemplate;
@@ -271,18 +268,28 @@ public class NodeDriver extends CloudDriver<INode> {
 
         this.executor = new NodeBasedClusterExecutor(this.configManager.getConfig());
 
+        this.databaseManager = new DefaultDatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType(), MainConfiguration.getInstance().getDatabaseConfiguration());
+        this.providerRegistry.setProvider(IDatabaseManager.class, this.databaseManager);
+
+        SectionedDatabase database = this.databaseManager.getDatabase();
+        database.registerSection("players", DefaultCloudOfflinePlayer.class);
+        database.registerSection("tasks", UniversalServiceTask.class);
+        database.registerSection("groups", DefaultTaskGroup.class);
+
+        this.serviceTaskManager = new NodeServiceTaskManager();
+        this.serviceManager = new NodeServiceManager();
+        this.playerManager = new NodePlayerManager(this.eventManager);
+        this.channelMessenger = new NodeChannelMessenger(executor);
+        this.nodeManager = new NodeNodeManager();
+        this.moduleManager = new NodeModuleManager();
+        this.logger.info("§8");
+
         if (node.getConfig().getClusterAddresses() != null && node.getConfig().getClusterAddresses().length > 0) {
             node.getConfig().setRemote();
         }
 
         if (this.node.getConfig().isRemote()) {
-            this.logger.info("This Node is a SubNode and will now connect to all provided Nodes in Cluster...");
-            ProtocolAddress[] clusterAddresses = node.getConfig().getClusterAddresses();
-            for (ProtocolAddress address : clusterAddresses) {
-                if (this.executor.connectToOtherNode(address.getAuthKey(), node.getConfig().getNodeName(), address.getHost(), address.getPort(), DocumentFactory.emptyDocument()).syncUninterruptedly().get()) {
-                    this.logger.info("Successfully connected to §a" + address);
-                }
-            }
+            this.executor.connectToAllOtherNodes(node.getName(), node.getConfig().getClusterAddresses()).syncUninterruptedly(); //wait till complete
         } else {
             this.logger.info("§7This Node is a HeadNode §7and boots up the Cluster...");
         }
@@ -305,22 +312,6 @@ public class NodeDriver extends CloudDriver<INode> {
         NodeDriver.SERVICE_DIR_DYNAMIC.mkdirs();
         this.logger.trace("Required folders created!");
 
-        this.databaseManager = new DefaultDatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType(), MainConfiguration.getInstance().getDatabaseConfiguration());
-
-        this.providerRegistry.setProvider(IDatabaseManager.class, this.databaseManager);
-
-        SectionedDatabase database = this.databaseManager.getDatabase();
-        database.registerSection("players", DefaultCloudOfflinePlayer.class);
-        database.registerSection("tasks", DefaultServiceTask.class);
-        database.registerSection("groups", DefaultTaskGroup.class);
-
-        this.serviceTaskManager = new NodeServiceTaskManager();
-        this.serviceManager = new NodeServiceManager();
-        this.playerManager = new NodePlayerManager(this.eventManager);
-        this.channelMessenger = new NodeChannelMessenger(executor);
-        this.nodeManager = new NodeNodeManager();
-        this.moduleManager = new NodeModuleManager();
-        this.logger.info("§8");
 
         //checking if directories got deleted meanwhile
         for (TaskGroup parent : this.serviceTaskManager.getAllTaskGroups()) {
@@ -392,6 +383,7 @@ public class NodeDriver extends CloudDriver<INode> {
         this.executor.registerUniversalHandler(new NodeRemoteServerStartHandler());
         this.executor.registerUniversalHandler(new NodeRemoteServerStopHandler());
         this.executor.registerUniversalHandler(new NodeRemoteLoggingHandler());
+        this.executor.registerRemoteHandler(new NodeRemoteCacheHandler());
 
         this.logger.trace("Registered " + PacketProvider.getRegisteredPackets().size() + " Packets & " + this.executor.getRegisteredPacketHandlers().size() + " PacketHandlers.");
         this.logger.trace("§8");
@@ -461,6 +453,7 @@ public class NodeDriver extends CloudDriver<INode> {
         boolean remote = setup.isRemote();
 
         if (remote) {
+            config.setHttpListeners(new ProtocolAddress[0]);
             new NodeRemoteSetup(NodeDriver.getInstance().getConsole()).start((setup1, state) -> {
                 if (state == SetupControlState.FINISHED) {
                     String host1 = setup1.getHost();
@@ -468,7 +461,7 @@ public class NodeDriver extends CloudDriver<INode> {
                     String authKey = setup1.getAuthKey();
 
                     nodeConfig.setAuthKey(authKey);
-                    nodeConfig.setClusterAddresses(new ProtocolAddress[]{new ProtocolAddress(host1, port1)});
+                    nodeConfig.setClusterAddresses(new ProtocolAddress[]{new ProtocolAddress(host1, port1, authKey)});
                 }
             });
         }
@@ -551,7 +544,7 @@ public class NodeDriver extends CloudDriver<INode> {
             this.databaseManager = new DefaultDatabaseManager(databaseType, new DatabaseConfiguration(databaseType, databaseHost, databasePort, databaseName, authDatabase, databaseUser, databasePassword));
 
             SectionedDatabase database = this.databaseManager.getDatabase();
-            database.registerSection("tasks", DefaultServiceTask.class);
+            database.registerSection("tasks", UniversalServiceTask.class);
             database.registerSection("groups", DefaultTaskGroup.class);
 
             NodeServiceTaskManager taskManager = new NodeServiceTaskManager();
@@ -559,8 +552,8 @@ public class NodeDriver extends CloudDriver<INode> {
             DefaultTaskGroup proxyGroup = new DefaultTaskGroup("Proxy", SpecificDriverEnvironment.PROXY, ServiceShutdownBehaviour.DELETE, args, new ArrayList<>(), Collections.singleton(new CloudTemplate("Proxy", "default", "local", true)));
             DefaultTaskGroup lobbyGroup = new DefaultTaskGroup("Lobby", SpecificDriverEnvironment.MINECRAFT, ServiceShutdownBehaviour.DELETE, args, new ArrayList<>(), Collections.singleton(new CloudTemplate("Lobby", "default", "local", true)));
 
-            IServiceTask proxyTask = new DefaultServiceTask("Proxy", proxyGroup.getName(), Collections.singletonList(config.getNodeConfig().getNodeName()), "Default HytoraCloud Service", "", 1024, 250, 1, -1, 0, true, -1, new SimpleFallback(false, "", 0), ServiceVersion.BUNGEECORD, new ArrayList<>());
-            IServiceTask lobbyTask = new DefaultServiceTask("Lobby", lobbyGroup.getName(), Collections.singletonList(config.getNodeConfig().getNodeName()), "Default HytoraCloud Service", "", 512, 50, 1, -1, 1, true, -1, new SimpleFallback(true, "", 1), ServiceVersion.SPIGOT_1_8_8, new ArrayList<>());
+            IServiceTask proxyTask = new UniversalServiceTask("Proxy", proxyGroup.getName(), Collections.singletonList(config.getNodeConfig().getNodeName()), "Default HytoraCloud Service", "", 1024, 250, 1, -1, 0, true, -1, new SimpleFallback(false, "", 0), ServiceVersion.BUNGEECORD, new ArrayList<>());
+            IServiceTask lobbyTask = new UniversalServiceTask("Lobby", lobbyGroup.getName(), Collections.singletonList(config.getNodeConfig().getNodeName()), "Default HytoraCloud Service", "", 512, 50, 1, -1, 1, true, -1, new SimpleFallback(true, "", 1), ServiceVersion.SPIGOT_1_8_8, new ArrayList<>());
             lobbyTask.setProperty("gameServer", true);
 
             proxyTask.setProperty("onlineMode", true);

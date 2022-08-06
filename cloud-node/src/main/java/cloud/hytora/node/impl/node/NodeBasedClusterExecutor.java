@@ -1,8 +1,10 @@
 package cloud.hytora.node.impl.node;
 
+import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
+import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.defaults.server.ServiceClusterConnectEvent;
 import cloud.hytora.driver.networking.NetworkComponent;
@@ -10,13 +12,14 @@ import cloud.hytora.driver.networking.cluster.client.ClusterParticipant;
 import cloud.hytora.driver.networking.cluster.client.SimpleClusterClientExecutor;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.packets.StorageUpdatePacket;
+import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.node.packet.NodeConnectionDataRequestPacket;
 import cloud.hytora.driver.node.packet.NodeConnectionDataResponsePacket;
 import cloud.hytora.driver.networking.protocol.packets.*;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.data.DefaultNodeData;
-import cloud.hytora.driver.node.DriverNodeObject;
+import cloud.hytora.driver.node.UniversalNode;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.node.NodeDriver;
@@ -29,9 +32,7 @@ import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
@@ -85,7 +86,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
                         DefaultNodeConfig nodeConfig = response.buffer().readObject(DefaultNodeConfig.class);
                         DefaultNodeData data = response.buffer().readObject(DefaultNodeData.class);
 
-                        INode currentNode = new DriverNodeObject(NodeDriver.getInstance().getNode().getConfig(), NodeDriver.getInstance().getNode().getLastCycleData());
+                        INode currentNode = new UniversalNode(NodeDriver.getInstance().getNode().getConfig(), NodeDriver.getInstance().getNode().getLastCycleData());
 
                         if (CloudDriver.getInstance().getNodeManager().getNode(nodeConfig.getNodeName()).isPresent()) {
                             wrapper.sendPacket(new NodeConnectionDataResponsePacket(nodeConfig.getNodeName(), NodeConnectionDataResponsePacket.PayLoad.ALREADY_NODE_EXISTS, currentNode));
@@ -100,7 +101,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
                             wrapper.sendPacket(new NodeConnectionDataResponsePacket(getNodeName(), NodeConnectionDataResponsePacket.PayLoad.SUCCESS, currentNode));
 
                             //right auth key -> registering node
-                            INode node = new DriverNodeObject(nodeConfig, data);
+                            INode node = new UniversalNode(nodeConfig, data);
                             CloudDriver.getInstance().getNodeManager().registerNode(node);
 
                             NodeDriver.getInstance().getServiceQueue().dequeue();
@@ -173,6 +174,22 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
     private ClusterParticipant nodeAsClient;
 
 
+    public Task<Void> connectToAllOtherNodes(String name, ProtocolAddress... nodeAddresses) {
+        return Task.callAsync(() -> {
+
+            Logger.constantInstance().info("This Node is a SubNode and will now connect to all provided Nodes in Cluster...");
+
+            Iterator<ProtocolAddress> iterator = Arrays.stream(nodeAddresses).iterator();
+            while (iterator.hasNext()) {
+                ProtocolAddress address = iterator.next();
+                if (this.connectToOtherNode(address.getAuthKey(), name, address.getHost(), address.getPort(), DocumentFactory.emptyDocument()).syncUninterruptedly().get()) {
+                    Logger.constantInstance().info("Successfully connected to §a" + address);
+                }
+            }
+            return null;
+        });
+    }
+
     public Task<Boolean> connectToOtherNode(String authKey, String name, String hostname, int port, Document customData) {
         Task<Boolean> task = Task.empty();
         ClusterParticipant client = new ClusterParticipant(authKey, name, ConnectionType.NODE, customData) {
@@ -183,6 +200,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
 
                 SimpleClusterClientExecutor connectedClient = (SimpleClusterClientExecutor) getConnectedClientByChannel(context.channel());
                 connectedClient.setAuthenticated(true);
+                task.setResult(true);
             }
 
             @Override
@@ -241,9 +259,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
             }
         });
         client.openConnection(hostname, port).registerListener(wrap -> {
-            if (wrap.isSuccess()) {
-                task.setResult(true);
-            } else {
+            if (!wrap.isSuccess()) {
                 task.setFailure(wrap.error());
             }
         });

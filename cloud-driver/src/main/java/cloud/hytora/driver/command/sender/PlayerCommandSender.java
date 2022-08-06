@@ -14,4 +14,14 @@ public interface PlayerCommandSender extends CommandSender {
 	@Nonnull
     ICloudPlayer getPlayer();
 
+
+	/**
+	 * Puts the cloud-prefix defined in {@link cloud.hytora.driver.common.CloudMessages}
+	 * in front of the message.<br>
+	 * To send a normal message use {@link cloud.hytora.driver.player.executor.PlayerExecutor#sendMessage(String)}
+	 *
+	 * @param message the message to send
+	 */
+	@Override
+	void sendMessage(String message);
 }

@@ -57,6 +57,10 @@ public class NodeServiceQueue {
                                 CloudDriver.getInstance().getLogger().error("Tried to start {} but the Node(s) {} for Servers of Configuration {} is not connected!", cloudServer.getName(), cloudServer.getTask().getPossibleNodes(), cloudServer.getTask().getName());
                             })
                             .onTaskSucess(node -> {
+                                if (!node.hasEnoughMemoryToStart(cloudServer)) {
+                                    CloudDriver.getInstance().getLogger().warn("'{}' couldn't start {} because its maximum memory of {} has been reached!", node.getName(), cloudServer.getName(), node.getConfig().getMemory());
+                                    return;
+                                }
                                 node.startServer(cloudServer);
                             });
                 });
@@ -76,6 +80,7 @@ public class NodeServiceQueue {
                         CloudDriver.getInstance().getLogger().info("Tried to start a Service of Group '" + task.getName() + "' but no Node(s) with name '" + task.getPossibleNodes() + "' is connected!");
                         return;
                     }
+
 
                     int port = task.getVersion().isProxy() ? MainConfiguration.getInstance().getProxyStartPort() : MainConfiguration.getInstance().getSpigotStartPort();
                     while (isPortUsed(port)) {

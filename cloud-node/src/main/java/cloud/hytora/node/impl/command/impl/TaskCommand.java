@@ -5,10 +5,11 @@ import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.completer.TaskCompleter;
 import cloud.hytora.driver.command.sender.CommandSender;
+import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.task.bundle.DefaultTaskGroup;
 import cloud.hytora.driver.services.fallback.SimpleFallback;
-import cloud.hytora.driver.services.task.DefaultServiceTask;
+import cloud.hytora.driver.services.task.UniversalServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.driver.services.template.def.CloudTemplate;
@@ -84,7 +85,7 @@ public class TaskCommand {
                 String templateStorage = setup.getTemplateStorage();
                 ServiceShutdownBehaviour shutdownBehaviour = dynamic ? ServiceShutdownBehaviour.DELETE : ServiceShutdownBehaviour.KEEP;
 
-                DefaultServiceTask serviceTask = new DefaultServiceTask();
+                UniversalServiceTask serviceTask = new UniversalServiceTask();
 
                 if (!CloudDriver.getInstance().getServiceTaskManager().getTaskGroupByName(parentName).isPresent()) {
                     DefaultTaskGroup parent = new DefaultTaskGroup(name, version.getEnvironment(), shutdownBehaviour, new String[]{
@@ -162,6 +163,7 @@ public class TaskCommand {
 
                 sender.sendMessage("§7The ServiceTask §b" + name + " §7was created§8!");
                 NodeDriver.getInstance().getServiceQueue().dequeue();
+                DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
 
             } else {
                 sender.sendMessage("§cNo ServiceTask has been created!");

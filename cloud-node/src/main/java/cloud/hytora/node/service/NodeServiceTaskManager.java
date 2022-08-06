@@ -4,6 +4,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.task.TaskUpdateEvent;
 
+import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.services.task.DefaultServiceTaskManager;
 import cloud.hytora.driver.services.task.packet.ServiceTaskExecutePacket;
@@ -68,6 +69,10 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
         CloudDriver.getInstance().getEventManager().callEventOnlyPacketBased(new TaskUpdateEvent(task));
 
         NodeDriver.getInstance().getServiceQueue().dequeue();
+
+        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        }
     }
 
     @Override
@@ -77,18 +82,30 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
             NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceTaskExecutePacket(task, ServiceTaskExecutePacket.ExecutionPayLoad.CREATE));
         }
         super.addTask(task);
+
+        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        }
     }
 
     @Override
     public void addTaskGroup(@NotNull TaskGroup task) {
         this.database.getSection(TaskGroup.class).insert(task.getName(), task);
         super.addTaskGroup(task);
+
+        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        }
     }
 
     @Override
     public void removeTaskGroup(@NotNull TaskGroup task) {
         this.database.getSection(TaskGroup.class).delete(task.getName());
         super.removeTaskGroup(task);
+
+        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        }
     }
 
     @Override
@@ -98,12 +115,19 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
             NodeDriver.getInstance().getExecutor().sendPacketToAll(new ServiceTaskExecutePacket(task, ServiceTaskExecutePacket.ExecutionPayLoad.REMOVE));
         }
         super.removeTask(task);
+
+        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        }
     }
 
     @Override
     public void update(@NotNull IServiceTask task) {
         this.database.getSection(IServiceTask.class).update(task.getName(), task);
         CloudDriver.getInstance().getEventManager().callEventGlobally(new TaskUpdateEvent(task));
+        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        }
     }
 
     @Override

@@ -91,6 +91,7 @@ public class CloudServerProcessWorker {
                 service.getRunningNodeName(),
                 service.getTask().getVersion().getType(),
                 MainConfiguration.getInstance().getServiceProcessType(),
+                CloudDriver.getInstance().getLogger().getMinLevel(),
                 MainConfiguration.getInstance().getPlayerLoginProcessing(),
                 NodeDriver.getInstance().getExecutor().getHostName(),
                 service.getName(),

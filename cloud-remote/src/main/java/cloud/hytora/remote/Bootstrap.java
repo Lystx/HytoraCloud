@@ -9,6 +9,7 @@ import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.remote.impl.log.DefaultLogHandler;
+import lombok.var;
 
 import java.io.File;
 import java.lang.instrument.Instrumentation;
@@ -32,14 +33,14 @@ public class Bootstrap {
 
 
     public static void main(String[] args) {
-
-        HandledLogger logger = new HandledAsyncLogger(LogLevel.TRACE);
+        var identity = RemoteIdentity.read(new File("property.json"));
+        var logger = new HandledAsyncLogger(identity.getLogLevel());
         logger.addHandler(new DefaultLogHandler());
         logger.addHandler(entry -> CloudDriver.getInstance().getEventManager().callEventGlobally(new DriverLogEvent(entry)));
         Logger.setFactory(logger);
 
 
-        Remote remote = new Remote(RemoteIdentity.read(new File("property.json")), logger, instrumentationInstance, args);
+        var remote = new Remote(identity, logger, instrumentationInstance, args);
 
         try {
             remote.startApplication();

@@ -3,6 +3,10 @@ package cloud.hytora.driver.networking.protocol.packets;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.DriverEnvironment;
+import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
+import cloud.hytora.driver.networking.EndpointNetworkExecutor;
+import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.packets.RedirectPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
@@ -67,6 +71,13 @@ public abstract class AbstractPacket implements IPacket {
 
     @Override
     public void publishTo(String... receivers) {
+        if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
+            EndpointNetworkExecutor executor = (EndpointNetworkExecutor) CloudDriver.getInstance().getExecutor();
+            for (String receiver : receivers) {
+
+                executor.sendPacket(this, NetworkComponent.of(receiver));
+            }
+        }
         for (String receiver : receivers) {
             CloudDriver.getInstance().getExecutor().sendPacket(new RedirectPacket(receiver, this));
         }

@@ -4,7 +4,7 @@ import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.node.INode;
-import cloud.hytora.driver.node.DriverNodeObject;
+import cloud.hytora.driver.node.UniversalNode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,7 +32,7 @@ public class NodeConnectionDataResponsePacket extends AbstractPacket {
             case READ:
                 node = buf.readString();
                 payLoad = buf.readEnum(PayLoad.class);
-                nodeInfo = buf.readObject(DriverNodeObject.class);
+                nodeInfo = buf.readObject(UniversalNode.class);
                 break;
 
             case WRITE:

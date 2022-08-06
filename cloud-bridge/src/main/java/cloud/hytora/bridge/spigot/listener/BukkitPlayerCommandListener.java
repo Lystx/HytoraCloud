@@ -5,6 +5,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandObject;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.data.RegisteredCommand;
+import cloud.hytora.driver.common.CloudMessages;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.packet.CloudPlayerExecuteCommandPacket;
 import cloud.hytora.driver.storage.DriverStorage;
@@ -26,11 +27,11 @@ public class BukkitPlayerCommandListener implements Listener {
             return;
         }
 
-        Player proxiedPlayer = event.getPlayer();
-        ICloudPlayer cloudPlayer = CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(proxiedPlayer.getUniqueId());
+        Player player = event.getPlayer();
+        ICloudPlayer cloudPlayer = CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(player.getUniqueId());
 
         if (cloudPlayer == null) {
-            proxiedPlayer.sendMessage("ERROR");
+            player.kickPlayer(CloudMessages.getInstance().getPrefix() + " §cCouldn't find your CloudPlayer. Please rejoin!");
             return;
         }
 

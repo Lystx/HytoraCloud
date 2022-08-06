@@ -17,7 +17,7 @@ import cloud.hytora.driver.permission.PermissionManager;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.impl.DefaultPlayerManager;
-import cloud.hytora.driver.player.impl.DefaultCloudPlayer;
+import cloud.hytora.driver.player.impl.UniversalCloudPlayer;
 import cloud.hytora.driver.player.impl.DefaultTemporaryProperties;
 import cloud.hytora.driver.uuid.DriverUUIDCache;
 import cloud.hytora.node.NodeDriver;
@@ -40,6 +40,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
         executor.registerPacketHandler((PacketHandler<CloudPlayerLoginPacket>) (wrapper, packet) -> {
             CloudDriver.getInstance().getLogger().debug("Player[name={}, uuid={}] logged in on {}!", packet.getUsername(), packet.getUuid(), packet.getProxy());
             ICloudPlayer cloudPlayer = constructPlayer(packet.getUuid(), packet.getUsername());
+            cloudPlayer.setProxyServer(CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(packet.getProxy()));
 
 
             DriverUUIDCache cache = CloudDriver.getInstance().getUUIDCache();
@@ -70,7 +71,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
                         } else {
                             cloudPlayer.setProperties(cloudOfflinePlayer.getProperties());
                             cloudPlayer.setFirstLogin(cloudOfflinePlayer.getFirstLogin());
-                            ((DefaultCloudPlayer)cloudPlayer).setTemporaryProperties((DefaultTemporaryProperties) cloudOfflinePlayer.getTemporaryProperties());
+                            ((UniversalCloudPlayer)cloudPlayer).setTemporaryProperties((DefaultTemporaryProperties) cloudOfflinePlayer.getTemporaryProperties());
 
                             cloudPlayer.setLastLogin(System.currentTimeMillis());
                             cloudPlayer.saveOfflinePlayer();
@@ -92,7 +93,9 @@ public class NodePlayerManager extends DefaultPlayerManager {
                 CloudDriver.getInstance().getLogger().debug("Player[name={}, uuid={}] dissconnected from [proxy={}, server={}]!", cloudPlayer.getName(), cloudPlayer.getUniqueId(), cloudPlayer.getProxyServer() == null ? "No Proxy" : cloudPlayer.getProxyServer().getName(), (cloudPlayer.getServer() == null ? "none" : cloudPlayer.getServer().getName()));
                 this.cachedCloudPlayers.remove(cloudPlayer.getUniqueId());
                 eventManager.callEventGlobally(new CloudPlayerDisconnectEvent(cloudPlayer));
-                DriverUpdatePacket.publishUpdate(NodeDriver.getInstance().getExecutor());
+                if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+                    DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+                }
 
             });
         });
@@ -173,17 +176,23 @@ public class NodePlayerManager extends DefaultPlayerManager {
     @Override
     public void registerCloudPlayer(@NotNull UUID uniqueID, @NotNull String username) {
         this.cachedCloudPlayers.put(uniqueID, constructPlayer(uniqueID, username));
+        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        }
     }
 
     @Override
     public ICloudPlayer constructPlayer(@NotNull UUID uniqueId, @NotNull String name) {
         CloudOfflinePlayer offlinePlayer = getOfflinePlayerByUniqueIdBlockingOrNull(uniqueId);
-        return offlinePlayer == null ? new DefaultCloudPlayer(uniqueId, name) : new DefaultCloudPlayer(uniqueId, name, offlinePlayer.getFirstLogin(), offlinePlayer.getLastLogin(), null, null, offlinePlayer.getProperties(), offlinePlayer.getTemporaryProperties());
+        return offlinePlayer == null ? new UniversalCloudPlayer(uniqueId, name) : new UniversalCloudPlayer(uniqueId, name, offlinePlayer.getFirstLogin(), offlinePlayer.getLastLogin(), null, null, offlinePlayer.getProperties(), offlinePlayer.getTemporaryProperties());
     }
 
     @Override
     public void unregisterCloudPlayer(@NotNull UUID uuid, @NotNull String name) {
         this.cachedCloudPlayers.remove(uuid);
+        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        }
     }
 
     @Override
@@ -191,5 +200,8 @@ public class NodePlayerManager extends DefaultPlayerManager {
         //Update cache of every component
         CloudPlayerUpdatePacket packet = new CloudPlayerUpdatePacket(cloudPlayer);
         NodeDriver.getInstance().getExecutor().sendPacketToAll(packet);
+        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        }
     }
 }
