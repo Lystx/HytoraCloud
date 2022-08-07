@@ -5,9 +5,9 @@ import javax.annotation.Nonnull;
 
 public class ExposedSecurityManager extends SecurityManager {
 
-	@Nonnull
-	public Class<?>[] getPublicClassContext() {
-		return getClassContext();
-	}
+    @Nonnull
+    public Class<?>[] getPublicClassContext() {
+        return getClassContext();
+    }
 
 }

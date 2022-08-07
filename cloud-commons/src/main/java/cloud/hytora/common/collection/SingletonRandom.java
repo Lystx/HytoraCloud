@@ -3,7 +3,7 @@ package cloud.hytora.common.collection;
 import java.util.Random;
 
 
-public class SingletonRandom extends RandomWrapper {
+public final class SingletonRandom extends RandomWrapper {
 
 	public static final SingletonRandom INSTANCE = new SingletonRandom();
 

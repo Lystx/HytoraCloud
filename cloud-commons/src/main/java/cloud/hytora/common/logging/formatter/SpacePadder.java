@@ -4,7 +4,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 
-public class SpacePadder {
+public final class SpacePadder {
 
 	private SpacePadder() {}
 

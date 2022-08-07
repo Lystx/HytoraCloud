@@ -11,7 +11,7 @@ import java.io.StringWriter;
 import java.util.Date;
 
 
-public class ColoredMessageFormatter {
+public final class ColoredMessageFormatter {
 
 	@Nonnull
 	public static String format(@Nonnull LogEntry entry) {
