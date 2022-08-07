@@ -137,7 +137,7 @@ public class NodeDriver extends CloudDriver<INode> {
     private NodeBasedClusterExecutor executor;
     private NodeServiceQueue serviceQueue;
 
-    public static final File NODE_FOLDER = new File("local/");
+    public static final File NODE_FOLDER = new File("cloud/");
     public static final File CONFIG_FILE = new File(NODE_FOLDER, "config.json");
     public static final File LOG_FOLDER = new File(NODE_FOLDER, "logs/");
     public static final File MODULE_FOLDER = new File(NODE_FOLDER, "modules/");

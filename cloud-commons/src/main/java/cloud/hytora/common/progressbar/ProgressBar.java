@@ -3,6 +3,9 @@ package cloud.hytora.common.progressbar;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
@@ -41,6 +44,8 @@ public class ProgressBar {
      * The time this bar was started
      */
     private final long startTime;
+
+    private LocalDateTime startDateTime;
 
     /**
      * The total maxLength of this bar
@@ -111,6 +116,7 @@ public class ProgressBar {
         this.percentagedWith = 100;
 
         this.startTime = System.currentTimeMillis();
+        this.startDateTime = LocalDateTime.now();
         this.extraMessage = "";
         this.expandingAnimation = true;
         this.printer = new ProgressPrinter() {
@@ -163,6 +169,7 @@ public class ProgressBar {
      * Prints the current progress
      */
     public void print() {
+
         long eta = current == 0 ? 0 :
                 (total - current) * (System.currentTimeMillis() - startTime) / current;
 

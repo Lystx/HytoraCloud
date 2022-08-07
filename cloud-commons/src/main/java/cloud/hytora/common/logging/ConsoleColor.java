@@ -48,6 +48,7 @@ public enum ConsoleColor {
 	public static String toUncoloredString(char triggerChar, @Nonnull String text) {
 		for (ConsoleColor color : values()) {
 			text = text.replace(triggerChar + "" + color.index, "");
+			text = text.replace(color.ansiCode, "");
 		}
 
 		return text;

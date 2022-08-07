@@ -76,7 +76,7 @@ public class DriverVersion {
     @Override
     public String toString() {
         String name = type.name();
-        return ((name.substring(0, 1).toUpperCase() + name.substring(1)) + version);
+        return ((name.substring(0, 1).toUpperCase() + name.substring(1)) + "-" + version);
     }
 
     public enum Type {

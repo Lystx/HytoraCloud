@@ -15,4 +15,5 @@ includeRepository('mvnCentral@https://repo1.maven.org/maven2/');
 
 
 #Including dependencies
-includeDependency('org.fusesource.jansi jansi 2.4.0');
+includeDependency('mvnCentral org.fusesource.jansi jansi 2.4.0');
+includeDependency('mvnCentral me.tongfei progressbar 0.5.5');
