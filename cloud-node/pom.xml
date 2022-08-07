@@ -43,7 +43,7 @@
 
 
     <build>
-        <finalName>hytoraCloud.jar</finalName>
+        <finalName>cloud</finalName>
 
         <plugins>
             <plugin>

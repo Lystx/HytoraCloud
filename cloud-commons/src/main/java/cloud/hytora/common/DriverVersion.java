@@ -1,11 +1,22 @@
 package cloud.hytora.common;
 
+import cloud.hytora.common.progressbar.ProgressBar;
+import cloud.hytora.common.progressbar.ProgressBarStyle;
+import cloud.hytora.common.progressbar.ProgressPrinter;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import com.sun.org.apache.bcel.internal.generic.NEW;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 @Getter
@@ -56,12 +67,6 @@ public class DriverVersion {
     public boolean isUpToDate() {
 
         return isNewerOrSameAs(getNewestVersion());
-    }
-
-
-    public void update() {
-        DriverVersion newestVersion = getNewestVersion();
-        String url = "https://github.com/Lystx/HytoraCloud/releases/download/" + newestVersion.toString() + "/HytoraCloud.zip";
     }
 
     public boolean isNewerOrSameAs(DriverVersion version) {

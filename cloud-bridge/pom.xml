@@ -51,7 +51,7 @@
 
 
     <build>
-        <finalName>plugin.jar</finalName>
+        <finalName>plugin</finalName>
 
         <plugins>
             <plugin>

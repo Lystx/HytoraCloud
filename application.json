@@ -1,5 +1,5 @@
 {
-  "version": "SNAPSHOT-1.4",
+  "version": "SNAPSHOT-1.5",
   "modules": {
     "module-proxy": "https://www.github.com/Lystx/HytoraCloud"
   },

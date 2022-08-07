@@ -63,6 +63,7 @@ cloud\hytora\context\definition\reader\SystemDefinitionReader.class
 cloud\hytora\common\scheduler\Scheduler.class
 cloud\hytora\common\collection\RandomWrapper.class
 cloud\hytora\common\task\exception\ValueTimedOutException.class
+cloud\hytora\common\DriverVersion.class
 cloud\hytora\common\logging\LoggerFactory.class
 cloud\hytora\common\collection\ThreadRunnable.class
 cloud\hytora\common\scheduler\def\DefaultScheduler.class
@@ -92,6 +93,7 @@ cloud\hytora\common\inject\base\SimpleInjector.class
 cloud\hytora\document\gson\adapter\ClassTypeAdapter.class
 cloud\hytora\document\DocumentFactory$1.class
 cloud\hytora\context\exceptions\MultipleInstanceException.class
+cloud\hytora\common\DriverVersion$Type.class
 cloud\hytora\common\misc\ZipUtils$1.class
 cloud\hytora\common\collection\SeededRandomWrapper.class
 cloud\hytora\common\logging\internal\SimpleLogger.class

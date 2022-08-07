@@ -1,8 +1,9 @@
 package cloud.hytora;
 
 
-import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.DriverVersion;
+import cloud.hytora.common.progressbar.ProgressBar;
+import cloud.hytora.common.progressbar.ProgressBarStyle;
 import cloud.hytora.context.ApplicationContext;
 import cloud.hytora.context.IApplicationContext;
 import cloud.hytora.dependency.Dependency;
@@ -15,13 +16,12 @@ import cloud.hytora.script.commands.PrintCommand;
 import cloud.hytora.script.commands.RunScriptCommand;
 import lombok.Getter;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -93,7 +93,8 @@ public class Launcher {
         if (!version.isUpToDate() || LAUNCHER_VERSIONS.toFile().listFiles().length == 0) {
             System.out.println("Version is outdated or not existing at all!");
             System.out.println("==> Downloading latest HytoraCloud version...");
-            version.update();
+
+            this.downloadNewestVersion(LAUNCHER_VERSIONS.resolve("cloud.jar").toFile());
             return;
         }
         System.out.println("Cloud is up to date with latest release!");
@@ -112,6 +113,44 @@ public class Launcher {
         } catch (IOException | ClassNotFoundException | NoSuchMethodException exception) {
             throw new RuntimeException("Failed to start the application!", exception);
         }
+    }
+
+
+    public void downloadNewestVersion(File location) {
+        DriverVersion newestVersion = DriverVersion.getNewestVersion();
+        try {
+            ProgressBar pb = new ProgressBar(ProgressBarStyle.ASCII, 100L);
+
+            pb.setPrintAutomatically(true);
+            pb.setExpandingAnimation(false);
+            pb.setTaskName("Updating...");
+
+            URL url = new URL(("https://github.com/Lystx/HytoraCloud/archive/refs/tags/v" + String.valueOf(newestVersion.getVersion()) + ".zip"));
+            String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36";
+            URLConnection con = url.openConnection();
+            con.setRequestProperty("User-Agent", USER_AGENT);
+
+            int contentLength = con.getContentLength();
+            InputStream inputStream = con.getInputStream();
+
+            OutputStream outputStream = new FileOutputStream(location);
+            byte[] buffer = new byte[2048];
+            int length;
+            int downloaded = 0;
+
+            while ((length = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, length);
+                downloaded+=length;
+                pb.stepTo((long) ((downloaded * 100L) / (contentLength * 1.0)));
+            }
+            pb.setExtraMessage("Cleaning up...");
+            outputStream.close();
+            inputStream.close();
+            pb.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void startApplication(String[] args, Collection<URL> dependencyResources) throws IOException, ClassNotFoundException, NoSuchMethodException {

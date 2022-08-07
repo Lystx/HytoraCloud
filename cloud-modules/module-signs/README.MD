@@ -13,8 +13,8 @@ You can switch between servers by clicking on signs that you can customize as mu
 <br>
 
 **Screenshots**
-![](../../sign_collection_updating.gif)
-![](../../sign_updating.gif)
+![](sign_collection_updating.gif)
+![](sign_updating.gif)
 **Permissions:**
 ````
 cloud.module.sign.command.use - for use of command

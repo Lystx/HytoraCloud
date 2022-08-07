@@ -1,4 +1,4 @@
-package cloud.hytora.node.console.progressbar;
+package cloud.hytora.common.progressbar;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
