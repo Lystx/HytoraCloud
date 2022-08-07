@@ -253,13 +253,19 @@ public class Launcher {
 
         Thread thread = new Thread(() -> {
             try {
-                method.invoke(null, (Object) args);
-            } catch (IllegalAccessException | InvocationTargetException exception) {
-                exception.printStackTrace();
+
+                try {
+                    method.invoke(null, (Object) args);
+                } catch (IllegalAccessException | InvocationTargetException exception) {
+                    exception.printStackTrace();
+                }
+            } catch (Exception e) {
+
             }
         }, "Application-Thread");
         thread.setPriority(Thread.MIN_PRIORITY);
         thread.setContextClassLoader(classLoader);
         thread.start();
+
     }
 }

@@ -567,10 +567,11 @@ public class NodeDriver extends CloudDriver<INode> {
             proxyTask.setProperty("onlineMode", true);
             proxyTask.setProperty("proxyProtocol", false);
 
-            taskManager.addTask(lobbyTask);
-            taskManager.addTask(proxyTask);
             taskManager.addTaskGroup(proxyGroup);
             taskManager.addTaskGroup(lobbyGroup);
+
+            taskManager.addTask(lobbyTask);
+            taskManager.addTask(proxyTask);
 
             this.logger.info("Created default Proxy & Lobby ServiceTasks!");
             this.logger.info("§7You §acompleted §7the NodeSetup§8!");

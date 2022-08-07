@@ -9,7 +9,6 @@ C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\no
 C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\impl\setup\database\MongoDBSetup.java
 C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\impl\setup\TaskSetup.java
 C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\console\handler\ConsoleLogHandler.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\console\progressbar\ProgressPrinter.java
 C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\impl\database\def\DefaultDatabaseManager.java
 C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\impl\handler\packet\remote\NodeRemoteServerStopHandler.java
 C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\NodeDriver.java
@@ -34,7 +33,6 @@ C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\no
 C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\impl\setup\NodeSetup.java
 C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\impl\setup\database\MySqlSetup.java
 C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\impl\handler\packet\normal\NodeOfflinePlayerPacketHandler.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\console\progressbar\ProgressBarStyle.java
 C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\impl\handler\packet\normal\NodeServiceConfigureHandler.java
 C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\service\NodeServiceTaskManager.java
 C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\impl\command\NodeCommandManager.java
@@ -50,7 +48,6 @@ C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\no
 C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\impl\module\HandlerMethod.java
 C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\impl\command\impl\PlayerCommand.java
 C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\impl\node\NodeNodeManager.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\console\progressbar\ProgressBar.java
 C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\CloudBootstrap.java
 C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\impl\command\impl\LoggerCommand.java
 C:\Users\Eric Lemm\julian lol\workspace\cloud-node\src\main\java\cloud\hytora\node\impl\node\BaseNode.java
