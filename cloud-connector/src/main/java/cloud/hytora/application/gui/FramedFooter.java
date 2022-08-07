@@ -10,8 +10,8 @@ import java.awt.event.WindowEvent;
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
 
+import cloud.hytora.common.DriverVersion;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.DriverStatus;
 import com.formdev.flatlaf.*;
 import cloud.hytora.application.elements.LookAndFeelsComboBox;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
@@ -146,8 +146,8 @@ public class FramedFooter extends JPanel {
     }
 
     private void updateInfoLabel() {
-        DriverStatus status = CloudDriver.getInstance().status();
-        infoLabel.setText("HytoraCloud Version: " + status.version() + " " + (status.experimental() ? "[Experimental]" : "[Stable]"));
+        DriverVersion version = DriverVersion.getCurrentVersion();
+        infoLabel.setText("HytoraCloud Version: " + version.toString());
     }
 
     private void registerSwitchToLookAndFeel(int keyCode, String lafClassName) {

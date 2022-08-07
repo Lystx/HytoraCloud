@@ -1,7 +1,6 @@
 package cloud.hytora.modules.proxy.config;
 
-import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.DriverStatus;
+import cloud.hytora.common.DriverVersion;
 import cloud.hytora.modules.proxy.config.sub.Motd;
 import cloud.hytora.modules.proxy.config.sub.MotdLayOut;
 import cloud.hytora.modules.proxy.config.sub.TabList;
@@ -29,7 +28,7 @@ public class ProxyConfig {
 
 	public static ProxyConfig defaultConfig() {
 
-		DriverStatus status = CloudDriver.getInstance().status();
+		DriverVersion version = DriverVersion.getCurrentVersion();
 
 		return new ProxyConfig(
 				new TabList(
@@ -68,8 +67,7 @@ public class ProxyConfig {
 												"§bHytoraCloud §7Information",
 												"§8§m--------------------------",
 												"§8",
-												"&bVersion &8» &7" + status.version(),
-												"&bThanks to &8» &7" + Arrays.toString(status.developers()),
+												"&bVersion &8» &7" + version.toString(),
 												"&bTwitter &8» &7@HytoraCloud",
 												"&bDiscord &8» &7pazzqaGSVs",
 												"§8",

@@ -42,6 +42,7 @@
         <module>cloud-commons</module>
         <module>cloud-modules</module>
         <module>cloud-connector</module>
+        <module>cloud-launcher</module>
     </modules>
 
     <dependencies>

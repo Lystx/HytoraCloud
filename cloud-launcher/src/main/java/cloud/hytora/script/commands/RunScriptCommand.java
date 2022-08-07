@@ -1,7 +1,7 @@
-package cloud.hytora.driver.script.commands;
+package cloud.hytora.script.commands;
 
-import cloud.hytora.driver.script.ScriptCommand;
-import cloud.hytora.driver.script.ScriptLoader;
+import cloud.hytora.script.ScriptCommand;
+import cloud.hytora.script.ScriptLoader;
 
 import java.io.IOException;
 import java.nio.file.Paths;

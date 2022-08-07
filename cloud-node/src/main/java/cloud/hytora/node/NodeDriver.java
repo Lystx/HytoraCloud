@@ -1,5 +1,6 @@
 package cloud.hytora.node;
 
+import cloud.hytora.common.DriverVersion;
 import cloud.hytora.common.function.ExceptionallyConsumer;
 import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
@@ -10,10 +11,8 @@ import cloud.hytora.common.task.Task;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.context.ApplicationContext;
 import cloud.hytora.context.IApplicationContext;
-import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
-import cloud.hytora.driver.DriverStatus;
 import cloud.hytora.driver.command.CommandManager;
 import cloud.hytora.driver.command.DefaultCommandSender;
 import cloud.hytora.driver.command.sender.CommandSender;
@@ -241,8 +240,6 @@ public class NodeDriver extends CloudDriver<INode> {
                 public boolean requiresLayout() {return false;}
             });
 
-            DriverStatus status = status();
-
             this.logger.info("§8");
             this.logger.info("§8");
             this.logger.info("§b    __  __      __                   ________                __");
@@ -255,8 +252,8 @@ public class NodeDriver extends CloudDriver<INode> {
             this.logger.info("§b/_____/   ___/ / / / / / / /_/ / /  / __/    | |/ // /  /_____/");
             this.logger.info("§b         /____/_/ /_/ /_/\\__,_/_/  /_/       |___//_/          ");
             this.logger.info("§8");
-            this.logger.info("§bVersion §7: {}", (status.version() + " " + (status.experimental() ? "§8[§6Experimental§8]" : "§8[§aStable§8]")));
-            this.logger.info("§bDeveloper(s) §7: {}", (Arrays.toString(status.developers()).replace("[", "").replace("]", "")));
+            this.logger.info("§bVersion §7: {}", DriverVersion.getCurrentVersion());
+            this.logger.info("§bDeveloper(s) §7: {}", "Lystx");
             this.logger.info("§8==================================================");
             this.logger.info("§8");
             this.logger.info("§8");

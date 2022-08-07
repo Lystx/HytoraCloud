@@ -22,6 +22,15 @@ public final class StringUtils {
     private StringUtils() {
     }
 
+
+    public static String getBetween(String input, String left, String right) {
+
+        input = input.substring(input.indexOf(left) + 1);
+        input = input.substring(0, input.indexOf(right));
+
+        return input;
+    }
+
     @Nonnull
     public static String getEnumName(@Nonnull Enum<?> enun) {
         return getEnumName(enun.name());

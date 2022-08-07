@@ -81,7 +81,6 @@
                             <Main-Class>cloud.hytora.node.CloudBootstrap</Main-Class>
                             <Version>${project.version}</Version>
                             <Implementation-Version>${project.version}</Implementation-Version>
-                            <Specification-Version>${describe}</Specification-Version>
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -93,7 +92,7 @@
                 <version>3.1.0</version>
                 <executions>
                     <execution>
-                        <id>copy</id>
+                        <id>copy_node</id>
                         <phase>validate</phase>
                         <goals>
                             <goal>run</goal>
@@ -111,7 +110,7 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>copy</id>
+                        <id>copy_remote</id>
                         <phase>validate</phase>
                         <goals>
                             <goal>run</goal>

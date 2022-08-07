@@ -1,4 +1,4 @@
-package cloud.hytora.driver.script;
+package cloud.hytora.script;
 
 
 public interface ScriptCommand {

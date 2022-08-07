@@ -69,7 +69,6 @@ import java.util.function.Supplier;
  * @since SNAPSHOT-1.0
  */
 @Getter
-@DriverStatus(version = "SNAPSHOT-1.4", experimental = true, developers = {"Lystx"})
 public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUtility {
 
     /**
@@ -367,14 +366,6 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
         return (V) thisSidesClusterParticipant();
     }
 
-    /**
-     * Returns the {@link DriverStatus} to gain information about current Cloud Build
-     * By retrieving the Annotation at the top of the class
-     */
-    @Nonnull
-    public DriverStatus status() {
-        return CloudDriver.class.getAnnotation(DriverStatus.class);
-    }
 
 
     private static class DefaultFullJoinExecutor implements PlayerFullJoinExecutor {

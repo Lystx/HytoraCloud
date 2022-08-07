@@ -1,6 +1,5 @@
 package cloud.hytora.context;
 
-import cloud.hytora.common.logging.Logger;
 import cloud.hytora.context.definition.IDefinition;
 import cloud.hytora.context.definition.CustomDefinition;
 import cloud.hytora.context.definition.reader.*;
@@ -71,11 +70,9 @@ public class ApplicationContext implements IApplicationContext {
         Set<IDefinition> iDefinitions = iDefinitionReader.getDefinitions();
 
         iDefinitions.forEach(bd -> {
-            Logger.constantInstance().warn("Registered Definition " + bd.getName() + "@" + bd.getBeanClass());
             definitionRegistry.registerDefinition(bd);
         });
         injectFactory = new DefaultInjectFactory(this, definitionRegistry);
-        Logger.constantInstance().warn("Loading InjectFactory...");
 
         setInstance(null, instance);
 

@@ -18,6 +18,7 @@ import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.*;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -107,6 +108,18 @@ public class DocumentFactory {
     @CheckReturnValue
     public static Document newJsonDocument(@Nonnull Reader reader) {
         return new GsonDocument(reader);
+    }
+
+    public static Document newJsonDocumentByURL(String urlString) throws Exception {
+        URL url = new URL(urlString);
+        InputStream inputStream = url.openStream();
+        InputStreamReader inputStreamReader = new InputStreamReader(url.openStream());
+        Document document = newJsonDocument(inputStreamReader);
+
+
+        inputStreamReader.close();
+        inputStream.close();
+        return document;
     }
 
     @Nonnull
