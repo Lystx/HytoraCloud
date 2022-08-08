@@ -35,6 +35,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -56,7 +57,7 @@ public class Launcher {
     public static final Path LAUNCHER_LIBS = LAUNCHER_DIR.resolve("libs/");
     public static final Path LAUNCHER_VERSIONS = LAUNCHER_DIR.resolve("versions/");
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         AnsiConsole.systemInstall();
         HandledLogger logger = new HandledAsyncLogger(LogLevel.fromName(System.getProperty("cloud.logging.level", "INFO")));
         Logger.setFactory(logger.addHandler(entry -> {
@@ -75,7 +76,7 @@ public class Launcher {
 
     private final DependencyLoader dependencyLoader;
 
-    public Launcher(Logger logger, String[] args) {
+    public Launcher(Logger logger, String[] args) throws IOException {
         this.args = args;
         this.logger = logger;
         this.dependencies = new ArrayList<>();
@@ -111,25 +112,34 @@ public class Launcher {
         loader.registerCommand("includeDependency", new IncludeDependencyCommand(this.dependencies::add));
         loader.registerCommand("includeRepository", new IncludeRepositoryCommand(repository -> repositories.put(repository.getName(), repository)));
 
-        try {
-            loader.executeScriptFromResource("launcher.cloud");
-
-            logger.info("Setting up Files...");
+        Path launcherFile = Paths.get("launcher.cloud");
+        if (!Files.exists(launcherFile)) {
             try {
-                LAUNCHER_DIR.toFile().mkdirs();
-                LAUNCHER_VERSIONS.toFile().mkdirs();
-                LAUNCHER_LIBS.toFile().mkdirs();
-            } catch (Exception e) {
-                //files already exists
+                FileUtils.copy(
+                        ClassLoader.getSystemResourceAsStream("launcher.cloud"),
+                        Files.newOutputStream(launcherFile)
+                );
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-
-            logger.info("Initialization done!");
-            logger.info("==> Now searching for updates...");
-            this.checkForUpdates(version, args);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
 
+        loader.executeScript(launcherFile)
+                .onTaskSucess(n -> {
+                    logger.info("Script-Task was successful!");
+                    logger.info("Setting up Files...");
+                    try {
+                        LAUNCHER_DIR.toFile().mkdirs();
+                        LAUNCHER_VERSIONS.toFile().mkdirs();
+                        LAUNCHER_LIBS.toFile().mkdirs();
+                    } catch (Exception e) {
+                        //files already exists
+                    }
+
+                    logger.info("Initialization done!");
+                    logger.info("==> Now searching for updates...");
+                    this.checkForUpdates(version, args);
+                });
     }
 
 
@@ -155,10 +165,10 @@ public class Launcher {
 
                     try {
                         Thread.sleep(1500);
+                        this.checkForUpdates(version, args);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
-                    this.checkForUpdates(version, args);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -177,11 +187,14 @@ public class Launcher {
         }
 
         logger.info("Running CloudApplication with dependencies:");
+        if (this.dependencies.isEmpty()) {
+            logger.info("==> Error: No dependencies found!");
+        }
         for (Dependency dependency : this.dependencies) {
             logger.info("  => " + dependency.toPath());
         }
 
-        logger.info("" );
+        logger.info("");
 
         try {
             logger.info("Bootstrapping...");

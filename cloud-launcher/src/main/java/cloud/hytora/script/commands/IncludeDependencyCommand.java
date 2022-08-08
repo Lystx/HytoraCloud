@@ -14,8 +14,8 @@ public class IncludeDependencyCommand implements ScriptCommand {
     @Override
     public void execute(String[] args, String input, String commandLine) {
 
-        if (args.length >= 4) {
-            Dependency dependency = new Dependency(args[0], args[1], args[2], args[3], args.length == 5 ? args[4] : null);
+        if (args.length >= 3) {
+            Dependency dependency = new Dependency(args[0], args[1], args[2], args.length == 4 ? args[3] : "mvn");
             this.includer.accept(dependency);
         }
     }

@@ -4,7 +4,6 @@ import cloud.hytora.Launcher;
 import cloud.hytora.common.DriverUtility;
 import cloud.hytora.context.annotations.CacheContext;
 import cloud.hytora.context.annotations.Component;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,6 +31,8 @@ public class DependencyLoader {
                 this.installLibrary(this.launcher.getRepositories().get(dependency.getRepository()).getUrl(), dependency, path);
 
                 dependencyResources.add(path.toUri().toURL());
+            } else {
+                throw new IllegalArgumentException("Dependency " + dependency + " does not match any registered Repository!");
             }
         }
 
@@ -44,14 +45,12 @@ public class DependencyLoader {
             Files.createDirectories(path.getParent());
 
             String dependencyName = dependency.getGroup() + ":" + dependency.getName() + ":"
-                    + dependency.getVersion() + (dependency.getClassifier() != null ? "-" + dependency.getClassifier() : "")
+                    + dependency.getVersion() + ""
                     + ".jar";
 
-            System.out.println(
-                    String.format("Installing dependency %s from repository %s...", dependencyName, dependency.getRepository()));
+            launcher.getLogger().info("Installing dependency {} from repository {}...", dependencyName, dependency.getRepository());
 
-            try (InputStream inputStream = DriverUtility
-                    .readInputStreamFromURL(repositoryURL + "/" + dependency.toPath().toString().replace(File.separatorChar, '/'))) {
+            try (InputStream inputStream = DriverUtility.readInputStreamFromURL(repositoryURL + "/" + dependency.toPath().toString().replace(File.separatorChar, '/'))) {
                 Files.copy(inputStream, path);
             }
 

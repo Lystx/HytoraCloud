@@ -15,16 +15,14 @@ import lombok.ToString;
 @AllArgsConstructor
 public class Dependency {
 
-    private final String repository;
     private final String group;
     private final String name;
     private final String version;
 
-    private String classifier;
-
+    private final String repository;
 
     public Path toPath() {
-        String fileName = String.format("%s-%s%s.jar", this.name, this.version, (this.classifier != null ? "-" + this.classifier : ""));
+        String fileName = String.format("%s-%s%s.jar", this.name, this.version, "");
 
         return Paths.get(this.group.replace(".", "/"), this.name, this.version, fileName);
     }

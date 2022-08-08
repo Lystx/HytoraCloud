@@ -2,6 +2,7 @@ package cloud.hytora.script;
 
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.StringUtils;
+import cloud.hytora.common.task.Task;
 
 import java.io.BufferedReader;
 import java.io.BufferedReader;
@@ -42,25 +43,29 @@ public class ScriptLoader {
         }
     }
 
-    public void executeScript(Path path) throws IOException {
-        executeScriptFromReader(FileUtils.newBufferedReader(path));
+    public Task<Void> executeScript(Path path) throws IOException {
+        return executeScriptFromReader(FileUtils.newBufferedReader(path));
     }
 
-    public void executeScriptFromInputStream(InputStream input) throws IOException {
-        executeScriptFromReader(new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8)));
+    public Task<Void> executeScriptFromInputStream(InputStream input) throws IOException {
+        return executeScriptFromReader(new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8)));
     }
 
-    public void executeScriptFromResource(String resource) throws IOException {
+    public Task<Void> executeScriptFromResource(String resource) throws IOException {
         InputStream systemResourceAsStream = ClassLoader.getSystemResourceAsStream(resource);
         assert systemResourceAsStream != null;
-        this.executeScriptFromReader(new BufferedReader(new InputStreamReader(systemResourceAsStream, StandardCharsets.UTF_8)));
+        return this.executeScriptFromReader(new BufferedReader(new InputStreamReader(systemResourceAsStream, StandardCharsets.UTF_8)));
     }
 
-    public void executeScriptFromReader(BufferedReader reader) throws IOException {
-        String line;
-        while ((line = reader.readLine()) != null) {
-            executeLine(line);
-        }
+    public Task<Void> executeScriptFromReader(BufferedReader reader) throws IOException {
+        return Task.callAsync(() -> {
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                executeLine(line);
+            }
+            return null;
+        });
     }
 
     public String replaceScriptVariables(String line) {
@@ -122,16 +127,15 @@ public class ScriptLoader {
 
             String[] args = arguments.split(" ");
 
-            if (args.length == 1) {
-                args = new String[0];
-            } else {
-                args = Arrays.copyOfRange(args, 1, args.length);
+            if (args.length != 1) {
+                args = Arrays.copyOfRange(args, 0, args.length);
             }
 
             ScriptCommand command = commands.get(commandName);
             if (command == null) {
                 throw new IllegalStateException("Unsupported syntax '" + line + "'");
             }
+            System.out.println(commandName + ": " + Arrays.toString(args));
             command.execute(args, String.join(" ", args), arguments);
         }
 

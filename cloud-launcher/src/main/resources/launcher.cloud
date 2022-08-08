@@ -11,9 +11,26 @@ print('Installing Dependencies...');
 
 #Including repositories
 includeRepository('ossrh@https://oss.sonatype.org/content/repositories/snapshots');
-includeRepository('mvnCentral@https://repo1.maven.org/maven2/');
+includeRepository('mvn@https://repo1.maven.org/maven2/');
 
 
 #Including dependencies
-includeDependency('mvnCentral org.fusesource.jansi jansi 2.4.0');
-includeDependency('mvnCentral me.tongfei progressbar 0.5.5');
+includeDependency('org.fusesource.jansi jansi 2.4.0');
+includeDependency('me.tongfei progressbar 0.5.5');
+includeDependency('mysql mysql-connector-java 8.0.27');
+includeDependency('org.mongodb mongodb-driver-core 4.2.0-beta1');
+includeDependency('org.mongodb mongodb-driver-sync 4.2.0-beta1');
+includeDependency('org.fusesource.jansi jansi 2.4.0');
+includeDependency('org.zeroturnaround zt-exec 1.12');
+includeDependency('dnsjava dnsjava 3.4.0');
+includeDependency('commons-io commons-io 2.11.0');
+includeDependency('org.reflections reflections 0.10.2');
+includeDependency('com.google.code.gson gson 2.8.9');
+includeDependency('com.google.guava guava 31.0.1-jre');
+includeDependency('io.netty netty-all 4.1.72.Final');
+includeDependency('io.netty netty-transport 4.1.72.Final');
+includeDependency('io.netty netty-transport-classes-epoll 4.1.72.Final');
+includeDependency('io.netty netty-codec 4.1.72.Final');
+includeDependency('org.jline jline 3.20.0');
+
+print('Launched script!');
