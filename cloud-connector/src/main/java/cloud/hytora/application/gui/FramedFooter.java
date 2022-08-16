@@ -10,7 +10,7 @@ import java.awt.event.WindowEvent;
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
 
-import cloud.hytora.common.DriverVersion;
+import cloud.hytora.common.VersionInfo;
 import cloud.hytora.driver.CloudDriver;
 import com.formdev.flatlaf.*;
 import cloud.hytora.application.elements.LookAndFeelsComboBox;
@@ -146,7 +146,7 @@ public class FramedFooter extends JPanel {
     }
 
     private void updateInfoLabel() {
-        DriverVersion version = DriverVersion.getCurrentVersion();
+        VersionInfo version = VersionInfo.getCurrentVersion();
         infoLabel.setText("HytoraCloud Version: " + version.toString());
     }
 

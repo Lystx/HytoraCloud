@@ -30,7 +30,7 @@ public interface DriverStorage {
 	}
 
 	default IEntry get(@Nonnull String path) {
-		return getRawData().getEntry(path);
+		return getRawData().get(path);
 	}
 
 	default <T> T get(@Nonnull String path, @Nonnull Type classOfT) {

@@ -83,7 +83,7 @@ public class MapDocument extends AbstractDocument {
 
 	@Nonnull
 	@Override
-	public IEntry getEntry(@Nonnull String path) {
+	public IEntry get(@Nonnull String path) {
 		return new MapEntry(properties.get(path));
 	}
 

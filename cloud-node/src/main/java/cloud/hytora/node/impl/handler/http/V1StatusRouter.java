@@ -1,6 +1,6 @@
 package cloud.hytora.node.impl.handler.http;
 
-import cloud.hytora.common.DriverVersion;
+import cloud.hytora.common.VersionInfo;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.http.api.*;
@@ -17,7 +17,7 @@ public class V1StatusRouter {
 
 		context.getResponse()
 			.setHeader("Content-Type", "application/json")
-			.setBody(DocumentFactory.newJsonDocument(DriverVersion.getCurrentVersion()))
+			.setBody(DocumentFactory.newJsonDocument(VersionInfo.getCurrentVersion()))
 			.setStatusCode(HttpCodes.OK)
 			.getContext()
 			.closeAfter(true)

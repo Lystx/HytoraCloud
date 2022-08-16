@@ -1,8 +1,12 @@
 {
   "version": "SNAPSHOT-1.5",
-  "modules": {
-    "module-proxy": "https://www.github.com/Lystx/HytoraCloud"
-  },
+  "modules": [
+    {
+      "name": "module-proxy",
+      "url": "{cloud.baseUrl}/{module.name}.jar",
+      "version": "SNAPSHOT-1.2.3"
+    }
+  ],
   "updates": [
     {
       "date": "04.06.2022 - 11:06",

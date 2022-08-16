@@ -1,5 +1,6 @@
 package cloud.hytora.common;
 
+import cloud.hytora.common.collection.WrappedException;
 import cloud.hytora.common.function.ExceptionallyRunnable;
 import cloud.hytora.common.task.Task;
 
@@ -8,8 +9,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -21,6 +24,20 @@ public class DriverUtility {
     @SuppressWarnings("unchecked")
     public static <T> T cast(Object object) {
         return (T) object;
+    }
+
+    public static boolean hasInternetConnection() {
+        try {
+            URL googleUrl = new URL("https://www.google.com");
+            URLConnection connection = googleUrl.openConnection();
+            connection.connect();
+            connection.getInputStream().close();
+            return true;
+        } catch (MalformedURLException e) {
+            throw WrappedException.silent(e);
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     public static void print(Object message) {
@@ -111,6 +128,10 @@ public class DriverUtility {
 
     public static <T> Task<T> find(Collection<T> iterator, Predicate<? super T> predicate) {
         return Task.build(findOrNull(iterator, predicate));
+    }
+
+    public static <T> List<T> newList() {
+        return new ArrayList<T>();
     }
 
     @SafeVarargs

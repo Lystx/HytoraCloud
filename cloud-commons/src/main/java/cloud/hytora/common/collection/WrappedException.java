@@ -49,6 +49,10 @@ public class WrappedException extends RuntimeException {
 	}
 
 	@Nonnull
+	public static RuntimeException throwWrapped(@Nonnull Throwable ex) {
+		throw rethrow(ex);
+	}
+	@Nonnull
 	public static WrappedException silent(@Nonnull Throwable cause) {
 		return new SilentWrappedException(cause);
 	}

@@ -92,8 +92,8 @@ public interface WrappedDocument extends Document {
 
 	@Nonnull
 	@Override
-	default IEntry getEntry(@Nonnull String path) {
-		return getTargetDocument().getEntry(path);
+	default IEntry get(@Nonnull String path) {
+		return getTargetDocument().get(path);
 	}
 
 	@Nonnull

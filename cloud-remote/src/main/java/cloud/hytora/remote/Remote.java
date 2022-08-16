@@ -104,6 +104,7 @@ public class Remote extends CloudDriver<ICloudServer> {
         this.instrumentation = instrumentation;
         this.arguments = arguments;
         this.applicationContext = new ApplicationContext(this);
+        this.applicationContext.setInstance("driver", CloudDriver.getInstance());
 
 
         this.commandSender = new DefaultCommandSender("Remote", null).function(System.out::println);

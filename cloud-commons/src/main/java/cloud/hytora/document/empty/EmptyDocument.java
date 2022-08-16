@@ -106,7 +106,7 @@ public class EmptyDocument implements Document {
 
 	@Nonnull
 	@Override
-	public IEntry getEntry(@Nonnull String path) {
+	public IEntry get(@Nonnull String path) {
 		return EmptyEntry.INSTANCE;
 	}
 

@@ -1,5 +1,8 @@
 package cloud.hytora.document;
 
+import cloud.hytora.document.gson.GsonEntry;
+
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.awt.*;
@@ -15,7 +18,7 @@ import java.util.UUID;
  * A {@link IEntry} is immutable, when the value is changed in the {@link Document} or {@link Bundle},
  * this {@link IEntry} will not be effected.
  *
- * @see Document#getEntry(String)
+ * @see Document#get(String)
  * @see Bundle#getEntry(int)
  *
  * @see Document#entries()
@@ -23,6 +26,12 @@ import java.util.UUID;
  *
  */
 public interface IEntry extends JsonEntity {
+
+	@Nonnull
+	@CheckReturnValue
+	public static IEntry newJsonEntry(@Nullable Object value) {
+		return new GsonEntry(value);
+	}
 
 	/**
 	 * @return whether this entry is {@code null}, non-primitive getters will return {@code null}

@@ -96,7 +96,7 @@ public class DatabaseFile implements IDatabase {
 
     @Override
     public Collection<Document> filter(String collection, String fieldName, Object fieldValue) {
-        return documents(collection).stream().filter(d -> d.getEntry(fieldName).toString().equalsIgnoreCase(fieldValue.toString())).collect(Collectors.toList());
+        return documents(collection).stream().filter(d -> d.get(fieldName).toString().equalsIgnoreCase(fieldValue.toString())).collect(Collectors.toList());
     }
 
     @Override

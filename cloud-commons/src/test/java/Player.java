@@ -1,6 +1,6 @@
 import cloud.hytora.context.annotations.*;
 
-@Component
+@ApplicationParticipant
 @Configuration
 public class Player {
 

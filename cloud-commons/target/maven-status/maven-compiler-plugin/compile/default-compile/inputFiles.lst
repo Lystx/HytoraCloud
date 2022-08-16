@@ -1,146 +1,149 @@
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\abstraction\AbstractDocument.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\DocumentFactory.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\scheduler\def\DefaultScheduler.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\collection\NamedThreadFactory.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\definition\IDefinition.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\factory\DefaultInjectFactory.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\LoggerFactory.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\task\exception\ValueImmutableException.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\internal\factory\ConstantLoggerFactory.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\exceptions\MultipleInstanceException.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\definition\reader\ConfigurationDefinitionReader.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\LogOutputStream.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\inject\base\SimpleBinder.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\annotations\CacheContext.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\definition\registry\DefaultDefinitionRegistry.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\identification\ModifiableUUIDHolder.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\postprocess\ContextProcessorJson.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\OffsetDateTimeTypeAdapter.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\task\WrapperListener.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\bson\BsonBundle.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\inject\annotation\Inject.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\DocumentTypeAdapter.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\map\MapBundle.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\collection\WrappedException.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\definition\reader\CompositeDefinitionReader.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\collection\IRandom.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\collection\SingletonRandom.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\location\ImmutableLocation.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\inject\IBinder.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\bson\BsonHelper.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\misc\StringUtils.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\empty\EmptyBundle.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\task\def\SimpleTask.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\ExcludeJsonField.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\internal\factory\DefaultLoggerFactory.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\task\exception\ValueTimedOutException.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\task\TaskHolder.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\collection\pair\Triple.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\handler\LogHandler.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\postprocess\PostConstructProcessor.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\wrapped\WrappedDocument.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\identification\ImmutableUUIDHolder.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\collection\pair\Pair.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\scheduler\def\DefaultSchedulerFuture.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\collection\RandomWrapper.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\task\Task.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\misc\RandomString.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\location\impl\DefaultLocation.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\handler\HandledLogger.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\map\MapDocument.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\definition\reader\IDefinitionReader.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\collection\ThreadRunnable.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\function\ExceptionallyBiFunction.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\Document.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\IEntry.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\collection\pair\Wrap.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\DriverVersion.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\exceptions\MultiplyConstructorException.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\definition\ConstructorDefinition.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\misc\FileUtils.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\function\ExceptionallyRunnable.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\internal\factory\Slf4jLoggerFactory.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\collection\RunnableTimerTask.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\function\ExceptionallyBiConsumer.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\collection\pair\Tuple.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\wrapped\StorableBundle.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\DocumentWrapper.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\annotations\DocumentConfiguration.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\exceptions\NoInstanceFoundException.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\wrapped\Storable.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\abstraction\AbstractBundle.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\definition\reader\ComponentDefinitionReader.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\BukkitReflectionSerializableTypeAdapter.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\formatter\UncoloredMessageFormatter.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\GsonTypeAdapter.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\task\exception\ValueHoldsNoObjectException.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\bson\BsonEntry.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\ExcludeIfNull.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\wrapped\StorableDocument.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\postprocess\ContextProcessorCache.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\gson\GsonHelper.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\scheduler\SchedulerFuture.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\ClassTypeAdapter.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\misc\GsonUtils.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\inject\Injector.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\collection\SeededRandomWrapper.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\annotations\Configuration.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\collection\ArrayWalker.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\handler\HandledSyncLogger.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\function\ExceptionallyFunction.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\annotations\Component.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\identification\ModifiableNameHolder.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\internal\SimpleLogger.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\inject\base\SimpleInjector.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\misc\ReflectionUtils.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\annotations\Qualifier.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\internal\WrappedSlf4jLogger.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\location\ModifiableLocation.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\gson\GsonDocument.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\IApplicationContext.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\wrapped\WrappedBundle.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\collection\ExposedSecurityManager.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\annotations\JsonContext.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\misc\ZipUtils.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\exceptions\WrongQualifierValueException.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\LogLevel.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\bson\BsonDocument.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\function\ExceptionallyConsumer.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\exceptions\MultiplyAnnotationTypeException.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\empty\EmptyEntry.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\function\ExceptionallySupplier.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\ApplicationContext.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\formatter\ColoredMessageFormatter.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\ConsoleColor.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\postprocess\IPostProcessor.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\utils\PackageScanner.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\gson\GsonBundle.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\definition\reader\SystemDefinitionReader.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\JsonEntity.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\Logger.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\handler\HandledAsyncLogger.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\annotations\DefinedMethod.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\function\BiSupplier.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\annotations\Constructor.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\empty\EmptyDocument.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\definition\registry\DefinitionRegistry.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\scheduler\Scheduler.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\misc\BukkitReflectionSerializationUtils.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\definition\CustomDefinition.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\BundleTypeAdapter.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\inject\feature\InjectedObject.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\definition\MethodDefinition.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\context\factory\InjectFactory.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\Bundle.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\handler\LogEntry.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\collection\pair\Quadro.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\internal\FallbackLogger.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\identification\ImmutableNameHolder.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\collection\ClassWalker.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\PairTypeAdapter.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\map\MapEntry.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\function\ObjectComparator.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\logging\formatter\SpacePadder.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\document\gson\GsonEntry.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\misc\CollectionUtils.java
-C:\Users\Eric Lemm\julian lol\workspace\cloud-commons\src\main\java\cloud\hytora\common\DriverUtility.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\function\ExceptionallyFunction.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\progressbar\ProgressBarStyle.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\gson\GsonBundle.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\handler\HandledAsyncLogger.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\formatter\SpacePadder.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\BukkitReflectionSerializableTypeAdapter.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\identification\ModifiableUUIDHolder.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\scheduler\def\DefaultSchedulerFuture.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\inject\Injector.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\misc\ReflectionUtils.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\misc\StringUtils.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\ExcludeJsonField.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\internal\FallbackLogger.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\map\MapDocument.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\annotations\CacheContext.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\postprocess\ContextProcessorJson.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\task\exception\ValueImmutableException.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\PairTypeAdapter.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\DocumentTypeAdapter.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\inject\base\SimpleInjector.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\bson\BsonHelper.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\wrapped\StorableBundle.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\exceptions\WrongQualifierValueException.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\misc\CollectionUtils.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\BundleTypeAdapter.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\function\ExceptionallyConsumer.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\collection\pair\Quadro.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\Bundle.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\function\ObjectComparator.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\scheduler\Scheduler.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\IEntry.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\wrapped\WrappedDocument.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\definition\registry\DefinitionRegistry.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\collection\ThreadRunnable.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\misc\GsonUtils.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\collection\SeededRandomWrapper.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\wrapped\StorableDocument.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\misc\BukkitReflectionSerializationUtils.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\factory\DefaultInjectFactory.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\collection\NamedThreadFactory.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\abstraction\AbstractBundle.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\function\BiSupplier.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\collection\ExposedSecurityManager.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\ApplicationContext.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\progressbar\ProgressPrinter.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\annotations\Configuration.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\collection\WrappedException.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\exceptions\MultipleInstanceException.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\task\Task.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\task\def\SimpleTask.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\function\ExceptionallySupplier.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\bson\BsonBundle.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\formatter\UncoloredMessageFormatter.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\location\ModifiableLocation.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\exceptions\NoInstanceFoundException.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\ExcludeIfNull.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\DocumentFactory.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\ClassTypeAdapter.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\internal\WrappedSlf4jLogger.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\collection\RunnableTimerTask.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\scheduler\def\DefaultScheduler.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\identification\ImmutableNameHolder.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\postprocess\PostConstructProcessor.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\handler\LogHandler.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\GsonTypeAdapter.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\LoggerFactory.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\definition\reader\ComponentDefinitionReader.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\annotations\ApplicationParticipant.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\empty\EmptyBundle.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\LogLevel.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\misc\RandomString.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\ConsoleColor.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\annotations\JsonContext.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\collection\pair\Triple.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\gson\GsonEntry.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\wrapped\WrappedBundle.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\definition\reader\CompositeDefinitionReader.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\exceptions\MultiplyAnnotationTypeException.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\OffsetDateTimeTypeAdapter.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\function\ExceptionallyBiConsumer.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\internal\factory\DefaultLoggerFactory.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\collection\pair\Wrap.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\empty\EmptyEntry.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\scheduler\SchedulerFuture.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\inject\base\SimpleBinder.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\map\MapEntry.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\LogOutputStream.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\collection\IRandom.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\handler\HandledSyncLogger.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\exceptions\MultiplyConstructorException.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\inject\IBinder.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\misc\FileUtils.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\location\ImmutableLocation.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\task\WrapperListener.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\collection\pair\Tuple.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\annotations\DefinedMethod.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\Document.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\definition\reader\ConfigurationDefinitionReader.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\function\ExceptionallyBiFunction.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\location\impl\DefaultLocation.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\abstraction\AbstractDocument.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\handler\HandledLogger.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\definition\IDefinition.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\collection\SingletonRandom.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\utils\PackageScanner.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\postprocess\ContextProcessorCache.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\inject\feature\InjectedObject.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\internal\factory\ConstantLoggerFactory.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\progressbar\ProgressBar.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\identification\ModifiableNameHolder.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\JsonEntity.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\handler\LogEntry.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\definition\registry\DefaultDefinitionRegistry.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\collection\ClassWalker.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\definition\reader\SystemDefinitionReader.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\bson\BsonDocument.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\misc\ZipUtils.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\VersionInfo.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\DriverUtility.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\definition\reader\IDefinitionReader.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\IApplicationContext.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\collection\RandomWrapper.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\task\TaskHolder.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\task\exception\ValueHoldsNoObjectException.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\factory\InjectFactory.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\function\ExceptionallyRunnable.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\wrapped\Storable.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\annotations\Constructor.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\definition\ConstructorDefinition.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\formatter\ColoredMessageFormatter.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\inject\annotation\Inject.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\gson\GsonHelper.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\identification\ImmutableUUIDHolder.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\definition\CustomDefinition.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\definition\MethodDefinition.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\DocumentWrapper.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\map\MapBundle.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\collection\pair\Pair.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\annotations\DocumentConfiguration.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\bson\BsonEntry.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\internal\factory\Slf4jLoggerFactory.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\task\exception\ValueTimedOutException.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\postprocess\IPostProcessor.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\annotations\Qualifier.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\gson\GsonDocument.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\Logger.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\empty\EmptyDocument.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\collection\ArrayWalker.java
+C:\Users\Lystx\IdeaProjects\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\internal\SimpleLogger.java

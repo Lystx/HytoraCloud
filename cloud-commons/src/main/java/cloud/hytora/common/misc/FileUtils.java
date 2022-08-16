@@ -1,16 +1,15 @@
 package cloud.hytora.common.misc;
 
 import cloud.hytora.common.collection.WrappedException;
+import cloud.hytora.common.function.BiSupplier;
 import cloud.hytora.common.function.ExceptionallyConsumer;
+import lombok.SneakyThrows;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLDecoder;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.*;
@@ -678,4 +677,59 @@ public final class FileUtils {
 		}
 	}
 
+
+	@SneakyThrows
+	public static Class<?> findClassWithJarEntry(File jar, String name) {
+		try {
+			JarFile jarFile = new JarFile(jar);
+			Enumeration<JarEntry> e = jarFile.entries();
+
+			URL[] urls = {new URL("jar:file:" + jar.getAbsolutePath())};
+			URLClassLoader cl = URLClassLoader.newInstance(urls);
+
+			while (e.hasMoreElements()) {
+				JarEntry je = e.nextElement();
+				if(je.isDirectory() || !je.getName().endsWith(".class")){
+					continue;
+				}
+				if (je.getName().contains(name)){
+					String className = je.getName().substring(0,je.getName().length()-6);
+					className = className.replace('/', '.');
+					Class<?> c = cl.loadClass(className);
+					return c;
+				}
+			}
+		} catch (IOException | ClassNotFoundException e) {
+			return null;
+		}
+		return null;
+	}
+
+	@SneakyThrows
+	public static Class<?> filterClassWithJarEntry(File jar, BiSupplier<Class<?>, Boolean> request) {
+		try {
+			JarFile jarFile = new JarFile(jar);
+			Enumeration<JarEntry> e = jarFile.entries();
+
+			URL[] urls = {new URL("jar:file:" + jar.getAbsolutePath())};
+			URLClassLoader cl = URLClassLoader.newInstance(urls);
+
+			while (e.hasMoreElements()) {
+				JarEntry je = e.nextElement();
+				if(je.isDirectory() || !je.getName().endsWith(".class")){
+					continue;
+				}
+				String className = je.getName().substring(0,je.getName().length()-6);
+				className = className.replace('/', '.');
+				Class<?> c = cl.loadClass(className);
+				if (!request.supply(c)) {
+					continue;
+				}
+				return c;
+			}
+		} catch (IOException | ClassNotFoundException e) {
+			return null;
+		}
+		return null;
+	}
 }

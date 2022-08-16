@@ -1,5 +1,6 @@
 package cloud.hytora.node.impl.command.impl;
 
+import cloud.hytora.context.annotations.ApplicationParticipant;
 import cloud.hytora.context.annotations.CacheContext;
 import cloud.hytora.context.annotations.Constructor;
 import cloud.hytora.driver.command.CommandScope;
@@ -14,6 +15,7 @@ import cloud.hytora.node.NodeDriver;
 @Command("clear")
 @CommandExecutionScope(CommandScope.CONSOLE)
 @CommandDescription("Clears the console")
+@ApplicationParticipant
 public class ClearCommand {
 
     @CacheContext

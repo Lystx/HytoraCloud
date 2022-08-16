@@ -70,7 +70,7 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
 
         NodeDriver.getInstance().getServiceQueue().dequeue();
 
-        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+        if (NodeDriver.getInstance().getNodeManager() != null && NodeDriver.getInstance().getNodeManager().isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
         }
     }
@@ -83,7 +83,7 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
         }
         super.addTask(task);
 
-        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+        if (NodeDriver.getInstance().getNodeManager() != null && NodeDriver.getInstance().getNodeManager().isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
         }
     }
@@ -93,7 +93,7 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
         this.database.getSection(TaskGroup.class).insert(task.getName(), task);
         super.addTaskGroup(task);
 
-        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+        if (NodeDriver.getInstance().getNodeManager() != null && NodeDriver.getInstance().getNodeManager().isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
         }
     }
@@ -103,7 +103,7 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
         this.database.getSection(TaskGroup.class).delete(task.getName());
         super.removeTaskGroup(task);
 
-        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+        if (NodeDriver.getInstance().getNodeManager() != null && NodeDriver.getInstance().getNodeManager().isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
         }
     }
@@ -116,7 +116,7 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
         }
         super.removeTask(task);
 
-        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+        if (NodeDriver.getInstance().getNodeManager() != null && NodeDriver.getInstance().getNodeManager().isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
         }
     }
@@ -125,7 +125,7 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
     public void update(@NotNull IServiceTask task) {
         this.database.getSection(IServiceTask.class).update(task.getName(), task);
         CloudDriver.getInstance().getEventManager().callEventGlobally(new TaskUpdateEvent(task));
-        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+        if (NodeDriver.getInstance().getNodeManager() != null && NodeDriver.getInstance().getNodeManager().isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
         }
     }

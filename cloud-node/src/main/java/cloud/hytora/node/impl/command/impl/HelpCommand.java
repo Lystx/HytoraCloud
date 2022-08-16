@@ -1,5 +1,6 @@
 package cloud.hytora.node.impl.command.impl;
 
+import cloud.hytora.context.annotations.ApplicationParticipant;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 @CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
 @CommandPermission("cloud.command.use")
 @CommandDescription("Shows this help menu")
+@ApplicationParticipant
 public class HelpCommand {
 
     @Root

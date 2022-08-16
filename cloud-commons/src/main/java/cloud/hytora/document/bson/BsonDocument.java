@@ -99,7 +99,7 @@ public class BsonDocument extends AbstractDocument implements DocumentWrapper<or
 
 	@Nonnull
 	@Override
-	public IEntry getEntry(@Nonnull String path) {
+	public IEntry get(@Nonnull String path) {
 		Object value = bsonDocument.get(path);
 		return new BsonEntry(value);
 	}

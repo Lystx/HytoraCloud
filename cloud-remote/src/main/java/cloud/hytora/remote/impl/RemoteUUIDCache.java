@@ -12,7 +12,6 @@ import cloud.hytora.driver.uuid.DriverUUIDCache;
 import cloud.hytora.driver.uuid.packets.CachedUUIDPacket;
 import lombok.Getter;
 import lombok.Setter;
-import org.jline.reader.Candidate;
 
 import java.util.Collection;
 import java.util.LinkedList;

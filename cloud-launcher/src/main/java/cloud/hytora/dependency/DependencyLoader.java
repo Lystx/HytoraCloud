@@ -3,7 +3,7 @@ package cloud.hytora.dependency;
 import cloud.hytora.Launcher;
 import cloud.hytora.common.DriverUtility;
 import cloud.hytora.context.annotations.CacheContext;
-import cloud.hytora.context.annotations.Component;
+import cloud.hytora.context.annotations.ApplicationParticipant;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +13,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 
-@Component
+@ApplicationParticipant
 public class DependencyLoader {
 
 

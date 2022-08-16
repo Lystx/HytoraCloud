@@ -1,15 +1,22 @@
 package cloud.hytora.document;
 
+import cloud.hytora.common.collection.WrappedException;
 import cloud.hytora.common.misc.FileUtils;
+import cloud.hytora.document.bson.BsonDocument;
+import cloud.hytora.document.empty.EmptyDocument;
+import cloud.hytora.document.gson.GsonDocument;
+import cloud.hytora.document.wrapped.StorableDocument;
+import cloud.hytora.document.wrapped.WrappedDocument;
 import com.google.gson.Gson;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
+import java.io.*;
 import java.lang.reflect.Type;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -25,6 +32,246 @@ import java.util.function.Consumer;
  * @see IEntry
  */
 public interface Document extends JsonEntity {
+
+	@Nonnull
+	@CheckReturnValue
+	public static Document emptyDocument() {
+		return EmptyDocument.INSTANCE;
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Document newJsonDocument() {
+		return new GsonDocument();
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Document newBsonDocument() {
+		return new BsonDocument();
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Document newBsonDocument(org.bson.Document bsonDocument) {
+		return new BsonDocument(bsonDocument);
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Document newJsonDocument(@Nonnull String json) {
+		return new GsonDocument(json);
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Document newBsonDocument(@Nonnull String json) {
+		return new BsonDocument(json);
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Document newJsonDocument(@Nonnull Object value) {
+		return new GsonDocument(value);
+	}
+
+	@Nullable
+	@CheckReturnValue
+	public static Document newJsonDocumentNullable(@Nullable Object object) {
+		return object == null ? null : newJsonDocument(object);
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Document newJsonDocument(@Nonnull String key, @Nonnull Object value) {
+		return newJsonDocument().set(key, value);
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Document newJsonDocument(@Nonnull Object... keysAndValues) {
+		Document document = newJsonDocument();
+		if (keysAndValues.length % 2 != 0)
+			throw new IllegalArgumentException("Cannot create document of " + keysAndValues.length + " arguments");
+		for (int i = 0; i < keysAndValues.length; i += 2) {
+			document.set(String.valueOf(keysAndValues[i]), keysAndValues[i + 1]);
+		}
+		return document;
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Document newJsonDocument(@Nonnull Reader reader) {
+		return new GsonDocument(reader);
+	}
+
+	public static Document newJsonDocumentByURL(String urlString) throws Exception {
+		URL url = new URL(urlString);
+		InputStream inputStream = url.openStream();
+		InputStreamReader inputStreamReader = new InputStreamReader(url.openStream());
+		Document document = newJsonDocument(inputStreamReader);
+
+
+		inputStreamReader.close();
+		inputStream.close();
+		return document;
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Document newJsonDocument(@Nonnull InputStream input) {
+		return newJsonDocument(new InputStreamReader(input, StandardCharsets.UTF_8));
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Document newJsonDocument(@Nonnull Path file) throws IOException {
+		if (Files.exists(file))
+			return new GsonDocument(FileUtils.newBufferedReader(file));
+		return new GsonDocument();
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Document newJsonDocument(@Nonnull File file) throws IOException {
+		if (file.exists())
+			return new GsonDocument(FileUtils.newBufferedReader(file));
+		return new GsonDocument();
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Document newJsonDocumentUnchecked(@Nonnull Path file) {
+		try {
+			return newJsonDocument(file);
+		} catch (Exception ex) {
+			throw new WrappedException(ex);
+		}
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Document newJsonDocumentUnchecked(@Nonnull File file) {
+		try {
+			return newJsonDocument(file);
+		} catch (Exception ex) {
+			throw new WrappedException(ex);
+		}
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static StorableDocument newStorableJsonDocument(@Nonnull Path file) throws IOException {
+		return newStorableDocument(newJsonDocument(file), file);
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static StorableDocument newStorableJsonDocumentUnchecked(@Nonnull Path file) {
+		try {
+			return newStorableJsonDocument(file);
+		} catch (Exception ex) {
+			throw new WrappedException(ex);
+		}
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static StorableDocument newStorableDocument(@Nonnull Document document, @Nonnull Path file) {
+		class DocumentClass implements WrappedDocument, StorableDocument {
+			@Nonnull
+			public Path getPath() {
+				return file;
+			}
+
+			@Nonnull
+			public File getFile() {
+				return file.toFile();
+			}
+
+			@Nonnull
+			public Document getTargetDocument() {
+				return document;
+			}
+
+			public void saveExceptionally() throws Exception {
+				saveToFile(file);
+			}
+
+			@Nonnull
+			public String toString() {
+				return this.asRawJsonString();
+			}
+
+			@Override
+			public DocumentWrapper<org.bson.Document> asBsonDocument() {
+				return document.asBsonDocument();
+			}
+
+			@Override
+			public DocumentWrapper<Gson> asGsonDocument() {
+				return document.asGsonDocument();
+			}
+
+			@Override
+			public Object getFallbackValue() {
+				return getTargetDocument().getFallbackValue();
+			}
+
+			@Override
+			public Document fallbackValue(Object value) {
+				return getTargetDocument().fallbackValue(value);
+			}
+		}
+		return new DocumentClass();
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static StorableDocument newStorableDocument(@Nonnull Document document, @Nonnull File file) {
+		return newStorableDocument(document, file.toPath());
+	}
+
+
+	@Nonnull
+	@CheckReturnValue
+	public static WrappedDocument newWrappedDocument(@Nonnull Document document, @Nullable Boolean overwriteEditable) {
+		return new WrappedDocument() {
+			@Nonnull
+			public Document getTargetDocument() {
+				return document;
+			}
+
+			@Override
+			public DocumentWrapper<org.bson.Document> asBsonDocument() {
+				return document.asBsonDocument();
+			}
+
+			@Override
+			public DocumentWrapper<Gson> asGsonDocument() {
+				return document.asGsonDocument();
+			}
+
+			public boolean canEdit() {
+				return overwriteEditable != null ? overwriteEditable : WrappedDocument.super.canEdit();
+			}
+
+			@Override
+			public Object getFallbackValue() {
+				return getTargetDocument().getFallbackValue();
+			}
+
+			@Override
+			public Document fallbackValue(Object value) {
+				return getTargetDocument().fallbackValue(value);
+			}
+
+			@Nonnull
+			public String toString() {
+				return this.asRawJsonString();
+			}
+		};
+	}
 
 	DocumentWrapper<org.bson.Document> asBsonDocument();
 
@@ -97,7 +344,7 @@ public interface Document extends JsonEntity {
 	 * @param path the path of the target object
 	 * @return the object at the given path wrapped as {@link IEntry}
 	 */
-	IEntry getEntry(@Nonnull String path);
+	IEntry get(@Nonnull String path);
 
 	/**
 	 * @param path the path of the target object
@@ -120,7 +367,7 @@ public interface Document extends JsonEntity {
 	Document getDocument(@Nonnull String path);
 
 	default String getString(@Nonnull String path) {
-		IEntry entry = getEntry(path);
+		IEntry entry = get(path);
 		if (entry.isNull() && getFallbackValue() != null) {
 			this.set(path, getFallbackValue());
 			return (String) getFallbackValue();
@@ -129,11 +376,11 @@ public interface Document extends JsonEntity {
 	}
 
 	default String getString(@Nonnull String path, @Nullable String def) {
-		return getEntry(path).toString(def);
+		return get(path).toString(def);
 	}
 
 	default Object getObject(@Nonnull String path) {
-		IEntry entry = getEntry(path);
+		IEntry entry = get(path);
 		if (entry.isNull() && getFallbackValue() != null) {
 			this.set(path, getFallbackValue());
 			return getFallbackValue();
@@ -142,7 +389,7 @@ public interface Document extends JsonEntity {
 	}
 
 	default boolean getBoolean(@Nonnull String path) {
-		IEntry entry = getEntry(path);
+		IEntry entry = get(path);
 		if (entry.isNull() && getFallbackValue() != null) {
 			this.set(path, getFallbackValue());
 			return (Boolean) getFallbackValue();
@@ -151,11 +398,11 @@ public interface Document extends JsonEntity {
 	}
 
 	default boolean getBoolean(@Nonnull String path, boolean def) {
-		return getEntry(path).toBoolean(def);
+		return get(path).toBoolean(def);
 	}
 
 	default long getLong(@Nonnull String path) {
-		IEntry entry = getEntry(path);
+		IEntry entry = get(path);
 		if (entry.isNull() && getFallbackValue() != null) {
 			this.set(path, getFallbackValue());
 			return (Long) getFallbackValue();
@@ -164,11 +411,11 @@ public interface Document extends JsonEntity {
 	}
 
 	default long getLong(@Nonnull String path, long def) {
-		return getEntry(path).toLong(def);
+		return get(path).toLong(def);
 	}
 
 	default int getInt(@Nonnull String path) {
-		IEntry entry = getEntry(path);
+		IEntry entry = get(path);
 		if (entry.isNull() && getFallbackValue() != null) {
 			this.set(path, getFallbackValue());
 			return (int) getFallbackValue();
@@ -177,11 +424,11 @@ public interface Document extends JsonEntity {
 	}
 
 	default int getInt(@Nonnull String path, int def) {
-		return getEntry(path).toInt(def);
+		return get(path).toInt(def);
 	}
 
 	default short getShort(@Nonnull String path) {
-		IEntry entry = getEntry(path);
+		IEntry entry = get(path);
 		if (entry.isNull() && getFallbackValue() != null) {
 			this.set(path, getFallbackValue());
 			return (short) getFallbackValue();
@@ -190,11 +437,11 @@ public interface Document extends JsonEntity {
 	}
 
 	default short getShort(@Nonnull String path, short def) {
-		return getEntry(path).toShort(def);
+		return get(path).toShort(def);
 	}
 
 	default byte getByte(@Nonnull String path) {
-		IEntry entry = getEntry(path);
+		IEntry entry = get(path);
 		if (entry.isNull() && getFallbackValue() != null) {
 			this.set(path, getFallbackValue());
 			return (byte) getFallbackValue();
@@ -203,11 +450,11 @@ public interface Document extends JsonEntity {
 	}
 
 	default byte getByte(@Nonnull String path, byte def) {
-		return getEntry(path).toByte(def);
+		return get(path).toByte(def);
 	}
 
 	default float getFloat(@Nonnull String path) {
-		IEntry entry = getEntry(path);
+		IEntry entry = get(path);
 		if (entry.isNull() && getFallbackValue() != null) {
 			this.set(path, getFallbackValue());
 			return (float) getFallbackValue();
@@ -216,11 +463,11 @@ public interface Document extends JsonEntity {
 	}
 
 	default float getFloat(@Nonnull String path, float def) {
-		return getEntry(path).toFloat(def);
+		return get(path).toFloat(def);
 	}
 
 	default double getDouble(@Nonnull String path) {
-		IEntry entry = getEntry(path);
+		IEntry entry = get(path);
 		if (entry.isNull() && getFallbackValue() != null) {
 			this.set(path, getFallbackValue());
 			return (double) getFallbackValue();
@@ -229,11 +476,11 @@ public interface Document extends JsonEntity {
 	}
 
 	default double getDouble(@Nonnull String path, double def) {
-		return getEntry(path).toDouble(def);
+		return get(path).toDouble(def);
 	}
 
 	default UUID getUniqueId(@Nonnull String path) {
-		IEntry entry = getEntry(path);
+		IEntry entry = get(path);
 		if (entry.isNull() && getFallbackValue() != null) {
 			this.set(path, getFallbackValue());
 			return (UUID) getFallbackValue();
@@ -242,7 +489,7 @@ public interface Document extends JsonEntity {
 	}
 
 	default <E extends Enum<?>> E getEnum(@Nonnull String path, @Nonnull Class<E> enumClass) {
-		IEntry entry = getEntry(path);
+		IEntry entry = get(path);
 		if (entry.isNull() && getFallbackValue() != null) {
 			this.set(path, getFallbackValue());
 			return (E) getFallbackValue();
@@ -251,11 +498,11 @@ public interface Document extends JsonEntity {
 	}
 
 	default <E extends Enum<?>> E getEnum(@Nonnull String path, @Nonnull E def) {
-		return getEntry(path).toEnum(def);
+		return get(path).toEnum(def);
 	}
 
 	default <T> T getInstance(@Nonnull String path, @Nonnull Class<T> classOfT) {
-		IEntry entry = getEntry(path);
+		IEntry entry = get(path);
 		if (entry.isNull() && getFallbackValue() != null) {
 			this.set(path, getFallbackValue());
 			return (T) getFallbackValue();
@@ -264,7 +511,7 @@ public interface Document extends JsonEntity {
 	}
 
 	default <T> T getInstance(@Nonnull String path, @Nonnull Type typeOfT) {
-		IEntry entry = getEntry(path);
+		IEntry entry = get(path);
 		if (entry.isNull() && getFallbackValue() != null) {
 			this.set(path, getFallbackValue());
 			return (T) getFallbackValue();

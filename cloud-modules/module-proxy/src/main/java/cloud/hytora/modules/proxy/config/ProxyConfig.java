@@ -1,6 +1,6 @@
 package cloud.hytora.modules.proxy.config;
 
-import cloud.hytora.common.DriverVersion;
+import cloud.hytora.common.VersionInfo;
 import cloud.hytora.modules.proxy.config.sub.Motd;
 import cloud.hytora.modules.proxy.config.sub.MotdLayOut;
 import cloud.hytora.modules.proxy.config.sub.TabList;
@@ -28,7 +28,7 @@ public class ProxyConfig {
 
 	public static ProxyConfig defaultConfig() {
 
-		DriverVersion version = DriverVersion.getCurrentVersion();
+		VersionInfo version = VersionInfo.getCurrentVersion();
 
 		return new ProxyConfig(
 				new TabList(

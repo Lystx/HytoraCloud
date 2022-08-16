@@ -1,6 +1,6 @@
 package cloud.hytora.node;
 
-import cloud.hytora.common.DriverVersion;
+import cloud.hytora.common.VersionInfo;
 import cloud.hytora.common.function.ExceptionallyConsumer;
 import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
@@ -173,6 +173,7 @@ public class NodeDriver extends CloudDriver<INode> {
         Task.callAsync(() -> {
             logger.warn("Loading ApplicationContext...");
             NodeDriver.this.context = new ApplicationContext(this);
+            context.setInstance("driver", CloudDriver.getInstance());
             return context;
         }).onTaskSucess((ExceptionallyConsumer<IApplicationContext>) c -> {
             logger.warn("Successfully loaded ApplicationContext!");
@@ -252,7 +253,7 @@ public class NodeDriver extends CloudDriver<INode> {
             this.logger.info("§b/_____/   ___/ / / / / / / /_/ / /  / __/    | |/ // /  /_____/");
             this.logger.info("§b         /____/_/ /_/ /_/\\__,_/_/  /_/       |___//_/          ");
             this.logger.info("§8");
-            this.logger.info("§bVersion §7: {}", DriverVersion.getCurrentVersion());
+            this.logger.info("§bVersion §7: {}", VersionInfo.getCurrentVersion());
             this.logger.info("§bDeveloper(s) §7: {}", "Lystx");
             this.logger.info("§8==================================================");
             this.logger.info("§8");

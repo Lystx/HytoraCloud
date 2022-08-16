@@ -1,13 +1,18 @@
 package cloud.hytora.document;
 
+import cloud.hytora.common.collection.WrappedException;
 import cloud.hytora.common.misc.FileUtils;
+import cloud.hytora.document.empty.EmptyBundle;
+import cloud.hytora.document.gson.GsonBundle;
+import cloud.hytora.document.wrapped.StorableBundle;
+import cloud.hytora.document.wrapped.WrappedBundle;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -22,6 +27,164 @@ import java.util.stream.Collectors;
  * @see IEntry
  */
 public interface Bundle extends JsonEntity, Iterable<IEntry> {
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle emptyBundle() {
+		return EmptyBundle.INSTANCE;
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newJsonBundle() {
+		return new GsonBundle();
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newJsonBundle(int initialSize) {
+		return new GsonBundle(initialSize);
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newJsonBundle(@Nonnull String json) {
+		return new GsonBundle(json);
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newJsonBundle(@Nonnull Object... values) {
+		return newJsonBundle().addAll(values);
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newJsonBundle(@Nonnull Iterable<?> values) {
+		return newJsonBundle().addAll(values);
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newJsonBundle(@Nonnull Reader reader) {
+		return new GsonBundle(reader);
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newJsonBundle(@Nonnull InputStream input) {
+		return newJsonBundle(new InputStreamReader(input, StandardCharsets.UTF_8));
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newJsonBundle(@Nonnull Path file) throws IOException {
+		if (Files.exists(file))
+			return new GsonBundle(FileUtils.newBufferedReader(file));
+		return new GsonBundle();
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newJsonBundle(@Nonnull File file) throws IOException {
+		if (file.exists())
+			return new GsonBundle(FileUtils.newBufferedReader(file));
+		return new GsonBundle();
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newJsonBundleUnchecked(@Nonnull Path file) {
+		try {
+			return newJsonBundle(file);
+		} catch (Exception ex) {
+			throw new WrappedException(ex);
+		}
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newJsonBundleUnchecked(@Nonnull File file) {
+		try {
+			return newJsonBundle(file);
+		} catch (Exception ex) {
+			throw new WrappedException(ex);
+		}
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static StorableBundle newStorableBundle(@Nonnull Bundle bundle, @Nonnull Path file) {
+		class BundleClass implements WrappedBundle, StorableBundle {
+			@Nonnull
+			public Path getPath() {
+				return file;
+			}
+
+			@Nonnull
+			public File getFile() {
+				return file.toFile();
+			}
+
+			@Nonnull
+			public Bundle getTargetBundle() {
+				return bundle;
+			}
+
+			public void saveExceptionally() throws Exception {
+				saveToFile(file);
+			}
+
+			@Nonnull
+			public String toString() {
+				return this.asRawJsonString();
+			}
+		}
+		return new BundleClass();
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static StorableBundle newStorableBundle(@Nonnull Bundle bundle, @Nonnull File file) {
+		return newStorableBundle(bundle, file.toPath());
+	}
+
+
+	@Nonnull
+	@CheckReturnValue
+	public static WrappedBundle newWrappedBundle(@Nonnull Bundle bundle, @Nullable Boolean overwriteEditable) {
+		return new WrappedBundle() {
+			@Nonnull
+			public Bundle getTargetBundle() {
+				return bundle;
+			}
+
+			public boolean canEdit() {
+				return overwriteEditable != null ? overwriteEditable : WrappedBundle.super.canEdit();
+			}
+
+			@Nonnull
+			public String toString() {
+				return this.asRawJsonString();
+			}
+		};
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static StorableBundle newStorableJsonBundle(@Nonnull Path file) throws IOException {
+		return newStorableBundle(newJsonBundle(file), file);
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static StorableBundle newStorableJsonBundleUnchecked(@Nonnull Path file) {
+		try {
+			return newStorableJsonBundle(file);
+		} catch (Exception ex) {
+			throw new WrappedException(ex);
+		}
+	}
 
 	@Nonnull
 	Object[] toArray();

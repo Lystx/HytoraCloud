@@ -3,12 +3,8 @@ package cloud.hytora.node.impl;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
-import cloud.hytora.document.IEntry;
-import cloud.hytora.driver.database.IDatabase;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
-import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
-import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.uuid.DriverUUIDCache;
 import cloud.hytora.driver.uuid.packets.CachedUUIDPacket;
 import cloud.hytora.node.NodeDriver;
@@ -70,7 +66,7 @@ public class NodeUUIDCache implements DriverUUIDCache {
             Document document = DocumentFactory.newJsonDocument(this.cacheFile);
 
             for (String key : document.keys()) {
-                UUID uuid = document.getEntry(key).toUniqueId();
+                UUID uuid = document.get(key).toUniqueId();
 
                 this.cachedUniqueIds.put(key, uuid);
             }

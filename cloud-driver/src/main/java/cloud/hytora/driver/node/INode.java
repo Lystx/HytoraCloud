@@ -10,6 +10,7 @@ import cloud.hytora.driver.services.ICloudServer;
 
 import java.util.Collection;
 
+// TODO: 15.08.2022 documentation 
 public interface INode extends IClusterObject<INode>, INetworkExecutor {
 
     @Override

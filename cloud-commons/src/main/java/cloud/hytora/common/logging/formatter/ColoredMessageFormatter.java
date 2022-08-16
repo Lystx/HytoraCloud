@@ -4,8 +4,6 @@ import cloud.hytora.common.logging.ConsoleColor;
 import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.logging.handler.LogHandler;
-import com.sun.deploy.util.SystemUtils;
-import sun.plugin2.util.SystemUtil;
 
 import javax.annotation.Nonnull;
 import java.io.PrintWriter;
@@ -37,7 +35,7 @@ public final class ColoredMessageFormatter {
 
 		SpacePadder.padRight(builder, entry.getLevel().getName() + ConsoleColor.DARK_GRAY + ":", 10 + ConsoleColor.DARK_GRAY.toString().length());
 		builder.append(entry.getLevel().isHighlighted() ? (entry.getLevel().getHighlightColor() != null ? entry.getLevel().getHighlightColor() : ConsoleColor.YELLOW) : ConsoleColor.DEFAULT)
-			.append(SystemUtil.getOSType() == 1 ? ConsoleColor.toUncoloredString('§', entry.getMessage()) : ConsoleColor.toColoredString('§', entry.getMessage()));
+			.append(ConsoleColor.toColoredString('§', entry.getMessage()));
 
 		if (entry.getException() != null) {
 			StringWriter writer = new StringWriter();

@@ -5,13 +5,18 @@
 #if enabled "Lystx" has all permisisons
 var cloud.hytora.launcher.devmode false
 var cloud.hytora.launcher.autoupdater true
+var cloud.hytora.launcher.module.autoupdater true
 var cloud.hytora.launcher.application.file https://raw.githubusercontent.com/Lystx/HytoraCloud/master/application.json
+var cloud.hytora.launcher.updater.baseUrl https://github.com/Lystx/HytoraCloud/releases/download/v{version}
+var cloud.hytora.launcher.updater.url {cloud.baseUrl}/HytoraCloud-{type}-{version}.zip
+var cloud.hytora.launcher.customVersion null
+
 
 print('Installing Dependencies...');
 
 #Including repositories
 includeRepository('ossrh@https://oss.sonatype.org/content/repositories/snapshots');
-includeRepository('mvn@https://repo1.maven.org/maven2/');
+includeRepository('mvn@https://repo1.maven.org/maven2');
 
 
 #Including dependencies

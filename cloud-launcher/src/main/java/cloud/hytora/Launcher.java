@@ -1,14 +1,15 @@
 package cloud.hytora;
 
 
-import cloud.hytora.common.DriverVersion;
+import cloud.hytora.common.DriverUtility;
+import cloud.hytora.common.VersionInfo;
+import cloud.hytora.common.collection.ThreadRunnable;
+import cloud.hytora.common.collection.WrappedException;
 import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
 import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.common.logging.handler.HandledLogger;
-import cloud.hytora.common.logging.handler.LogEntry;
-import cloud.hytora.common.logging.handler.LogHandler;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.ZipUtils;
 import cloud.hytora.common.progressbar.ProgressBar;
@@ -19,15 +20,14 @@ import cloud.hytora.context.IApplicationContext;
 import cloud.hytora.dependency.Dependency;
 import cloud.hytora.dependency.DependencyLoader;
 import cloud.hytora.dependency.Repository;
+import cloud.hytora.module.ModuleUpdater;
 import cloud.hytora.script.ScriptLoader;
 import cloud.hytora.script.commands.IncludeDependencyCommand;
 import cloud.hytora.script.commands.IncludeRepositoryCommand;
 import cloud.hytora.script.commands.PrintCommand;
 import cloud.hytora.script.commands.RunScriptCommand;
 import lombok.Getter;
-import org.fusesource.jansi.AnsiColors;
 import org.fusesource.jansi.AnsiConsole;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
@@ -35,27 +35,30 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Consumer;
+import java.util.*;
 import java.util.jar.JarFile;
 
 /**
  * Launcher highly inspired by
- * => <a href="https://github.com/CloudNetService/CloudNet-v3/blob/development/cloudnet-launcher/src/main/java/de/dytanic/cloudnet/launcher/CloudNetLauncher.java">...</a>
+ * => <a href="https://github.com/CloudNetService/CloudNet-v3/blob/development/cloudnet-launcher/src/main/java/de/dytanic/cloudnet/launcher/CloudNetLauncher.java">CloudNet V3</a>
  */
 @Getter
-public class Launcher {
+public class Launcher extends DriverUtility {
 
     public static final Path LAUNCHER_DIR = Paths.get("launcher/");
     public static final Path LAUNCHER_LIBS = LAUNCHER_DIR.resolve("libs/");
+    public static final Path LAUNCHER_MODULES = LAUNCHER_DIR.resolve("modules/");
     public static final Path LAUNCHER_VERSIONS = LAUNCHER_DIR.resolve("versions/");
+
+
+    public static String APPLICATION_FILE_URL;
+    public static String DOWNLOAD_URL;
+    public static String BASE_URL;
+    public static String CUSTOM_VERSION;
+    public static boolean USE_AUTO_UPDATER, USE_MODULE_AUTO_UPDATER;
 
     public static void main(String[] args) throws IOException {
         AnsiConsole.systemInstall();
@@ -75,14 +78,15 @@ public class Launcher {
     private final Map<String, Repository> repositories;
 
     private final DependencyLoader dependencyLoader;
+    private final ModuleUpdater moduleUpdater;
 
     public Launcher(Logger logger, String[] args) throws IOException {
         this.args = args;
         this.logger = logger;
-        this.dependencies = new ArrayList<>();
+        this.dependencies = newList();
         this.repositories = new HashMap<>();
 
-        DriverVersion version = DriverVersion.getCurrentVersion();
+        VersionInfo version = VersionInfo.getCurrentVersion();
 
         logger.log(LogLevel.NULL, "         ██▓    ▄▄▄       █    ██  ███▄    █  ▄████▄   ██░ ██ ▓█████  ██▀███  ");
         logger.log(LogLevel.NULL, "        ▓██▒   ▒████▄     ██  ▓██▒ ██ ▀█   █ ▒██▀ ▀█  ▓██░ ██▒▓█   ▀ ▓██ ▒ ██▒");
@@ -104,6 +108,7 @@ public class Launcher {
         logger.info("Loaded ApplicationContext!");
 
         this.dependencyLoader = context.getInstance(DependencyLoader.class);
+        this.moduleUpdater = context.getInstance(ModuleUpdater.class);
 
         logger.info("Loading 'launcher.cloud'...");
         ScriptLoader loader = ScriptLoader.getInstance();
@@ -126,12 +131,19 @@ public class Launcher {
 
         loader.executeScript(launcherFile)
                 .onTaskSucess(n -> {
+                    APPLICATION_FILE_URL = System.getProperty("cloud.hytora.launcher.application.file");
+                    BASE_URL = System.getProperty("cloud.hytora.launcher.updater.baseUrl");
+                    DOWNLOAD_URL = System.getProperty("cloud.hytora.launcher.updater.url").replace("{cloud.baseUrl}", BASE_URL);
+                    USE_AUTO_UPDATER = System.getProperty("cloud.hytora.launcher.autoupdater").equalsIgnoreCase("true");
+                    USE_MODULE_AUTO_UPDATER = System.getProperty("cloud.hytora.launcher.module.autoupdater").equalsIgnoreCase("true");
+                    CUSTOM_VERSION = System.getProperty("cloud.hytora.launcher.customVersion");
                     logger.info("Script-Task was successful!");
                     logger.info("Setting up Files...");
                     try {
                         LAUNCHER_DIR.toFile().mkdirs();
                         LAUNCHER_VERSIONS.toFile().mkdirs();
                         LAUNCHER_LIBS.toFile().mkdirs();
+                        LAUNCHER_MODULES.toFile().mkdirs();
                     } catch (Exception e) {
                         //files already exists
                     }
@@ -143,110 +155,127 @@ public class Launcher {
     }
 
 
-    private void checkForUpdates(DriverVersion version, String... args) {
+    private void checkForUpdates(VersionInfo version, String... args) {
+        if (!CUSTOM_VERSION.equalsIgnoreCase("null") && USE_AUTO_UPDATER) {
+            logger.info("Checking for Updates...");
+            if (!version.isUpToDate() || LAUNCHER_VERSIONS.toFile().listFiles().length == 0) {
+                logger.info("Version (" + version + ") is outdated or your cloud.jar is not existing at all!");
+                logger.info("==> Downloading latest HytoraCloud version...");
 
-        logger.info("Checking for Updates...");
-        if (!version.isUpToDate() || LAUNCHER_VERSIONS.toFile().listFiles().length == 0) {
-            logger.info("Version (" + version + ") is outdated or your cloud.jar is not existing at all!");
-            logger.info("==> Downloading latest HytoraCloud version...");
+                Path zippedFile = LAUNCHER_DIR.resolve("hytoraCloud.zip");
+                LauncherUtils.downloadVersion(getNewestVersionDownloadUrl(), zippedFile).onTaskSucess(v -> {
+                    logger.info("Downloaded latest RELEASE!");
+                    logger.info("Unzipping...");
 
-            Path zippedFile = LAUNCHER_DIR.resolve("hytoraCloud.zip");
-            this.downloadNewestVersion(zippedFile).onTaskSucess(v -> {
-                logger.info("Downloaded latest RELEASE!");
-                logger.info("Unzipping...");
-
-                ZipUtils.unzipDirectory(zippedFile, "unzipped");
-                try {
-                    Files.delete(zippedFile);
-                    Path cloudInFile = Paths.get("unzipped/cloud.jar");
-                    Files.copy(cloudInFile, LAUNCHER_VERSIONS.resolve("cloud.jar"));
-                    FileUtils.delete(Paths.get("unzipped"));
-                    logger.info("Unzipped and moved HytoraCloud-Jar to its folder!");
-
+                    ZipUtils.unzipDirectory(zippedFile, "unzipped");
                     try {
-                        Thread.sleep(1500);
-                        this.checkForUpdates(version, args);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
+                        Files.delete(zippedFile);
+                        Path cloudInFile = Paths.get("unzipped/cloud.jar");
+                        Files.copy(cloudInFile, LAUNCHER_VERSIONS.resolve(VersionInfo.getNewestVersion().formatCloudJarName()));
+                        FileUtils.delete(Paths.get("unzipped"));
+                        logger.info("Unzipped and moved HytoraCloud-Jar to its folder!");
+
+                        try {
+                            Thread.sleep(1500);
+                            this.checkForUpdates(version, args);
+                        } catch (InterruptedException e) {
+                            throw new WrappedException(e);
+                        }
+                    } catch (IOException e) {
+                        throw new WrappedException(e);
                     }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
 
-            });
-            return;
-        }
-
-        logger.info("Cloud is up to date with latest release!");
-
-        Collection<URL> dependencyResources;
-        try {
-            dependencyResources = this.dependencyLoader.loadDependencyURLs();
-        } catch (IOException exception) {
-            throw new RuntimeException("Unable to install needed dependencies!", exception);
-        }
-
-        logger.info("Running CloudApplication with dependencies:");
-        if (this.dependencies.isEmpty()) {
-            logger.info("==> Error: No dependencies found!");
-        }
-        for (Dependency dependency : this.dependencies) {
-            logger.info("  => " + dependency.toPath());
-        }
-
-        logger.info("");
-
-        try {
-            logger.info("Bootstrapping...");
-            Thread.sleep(400);
-            this.startApplication(args, dependencyResources);
-        } catch (IOException | ClassNotFoundException | NoSuchMethodException exception) {
-            throw new RuntimeException("Failed to start the application!", exception);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public Task<Void> downloadNewestVersion(Path location) {
-        Task<Void> task = Task.empty();
-        DriverVersion newestVersion = DriverVersion.getNewestVersion();
-        try {
-            ProgressBar pb = new ProgressBar(ProgressBarStyle.UNICODE_BLOCK, 300);
-
-            pb.setPrintAutomatically(true);
-            pb.setExpandingAnimation(false);
-
-            URL url = new URL(("https://github.com/Lystx/HytoraCloud/releases/download/v" + newestVersion.getVersion() + "/RELEASE.zip"));
-            String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36";
-            URLConnection con = url.openConnection();
-            con.setRequestProperty("User-Agent", USER_AGENT);
-
-            int contentLength = con.getContentLength();
-            InputStream inputStream = con.getInputStream();
-
-            OutputStream outputStream = Files.newOutputStream(location);
-            byte[] buffer = new byte[2048];
-            int length;
-            int downloaded = 0;
-
-            while ((length = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, length);
-                downloaded+=length;
-                pb.stepTo((long) ((downloaded * 100L) / (contentLength * 1.0)));
+                });
+                return;
             }
-            pb.setExtraMessage("Cleaning up...");
-            outputStream.close();
-            inputStream.close();
-            pb.close();
-            task.setResult(null);
-        } catch (Exception e) {
-            e.printStackTrace();
+
         }
-        return task;
+        
+        if (!USE_AUTO_UPDATER) {
+            logger.info("AutoUpdater has been disabled!");
+            logger.info("Directly starting CloudNode...");
+        } else if (!CUSTOM_VERSION.equalsIgnoreCase("null")) {
+            logger.info("Custom version [val={}] has been selected! Skipping AutoUpdater", VersionInfo.fromString(CUSTOM_VERSION));
+        } else {
+            logger.info("Cloud is up to date with latest release!");
+        }
+
+        ThreadRunnable runnable = new ThreadRunnable(() -> {
+            Collection<URL> dependencyResources;
+            try {
+                dependencyResources = dependencyLoader.loadDependencyURLs();
+            } catch (IOException exception) {
+                throw new RuntimeException("Unable to install needed dependencies!", exception);
+            }
+
+            if (dependencies.isEmpty()) {
+                logger.error("==> Error: No dependencies found to start Application with! Please restart Launcher!");
+                logger.error("==> Error: If the error occurs again, please contact the Developer!");
+                return;
+            }
+            logger.info("");
+
+            try {
+                startApplication(args, dependencyResources);
+            } catch (Throwable exception) {
+                throw new RuntimeException("Failed to start the application!", exception);
+            }
+        });
+
+        if (USE_MODULE_AUTO_UPDATER) {
+            logger.info("Checking for Module-Updates!");
+            moduleUpdater.updateModules()
+                    .onTaskSucess(n -> {
+                        if (n > 0) {
+                            logger.info("Updated {} Modules!", n);
+                        } else {
+                            logger.info("All Modules are up to date!");
+                        }
+                        logger.info("Continuing to cloud process...");
+                        runnable.runAsync();
+                    })
+                    .onTaskFailed(e -> {
+                        logger.info("Something went wrong whilst trying to update Modules!");
+                        WrappedException.throwWrapped(e);
+                    });
+        } else {
+            logger.info("Module Updating is disabled! Skipping...");
+            runnable.runAsync();
+        }
+
     }
 
-    private void startApplication(String[] args, Collection<URL> dependencyResources) throws IOException, ClassNotFoundException, NoSuchMethodException {
-        Path targetPath = LAUNCHER_VERSIONS.resolve("cloud.jar");
+
+    public String getNewestVersionDownloadUrl() {
+        VersionInfo newestVersion = VersionInfo.getNewestVersion();
+
+        String urlString = DOWNLOAD_URL;
+        urlString = urlString.replace("{version}", String.valueOf(newestVersion.getVersion()));
+        urlString = urlString.replace("{type}", String.valueOf(newestVersion.getType()));
+
+        return urlString;
+    }
+
+
+    public String getBaseUrl() {
+        VersionInfo newestVersion = VersionInfo.getNewestVersion();
+
+        String urlString = BASE_URL;
+        urlString = urlString.replace("{version}", String.valueOf(newestVersion.getVersion()));
+        urlString = urlString.replace("{type}", String.valueOf(newestVersion.getType()));
+
+        return urlString;
+    }
+
+    private void startApplication(String[] args, Collection<URL> dependencyResources) throws Throwable {
+        
+        String jarName;
+        if (!CUSTOM_VERSION.equalsIgnoreCase("null")) {
+            jarName = VersionInfo.fromString(CUSTOM_VERSION).formatCloudJarName();
+        } else {
+            jarName = VersionInfo.getNewestVersion().formatCloudJarName();
+        }
+        Path targetPath = LAUNCHER_VERSIONS.resolve(jarName);
         Path driverTargetPath = LAUNCHER_VERSIONS.resolve("api.jar");
 
         String mainClass;

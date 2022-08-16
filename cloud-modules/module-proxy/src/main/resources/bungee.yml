@@ -1,7 +1,0 @@
-name: Cloud-Proxy
-author: Lystx
-version: 1.0
-main: cloud.hytora.modules.proxy.bungee.BungeeCloudProxyPlugin
-description: Runtime module to enable the use of proxy systems & configs
-depends:
-  - HytoraCloud-Bridge

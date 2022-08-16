@@ -135,7 +135,6 @@ public class ScriptLoader {
             if (command == null) {
                 throw new IllegalStateException("Unsupported syntax '" + line + "'");
             }
-            System.out.println(commandName + ": " + Arrays.toString(args));
             command.execute(args, String.join(" ", args), arguments);
         }
 

@@ -126,7 +126,7 @@ public class GsonDocument extends AbstractDocument implements DocumentWrapper<Gs
 
 	@Nonnull
 	@Override
-	public IEntry getEntry(@Nonnull String path) {
+	public IEntry get(@Nonnull String path) {
 		JsonElement element = getElement(path).orElse(null);
 		return new GsonEntry(element);
 	}
