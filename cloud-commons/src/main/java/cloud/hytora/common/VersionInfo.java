@@ -20,6 +20,9 @@ public class VersionInfo {
     private final double version;
 
     public static VersionInfo fromString(String input) {
+        if (input == null) {
+            throw new NullPointerException("Can't parse Null-String to VersionInfo!");
+        }
         if (input.contains("-")) {
             String[] data = input.split("-");
             Type type = Type.fromName(data[0]);

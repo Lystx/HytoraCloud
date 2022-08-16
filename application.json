@@ -4,7 +4,7 @@
     {
       "name": "module-proxy",
       "url": "{cloud.baseUrl}/{module.name}.jar",
-      "version": "SNAPSHOT-1.2.3"
+      "version": "SNAPSHOT-1.2"
     }
   ],
   "updates": [

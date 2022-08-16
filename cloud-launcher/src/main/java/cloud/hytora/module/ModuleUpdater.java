@@ -42,6 +42,12 @@ public class ModuleUpdater {
         Document document = Document.newJsonDocumentByURL(Launcher.APPLICATION_FILE_URL);
         for (IEntry entry : document.getBundle("modules")) {
             Document doc = entry.toDocument();
+            if (!doc.has("name") || !doc.has("url") || !doc.has("version")) {
+                launcher.getLogger().error("Couldn't find attributes for ModuleInfo 'name' or 'url' or 'version' in following document:");
+                launcher.getLogger().error(doc.asRawJsonString());
+                continue;
+            }
+            System.out.println(doc);
             ModuleInfo moduleInfo = new ModuleInfo(
                     doc.get("name").toString(),
                     doc.get("url").toString(),

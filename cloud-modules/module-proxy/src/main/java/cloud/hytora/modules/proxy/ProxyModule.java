@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
         main = ProxyModule.class,
         author = "Lystx",
         description = "Manages the Proxy servers",
-        version = "SNAPSHOT-1.2.3",
+        version = "SNAPSHOT-1.2",
         website = "https://github.com/Lystx/HytoraCloud/tree/master/cloud-modules/module-proxy",
         copyType = ModuleCopyType.NONE,
         environment = ModuleEnvironment.NODE
