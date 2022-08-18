@@ -8,9 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@NoArgsConstructor
 @Getter
-public abstract class DriverModule implements IModule {
+public class AbstractModule implements IModule {
 
 	/**
 	 * The controller for this module (is being set when being loaded)

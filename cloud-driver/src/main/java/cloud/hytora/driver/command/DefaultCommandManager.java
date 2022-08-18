@@ -59,7 +59,7 @@ public abstract class DefaultCommandManager implements CommandManager {
 
     @Override
     public void registerCommand(Class<?> commandClass) {
-        this.registerCommand(ApplicationContext.getCurrent().getInstance(commandClass));
+        this.registerCommand(ReflectionUtils.createEmpty(commandClass));
     }
 
     @Override

@@ -20,7 +20,7 @@ public class LogOutputStream extends ByteArrayOutputStream {
 		this.reset();
 
 		if (input != null && !input.isEmpty() && !input.equals(System.lineSeparator())) {
-			logger.log(level, input);
+			logger.translateColors().log(level, input);
 		}
 	}
 

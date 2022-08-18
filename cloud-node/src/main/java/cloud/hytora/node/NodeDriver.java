@@ -140,7 +140,7 @@ public class NodeDriver extends CloudDriver<INode> {
     public static final File NODE_FOLDER = new File("cloud/");
     public static final File CONFIG_FILE = new File(NODE_FOLDER, "config.json");
     public static final File LOG_FOLDER = new File(NODE_FOLDER, "logs/");
-    public static final File MODULE_FOLDER = new File(NODE_FOLDER, "modules/");
+    public static File MODULE_FOLDER;
 
     public static final File STORAGE_FOLDER = new File(NODE_FOLDER, "storage/");
     public static final File STORAGE_VERSIONS_FOLDER = new File(STORAGE_FOLDER, "versions/");
@@ -152,12 +152,14 @@ public class NodeDriver extends CloudDriver<INode> {
     public static final File SERVICE_DIR_DYNAMIC = new File(SERVICE_DIR, "temporary/");
 
 
-    public NodeDriver(Logger logger, Console console, boolean devMode) throws Exception {
+    public NodeDriver(Logger logger, Console console, boolean devMode, String modulePath) throws Exception {
         super(logger, DriverEnvironment.NODE);
         instance = this;
 
         this.running = true;
         this.console = console;
+
+        MODULE_FOLDER = new File(modulePath);
 
         //setting node screen manager
         this.providerRegistry.setProvider(ScreenManager.class, new NodeScreenManager());
@@ -345,16 +347,16 @@ public class NodeDriver extends CloudDriver<INode> {
             this.storage.fetch();
 
             this.logger.trace("Registering Commands & ArgumentParsers...");
-            this.commandManager.registerCommand(ShutdownCommand.class);
-            this.commandManager.registerCommand(HelpCommand.class);
-            this.commandManager.registerCommand(NodeCommand.class);
-            this.commandManager.registerCommand(TaskCommand.class);
-            this.commandManager.registerCommand(ClearCommand.class);
-            this.commandManager.registerCommand(ServiceCommand.class);
-            this.commandManager.registerCommand(PlayerCommand.class);
-            this.commandManager.registerCommand(TickCommand.class);
-            this.commandManager.registerCommand(ClusterCommand.class);
-            this.commandManager.registerCommand(LoggerCommand.class);
+            this.commandManager.registerCommand(new ShutdownCommand());
+            this.commandManager.registerCommand(new HelpCommand());
+            this.commandManager.registerCommand(new NodeCommand());
+            this.commandManager.registerCommand(new TaskCommand());
+            this.commandManager.registerCommand(new ClearCommand());
+            this.commandManager.registerCommand(new ServiceCommand());
+            this.commandManager.registerCommand(new PlayerCommand());
+            this.commandManager.registerCommand(new TickCommand());
+            this.commandManager.registerCommand(new ClusterCommand());
+            this.commandManager.registerCommand(new LoggerCommand());
 
             //registering command argument parsers
             this.commandManager.registerParser(ServiceVersion.class, ServiceVersion::valueOf);

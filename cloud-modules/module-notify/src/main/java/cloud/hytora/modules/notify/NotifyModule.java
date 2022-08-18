@@ -1,9 +1,7 @@
 package cloud.hytora.modules.notify;
 
-import cloud.hytora.common.scheduler.Scheduler;
-import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.module.controller.DriverModule;
+import cloud.hytora.driver.module.controller.AbstractModule;
 import cloud.hytora.driver.module.controller.base.ModuleConfiguration;
 import cloud.hytora.driver.module.controller.base.ModuleCopyType;
 import cloud.hytora.driver.module.controller.base.ModuleEnvironment;
@@ -13,9 +11,6 @@ import cloud.hytora.modules.notify.command.NotifyCommand;
 import cloud.hytora.modules.notify.config.NotifyConfiguration;
 import cloud.hytora.modules.notify.listener.ModuleListener;
 import lombok.Getter;
-
-import java.io.File;
-import java.io.IOException;
 
 @ModuleConfiguration(
         name = "module-notify",
@@ -27,7 +22,7 @@ import java.io.IOException;
         copyType = ModuleCopyType.NONE,
         environment = ModuleEnvironment.NODE
 )
-public class NotifyModule extends DriverModule {
+public class NotifyModule extends AbstractModule {
 
     /**
      * The static module instance

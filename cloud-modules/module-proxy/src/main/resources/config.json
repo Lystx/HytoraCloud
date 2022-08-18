@@ -1,0 +1,11 @@
+{
+  "name": "module-proxy",
+  "description": "Manages the Proxy servers",
+  "version": "SNAPSHOT-1.2",
+  "main": "cloud.hytora.modules.proxy.ProxyModule",
+  "author": "Lystx",
+  "website": "https://github.com/Lystx/HytoraCloud/tree/master/cloud-modules/module-proxy",
+  "copy": "NONE",
+  "environment": "NODE",
+  "depends": []
+}

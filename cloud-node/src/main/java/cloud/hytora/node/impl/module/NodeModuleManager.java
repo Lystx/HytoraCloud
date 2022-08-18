@@ -4,6 +4,8 @@ package cloud.hytora.node.impl.module;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.IdentifiableClassLoader;
+import cloud.hytora.driver.exception.CloudException;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.module.packet.RemoteModuleExecutionPacket;
@@ -59,7 +61,6 @@ public class NodeModuleManager implements ModuleManager {
     @Override
     public synchronized void resolveModules() {
         Logger.constantInstance().debug("Resolving Modules...");
-        unregisterModules();
         FileUtils.createDirectory(directory);
 
         if (NodeDriver.getInstance().getNode().getConfig().isRemote()) {
@@ -103,25 +104,12 @@ public class NodeModuleManager implements ModuleManager {
                 CloudDriver.getInstance().getLogger().info("Resolving module {}..", file.getFileName());
                 Path selfBasePath = new File(CloudDriver.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath();
 
-                DefaultModuleController module = new DefaultModuleController(CloudDriver.class.getClassLoader(), this, file, selfBasePath, (loggingType, message) -> {
-                    switch (loggingType) {
-                        case "INFO":
-                            CloudDriver.getInstance().getLogger().info(message);
-                            break;
-                        case "ERROR":
-                            CloudDriver.getInstance().getLogger().error(message);
-                            break;
-                        case "DEBUG":
-                            CloudDriver.getInstance().getLogger().debug(message);
-                            break;
-                        case "WARN":
-                            CloudDriver.getInstance().getLogger().warn(message);
-                            break;
-                        case "TRACE":
-                            CloudDriver.getInstance().getLogger().trace(message);
-                            break;
-                    }
-                }, moduleClassLoader -> CloudDriver.getInstance().getEventManager().unregisterListeners(moduleClassLoader));
+                ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+                if (!(classLoader instanceof IdentifiableClassLoader)) {
+                    throw new CloudException("Wrong SystemClassLoader : " + classLoader.getClass().getName());
+                }
+
+                DefaultModuleController module = new DefaultModuleController(classLoader, this, file, moduleClassLoader -> CloudDriver.getInstance().getEventManager().unregisterListeners(moduleClassLoader));
                 module.initConfig();
 
                 modules.add(module);

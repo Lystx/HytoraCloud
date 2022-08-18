@@ -124,6 +124,8 @@ public final class CollectionUtils {
 
 	}
 
+
+
 	public static <T> void updateValue(List<? super T> collection, T oldValue, T newValue) {
 		int index = collection.indexOf(oldValue);
 		collection.set(index, newValue);

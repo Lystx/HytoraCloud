@@ -43,6 +43,7 @@
         <module>cloud-modules</module>
         <module>cloud-connector</module>
         <module>cloud-launcher</module>
+        <module>cloud-script</module>
     </modules>
 
     <dependencies>

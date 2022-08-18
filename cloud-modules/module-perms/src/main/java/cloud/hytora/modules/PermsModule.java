@@ -3,7 +3,7 @@ package cloud.hytora.modules;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.database.IDatabaseManager;
 import cloud.hytora.driver.database.SectionedDatabase;
-import cloud.hytora.driver.module.controller.DriverModule;
+import cloud.hytora.driver.module.controller.AbstractModule;
 import cloud.hytora.driver.module.controller.base.ModuleConfiguration;
 import cloud.hytora.driver.module.controller.base.ModuleCopyType;
 import cloud.hytora.driver.module.controller.base.ModuleEnvironment;
@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
         copyType = ModuleCopyType.ALL,
         environment = ModuleEnvironment.ALL
 )
-public class PermsModule extends DriverModule {
+public class PermsModule extends AbstractModule {
 
     @ModuleTask(id = 1, state = ModuleState.LOADED)
     public void load() {

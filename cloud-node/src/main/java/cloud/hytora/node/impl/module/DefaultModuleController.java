@@ -1,10 +1,11 @@
 package cloud.hytora.node.impl.module;
 
+import cloud.hytora.common.logging.Logger;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.wrapped.StorableDocument;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.module.controller.DriverModule;
+import cloud.hytora.driver.module.controller.AbstractModule;
 import cloud.hytora.driver.module.controller.ModuleClassLoader;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.ModuleManager;
@@ -28,34 +29,29 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 
 public class DefaultModuleController implements ModuleController {
 
     private final ModuleManager manager;
-    private final Path jarFile, selfJar;
+    private final Path jarFile;
     private final ClassLoader mainClassLoader;
-    private final BiConsumer<String, String> logger;
     private final Consumer<ModuleClassLoader> unregisterClassLoader;
 
     private Path dataFolder;
     private StorableDocument config;
     private ModuleClassLoader classLoader;
     private ModuleConfig moduleConfig;
-    private DriverModule module;
+    private AbstractModule module;
 
     private ModuleState state = ModuleState.DISABLED;
 
     private final Map<Object, Collection<HandlerMethod<ModuleTask>>> moduleTasks;
 
-    public DefaultModuleController(ClassLoader mainClassLoader, @Nonnull ModuleManager manager, @Nonnull Path jarFile, @Nonnull Path selfJar, BiConsumer<String, String> logger, Consumer<ModuleClassLoader> unregisterClassLoader) {
+    public DefaultModuleController(ClassLoader mainClassLoader, @Nonnull ModuleManager manager, @Nonnull Path jarFile, Consumer<ModuleClassLoader> unregisterClassLoader) {
         this.mainClassLoader = mainClassLoader;
         this.manager = manager;
         this.jarFile = jarFile;
-        this.selfJar = selfJar;
-        this.logger = logger;
         this.unregisterClassLoader = unregisterClassLoader;
 
         this.moduleTasks = new ConcurrentHashMap<>();
@@ -67,58 +63,15 @@ public class DefaultModuleController implements ModuleController {
     }
 
     public void initConfig() throws Exception {
-
         URL url = jarFile.toUri().toURL();
-        URL selfUrl = selfJar.toUri().toURL();
 
-        this.classLoader = new ModuleClassLoader(Arrays.asList(url, selfUrl).toArray(new URL[0]), this.mainClassLoader, jarFile.toFile());
+        this.classLoader = new ModuleClassLoader(Arrays.asList(url).toArray(new URL[0]), this.mainClassLoader, jarFile.toFile());
 
-
-        Class<?> loadedClass;
         Document document = classLoader.loadDocument("config.json");
 
         if (document == null || document.isEmpty()) {
-            JarFile jarFile = new JarFile(this.jarFile.toFile());
-            Enumeration<JarEntry> e = jarFile.entries();
-
-            while (e.hasMoreElements()) {
-                JarEntry jarEntry = e.nextElement();
-                if (jarEntry.isDirectory() || !jarEntry.getName().endsWith(".class")) {
-                    continue;
-                }
-                String className = jarEntry.getName().substring(0, jarEntry.getName().length() - 6);
-                className = className.replace('/', '.');
-
-                try {
-                    loadedClass = classLoader.loadClass(className);
-                    if (DriverModule.class.isAssignableFrom(loadedClass)) {
-                        //found main class
-
-                        if (loadedClass.isAnnotationPresent(ModuleConfiguration.class)) {
-                            ModuleConfiguration info = loadedClass.getAnnotation(ModuleConfiguration.class);
-
-                            this.moduleConfig = new ModuleConfig(
-                                    info.name(),
-                                    info.description(),
-                                    info.version(),
-                                    info.main().getName(),
-                                    info.website(),
-                                    info.author(),
-                                    info.depends(),
-                                    info.copyType(),
-                                    info.environment()
-                            );
-
-                        } else {
-                            CloudDriver.getInstance().getLogger().error( "§cThe provided main-class §e" + loadedClass.getName() + " §cof the Module §e" + this.jarFile.toFile().getName() + " §cdoesn't have a §e@" + ModuleConfiguration.class.getSimpleName() + "-Annotation!");
-                        }
-                        break;
-                    }
-                } catch (ClassNotFoundException ex) {
-                    //Ignoring
-                }
-            }
-
+            Logger.constantInstance().error("Missing 'config.json' for module with file {}", jarFile.toString());
+            return;
         } else {
             if (!document.contains("name")) throw new IllegalArgumentException("Missing property 'name'");
             if (!document.contains("version")) throw new IllegalArgumentException("Missing property 'version'");
@@ -131,12 +84,11 @@ public class DefaultModuleController implements ModuleController {
                     document.getString("version"),
                     document.getString("main"),
                     document.getString("website", ""),
-                    document.getStrings("author").toArray(new String[0]),
+                    new String[]{document.getString("author")},
                     document.getStrings("depends").toArray(new String[0]),
                     document.getEnum("copy", ModuleCopyType.NONE),
                     document.getEnum("environment", ModuleEnvironment.ALL)
             );
-
         }
 
         dataFolder = manager.getModulesDirectory().resolve(moduleConfig.getName());
@@ -147,6 +99,130 @@ public class DefaultModuleController implements ModuleController {
             config.saveToFile(dataFolder.resolve("config.json"));
         }
     }
+
+
+    public void initModule() throws Exception {
+
+        Class<?> mainClass = classLoader
+                .loadClass(
+                        moduleConfig
+                                .getMainClass()
+                );
+        if (mainClass == null) {
+            Logger.constantInstance().error("Couldn't initialize Module[name={}, version={}, main={}] because main class was not found!", moduleConfig.getName(), moduleConfig.getVersion(), moduleConfig.getMainClass());
+            return;
+        }
+        Constructor<?> constructor = mainClass.getDeclaredConstructor(ModuleController.class);
+
+        Object instance = constructor.newInstance(this);
+
+        AbstractModule abstractModule = new AbstractModule();
+        abstractModule.setController(this);
+        abstractModule.setHttpServer(NodeDriver.getInstance().getWebServer());
+        this.registerModuleTasks(instance);
+
+        classLoader.setModule((module = abstractModule));
+
+
+        /*
+        if (!(instance instanceof AbstractModule)) {
+            throw new IllegalArgumentException(
+                    "Main class (" + moduleConfig.getMainClass() + ") does not extend "
+                            + AbstractModule.class.getName()
+                            + ", but "
+                            + instance.getClass().getSuperclass()
+            );
+        }
+        module = (AbstractModule) instance;
+        module.setController(this);
+        module.setHttpServer(NodeDriver.getInstance().getWebServer());
+        this.registerModuleTasks(module);
+
+        classLoader.setModule(module);*/
+
+    }
+
+    @Override
+    public void loadModule() {
+        synchronized (this) {
+            if (module == null) return; // was never initialized
+            if (state != ModuleState.DISABLED) return; // must be disabled first
+
+            this.reloadConfig();
+            Logger.constantInstance().info("Module " + module + " is being loaded...");
+            try {
+
+                state = ModuleState.LOADED;
+                if (this.moduleConfig.getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
+                    this.callTasks(this.state);
+                }
+            } catch (Throwable ex) {
+                Logger.constantInstance().error("An error occurred while loading module " + module);
+                ex.printStackTrace();
+                disableModule();
+            }
+        }
+    }
+
+    @Override
+    public void enableModule() {
+        synchronized (this) {
+            if (module == null) return; // was never initialized
+            if (state != ModuleState.LOADED) return; // must be loaded first
+
+            Logger.constantInstance().info("Module " + module + " is being enabled...");
+
+            try {
+                state = ModuleState.ENABLED;
+                if (this.moduleConfig.getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
+                    this.callTasks(this.state);
+                }
+            } catch (Throwable ex) {
+                Logger.constantInstance().error("An error occurred while enabling module " + module);
+                ex.printStackTrace();
+                disableModule();
+            }
+        }
+    }
+
+    @Override
+    public void disableModule() {
+        synchronized (this) {
+            if (module == null) return; // Was never initialized
+            if (state == ModuleState.DISABLED) return; // Is already disabled
+
+            Logger.constantInstance().info("Module " + module + " is being disabled..");
+
+            try {
+                state = ModuleState.DISABLED;
+                if (this.moduleConfig.getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
+                    this.callTasks(this.state);
+                }
+            } catch (Throwable ex) {
+                Logger.constantInstance().error("An error occurred while disabling module " + module);
+                ex.printStackTrace();
+            }
+
+            state = ModuleState.DISABLED;
+            this.unregisterClassLoader.accept(classLoader);
+        }
+    }
+
+    @Override
+    public void unregisterModule() {
+        synchronized (this) {
+
+            try {
+                classLoader.close();
+            } catch (Exception ex) {
+                Logger.constantInstance().error("Unable to close classloader");
+                ex.printStackTrace();
+            }
+
+            state = ModuleState.UNREGISTERED;
+        }
+    }
+
 
     @Override
     public void registerModuleTasks(Object objectClass) {
@@ -208,104 +284,6 @@ public class DefaultModuleController implements ModuleController {
             } catch (IllegalAccessException | InvocationTargetException e) {
                 //ignoring on shutdown
             }
-        }
-    }
-
-    public void initModule() throws Exception {
-
-        Class<?> mainClass = classLoader.loadClass(moduleConfig.getMainClass());
-        Constructor<?> constructor = mainClass.getDeclaredConstructor();
-        Object instance = constructor.newInstance();
-        if (!(instance instanceof DriverModule))
-            throw new IllegalArgumentException("Main class (" + moduleConfig.getMainClass() + ") does not extend " + DriverModule.class.getName());
-
-        module = (DriverModule) instance;
-        module.setController(this);
-        module.setHttpServer(NodeDriver.getInstance().getWebServer());
-        this.registerModuleTasks(module);
-
-        classLoader.setModule(module);
-
-    }
-
-    @Override
-    public void loadModule() {
-        synchronized (this) {
-            if (module == null) return; // was never initialized
-            if (state != ModuleState.DISABLED) return; // must be disabled first
-
-            this.reloadConfig();
-            this.logger.accept("INFO", "Module " + module + " is being loaded...");
-            try {
-
-                state = ModuleState.LOADED;
-                if (this.moduleConfig.getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
-                    this.callTasks(this.state);
-                }
-            } catch (Throwable ex) {
-                this.logger.accept("ERROR", "An error occurred while loading module " + module);
-                ex.printStackTrace();
-                disableModule();
-            }
-        }
-    }
-
-    @Override
-    public void enableModule() {
-        synchronized (this) {
-            if (module == null) return; // was never initialized
-            if (state != ModuleState.LOADED) return; // must be loaded first
-
-            this.logger.accept("INFO", "Module " + module + " is being enabled...");
-
-            try {
-                state = ModuleState.ENABLED;
-                if (this.moduleConfig.getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
-                    this.callTasks(this.state);
-                }
-            } catch (Throwable ex) {
-                this.logger.accept("ERROR", "An error occurred while enabling module " + module);
-                ex.printStackTrace();
-                disableModule();
-            }
-        }
-    }
-
-    @Override
-    public void disableModule() {
-        synchronized (this) {
-            if (module == null) return; // Was never initialized
-            if (state == ModuleState.DISABLED) return; // Is already disabled
-
-            this.logger.accept("INFO", "Module " + module + " is being disabled..");
-            this.unregisterClassLoader.accept(classLoader);
-
-            try {
-                state = ModuleState.DISABLED;
-                if (this.moduleConfig.getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
-                    this.callTasks(this.state);
-                }
-            } catch (Throwable ex) {
-                this.logger.accept("ERROR", "An error occurred while disabling module " + module);
-                ex.printStackTrace();
-            }
-
-            state = ModuleState.DISABLED;
-        }
-    }
-
-    @Override
-    public void unregisterModule() {
-        synchronized (this) {
-
-            try {
-                classLoader.close();
-            } catch (Exception ex) {
-                this.logger.accept("ERROR", "Unable to close classloader");
-                ex.printStackTrace();
-            }
-
-            state = ModuleState.UNREGISTERED;
         }
     }
 
@@ -374,7 +352,7 @@ public class DefaultModuleController implements ModuleController {
 
     @Nonnull
     @Override
-    public DriverModule getModule() {
+    public AbstractModule getModule() {
         return module;
     }
 

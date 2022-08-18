@@ -23,6 +23,7 @@ cloud\hytora\common\function\ObjectComparator.class
 cloud\hytora\common\logging\internal\WrappedSlf4jLogger$1.class
 cloud\hytora\document\DocumentFactory$2.class
 cloud\hytora\common\logging\formatter\SpacePadder.class
+cloud\hytora\IdentifiableClassLoader.class
 cloud\hytora\common\location\ImmutableLocation.class
 cloud\hytora\common\misc\FileUtils.class
 cloud\hytora\common\misc\GsonUtils.class

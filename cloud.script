@@ -1,0 +1,22 @@
+# Represents the global execution script for the reformcloud runner
+# Modify this file only if you are able to use reform script
+# Do not remove something from this file it might be required for the workflow to run
+
+print "Hello World"
+run checkScript();
+
+# Check if env is defined
+#IF _%_env_set_%_ THEN() OR(EXECUTE:checkIfSetupRequired())
+
+# Write env to file and check for updates if required
+#IF _%_env_not_api_%_ THEN(CHECK_FOR_UPDATES) OR()
+
+
+Task checkScript() -> {
+   print "Hello World 2"
+    if (true) -> {
+        print "True"
+    } else -> {
+        print "False"
+    }
+} : Void

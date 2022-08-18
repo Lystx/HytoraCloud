@@ -52,7 +52,7 @@ public class VersionInfo {
     }
 
     public String formatCloudJarName() {
-        return "HCLOUD_NODE" + ";" + type + ";" + version + ".jar";
+        return "HytoraCloud" + "-" + this + ".jar";
     }
 
     public boolean isNewerAs(VersionInfo version) {

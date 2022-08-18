@@ -218,11 +218,11 @@ cloud\hytora\driver\http\api\HttpVersion.class
 cloud\hytora\driver\networking\protocol\codec\buf\IBufferObject.class
 cloud\hytora\driver\event\defaults\player\DefaultPlayerEvent.class
 cloud\hytora\driver\http\api\HttpAuthUser.class
-cloud\hytora\driver\module\controller\DriverModule.class
 cloud\hytora\driver\common\IClusterObject.class
 cloud\hytora\driver\exception\PlayerNotOnlineException.class
 cloud\hytora\driver\networking\INetworkExecutor.class
 cloud\hytora\driver\provider\ProviderImmutableException.class
+cloud\hytora\driver\module\controller\AbstractModule.class
 cloud\hytora\driver\event\defaults\task\TaskUpdateEvent.class
 cloud\hytora\driver\common\IPlaceHolderObject.class
 cloud\hytora\driver\command\ArgumentParser.class

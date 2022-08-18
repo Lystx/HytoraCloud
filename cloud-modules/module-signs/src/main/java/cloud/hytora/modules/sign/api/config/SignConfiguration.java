@@ -62,7 +62,7 @@ public class SignConfiguration {
         SignLayout loading9 = new SignLayout(new String[]{"", "&8│ &e{server.name} &8│", "&8× &0Starting. &8×", ""}, "STAINED_CLAY", 4);
         SignLayout loading10 = new SignLayout(new String[]{"", "&8│ &e{server.name} &8│", "&8× &0Starting &8×", ""}, "STAINED_CLAY", 4);
 
-        this.knockBackConfig = new SignKnockbackConfig(true, 0.7, 0.5, "cloud.hytora.module.signs.knockback.bypass");
+        this.knockBackConfig = new SignKnockbackConfig(true, 0.7, 0.5, "cloud.hytora.script.module.signs.knockback.bypass");
         this.loadingLayout = new SignAnimation(20, loading1, loading2, loading3, loading4);
         this.onlineLayout = new SignAnimation(
                 20,

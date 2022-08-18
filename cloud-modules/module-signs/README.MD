@@ -43,7 +43,7 @@ cloud.module.sign.command.use - for use of command
     "enabled": true,
     "strength": 0.7,
     "distance": 0.5,
-    "byPassPermission": "cloud.hytora.module.signs.knockback.bypass"
+    "byPassPermission": "cloud.hytora.script.module.signs.knockback.bypass"
   },
   "onlineLayout": {
     "repeatingTick": 20,

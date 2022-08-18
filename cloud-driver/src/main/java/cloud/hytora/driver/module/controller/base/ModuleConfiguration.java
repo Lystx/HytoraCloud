@@ -1,6 +1,6 @@
 package cloud.hytora.driver.module.controller.base;
 
-import cloud.hytora.driver.module.controller.DriverModule;
+import cloud.hytora.driver.module.controller.AbstractModule;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -13,7 +13,7 @@ public @interface ModuleConfiguration {
 
     String name();
 
-    Class<? extends DriverModule> main();
+    Class<? extends AbstractModule> main();
 
     String[] author() default "No Author";
 

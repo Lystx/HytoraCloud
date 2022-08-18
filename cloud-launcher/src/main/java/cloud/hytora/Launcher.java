@@ -12,20 +12,17 @@ import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.common.logging.handler.HandledLogger;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.ZipUtils;
-import cloud.hytora.common.progressbar.ProgressBar;
-import cloud.hytora.common.progressbar.ProgressBarStyle;
-import cloud.hytora.common.task.Task;
 import cloud.hytora.context.ApplicationContext;
 import cloud.hytora.context.IApplicationContext;
-import cloud.hytora.dependency.Dependency;
-import cloud.hytora.dependency.DependencyLoader;
-import cloud.hytora.dependency.Repository;
-import cloud.hytora.module.ModuleUpdater;
+import cloud.hytora.script.dependency.Dependency;
+import cloud.hytora.script.dependency.DependencyLoader;
+import cloud.hytora.script.dependency.Repository;
+import cloud.hytora.script.module.ModuleUpdater;
 import cloud.hytora.script.ScriptLoader;
-import cloud.hytora.script.commands.IncludeDependencyCommand;
-import cloud.hytora.script.commands.IncludeRepositoryCommand;
-import cloud.hytora.script.commands.PrintCommand;
-import cloud.hytora.script.commands.RunScriptCommand;
+import cloud.hytora.script.commands.IncludeDependencyCommandI;
+import cloud.hytora.script.commands.IncludeRepositoryCommandI;
+import cloud.hytora.script.commands.PrintCommandI;
+import cloud.hytora.script.commands.RunIScriptCommand;
 import lombok.Getter;
 import org.fusesource.jansi.AnsiConsole;
 
@@ -33,8 +30,6 @@ import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.net.URLClassLoader;
-import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -112,10 +107,10 @@ public class Launcher extends DriverUtility {
 
         logger.info("Loading 'launcher.cloud'...");
         ScriptLoader loader = ScriptLoader.getInstance();
-        loader.registerCommand("runScript", new RunScriptCommand());
-        loader.registerCommand("print", new PrintCommand());
-        loader.registerCommand("includeDependency", new IncludeDependencyCommand(this.dependencies::add));
-        loader.registerCommand("includeRepository", new IncludeRepositoryCommand(repository -> repositories.put(repository.getName(), repository)));
+        loader.registerCommand("runScript", new RunIScriptCommand());
+        loader.registerCommand("print", new PrintCommandI());
+        loader.registerCommand("includeDependency", new IncludeDependencyCommandI(this.dependencies::add));
+        loader.registerCommand("includeRepository", new IncludeRepositoryCommandI(repository -> repositories.put(repository.getName(), repository)));
 
         Path launcherFile = Paths.get("launcher.cloud");
         if (!Files.exists(launcherFile)) {
@@ -156,7 +151,7 @@ public class Launcher extends DriverUtility {
 
 
     private void checkForUpdates(VersionInfo version, String... args) {
-        if (!CUSTOM_VERSION.equalsIgnoreCase("null") && USE_AUTO_UPDATER) {
+        if (USE_AUTO_UPDATER) {
             logger.info("Checking for Updates...");
             if (!version.isUpToDate() || LAUNCHER_VERSIONS.toFile().listFiles().length == 0) {
                 logger.info("Version (" + version + ") is outdated or your cloud.jar is not existing at all!");
@@ -288,16 +283,19 @@ public class Launcher extends DriverUtility {
         }
 
         dependencyResources.add(targetPath.toUri().toURL());
-        dependencyResources.add(driverTargetPath.toUri().toURL());
+       // dependencyResources.add(driverTargetPath.toUri().toURL());
 
-        ClassLoader classLoader = new URLClassLoader(dependencyResources.toArray(new URL[0]));
+        IdentifiableClassLoader classLoader = new IdentifiableClassLoader(dependencyResources.toArray(new URL[0]));
         Method method = classLoader.loadClass(mainClass).getMethod("main", String[].class);
+
+        Collection<String> arguments = listOf(args);
+        arguments.add("--moduleFolder=" + LAUNCHER_MODULES.toString());
 
         Thread thread = new Thread(() -> {
             try {
 
                 try {
-                    method.invoke(null, (Object) args);
+                    method.invoke(null, (Object) arguments.toArray(new String[0]));
                 } catch (IllegalAccessException | InvocationTargetException exception) {
                     exception.printStackTrace();
                 }

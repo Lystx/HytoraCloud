@@ -115,7 +115,7 @@ public class ModuleClassLoader extends URLClassLoader {
 				if(je.isDirectory() || !je.getName().endsWith(".class")){
 					continue;
 				}
-				if (je.getName().contains(name)){
+				if (je.getName().equalsIgnoreCase(name)){
 					String className = je.getName().substring(0,je.getName().length()-6);
 					className = className.replace('/', '.');
 					Class<?> c = cl.loadClass(className);

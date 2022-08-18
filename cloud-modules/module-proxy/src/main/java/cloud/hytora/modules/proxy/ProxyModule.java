@@ -3,11 +3,10 @@ package cloud.hytora.modules.proxy;
 import cloud.hytora.common.collection.IRandom;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.scheduler.Scheduler;
+import cloud.hytora.context.annotations.Constructor;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.module.controller.DriverModule;
-import cloud.hytora.driver.module.controller.base.ModuleConfiguration;
-import cloud.hytora.driver.module.controller.base.ModuleCopyType;
-import cloud.hytora.driver.module.controller.base.ModuleEnvironment;
+import cloud.hytora.driver.module.ModuleController;
+import cloud.hytora.driver.module.controller.AbstractModule;
 import cloud.hytora.driver.module.controller.base.ModuleState;
 import cloud.hytora.driver.module.controller.task.ModuleTask;
 import cloud.hytora.driver.player.ICloudPlayer;
@@ -26,18 +25,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@ModuleConfiguration(
-        name = "module-proxy",
-        main = ProxyModule.class,
-        author = "Lystx",
-        description = "Manages the Proxy servers",
-        version = "SNAPSHOT-1.2",
-        website = "https://github.com/Lystx/HytoraCloud/tree/master/cloud-modules/module-proxy",
-        copyType = ModuleCopyType.NONE,
-        environment = ModuleEnvironment.NODE
-)
-public class ProxyModule extends DriverModule {
-
+public class ProxyModule {
 
     private final Logger logger = Logger.newInstance();
 
@@ -52,6 +40,13 @@ public class ProxyModule extends DriverModule {
      */
     private ProxyConfig proxyConfig;
 
+    private final ModuleController controller;
+
+    public ProxyModule(ModuleController controller) {
+        this.controller = controller;
+        System.out.println("Loaded ModuleController => " + controller);
+    }
+
     @ModuleTask(id = 1, state = ModuleState.LOADED)
     public void load() {
         instance = this;
@@ -62,8 +57,8 @@ public class ProxyModule extends DriverModule {
     @ModuleTask(id = 2, state = ModuleState.ENABLED)
     public void enable() {
 
-        this.registerEvent(new ModuleListener());
-        this.registerCommand(new ProxyCommand());
+        CloudDriver.getInstance().getEventManager().registerListener(new ModuleListener());
+        CloudDriver.getInstance().getCommandManager().registerCommand(new ProxyCommand());
 
         //scheduling tab update
         Scheduler.runTimeScheduler().scheduleRepeatingTask(this::updateTabList, 0L, (long) (proxyConfig.getTablist().getAnimationInterval() * 1000));

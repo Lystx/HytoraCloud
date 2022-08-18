@@ -29,7 +29,9 @@ public class CloudBootstrap {
             System.setOut(logger.asPrintStream(LogLevel.INFO));
             System.setErr(logger.asPrintStream(LogLevel.ERROR));
 
-            CloudDriver driver = new NodeDriver(logger, console, Arrays.asList(args).contains("--devMode"));
+            String modulePath = Arrays.stream(args).filter(s -> s.startsWith("--moduleFolder=")).findFirst().orElse("--moduleFolder=modules/").split("=")[1];
+
+            CloudDriver driver = new NodeDriver(logger, console, Arrays.asList(args).contains("--devMode"), modulePath);
 
             logger.addHandler(entry -> driver.getEventManager().callEventGlobally(new DriverLogEvent(entry)));
         } catch (Exception e) {

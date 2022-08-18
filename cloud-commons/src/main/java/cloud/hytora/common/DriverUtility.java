@@ -136,7 +136,7 @@ public class DriverUtility {
 
     @SafeVarargs
     public static <T> List<T> listOf(T... objects) {
-        return Arrays.asList(objects);
+        return new ArrayList<>(Arrays.asList(objects));
     }
 
 }

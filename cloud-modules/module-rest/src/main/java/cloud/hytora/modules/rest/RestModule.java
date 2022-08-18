@@ -1,6 +1,6 @@
 package cloud.hytora.modules.rest;
 
-import cloud.hytora.driver.module.controller.DriverModule;
+import cloud.hytora.driver.module.controller.AbstractModule;
 import cloud.hytora.driver.module.controller.base.ModuleConfiguration;
 import cloud.hytora.driver.module.controller.base.ModuleCopyType;
 import cloud.hytora.driver.module.controller.base.ModuleEnvironment;
@@ -17,7 +17,7 @@ import cloud.hytora.driver.module.controller.task.ModuleTask;
         copyType = ModuleCopyType.NONE,
         environment = ModuleEnvironment.NODE
 )
-public class RestModule extends DriverModule {
+public class RestModule extends AbstractModule {
 
     @ModuleTask(id = 1, state = ModuleState.LOADED)
     public void load() {

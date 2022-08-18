@@ -2,7 +2,7 @@ package cloud.hytora.modules.sign.cloud;
 
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.module.controller.DriverModule;
+import cloud.hytora.driver.module.controller.AbstractModule;
 import cloud.hytora.driver.module.controller.base.ModuleConfiguration;
 import cloud.hytora.driver.module.controller.base.ModuleCopyType;
 import cloud.hytora.driver.module.controller.base.ModuleEnvironment;
@@ -24,7 +24,7 @@ import cloud.hytora.modules.sign.cloud.listener.ModuleServiceReadyListener;
         copyType = ModuleCopyType.SERVER_FALLBACK,
         environment = ModuleEnvironment.ALL
 )
-public class ModuleBootstrap extends DriverModule {
+public class ModuleBootstrap extends AbstractModule {
 
     @ModuleTask(id = 1, state = ModuleState.LOADED)
     public void load() {

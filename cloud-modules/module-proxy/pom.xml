@@ -14,15 +14,15 @@
     <dependencies>
         <dependency>
             <groupId>cloud.hytora</groupId>
-            <artifactId>cloud-remote</artifactId>
+            <artifactId>cloud-driver</artifactId>
             <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>cloud.hytora</groupId>
             <artifactId>cloud-commons</artifactId>
             <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
