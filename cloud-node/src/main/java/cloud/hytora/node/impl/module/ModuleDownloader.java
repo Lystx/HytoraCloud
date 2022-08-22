@@ -33,7 +33,7 @@ import java.util.jar.JarFile;
 public class ModuleDownloader {
 
     private final String applicationFileURL = "https://raw.githubusercontent.com/Lystx/HytoraCloud/master/application.json";
-    private Collection<ModuleInfo> cachedModules = new ArrayList<>();
+    private Collection<ModuleInfo> cachedModules;
 
 
     @SneakyThrows
@@ -62,6 +62,18 @@ public class ModuleDownloader {
         return (cachedModules = modules);
     }
 
+    public String getModuleUrl(ModuleInfo info) {
+        VersionInfo currentVersion = info.getVersion();
+        String url = info.getUrl();
+
+        //replace url place holders
+        url = url.replace("{cloud.baseUrl}", NodeDriver.getInstance().getBaseUrl());
+        url = url.replace("{module.name}", info.getName());
+        url = url.replace("{module.version}", currentVersion.toString());
+
+        return url;
+    }
+
     public Task<ModuleInfo> updateModule(ModuleInfo module) {
         Task<ModuleInfo> task = Task.empty();
         return Task.callAsync(() -> {
@@ -78,12 +90,15 @@ public class ModuleDownloader {
             ModuleInfo localModule = findCurrentModule(name, url);
             if (localModule == null || module.getVersion().isNewerAs(localModule.getVersion())) {
                 Logger.constantInstance().info("Module[val={}] is either not existing or needs to be updated to Version[val={}, url={}]", module.getName(), module.getVersion(), url);
-                this.downloadModule(module, url);
+                downloadModule(module, url)
+                        .onTaskSucess(e -> task.setResult(module))
+                        .onTaskFailed(task::setFailure);
+            } else {
+                Logger.constantInstance().info("Module[name={}, ver={}] is up to date", module.getName(), module.getVersion());
             }
             return null;
         });
     }
-
 
 
     public Task<ModuleInfo> updateModule(String name) {
@@ -92,6 +107,7 @@ public class ModuleDownloader {
         ModuleInfo moduleInfo = modules.stream().filter(m -> m.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
         return moduleInfo == null ? Task.empty() : updateModule(moduleInfo);
     }
+
     public Task<Integer> updateModules() {
         Task<Integer> task = Task.empty();
         Collection<ModuleInfo> modules = loadProvidedModules();
@@ -110,8 +126,8 @@ public class ModuleDownloader {
         return task;
     }
 
-    public Task<Void> downloadModule(ModuleInfo module, String url) {
-        Task<Void> task = Task.empty();
+    public Task<Path> downloadModule(ModuleInfo module, String url) {
+        Task<Path> task = Task.empty();
         ProgressBar pb = new ProgressBar(ProgressBarStyle.COLORED_UNICODE_BLOCK, 100L);
 
         //manage console
@@ -128,10 +144,9 @@ public class ModuleDownloader {
             NodeDriver.getInstance().getConsole().writePlain(ConsoleColor.toColoredString('§', progress));
         });
 
-
         DriverUtility.downloadVersion(url, CloudDriver.getInstance().getProviderRegistry().getUnchecked(IModuleManager.class).getModulesDirectory().resolve(module.getName() + "-" + module.getVersion() + ".jar"), pb)
                 .onTaskSucess(v -> {
-                    task.setResult(null);
+                    task.setResult(v);
                     console.setPrompt(prompt);
                 })
                 .onTaskFailed(e -> {

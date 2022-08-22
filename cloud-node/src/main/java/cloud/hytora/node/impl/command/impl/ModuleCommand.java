@@ -18,6 +18,7 @@ import cloud.hytora.driver.module.controller.base.ModuleState;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.ICloudPlayerManager;
 import cloud.hytora.node.impl.module.ModuleDownloader;
+import cloud.hytora.node.impl.module.NodeModuleManager;
 import cloud.hytora.node.impl.module.updater.ModuleInfo;
 
 import java.util.*;
@@ -168,6 +169,12 @@ public class ModuleCommand {
             return;
         }
 
+        if (!module.getModuleConfig().getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
+            ctx.sendMessage("Skipping initialization of {} (ModuleEnvironment.{}, DriverEnvironment.{})",
+                    module, module.getModuleConfig().getEnvironment(), CloudDriver.getInstance().getEnvironment());
+            return;
+        }
+
         try {
             module.initConfig();
             module.initModule();
@@ -192,7 +199,32 @@ public class ModuleCommand {
         if (name.equalsIgnoreCase("ALL")) {
             Logger.constantInstance().info("Downloading all modules...");
         } else {
+            NodeModuleManager moduleManager = (NodeModuleManager) CloudDriver.getInstance().getProviderRegistry().getUnchecked(IModuleManager.class);
 
+            Collection<ModuleInfo> modules = downloader.loadProvidedModules();
+            ModuleInfo moduleInfo = modules.stream().filter(module -> module.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
+            if (moduleInfo == null) {
+                ctx.sendMessage("§cThere is no such module to download!");
+                ctx.sendMessage("§cUse §emodule list -online §cto see all available modules!");
+                return;
+            }
+            downloader
+                    .downloadModule(moduleInfo, downloader.getModuleUrl(moduleInfo))
+                    .onTaskSucess(path -> {
+                        ctx.sendMessage("§7Downloaded module!");
+                        ctx.sendMessage("§7Auto-resolving, loading and enabling module...");
+                        ModuleController module = moduleManager.resolveSingleModule(path, new ArrayList<>());
+                        try {
+                            module.initConfig();
+                            module.initModule();
+                            module.loadModule();
+                            module.enableModule();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }).onTaskFailed(e -> {
+                       ctx.sendMessage("§cCouldn't download module!");
+                    });
         }
     }
 

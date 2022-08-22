@@ -139,28 +139,34 @@ public class CloudServerProcessWorker {
 
                         File folder = new File(parent, service.getName() + "/");
 
-                        ScreenManager screenManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
+                        CloudDriver
+                                .getInstance()
+                                .getProviderRegistry()
+                                .get(ScreenManager.class)
+                                .ifPresent((ExceptionallyConsumer<ScreenManager>)screenManager -> {
 
-                        StartedProcess result = new ProcessExecutor()
-                                .command(this.args(service))
-                                .directory(folder)
-                                .redirectOutput(new LogOutputStream() {
-                                    @Override
-                                    protected void processLine(String line) {
-                                        Screen screenByNameOrNull = screenManager.getScreenByNameOrNull(service.getName());
-                                        screenByNameOrNull.writeLine(line);
-                                    }
-                                })
-                                .start();
+                                    StartedProcess result = new ProcessExecutor()
+                                            .command(this.args(service))
+                                            .directory(folder)
+                                            .redirectOutput(new LogOutputStream() {
+                                                @Override
+                                                protected void processLine(String line) {
+                                                    Screen serviceScreen = screenManager.getScreenByNameOrNull(service.getName());
+                                                    serviceScreen.writeLine(line);
+                                                }
+                                            })
+                                            .start();
 
-                        Process process = result.getProcess();
+                                    Process process = result.getProcess();
 
-                        UniversalCloudServer serviceInfo = (UniversalCloudServer) service;
-                        serviceInfo.setProcess(process);
-                        serviceInfo.setWorkingDirectory(folder);
+                                    UniversalCloudServer serviceInfo = (UniversalCloudServer) service;
+                                    serviceInfo.setProcess(process);
+                                    serviceInfo.setWorkingDirectory(folder);
 
 
-                        task.setResult(serviceInfo);
+                                    task.setResult(serviceInfo);
+
+                                });
 
                     });
 

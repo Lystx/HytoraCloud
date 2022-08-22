@@ -17,6 +17,7 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 
 public class NodeModuleManager implements IModuleManager {
 
-    private List<DefaultModuleController> modules = Collections.emptyList();
+    private List<DefaultModuleController> modules = new ArrayList<>();
     private Path directory;
 
     @Nonnull
@@ -61,7 +62,7 @@ public class NodeModuleManager implements IModuleManager {
 
     @Override
     public synchronized void resolveModules() {
-        Logger.constantInstance().info("Resolving Modules...");
+        Logger.constantInstance().debug("Resolving Modules...");
         FileUtils.createDirectory(directory);
 
         if (NodeDriver.getInstance().getNode().getConfig().isRemote()) {
@@ -101,22 +102,7 @@ public class NodeModuleManager implements IModuleManager {
 
         // resolve modules and load configs
         for (Path file : FileUtils.list(directory).filter(path -> path.toString().endsWith(".jar")).collect(Collectors.toList())) {
-            try {
-                CloudDriver.getInstance().getLogger().info("§6=> §fResolving module §b{}§8..", file.getFileName());
-                Path selfBasePath = new File(CloudDriver.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath();
-
-                ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-                if (!(classLoader instanceof IdentifiableClassLoader)) {
-                    throw new CloudException("Wrong SystemClassLoader : " + classLoader.getClass().getName());
-                }
-
-                DefaultModuleController module = new DefaultModuleController(classLoader, this, file, moduleClassLoader -> CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).unregisterListeners(moduleClassLoader));
-                module.initConfig();
-
-                modules.add(module);
-            } catch (Throwable ex) {
-                CloudDriver.getInstance().getLogger().error("Could not resolve module {}", FileUtils.getRealFileName(file), ex);
-            }
+           this.resolveSingleModule(file, modules);
         }
 
         // check if the depends are existing
@@ -164,6 +150,27 @@ public class NodeModuleManager implements IModuleManager {
         }
 
         this.modules = modules;
+    }
+
+    public ModuleController resolveSingleModule(Path file, List<DefaultModuleController> toAddTo) {
+        try {
+            CloudDriver.getInstance().getLogger().info("§6=> §fResolving module §b{}§8..", file.getFileName());
+            Path selfBasePath = new File(CloudDriver.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath();
+
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            if (!(classLoader instanceof IdentifiableClassLoader)) {
+                throw new CloudException("Wrong SystemClassLoader : " + classLoader.getClass().getName());
+            }
+
+            DefaultModuleController module = new DefaultModuleController(classLoader, this, file, moduleClassLoader -> CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).unregisterListeners(moduleClassLoader));
+            module.initConfig();
+
+            toAddTo.add(module);
+            return module;
+        } catch (Throwable ex) {
+            CloudDriver.getInstance().getLogger().error("Could not resolve module {}", FileUtils.getRealFileName(file), ex);
+        }
+        return null;
     }
 
     private boolean hasModule(@Nonnull Collection<DefaultModuleController> modules, @Nonnull String depend) {

@@ -85,6 +85,7 @@ public class ModuleUpdater {
                         .onTaskFailed(e -> {
                             launcher.getLogger().error("Couldn't download Module[val={}, url={}] Error: {}", module.getName(), finalUrl, e);
                         });
+            } else {
 
             }
         }

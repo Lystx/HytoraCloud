@@ -31,35 +31,37 @@ public class DriverUtility {
         return (T) object;
     }
 
-    public static Task<Boolean> downloadVersion(String urlStr, Path location, ProgressBar pb) {
-        Task<Boolean> task = Task.empty();
+    public static Task<Path> downloadVersion(String urlStr, Path location, ProgressBar pb) {
+        Task<Path> task = Task.empty();
 
-        try {
-            URL url = new URL(urlStr);
-            String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36";
-            URLConnection con = url.openConnection();
-            con.setRequestProperty("User-Agent", USER_AGENT);
+        Task.runAsync(() -> {
+            try {
+                URL url = new URL(urlStr);
+                String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36";
+                URLConnection con = url.openConnection();
+                con.setRequestProperty("User-Agent", USER_AGENT);
 
-            int contentLength = con.getContentLength();
-            InputStream inputStream = con.getInputStream();
+                int contentLength = con.getContentLength();
+                InputStream inputStream = con.getInputStream();
 
-            OutputStream outputStream = Files.newOutputStream(location);
-            byte[] buffer = new byte[2048];
-            int length;
-            int downloaded = 0;
+                OutputStream outputStream = Files.newOutputStream(location);
+                byte[] buffer = new byte[2048];
+                int length;
+                int downloaded = 0;
 
-            while ((length = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, length);
-                downloaded += length;
-                pb.stepTo((long) ((downloaded * 100L) / (contentLength * 1.0)));
+                while ((length = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, length);
+                    downloaded += length;
+                    pb.stepTo((long) ((downloaded * 100L) / (contentLength * 1.0)));
+                }
+                outputStream.close();
+                inputStream.close();
+                pb.close();
+                task.setResult(location);
+            } catch (Exception e) {
+                task.setFailure(e);
             }
-            outputStream.close();
-            inputStream.close();
-            pb.close();
-            task.setResult(true);
-        } catch (Exception e) {
-            task.setFailure(e);
-        }
+        });
         return task;
     }
 

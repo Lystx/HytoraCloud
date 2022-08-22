@@ -43,7 +43,7 @@ public class DefaultModuleController implements ModuleController {
     private ModuleConfig moduleConfig;
     private AbstractModule module;
 
-    private ModuleState state = ModuleState.DISABLED;
+    private ModuleState state = ModuleState.UNREGISTERED;
 
     private final Map<Object, Collection<HandlerMethod<ModuleTask>>> moduleTasks;
 
@@ -128,7 +128,6 @@ public class DefaultModuleController implements ModuleController {
     public void loadModule() {
         synchronized (this) {
             if (module == null) return; // was never initialized
-            if (state != ModuleState.DISABLED && state != ModuleState.UNREGISTERED ) return; // must be disabled first
 
             this.reloadConfig();
             Logger.constantInstance().info("§e=> §fModule §b" + module + " §7is being loaded§8...");
