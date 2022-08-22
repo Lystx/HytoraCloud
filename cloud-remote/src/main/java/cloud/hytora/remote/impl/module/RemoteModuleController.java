@@ -113,6 +113,17 @@ public class RemoteModuleController implements ModuleController {
     }
 
     @Override
+    public void initConfig() throws Exception {
+        CloudDriver.getInstance().getNetworkExecutor().sendPacket(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.INIT_CONFIG));
+    }
+
+    @Override
+    public void initModule() throws Exception {
+        CloudDriver.getInstance().getNetworkExecutor().sendPacket(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.INIT_MODULE));
+
+    }
+
+    @Override
     public void applyBuffer(BufferState s, @NotNull PacketBuffer buf) throws IOException {
         if (s == BufferState.READ) {
             enabled = buf.readBoolean();

@@ -1,8 +1,10 @@
 package net.hytora.discordbot.manager.command;
 
+import cloud.hytora.common.logging.Logger;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
-import net.hytora.discordbot.Hytora;
+import net.hytora.discordbot.HytoraDiscordBot;
+import net.hytora.discordbot.util.DiscordChat;
 
 import java.awt.*;
 import java.util.Arrays;
@@ -69,14 +71,14 @@ public class CommandManager {
         }
         split = args.toArray(new String[0]);
 
-        Member member = Hytora.getHytora().getGuild().getMember(user);
+        Member member = HytoraDiscordBot.getHytora().getGuild().getMember(user);
         if (member == null) {
-            Hytora.getHytora().getLogManager().log("ERROR", "§cCouldn't get Member for User §e" + user.getAsTag() + "§c!");
+            Logger.constantInstance().error("§cCouldn't get Member for User §e" + user.getAsTag() + "§c!");
             return true;
         }
         if (!cmd.hasPermission(member)) {
 
-            EmbedBuilder embedBuilder = Hytora.getHytora().getLogManager().embedBuilder(Color.RED, "Permissions", user, "You are not permitted", "to perform this command!");
+            EmbedBuilder embedBuilder = DiscordChat.embedBuilder(Color.RED, "Permissions", user, "You are not permitted", "to perform this command!");
             channel.sendMessage(embedBuilder.build()).queue();
             return true;
         }

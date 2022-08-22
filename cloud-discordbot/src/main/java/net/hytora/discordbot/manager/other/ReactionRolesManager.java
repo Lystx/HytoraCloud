@@ -1,5 +1,6 @@
 package net.hytora.discordbot.manager.other;
 
+import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.misc.StringCreator;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
@@ -7,7 +8,8 @@ import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.hytora.discordbot.Hytora;
+import net.hytora.discordbot.HytoraDiscordBot;
+import net.hytora.discordbot.util.DiscordChat;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -30,25 +32,25 @@ public class ReactionRolesManager extends ListenerAdapter {
     public ReactionRolesManager(String channel, Document jsonDocument) {
 
         this.rolesAndEmotes = new HashMap<>();
-        this.textChannel = Hytora.getHytora().getDiscord().getTextChannelById(channel);
+        this.textChannel = HytoraDiscordBot.getHytora().getDiscord().getTextChannelById(channel);
 
         for (String role : jsonDocument.keys().stream().filter(s -> !s.equalsIgnoreCase("channel")).collect(Collectors.toList())) {
 
 
-            Hytora.getHytora().createRole(
+            HytoraDiscordBot.getHytora().createRole(
                     DocumentFactory.newJsonDocument()
                             .set("color", "GRAY")
                             .set("name", role)
                             .set("mentionable", true)
                             .set("showOrder", false)
                     , newRole -> {
-                        Hytora.getHytora().getLogManager().log("REACTION", "§7ReactionRoles created §b" + newRole.getName() + "§8!");
+                        Logger.constantInstance().info("§7ReactionRoles created §b" + newRole.getName() + "§8!");
                     });
 
             this.rolesAndEmotes.put(role, jsonDocument.getString(role));
         }
         this.checkForChannel();
-        Hytora.getHytora().getDiscord().addEventListener(this);
+        HytoraDiscordBot.getHytora().getDiscord().addEventListener(this);
     }
 
     /**
@@ -71,7 +73,7 @@ public class ReactionRolesManager extends ListenerAdapter {
             strings.singleAppend(rolesAndEmotes.get(s) + " = " + s);
         }
 
-        Hytora.getHytora().getLogManager().preset(textChannel, "ReactionRoles", Hytora.getHytora().getDiscord().getSelfUser(), new Consumer<Message>() {
+        DiscordChat.preset(textChannel, "ReactionRoles", HytoraDiscordBot.getHytora().getDiscord().getSelfUser(), new Consumer<Message>() {
             @Override
             public void accept(Message message) {
                 for (String s : rolesAndEmotes.keySet()) {
@@ -90,7 +92,7 @@ public class ReactionRolesManager extends ListenerAdapter {
             return;
         }
 
-        if (event.getUser().getId().equalsIgnoreCase(Hytora.getHytora().getDiscord().getSelfUser().getId())) {
+        if (event.getUser().getId().equalsIgnoreCase(HytoraDiscordBot.getHytora().getDiscord().getSelfUser().getId())) {
             return;
         }
 
@@ -105,9 +107,9 @@ public class ReactionRolesManager extends ListenerAdapter {
 
         event.getReaction().removeReaction(event.getUser()).queue();
 
-        Role getRole = Hytora.getHytora().getGuild().getRolesByName(role, true).get(0);
+        Role getRole = HytoraDiscordBot.getHytora().getGuild().getRolesByName(role, true).get(0);
 
-        List<Role> roles = new ArrayList<>(Hytora.getHytora().getGuild().getSelfMember().getRoles());
+        List<Role> roles = new ArrayList<>(HytoraDiscordBot.getHytora().getGuild().getSelfMember().getRoles());
 
         roles.sort(Comparator.comparingInt(Role::getPosition));
         Role botRole = roles.get(roles.size() - 1);
@@ -116,13 +118,13 @@ public class ReactionRolesManager extends ListenerAdapter {
 
         if (hasRole == null) {
             if (getRole.getPosition() < botRole.getPosition()) {
-                Hytora.getHytora().getGuild().addRoleToMember(event.getMember(), getRole).queue();
+                HytoraDiscordBot.getHytora().getGuild().addRoleToMember(event.getMember(), getRole).queue();
             } else {
                 channel.sendMessage(new MessageBuilder("Cant give you the " + getRole.getName() + " because the bot does not have all rights!").build()).queue(message -> message.delete().queueAfter(3L, TimeUnit.SECONDS));
             }
         } else {
             if (getRole.getPosition() < botRole.getPosition()) {
-                Hytora.getHytora().getGuild().removeRoleFromMember(event.getMember(), getRole).queue();
+                HytoraDiscordBot.getHytora().getGuild().removeRoleFromMember(event.getMember(), getRole).queue();
             } else {
                 channel.sendMessage(new MessageBuilder("Cant remove you the " + getRole.getName() + " because the bot does not have all rights!").build()).queue(message -> message.delete().queueAfter(3L, TimeUnit.SECONDS));
             }

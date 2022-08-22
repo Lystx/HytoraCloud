@@ -4,7 +4,8 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.hytora.discordbot.Hytora;
+import net.hytora.discordbot.HytoraDiscordBot;
+import net.hytora.discordbot.util.DiscordChat;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -17,7 +18,7 @@ public class ConversationListener extends ListenerAdapter {
     @Override
     public void onGuildMessageReceived(@NotNull GuildMessageReceivedEvent event) {
 
-        if (event.getAuthor().getId().equalsIgnoreCase(Hytora.getHytora().getDiscord().getSelfUser().getId())) {
+        if (event.getAuthor().getId().equalsIgnoreCase(HytoraDiscordBot.getHytora().getDiscord().getSelfUser().getId())) {
             return;
         }
 
@@ -25,13 +26,13 @@ public class ConversationListener extends ListenerAdapter {
         if (pinged.isEmpty()) {
             return;
         }
-        if (pinged.get(0).getAsTag().startsWith(Hytora.getHytora().getDiscord().getSelfUser().getAsTag())) {
+        if (pinged.get(0).getAsTag().startsWith(HytoraDiscordBot.getHytora().getDiscord().getSelfUser().getAsTag())) {
 
             String replace = event.getMessage().getContentRaw();
 
             replace = replace.split(pinged.get(0).getAsMention() + " ")[1];
 
-            List<String> response = Hytora.getHytora().getConversationManager().matches(replace, event);
+            List<String> response = HytoraDiscordBot.getHytora().getConversationManager().matches(replace, event);
 
 
             String extra = response.get(response.size() - 1);
@@ -59,13 +60,13 @@ public class ConversationListener extends ListenerAdapter {
                 responses.add("I'm new to Discord and didn't understand this phrase :(");
                 responses.add("Maybe you made a spelling mistake?");
 
-                EmbedBuilder embedBuilder = Hytora.getHytora().getLogManager().embedBuilder(
+                EmbedBuilder embedBuilder = DiscordChat.embedBuilder(
                         Color.CYAN,
                         "Lonely",
-                        Hytora.getHytora().getDiscord().getSelfUser(),
+                        HytoraDiscordBot.getHytora().getDiscord().getSelfUser(),
                         responses.get(new Random().nextInt(responses.size()))
                 );
-                embedBuilder.setFooter(extra, Hytora.getHytora().getDiscord().getSelfUser().getEffectiveAvatarUrl());
+                embedBuilder.setFooter(extra, HytoraDiscordBot.getHytora().getDiscord().getSelfUser().getEffectiveAvatarUrl());
 
                 event.getChannel().sendMessage(embedBuilder.build()).queue();
             }

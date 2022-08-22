@@ -1,14 +1,17 @@
 package net.hytora.discordbot;
 
 
+import cloud.hytora.common.logging.LogLevel;
+import cloud.hytora.common.logging.Logger;
+import cloud.hytora.common.scheduler.Scheduler;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
-import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.networking.protocol.ProtocolAddress;
-import cloud.hytora.driver.services.utils.RemoteIdentity;
-import cloud.hytora.remote.Remote;
+import lombok.Getter;
 import net.dv8tion.jda.api.*;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
@@ -19,15 +22,15 @@ import net.hytora.discordbot.listener.*;
 import net.hytora.discordbot.manager.command.CommandCategory;
 import net.hytora.discordbot.manager.command.CommandManager;
 import net.hytora.discordbot.manager.conversation.ConversationManager;
-import net.hytora.discordbot.manager.logger.LogManager;
 import net.hytora.discordbot.manager.other.ReactionRolesManager;
 import net.hytora.discordbot.manager.suggestion.SuggestionManager;
 import net.hytora.discordbot.manager.ticket.TicketManager;
+import net.hytora.discordbot.util.DiscordChat;
 import net.hytora.discordbot.util.button.DiscordButton;
 import net.hytora.discordbot.util.button.DiscordButtonAction;
+import org.jetbrains.annotations.NotNull;
 
 import javax.security.auth.login.LoginException;
-import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -35,17 +38,14 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class Hytora {
+@Getter
+public class HytoraDiscordBot {
 
     /**
      * The instance
      */
-    private static Hytora hytora;
-
-    /**
-     * The manager to log everything
-     */
-    private final LogManager logManager;
+    @Getter
+    private static HytoraDiscordBot hytora;
 
     /**
      * The manager for commands
@@ -75,7 +75,7 @@ public class Hytora {
     /**
      * The config where all values are stored
      */
-    private Document jsonConfig;
+    private Document config;
 
     /**
      * The JDA to manage all discord stuff
@@ -97,94 +97,101 @@ public class Hytora {
      */
     private final List<DiscordButton> discordButtons;
 
-    public Hytora() {
+    private final Logger logger;
+
+    private final Task<Void> guildReadyTask;
+
+    public HytoraDiscordBot(Logger logger) {
+        hytora = this;
+
+        //starting bootup time
         long start = System.currentTimeMillis();
 
-        hytora = this;
-        this.logManager = new LogManager("logs/");
+        this.logger = logger;
+        this.guildReadyTask = Task.empty();
         this.conversationManager = new ConversationManager();
         this.discordButtons = new ArrayList<>();
 
-        if (this.loadConfig() && this.loadJDA(new CommandListener(), new JoinListener(), new DiscordButtonListener(), new ConversationListener())) {
-            Remote.getInstance().getScheduler().scheduleDelayedTask(() -> {
-                this.logManager.log("\n  _    _       _                  \n" +
-                        " | |  | |     | |                 \n" +
-                        " | |__| |_   _| |_ ___  _ __ __ _ \n" +
-                        " |  __  | | | | __/ _ \\| '__/ _` |\n" +
-                        " | |  | | |_| | || (_) | | | (_| |\n" +
-                        " |_|  |_|\\__, |\\__\\___/|_|  \\__,_|\n" +
-                        "          __/ |                   \n" +
-                        "         |___/                    \n");
-                this.logManager.log("§8");
-                this.logManager.log("INFO", "§7Loading §3HytoraBot §7by §bLystx§8...");
-
-
-                if (this.loadGuild()) {
-
-                    this.commandManager = new CommandManager(this.jsonConfig.getString("command"));
-                    this.registerCommands();
-
-                    this.logManager.log("WELCOME", "§7Bot logged in as §3" + this.discord.getSelfUser().getAsTag() + " §7in §b" + (System.currentTimeMillis() - start) + "ms");
-                    this.logManager.log("WELCOME", "§7Logged in on Guild §3" + this.guild.getName() + " §7@ §b" + this.guild.getId());
-                    this.logManager.log("WELCOME", "§7On the guild are §b" + this.guild.getMembers().size() + "§8/§b" + this.guild.getMaxMembers() + " Members!");
-                    this.logManager.log("§8");
-
-                    if (this.checkOtherValues()) {
-                        this.registerConversations();
-                        this.manageDefaultRoles();
-
-                        this.logManager.preset(this.botManaging, "Welcome", this.discord.getSelfUser(), message -> {
-
-                        }, new Button[]{
-                                new DiscordButton(0x00, "Stop DiscordBot", ButtonStyle.DANGER, new Consumer<DiscordButtonAction>() {
-                                    @Override
-                                    public void accept(DiscordButtonAction discordButtonAction) {
-                                        TextChannel textChannel = discordButtonAction.getTextChannel();
-                                        Message message = discordButtonAction.getMessage();
-                                        if (textChannel.getId().equalsIgnoreCase(Hytora.getHytora().getBotManaging().getId())) {
-                                            EmbedBuilder embedBuilder = Hytora.getHytora().getLogManager().embedBuilder(Color.DARK_GRAY,"Shutdown", discordButtonAction.getUser(), "The HytoraCloud Bot", "Is shutting down in 1 Second...");
-                                            message.editMessage(embedBuilder.build()
-                                            ).queue(message1 -> {
-                                                CloudDriver.getInstance().getScheduler().scheduleDelayedTask(() -> {
-                                                    message1.delete().queue(unused -> Hytora.getHytora().shutdown());
-                                                }, 20L);
-                                            });
-                                        }
-                                    }
-                                }).submit()
-                        }, "HytoraCloud DiscordBot", "Is now active and may be used!", "----------", "Click the stop-button", "to stop the bot at any time!");
-
-                    } else {
-                        this.logManager.log("ERROR", "§cCouldn't load the §econfig.json properly!");
-                        this.shutdown();
+        this.loadConfig();
+        this.loadJDA(
+                new ListenerAdapter() {
+                    @Override
+                    public void onGuildReady(@NotNull GuildReadyEvent event) {
+                        guildReadyTask.setResult(null);
                     }
 
-                } else {
-                    this.logManager.log("ERROR", "§cCouldn't get §eGuild §cwith ID §e" + this.jsonConfig.getString("guildID"));
-                    this.logManager.log("INFO", "§7Available §3Guilds§8: " + (this.discord.getGuilds().size() == 0 ? " §cNone" : ""));
-                    for (Guild discordGuild : this.discord.getGuilds()) {
-                        this.logManager.log("INFO", " §8> §3" + discordGuild.getName() + " §8| §b" + discordGuild.getId());
-                    }
-                    this.shutdown();
-                }
-            }, 60L);
-            return;
-        }
-        this.logManager.log("ERROR", "§cCouldn't load the §econfig.json §cor the §ebot §ccouldn't log in properly!");
-        this.shutdown();
+                },
+                new CommandListener(),
+                new JoinListener(),
+                new DiscordButtonListener(),
+                new ConversationListener()
+        );
+
+        this.logger.log(LogLevel.NULL, "\n  _    _       _                  \n" +
+                " | |  | |     | |                 \n" +
+                " | |__| |_   _| |_ ___  _ __ __ _ \n" +
+                " |  __  | | | | __/ _ \\| '__/ _` |\n" +
+                " | |  | | |_| | || (_) | | | (_| |\n" +
+                " |_|  |_|\\__, |\\__\\___/|_|  \\__,_|\n" +
+                "          __/ |                   \n" +
+                "         |___/                    \n");
+        this.logger.log(LogLevel.NULL, "§8");
+        this.logger.info("§7Loading §3HytoraBot §7by §bLystx§8...");
+        this.logger.info("§7Waiting for GuildStartup§8...");
+        //if guild is ready to use
+        this.guildReadyTask.onTaskSucess(v -> {
+            this.loadGuild();
+
+            this.commandManager = new CommandManager(this.config.getString("command"));
+            this.registerCommands();
+
+            this.logger.info("WELCOME", "§7Bot logged in as §3" + this.discord.getSelfUser().getAsTag() + " §7in §b" + (System.currentTimeMillis() - start) + "ms");
+            this.logger.info("WELCOME", "§7Logged in on Guild §3" + this.guild.getName() + " §7@ §b" + this.guild.getId());
+            this.logger.info("WELCOME", "§7On the guild are §b" + this.guild.getMembers().size() + "§8/§b" + this.guild.getMaxMembers() + " Members!");
+            this.logger.info("§8");
+
+            if (this.checkOtherValues()) {
+                this.registerConversations();
+                this.manageDefaultRoles();
+
+                DiscordChat.preset(this.botManaging, "Welcome", this.discord.getSelfUser(), message -> {
+
+                }, new Button[]{
+                        new DiscordButton(0x00, "Stop DiscordBot", ButtonStyle.DANGER, new Consumer<DiscordButtonAction>() {
+                            @Override
+                            public void accept(DiscordButtonAction discordButtonAction) {
+                                TextChannel textChannel = discordButtonAction.getTextChannel();
+                                Message message = discordButtonAction.getMessage();
+                                if (textChannel.getId().equalsIgnoreCase(HytoraDiscordBot.getHytora().getBotManaging().getId())) {
+                                    EmbedBuilder embedBuilder = DiscordChat.embedBuilder(Color.DARK_GRAY, "Shutdown", discordButtonAction.getUser(), "The HytoraCloud Bot", "Is shutting down in 1 Second...");
+                                    message.editMessage(embedBuilder.build()
+                                    ).queue(message1 -> {
+                                        Scheduler.runTimeScheduler().scheduleDelayedTask(() -> {
+                                            message1.delete().queue(unused -> HytoraDiscordBot.getHytora().shutdown());
+                                        }, 20L);
+                                    });
+                                }
+                            }
+                        }).submit()
+                }, "HytoraCloud DiscordBot", "Is now active and may be used!", "----------", "Click the stop-button", "to stop the bot at any time!");
+
+            } else {
+                this.logger.info("ERROR", "§cCouldn't load the §econfig.json properly!");
+                this.shutdown();
+            }
+        });
     }
 
     /**
      * Shuts down the bot
      */
     public void shutdown() {
-        this.logManager.log("ERROR", "§cShutting down....");
+        this.logger.info("ERROR", "§cShutting down....");
 
         if (this.suggestionManager != null) {
             this.suggestionManager.save();
         }
 
-        this.logManager.save();
         if (this.discord != null) {
             this.discord.shutdown();
         }
@@ -249,13 +256,13 @@ public class Hytora {
     public void manageDefaultRoles() {
 
         //Roles
-        Document roles = this.jsonConfig.getDocument("roles");
+        Document roles = this.config.getDocument("roles");
         Document defaultRole = roles.getDocument("default");
         Document supportRole = roles.getDocument("support");
 
         this.createRole(defaultRole, df -> {
 
-            logManager.log("INFO", "§7Created §b" + df.getName() + "§7-Role§8!");
+            logger.info("§7Created §b" + df.getName() + "§7-Role§8!");
             for (Member member : guild.getMembers()) {
                 Role memberRole = member.getRoles().stream().filter(role1 -> role1.getName().equalsIgnoreCase(df.getName())).findFirst().orElse(null);
                 if (memberRole == null) {
@@ -277,7 +284,7 @@ public class Hytora {
      * Creates a new {@link Role} and accepts the consumer
      *
      * @param jsonDocument the data for the role
-     * @param consumer the consumer
+     * @param consumer     the consumer
      */
     public void createRole(Document jsonDocument, Consumer<Role> consumer) {
 
@@ -302,7 +309,7 @@ public class Hytora {
             try {
                 guild.createRole()
                         .setName(name)
-                        .setColor(rgb[0] == 0 ? (Color) Color.class.getDeclaredField(color).get(Color.WHITE) :  new Color(rgb[0], rgb[1], rgb[2]))
+                        .setColor(rgb[0] == 0 ? (Color) Color.class.getDeclaredField(color).get(Color.WHITE) : new Color(rgb[0], rgb[1], rgb[2]))
                         .setHoisted(showOrder)
                         .setMentionable(mentionable)
                         .queue(consumer);
@@ -333,23 +340,23 @@ public class Hytora {
         try {
 
             //Bot Managing channel
-            String botManagingId = this.jsonConfig.getString("botManagingId");
+            String botManagingId = this.config.getString("botManagingId");
             this.botManaging = this.guild.getTextChannelById(botManagingId);
 
             //Suggestions
-            Document suggestions = this.jsonConfig.getDocument("suggestions");
+            Document suggestions = this.config.getDocument("suggestions");
             String commands = suggestions.getString("commands");
             String suggestionsChannel = suggestions.getString("suggestions");
 
             this.suggestionManager = new SuggestionManager(suggestionsChannel);
 
 
-            Document tickets = this.jsonConfig.getDocument("tickets");
+            Document tickets = this.config.getDocument("tickets");
             String channel = tickets.getString("channel");
             this.ticketManager = new TicketManager(channel);
 
 
-            Document reactionRoles = this.jsonConfig.getDocument("reactionRoles");
+            Document reactionRoles = this.config.getDocument("reactionRoles");
             this.reactionRolesManager = new ReactionRolesManager(reactionRoles.getString("channel"), reactionRoles);
 
             return true;
@@ -363,34 +370,29 @@ public class Hytora {
     /**
      * Loads the config.json
      */
-    public boolean loadConfig() {
-
-        try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(Hytora.class.getResourceAsStream("/config.json"))));
-            this.jsonConfig = DocumentFactory.newJsonDocument(reader);
-            return !this.jsonConfig.isEmpty();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+    public Document loadConfig() {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(HytoraDiscordBot.class.getResourceAsStream("/config.json"))));
+        this.config = DocumentFactory.newJsonDocument(reader);
+        return config;
     }
 
     /**
      * Loads and builds the jda
      */
-    public boolean loadJDA(ListenerAdapter... listenerAdapters) {
-        String token = this.jsonConfig.getString("token");
+    public void loadJDA(ListenerAdapter... listenerAdapters) {
+        String token = this.config.getString("token");
 
         if (token.trim().isEmpty()) {
-            this.logManager.log("INFO", "§cCan't connect with §eempty token§c!");
-            return false;
+            this.logger.info("§cCan't connect with §eempty token§c!");
+            return;
         }
 
-        this.logManager.log("INFO", "§7Trying to connect to §3Hytora-Bot with token §b" + token + "§8...");
+        this.logger.info("§7Trying to connect to §3Hytora-Bot with token §b" + token + "§8...");
 
         JDABuilder api = JDABuilder.createDefault(token)
                 .setMemberCachePolicy(MemberCachePolicy.ALL) //Member caching
                 .setStatus(OnlineStatus.ONLINE) //Status
+                .addEventListeners((Object[]) listenerAdapters)
                 .enableIntents(
                         GatewayIntent.GUILD_PRESENCES,
                         GatewayIntent.GUILD_MEMBERS,
@@ -401,16 +403,9 @@ public class Hytora {
                 )
                 .setActivity(Activity.playing(" HytoraCloud")); //activity
         try {
-            //Registering the listeners
-            for (ListenerAdapter listenerAdapter : listenerAdapters) {
-                api.addEventListeners(listenerAdapter);
-            }
-
             this.discord = api.build(); //Building
-            return true; //everything went well
         } catch (LoginException e) {
             e.printStackTrace();
-            return false;
         }
     }
 
@@ -419,13 +414,13 @@ public class Hytora {
      *
      * @return if success
      */
-    public boolean loadGuild() {
+    public void loadGuild() {
 
-        String guildID = this.jsonConfig.getString("guildID");
+        String guildID = this.config.getString("guildID");
 
         if (guildID.trim().isEmpty()) {
-            this.logManager.log("ERROR", "§cCan't search for a guild with an §empty id§c!");
-            return false;
+            this.logger.info("ERROR", "§cCan't search for a guild with an §empty id§c!");
+            return;
         }
 
         System.out.println("==");
@@ -435,87 +430,6 @@ public class Hytora {
         System.out.println("==");
 
         this.guild = this.discord.getGuildById(guildID);
-
-        return this.guild != null;
     }
 
-    public static void main(String[] args) {
-
-        List<String> arguments = Arrays.asList(args);
-
-        if (arguments.stream().noneMatch(s -> s.startsWith("host=")) || arguments.stream().noneMatch(s -> s.startsWith("port=")) || arguments.stream().noneMatch(s -> s.startsWith("key="))) {
-            throw new IllegalStateException("Can't start Application without following arguments: host=??? port=??? key=???");
-        }
-
-
-        String host = "";
-        String key = "";
-        int port = -1;
-
-        for (String argument : arguments) {
-            if (argument.startsWith("host=")) {
-                host = argument.split("host=")[1];
-            }
-            if (argument.startsWith("port=")) {
-                port = Integer.parseInt(argument.split("port=")[1]);
-            }
-            if (argument.startsWith("key=")) {
-                key = argument.split("key=")[1];
-            }
-        }
-
-        Remote remote = new Remote(RemoteIdentity.forApplication(new ProtocolAddress(host, port, key)));
-        remote.nexCacheUpdate()
-                .onTaskSucess(packet -> new Hytora())
-                .onTaskFailed(v -> new Hytora());
-    }
-
-
-    public static Hytora getHytora() {
-        return hytora;
-    }
-
-    public LogManager getLogManager() {
-        return logManager;
-    }
-
-    public TicketManager getTicketManager() {
-        return ticketManager;
-    }
-
-    public CommandManager getCommandManager() {
-        return commandManager;
-    }
-
-    public Document getJsonConfig() {
-        return jsonConfig;
-    }
-
-    public JDA getDiscord() {
-        return discord;
-    }
-
-    public Guild getGuild() {
-        return guild;
-    }
-
-    public SuggestionManager getSuggestionManager() {
-        return suggestionManager;
-    }
-
-    public List<DiscordButton> getDiscordButtons() {
-        return discordButtons;
-    }
-
-    public ConversationManager getConversationManager() {
-        return conversationManager;
-    }
-
-    public ReactionRolesManager getReactionRolesManager() {
-        return reactionRolesManager;
-    }
-
-    public TextChannel getBotManaging() {
-        return botManaging;
-    }
 }

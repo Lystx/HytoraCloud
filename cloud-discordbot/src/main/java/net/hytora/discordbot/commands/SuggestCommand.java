@@ -5,7 +5,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
-import net.hytora.discordbot.Hytora;
+import net.hytora.discordbot.HytoraDiscordBot;
 import net.hytora.discordbot.manager.command.CommandCategory;
 import net.hytora.discordbot.manager.command.CommandHandler;
 import net.hytora.discordbot.manager.suggestion.Suggestion;
@@ -36,7 +36,7 @@ public class SuggestCommand extends CommandHandler {
 
                 UUID uniqueId = UUID.fromString(args[1]);
 
-                Suggestion suggestion = Hytora.getHytora().getSuggestionManager().getPendingSuggestions().stream().filter(s -> s.getUniqueId().equals(uniqueId)).findFirst().orElse(null);
+                Suggestion suggestion = HytoraDiscordBot.getHytora().getSuggestionManager().getPendingSuggestions().stream().filter(s -> s.getUniqueId().equals(uniqueId)).findFirst().orElse(null);
 
                 if (suggestion == null) {
                     System.out.println("Nulled suggestion");
@@ -45,14 +45,14 @@ public class SuggestCommand extends CommandHandler {
 
 
                 if (args[0].equalsIgnoreCase("deny")) {
-                    Hytora.getHytora().getSuggestionManager().result(suggestion, Color.RED);
+                    HytoraDiscordBot.getHytora().getSuggestionManager().result(suggestion, Color.RED);
                 } else if (args[0].equalsIgnoreCase("accept")) {
-                    Hytora.getHytora().getSuggestionManager().result(suggestion, Color.GREEN);
+                    HytoraDiscordBot.getHytora().getSuggestionManager().result(suggestion, Color.GREEN);
                 }
                 raw.delete().queue();
                 return;
             }
-            if (!channel.getId().equalsIgnoreCase(Hytora.getHytora().getJsonConfig().getDocument("suggestions").getString("commands"))) {
+            if (!channel.getId().equalsIgnoreCase(HytoraDiscordBot.getHytora().getConfig().getDocument("suggestions").getString("commands"))) {
                 raw.delete().queue();
                 return;
             }
@@ -75,7 +75,7 @@ public class SuggestCommand extends CommandHandler {
             );
 
             raw.delete().queue(v -> {
-                Hytora.getHytora().getSuggestionManager().createSuggestion(executor.getUser(), suggestion);
+                HytoraDiscordBot.getHytora().getSuggestionManager().createSuggestion(executor.getUser(), suggestion);
             });
         }
     }

@@ -26,6 +26,10 @@ public class RemoteModuleControllerPacket extends AbstractPacket {
 
         LOAD_MODULE,
 
+        INIT_CONFIG,
+
+        INIT_MODULE,
+
         ENABLE_MODULE,
 
         DISABLE_MODULE,

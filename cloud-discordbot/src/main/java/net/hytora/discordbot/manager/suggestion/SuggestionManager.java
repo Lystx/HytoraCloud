@@ -1,5 +1,6 @@
 package net.hytora.discordbot.manager.suggestion;
 
+import cloud.hytora.common.logging.Logger;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import lombok.SneakyThrows;
@@ -10,7 +11,8 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
 import net.dv8tion.jda.internal.interactions.ButtonImpl;
-import net.hytora.discordbot.Hytora;
+import net.hytora.discordbot.HytoraDiscordBot;
+import net.hytora.discordbot.util.DiscordChat;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -60,9 +62,9 @@ public class SuggestionManager extends ListenerAdapter {
             for (String key : this.jsonDocument.keys()) {
                 this.pendingSuggestions.add(this.jsonDocument.getInstance(key, Suggestion.class));
             }
-            Hytora.getHytora().getLogManager().log("SUGGESTIONS", "§7Loaded §b" + this.pendingSuggestions.size() + " §7Pending §3Suggestions§8!");
+            Logger.constantInstance().info( "§7Loaded §b" + this.pendingSuggestions.size() + " §7Pending §3Suggestions§8!");
 
-            Hytora.getHytora().getDiscord().addEventListener(this);
+            HytoraDiscordBot.getHytora().getDiscord().addEventListener(this);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -90,9 +92,9 @@ public class SuggestionManager extends ListenerAdapter {
      */
     public void result(Suggestion suggestion, Color color) {
 
-        TextChannel channel = Hytora.getHytora().getGuild().getTextChannelById(this.channel);
+        TextChannel channel = HytoraDiscordBot.getHytora().getGuild().getTextChannelById(this.channel);
 
-        User userTag = Hytora.getHytora().getDiscord().getUserByTag(suggestion.getUser());
+        User userTag = HytoraDiscordBot.getHytora().getDiscord().getUserByTag(suggestion.getUser());
 
         if (userTag == null) {
             return;
@@ -148,10 +150,10 @@ public class SuggestionManager extends ListenerAdapter {
      */
     public void createSuggestion(User user, Suggestion suggestion) {
 
-        TextChannel channel = Hytora.getHytora().getGuild().getTextChannelById(this.channel);
+        TextChannel channel = HytoraDiscordBot.getHytora().getGuild().getTextChannelById(this.channel);
 
         if (channel == null) {
-            Hytora.getHytora().getLogManager().log("ERROR", "§cCouldn't create Suggestion §e" + suggestion.getUniqueId() + " §cbecause Channel was not found!");
+            Logger.constantInstance().error( "§cCouldn't create Suggestion §e" + suggestion.getUniqueId() + " §cbecause Channel was not found!");
             return;
         }
 
@@ -187,7 +189,7 @@ public class SuggestionManager extends ListenerAdapter {
 
         embedBuilder.setDescription(stringCreator.toString());
         embedBuilder.setThumbnail(user.getEffectiveAvatarUrl());
-        embedBuilder.setFooter("ID : " + suggestion.getUniqueId(), Hytora.getHytora().getDiscord().getSelfUser().getEffectiveAvatarUrl());
+        embedBuilder.setFooter("ID : " + suggestion.getUniqueId(), HytoraDiscordBot.getHytora().getDiscord().getSelfUser().getEffectiveAvatarUrl());
 
         return embedBuilder;
     }
@@ -217,7 +219,7 @@ public class SuggestionManager extends ListenerAdapter {
                     return;
                 }
 
-                User userByTag = Hytora.getHytora().getDiscord().getUserByTag(suggestion.getUser());
+                User userByTag = HytoraDiscordBot.getHytora().getDiscord().getUserByTag(suggestion.getUser());
 
                 if (userByTag == null) {
                     return;

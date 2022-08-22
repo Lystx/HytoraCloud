@@ -5,7 +5,7 @@ import lombok.Getter;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
 import net.dv8tion.jda.internal.interactions.ButtonImpl;
-import net.hytora.discordbot.Hytora;
+import net.hytora.discordbot.HytoraDiscordBot;
 
 import java.util.function.Consumer;
 
@@ -40,7 +40,7 @@ public class DiscordButton {
      * @return button
      */
     public Button submit() {
-        Hytora.getHytora().getDiscordButtons().add(this);
+        HytoraDiscordBot.getHytora().getDiscordButtons().add(this);
         return new ButtonImpl(String.valueOf(id), display, style, false, null);
     }
 

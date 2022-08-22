@@ -7,9 +7,10 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
-import net.hytora.discordbot.Hytora;
+import net.hytora.discordbot.HytoraDiscordBot;
 import net.hytora.discordbot.manager.command.CommandCategory;
 import net.hytora.discordbot.manager.command.CommandHandler;
+import net.hytora.discordbot.util.DiscordChat;
 
 import java.awt.*;
 
@@ -41,11 +42,11 @@ public class EmbedCommand extends CommandHandler {
                     stringCreator.singleAppend(args[i]).singleAppend(" ");
                 }
 
-                EmbedBuilder embedBuilder = Hytora.getHytora().getLogManager().embedBuilder(color, title, executor.getUser(), stringCreator.toString());
+                EmbedBuilder embedBuilder = DiscordChat.embedBuilder(color, title, executor.getUser(), stringCreator.toString());
                 channel.sendMessage(embedBuilder.build()).queue();
 
             } catch (IllegalAccessException | NoSuchFieldException e) {
-                EmbedBuilder embedBuilder = Hytora.getHytora().getLogManager().embedBuilder(Color.RED, "Failed", executor.getUser(), "There is no such color as '" + c + "' !");
+                EmbedBuilder embedBuilder = DiscordChat.embedBuilder(Color.RED, "Failed", executor.getUser(), "There is no such color as '" + c + "' !");
                 channel.sendMessage(embedBuilder.build()).queue();
 
             }
@@ -56,7 +57,7 @@ public class EmbedCommand extends CommandHandler {
 
     @Override
     public void syntax(String command, TextChannel channel, User executor) {
-        Hytora.getHytora().getLogManager().preset(
+        DiscordChat.preset(
                 channel,
                 "Embed-Help",
                 executor,

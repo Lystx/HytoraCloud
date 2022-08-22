@@ -2,7 +2,7 @@ package net.hytora.discordbot.commands;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
-import net.hytora.discordbot.Hytora;
+import net.hytora.discordbot.HytoraDiscordBot;
 import net.hytora.discordbot.manager.command.CommandCategory;
 import net.hytora.discordbot.manager.command.CommandHandler;
 
@@ -27,7 +27,7 @@ public class HelpCommand extends CommandHandler {
 
         for (CommandCategory value : CommandCategory.values()) {
             sb.append("**").append(value.name()).append("**").append("\n");
-            final List<CommandHandler> commands = Hytora.getHytora().getCommandManager().getCommands(value);
+            final List<CommandHandler> commands = HytoraDiscordBot.getHytora().getCommandManager().getCommands(value);
             if (!commands.isEmpty()) {
                 for (CommandHandler command : commands) {
                     sb.append("  » " + command.getName() + " | " + command.getDescription()).append("\n");
@@ -42,7 +42,7 @@ public class HelpCommand extends CommandHandler {
                 .setTitle("HytoraCloud | Help")
                 .setDescription(sb.toString())
                 .setColor(Color.CYAN)
-                .setThumbnail(Hytora.getHytora().getGuild().getIconUrl())
+                .setThumbnail(HytoraDiscordBot.getHytora().getGuild().getIconUrl())
                 .setFooter("Requested by " + executor.getUser().getAsTag(), executor.getUser().getEffectiveAvatarUrl())
             .build()
         ).queue();

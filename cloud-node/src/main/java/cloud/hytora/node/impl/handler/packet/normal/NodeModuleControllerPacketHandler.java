@@ -25,6 +25,20 @@ public class NodeModuleControllerPacketHandler implements PacketHandler<RemoteMo
         }
 
         switch (payLoad) {
+            case INIT_CONFIG:
+                try {
+                    controller.initConfig();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                break;
+            case INIT_MODULE:
+                try {
+                    controller.initModule();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                break;
             case LOAD_MODULE:
                 controller.loadModule();
                 break;

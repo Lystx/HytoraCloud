@@ -1,7 +1,7 @@
 package net.hytora.discordbot.manager.command;
 
 import net.dv8tion.jda.api.entities.*;
-import net.hytora.discordbot.Hytora;
+import net.hytora.discordbot.HytoraDiscordBot;
 
 public abstract class CommandHandler {
 
@@ -40,6 +40,6 @@ public abstract class CommandHandler {
     }
 
     protected String getPrefix() {
-        return Hytora.getHytora().getCommandManager().getPrefix();
+        return HytoraDiscordBot.getHytora().getCommandManager().getPrefix();
     }
 }

@@ -5,7 +5,7 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.Button;
-import net.hytora.discordbot.Hytora;
+import net.hytora.discordbot.HytoraDiscordBot;
 import net.hytora.discordbot.util.button.DiscordButton;
 import net.hytora.discordbot.util.button.DiscordButtonAction;
 import org.jetbrains.annotations.NotNull;
@@ -21,7 +21,7 @@ public class DiscordButtonListener extends ListenerAdapter {
 
         if (button != null && message != null) {
 
-            DiscordButton discordButton = Hytora.getHytora().getDiscordButtons().stream().filter(db -> String.valueOf(db.getId()).equalsIgnoreCase(button.getId())).findFirst().orElse(null);
+            DiscordButton discordButton = HytoraDiscordBot.getHytora().getDiscordButtons().stream().filter(db -> String.valueOf(db.getId()).equalsIgnoreCase(button.getId())).findFirst().orElse(null);
 
             if (discordButton == null) {
                 return;

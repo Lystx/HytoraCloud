@@ -1,12 +1,14 @@
 package net.hytora.discordbot.manager.ticket;
 
+import cloud.hytora.common.logging.Logger;
 import lombok.Getter;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
-import net.hytora.discordbot.Hytora;
+import net.hytora.discordbot.HytoraDiscordBot;
+import net.hytora.discordbot.util.DiscordChat;
 import net.hytora.discordbot.util.button.DiscordButton;
 
 import java.awt.*;
@@ -35,11 +37,11 @@ public class TicketManager extends ListenerAdapter {
     public TicketManager(String channelId) {
         this.tickets = new ArrayList<>();
 
-        this.channel = Hytora.getHytora().getGuild().getTextChannelById(channelId);
+        this.channel = HytoraDiscordBot.getHytora().getGuild().getTextChannelById(channelId);
         this.category = channel.getParent();
 
         this.checkCreator();
-        Hytora.getHytora().getLogManager().log("TICKETS", "§7Loaded §b" + this.tickets.size() + " §7Opened §3Tickets§8!");
+        Logger.constantInstance().info("§7Loaded §b" + this.tickets.size() + " §7Opened §3Tickets§8!");
     }
 
     /**
@@ -51,10 +53,10 @@ public class TicketManager extends ListenerAdapter {
             message.delete().queue();
         }
 
-        Hytora.getHytora().getLogManager().preset(
+        DiscordChat.preset(
                 channel,
                 "TicketSystem",
-                Hytora.getHytora().getDiscord().getSelfUser(),
+                HytoraDiscordBot.getHytora().getDiscord().getSelfUser(),
                 message -> {},
                 new Button[]{
                         new DiscordButton(0x099, "Open Ticket", ButtonStyle.SUCCESS, a -> openTicket(new Ticket(a.getUser().getId(), tickets.size() + 1, false, null))).submit()
@@ -75,16 +77,16 @@ public class TicketManager extends ListenerAdapter {
         Member executor = ticket.getExecutor();
 
         if (this.tickets.stream().filter(t -> t.getId() == ticket.getId()).findFirst().orElse(null) != null) {
-            executor.getUser().openPrivateChannel().queue(privateChannel -> privateChannel.sendMessage(Hytora.getHytora().getLogManager().embedBuilder(Color.RED, "TicketSupport", Hytora.getHytora().getDiscord().getSelfUser(), "Please do not try to open", "more than one ticket at the same time!").build()).queue());
+            executor.getUser().openPrivateChannel().queue(privateChannel -> privateChannel.sendMessage(DiscordChat.embedBuilder(Color.RED, "TicketSupport", HytoraDiscordBot.getHytora().getDiscord().getSelfUser(), "Please do not try to open", "more than one ticket at the same time!").build()).queue());
             return;
         }
 
         this.tickets.add(ticket);
 
-        Hytora.getHytora().getGuild().createTextChannel("ticket-" + ticket.getId(), category)
+        HytoraDiscordBot.getHytora().getGuild().createTextChannel("ticket-" + ticket.getId(), category)
                 .addPermissionOverride(executor, EnumSet.of(Permission.VIEW_CHANNEL), null)
-                .addPermissionOverride(Hytora.getHytora().getGuild().getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL))
-                .queue(textChannel -> Hytora.getHytora().getLogManager().preset(textChannel, "TicketSystem", executor.getUser(), message -> {
+                .addPermissionOverride(HytoraDiscordBot.getHytora().getGuild().getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL))
+                .queue(textChannel -> DiscordChat.preset(textChannel, "TicketSystem", executor.getUser(), message -> {
                 }, new Button[]{
                         new DiscordButton(0x01, "German", ButtonStyle.PRIMARY, discordButtonAction -> {
                             if (!discordButtonAction.getUser().getId().equalsIgnoreCase(ticket.getMember())) {
@@ -134,7 +136,7 @@ public class TicketManager extends ListenerAdapter {
      * @param ticket the ticket
      */
     public void closeTicket(Ticket ticket) {
-        TextChannel textChannel = Hytora.getHytora().getDiscord().getTextChannelsByName("ticket-" + ticket.getId(), true).get(0);
+        TextChannel textChannel = HytoraDiscordBot.getHytora().getDiscord().getTextChannelsByName("ticket-" + ticket.getId(), true).get(0);
 
         if (textChannel == null) {
             return;
