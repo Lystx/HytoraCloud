@@ -1,23 +1,22 @@
 package cloud.hytora.node.impl.command.impl;
 
 
-import cloud.hytora.context.annotations.ApplicationParticipant;
-import cloud.hytora.driver.command.CommandScope;
-import cloud.hytora.driver.command.annotation.*;
-import cloud.hytora.driver.command.sender.CommandSender;
+import cloud.hytora.driver.commands.data.enums.AllowedCommandSender;
+import cloud.hytora.driver.commands.data.Command;
+import cloud.hytora.driver.commands.data.enums.CommandScope;
+import cloud.hytora.driver.commands.context.CommandContext;
+import cloud.hytora.driver.commands.parameter.CommandArguments;
 import cloud.hytora.node.NodeDriver;
 
-import javax.annotation.Nonnull;
-
-@Command({"shutdown", "exit", "end"})
-@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
-@CommandPermission("cloud.command.use")
-@CommandDescription("Stops the current Cloud-Instance")
-@ApplicationParticipant
 public class ShutdownCommand {
 
-    @Root
-    public void onShutdown(@Nonnull CommandSender sender) throws Exception {
+    @Command(
+            label = "shutdown",
+            desc = "Shuts down the Cloud!",
+            aliases = {"exit", "stop", "end"},
+            scope = CommandScope.CONSOLE_AND_INGAME
+    )
+    public void execute(CommandContext<?> context, CommandArguments args) {
         NodeDriver.getInstance().shutdown();
     }
 

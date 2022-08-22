@@ -14,7 +14,7 @@ public class RemoteLoggingHandler implements PacketHandler<DriverLoggingPacket> 
         NetworkComponent component = packet.getComponent();
         String message = packet.getMessage();
 
-        if (component.matches(Remote.getInstance().getExecutor())) {
+        if (component.matches(Remote.getInstance().getNetworkExecutor())) {
             Remote.getInstance().getLogger().info(message);
         }
     }

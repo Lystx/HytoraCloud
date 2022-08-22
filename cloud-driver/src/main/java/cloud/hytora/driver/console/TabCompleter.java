@@ -1,9 +1,9 @@
 package cloud.hytora.driver.console;
 
-import java.util.Collection;
+import java.util.List;
 
 public interface TabCompleter {
 
 
-    Collection<String> onTabComplete(String buffer);
+    int onTabComplete(String buffer, int cursor, List<CharSequence> result);
 }

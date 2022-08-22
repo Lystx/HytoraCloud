@@ -1,11 +1,10 @@
 package cloud.hytora.node.console;
 
-import cloud.hytora.common.logging.Logger;
-import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.console.Screen;
-import cloud.hytora.driver.console.ScreenManager;
+import cloud.hytora.driver.commands.sender.CommandSender;
+import cloud.hytora.driver.commands.sender.ConsoleCommandSender;
+import cloud.hytora.driver.console.screen.Screen;
+import cloud.hytora.driver.console.screen.ScreenManager;
 import cloud.hytora.driver.console.TabCompleter;
 import cloud.hytora.node.NodeDriver;
 import lombok.Getter;
@@ -32,8 +31,9 @@ public class NodeScreen implements Screen {
     }
 
     @Override
-    public void registerTabCompleter(TabCompleter completer) {
+    public Screen registerTabCompleter(TabCompleter completer) {
         this.tabCompleter = completer;
+        return this;
     }
 
     @Override
@@ -46,10 +46,8 @@ public class NodeScreen implements Screen {
         this.cacheLine(line);
 
         if (CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class).isScreenActive(this.name)) {
-            CommandSender commandSender = CloudDriver.getInstance().getCommandSender();
-            if (commandSender != null) {
-                commandSender.forceMessage(line);
-            }
+            ConsoleCommandSender commandSender = NodeDriver.getInstance().getCommandSender();
+            commandSender.forceMessage(line);
         }
     }
 
@@ -59,13 +57,14 @@ public class NodeScreen implements Screen {
     }
 
     @Override
-    public void addInputHandler(@NotNull Consumer<? super String> handler) {
+    public void registerInputHandler(@NotNull Consumer<? super String> handler) {
         this.inputHandlers.add(handler);
     }
 
     @Override
     public void clear() {
-        NodeDriver.getInstance().getConsole().clearScreen();}
+        NodeDriver.getInstance().getConsole().clearScreen();
+    }
 
 
     @Override

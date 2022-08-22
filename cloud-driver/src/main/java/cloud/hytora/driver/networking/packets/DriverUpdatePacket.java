@@ -1,16 +1,21 @@
 package cloud.hytora.driver.networking.packets;
 
 import cloud.hytora.common.logging.Logger;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.driver.DriverCacheUpdateEvent;
 import cloud.hytora.driver.networking.IPacketExecutor;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.node.INode;
+import cloud.hytora.driver.node.INodeManager;
 import cloud.hytora.driver.node.UniversalNode;
+import cloud.hytora.driver.player.ICloudPlayerManager;
 import cloud.hytora.driver.player.impl.UniversalCloudPlayer;
 import cloud.hytora.driver.CloudDriver;
 
+import cloud.hytora.driver.services.ICloudServiceManager;
+import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.task.UniversalServiceTask;
 import cloud.hytora.driver.player.ICloudPlayer;
@@ -45,11 +50,11 @@ public class DriverUpdatePacket extends AbstractPacket {
 
     public DriverUpdatePacket() {
         this(
-                CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks(),
-                CloudDriver.getInstance().getServiceTaskManager().getAllTaskGroups(),
-                CloudDriver.getInstance().getServiceManager().getAllCachedServices(),
-                CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers(),
-                CloudDriver.getInstance().getNodeManager().getAllCachedNodes()
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getAllCachedTasks(),
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getAllTaskGroups(),
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllCachedServices(),
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getAllCachedCloudPlayers(),
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).getAllCachedNodes()
         );
     }
 
@@ -63,21 +68,21 @@ public class DriverUpdatePacket extends AbstractPacket {
             case READ:
 
                 parentGroups = buf.readWrapperObjectCollection(DefaultTaskGroup.class);
-                CloudDriver.getInstance().getServiceTaskManager().setAllTaskGroups(parentGroups);
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).setAllTaskGroups(parentGroups);
 
                 serviceTasks = buf.readWrapperObjectCollection(UniversalServiceTask.class);
-                CloudDriver.getInstance().getServiceTaskManager().setAllCachedTasks(serviceTasks);
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).setAllCachedTasks(serviceTasks);
 
                 allCachedServices = buf.readWrapperObjectCollection(UniversalCloudServer.class);
-                CloudDriver.getInstance().getServiceManager().setAllCachedServices((List<ICloudServer>) allCachedServices);
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).setAllCachedServices((List<ICloudServer>) allCachedServices);
 
                 cloudPlayers = buf.readWrapperObjectCollection(UniversalCloudPlayer.class);
-                CloudDriver.getInstance().getPlayerManager().setAllCachedCloudPlayers((List<ICloudPlayer>) cloudPlayers);
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).setAllCachedCloudPlayers((List<ICloudPlayer>) cloudPlayers);
 
                 connectedNodes = buf.readWrapperObjectCollection(UniversalNode.class);
-                CloudDriver.getInstance().getNodeManager().setAllCachedNodes((List<INode>) connectedNodes);
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).setAllCachedNodes((List<INode>) connectedNodes);
 
-                CloudDriver.getInstance().getEventManager().callEventOnlyLocally(new DriverCacheUpdateEvent());
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventOnlyLocally(new DriverCacheUpdateEvent());
                 break;
 
             case WRITE:

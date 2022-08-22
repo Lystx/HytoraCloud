@@ -1,8 +1,8 @@
 package cloud.hytora.driver.player;
 
 import cloud.hytora.common.task.Task;
-import cloud.hytora.driver.command.sender.PlayerCommandSender;
-import cloud.hytora.driver.common.ICloneableObject;
+import cloud.hytora.driver.commands.sender.PlayerCommandSender;
+import cloud.hytora.driver.common.ICopyableObject;
 import cloud.hytora.driver.exception.ModuleNeededException;
 import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.driver.player.connection.PlayerConnection;
@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public interface ICloudPlayer extends CloudOfflinePlayer, PlayerCommandSender, ICloneableObject<ICloudPlayer> {
+public interface ICloudPlayer extends CloudOfflinePlayer, PlayerCommandSender, ICopyableObject<ICloudPlayer> {
 
     /**
      * The current Proxy-Server this player is currently on

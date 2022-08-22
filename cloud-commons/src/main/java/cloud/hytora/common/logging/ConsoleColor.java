@@ -1,5 +1,6 @@
 package cloud.hytora.common.logging;
 
+
 import org.fusesource.jansi.Ansi;
 
 import javax.annotation.Nonnull;

@@ -58,7 +58,7 @@ public class DefaultChannelMessage implements ChannelMessage {
 
     @Override
     public void send() {
-        CloudDriver.getInstance().getChannelMessenger().sendChannelMessage(this);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(IChannelMessenger.class).sendChannelMessage(this);
     }
 
     @Override

@@ -14,6 +14,7 @@ import cloud.hytora.driver.permission.PermissionChecker;
 import cloud.hytora.driver.permission.PermissionManager;
 import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.driver.player.ICloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayerManager;
 import cloud.hytora.driver.player.TemporaryProperties;
 import cloud.hytora.driver.player.connection.DefaultPlayerConnection;
 import cloud.hytora.driver.player.connection.PlayerConnection;
@@ -21,6 +22,7 @@ import cloud.hytora.driver.player.executor.PlayerExecutor;
 import cloud.hytora.driver.services.ICloudServer;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
+import cloud.hytora.driver.services.ICloudServiceManager;
 import lombok.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -68,23 +70,23 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
     @Nullable
     @Override
     public ICloudServer getServer() {
-        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(this.serverName);
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNull(this.serverName);
     }
 
     @NotNull
     @Override
     public ICloudServer getProxyServer() {
-        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(this.proxyName);
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNull(this.proxyName);
     }
 
     @Override
     public Task<ICloudServer> getServerAsync() {
-        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNullAsync(this.serverName);
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNullAsync(this.serverName);
     }
 
     @Override
     public Task<ICloudServer> getProxyServerAsync() {
-        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNullAsync(this.proxyName);
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNullAsync(this.proxyName);
     }
 
     @Override
@@ -108,7 +110,7 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
 
     @Override
     public void update() {
-        CloudDriver.getInstance().getPlayerManager().updateCloudPlayer(this);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).updateCloudPlayer(this);
     }
 
     @Override
@@ -140,7 +142,7 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
 
 
     @Override
-    public void clone(ICloudPlayer from) {
+    public void copy(ICloudPlayer from) {
         this.setProxyServer(from.getProxyServer());
         this.setServer(from.getServer());
 

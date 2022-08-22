@@ -13,7 +13,7 @@ public enum LogLevel {
     NULL(-1, false),
     TRACE(0, ConsoleColor.YELLOW),
     DEBUG(2, ConsoleColor.YELLOW),
-    STATUS(7, false),
+    STATUS(7, ConsoleColor.GREEN),
     INFO(10, false),
     WARN(15, ConsoleColor.ORANGE),
     ERROR(25,  ConsoleColor.RED);

@@ -5,7 +5,7 @@ import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.networking.packets.RedirectPacket;
-import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
+import cloud.hytora.driver.networking.IHandlerNetworkExecutor;
 import cloud.hytora.driver.networking.INetworkExecutor;
 import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
 import cloud.hytora.driver.networking.cluster.ClusterExecutor;
@@ -96,7 +96,7 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
         INetworkExecutor executor = this.wrapper.executor();
 
         if (identifier.equalsIgnoreCase("multiQuery")) {
-            if (!(executor instanceof AdvancedNetworkExecutor)) {
+            if (!(executor instanceof IHandlerNetworkExecutor)) {
                 throw new IllegalStateException("Can't execute MultiQuery from normal NetworkExecutor!");
             }
             Set<BufferedResponse> responses = new HashSet<>();
@@ -114,7 +114,7 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
             }
 
 
-            ((AdvancedNetworkExecutor)executor).registerPacketHandler((PacketHandler<ResponsePacket>) (wrap, packet1) -> {
+            ((IHandlerNetworkExecutor)executor).registerPacketHandler((PacketHandler<ResponsePacket>) (wrap, packet1) -> {
 
                 if (packet1.transferInfo().getInternalQueryId().equals(packet.transferInfo().getInternalQueryId())) {
                     responses.add(packet1);
@@ -129,11 +129,11 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
 
         } else if (identifier.equalsIgnoreCase("singleQuery")) {
 
-            if (!(executor instanceof AdvancedNetworkExecutor)) {
+            if (!(executor instanceof IHandlerNetworkExecutor)) {
                 throw new IllegalStateException("Can't execute SingleQuery from normal NetworkExecutor!");
             }
 
-            ((AdvancedNetworkExecutor)executor).registerSelfDestructivePacketHandler((PacketHandler<ResponsePacket>) (wrap, packet1) -> {
+            ((IHandlerNetworkExecutor)executor).registerSelfDestructivePacketHandler((PacketHandler<ResponsePacket>) (wrap, packet1) -> {
                 if (packet1.transferInfo().getInternalQueryId().equals(packet.transferInfo().getInternalQueryId())) {
                     task.setResult((R) packet1);
                 }
@@ -175,7 +175,7 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
                 //specific receiver(s) should receive the packet
                 for (String receiver : receivers) {
                     if (receiver.equalsIgnoreCase(executor.getName())) {
-                        ((AdvancedNetworkExecutor) executor).handlePacket(null, packet);
+                        ((IHandlerNetworkExecutor) executor).handlePacket(null, packet);
                         continue;
                     }
                     ClusterClientExecutor client = ((ClusterExecutor) executor).getClient(receiver).orElse(null);

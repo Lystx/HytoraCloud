@@ -2,7 +2,7 @@
 package cloud.hytora.driver.tps.def;
 
 import cloud.hytora.driver.tps.TickCounter;
-import cloud.hytora.driver.tps.TickWorker;
+import cloud.hytora.driver.tps.ICloudTickWorker;
 import lombok.Getter;
 
 @Getter
@@ -15,7 +15,7 @@ public class DefaultTickCounter implements TickCounter {
     private final double[] samples;
     private final long[] times;
 
-    public DefaultTickCounter(TickWorker tickWorker, int size) {
+    public DefaultTickCounter(ICloudTickWorker tickWorker, int size) {
         this.size = size;
         this.time = size * tickWorker.getSecondsInNano();
         this.total = tickWorker.getMaxTps() * tickWorker.getSecondsInNano() * size;

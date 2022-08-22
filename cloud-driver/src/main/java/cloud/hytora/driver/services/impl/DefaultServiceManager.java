@@ -2,7 +2,8 @@ package cloud.hytora.driver.services.impl;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.services.ServiceManager;
+import cloud.hytora.driver.event.IEventManager;
+import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 
 @Getter
 @Setter
-public abstract class DefaultServiceManager implements ServiceManager {
+public abstract class DefaultServiceManager implements ICloudServiceManager {
 
     /**
      * All cached {@link ICloudServer} stored in a {@link List}
@@ -30,7 +31,7 @@ public abstract class DefaultServiceManager implements ServiceManager {
 
     public DefaultServiceManager() {
         this.allCachedServices = new CopyOnWriteArrayList<>();
-        CloudDriver.getInstance().getEventManager().registerListener(this);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).registerListener(this);
     }
 
     public void setAllCachedServices(List<ICloudServer> allCachedServices) {
@@ -106,7 +107,7 @@ public abstract class DefaultServiceManager implements ServiceManager {
     @NotNull
     @Override
     public List<FallbackEntry> getAvailableFallbacks() {
-        return CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream()
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllCachedServices().stream()
                 .filter(ICloudServer::isReady)
                 .filter(it -> it.getServiceState() == ServiceState.ONLINE)
                 .filter(it -> it.getServiceVisibility() == ServiceVisibility.VISIBLE)
@@ -119,7 +120,7 @@ public abstract class DefaultServiceManager implements ServiceManager {
 
     @Override
     public @NotNull List<ICloudServer> getAvailableFallbacksAsServices() {
-        return CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream()
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllCachedServices().stream()
                 .filter(ICloudServer::isReady)
                 .filter(it -> it.getServiceState() == ServiceState.ONLINE)
                 .filter(it -> it.getServiceVisibility() == ServiceVisibility.VISIBLE)

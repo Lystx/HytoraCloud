@@ -9,6 +9,7 @@ import cloud.hytora.driver.exception.IncompatibleDriverEnvironment;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.IPacketExecutor;
 import cloud.hytora.driver.player.ICloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayerManager;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.utils.ServiceState;
@@ -116,7 +117,7 @@ public interface ICloudServer extends IClusterObject<ICloudServer>, NetworkCompo
      * @return the online amount of the service
      */
     default int getOnlinePlayerCount() {
-        return (int) CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()
+        return (int) CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getAllCachedCloudPlayers()
                 .stream()
                 .filter(it -> {
                     ICloudServer service = getTask().getVersion().isProxy() ? it.getProxyServer() : it.getServer();
@@ -128,7 +129,7 @@ public interface ICloudServer extends IClusterObject<ICloudServer>, NetworkCompo
      * @return the online amount of the service
      */
     default Collection<ICloudPlayer> getOnlinePlayers() {
-        return CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getAllCachedCloudPlayers()
                 .stream()
                 .filter(it -> {
                     ICloudServer service = getTask().getVersion().isProxy() ? it.getProxyServer() : it.getServer();

@@ -18,7 +18,7 @@ public class ModuleCloudSignAPI extends CloudSignAPI {
 
     private final ICloudSignManager signManager;
 
-    public ModuleCloudSignAPI(IModule module) {
+    public ModuleCloudSignAPI(ModuleBootstrap module) {
         super();
 
         this.signManager = new ModuleCloudSignManager(module.getController().getDataFolder());

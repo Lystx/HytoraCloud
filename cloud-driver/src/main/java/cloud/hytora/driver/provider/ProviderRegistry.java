@@ -5,6 +5,7 @@ import cloud.hytora.common.task.Task;
 
 import java.util.Collection;
 
+// TODO: 21.08.2022 documentation
 public interface ProviderRegistry {
 
     /**

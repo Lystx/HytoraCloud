@@ -1,14 +1,13 @@
 package cloud.hytora.node.console;
 
 import cloud.hytora.common.function.ExceptionallyBiConsumer;
-import cloud.hytora.common.logging.Logger;
-import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.console.Screen;
-import cloud.hytora.driver.console.ScreenManager;
-import org.jetbrains.annotations.Nullable;
+import cloud.hytora.driver.commands.ICommandManager;
+import cloud.hytora.driver.commands.sender.CommandSender;
+import cloud.hytora.driver.console.screen.Screen;
+import cloud.hytora.driver.console.screen.ScreenManager;
+import cloud.hytora.node.NodeDriver;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,38 +44,34 @@ public class NodeScreenManager implements ScreenManager {
         if (lastScreenName == null) {
             this.lastScreenName = screen.getName();
         }
-
-        if (CloudDriver.getInstance().getCommandManager() != null) {
-
-            CloudDriver.getInstance().getCommandManager().setActive(this.allCachedScreenSettings.get(screen.getName()));
-            CloudDriver.getInstance().getCommandManager().setInActiveHandler((ExceptionallyBiConsumer<CommandSender, String>) (sender, s) -> {
-                for (Consumer<? super String> inputHandler : (getCurrentScreen() == null ? new ArrayList<Consumer<? super String>>() : new ArrayList<>(getCurrentScreen().getInputHandlers()))) {
-                    inputHandler.accept(s);
-                }
-            });
-        }
-
+        CloudDriver.getInstance()
+                .getProviderRegistry()
+                .getUnchecked(ICommandManager.class)
+                .setActive(
+                        this.allCachedScreenSettings.get(screen.getName()),
+                        (ExceptionallyBiConsumer<CommandSender, String>) (commandSender, s) -> {
+                            for (Consumer<? super String> inputHandler : (getCurrentScreen() == null ? new ArrayList<Consumer<? super String>>() : new ArrayList<>(getCurrentScreen().getInputHandlers()))) {
+                                inputHandler.accept(s);
+                            }
+                        });
 
 
         screen.clear();
 
-        if (CloudDriver.getInstance().getCommandSender() == null) {
-            return;
-        }
-
         //re-displaying old cached lines
         for (String allCachedLine : new ArrayList<>(screen.getAllCachedLines())) {
-            CloudDriver.getInstance().getCommandSender().forceMessage(allCachedLine);
+            NodeDriver.getInstance().getCommandSender().forceMessage(allCachedLine);
         }
     }
 
     @Override
     public void leaveCurrentScreen() {
-        getCurrentScreen().getInputHandlers().clear();
+        if (getCurrentScreen() != null) {
+            getCurrentScreen().getInputHandlers().clear();
+        }
         this.currentScreenName = null;
 
-        CloudDriver.getInstance().getCommandManager().setInActiveHandler(null);
-        CloudDriver.getInstance().getCommandManager().setActive(true);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICommandManager.class).setActive(true, null);
         if (this.lastScreenName != null) {
             this.joinScreen(this.getScreenByNameOrNull(lastScreenName));
         }
@@ -94,9 +89,12 @@ public class NodeScreenManager implements ScreenManager {
 
 
     @Override
-    public void registerScreen(String name, boolean enableCommandManager) {
-        this.allCachedScreens.put(name, new NodeScreen(name));
+    public Screen registerScreen(String name, boolean enableCommandManager) {
+        NodeScreen screen = new NodeScreen(name);
+        this.allCachedScreens.put(name, screen);
         this.allCachedScreenSettings.put(name, enableCommandManager);
+
+        return screen;
     }
 
     @Override

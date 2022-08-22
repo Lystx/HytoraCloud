@@ -3,9 +3,9 @@ package cloud.hytora.driver.node.base;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
-import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
+import cloud.hytora.driver.networking.IHandlerNetworkExecutor;
 import cloud.hytora.driver.node.INode;
-import cloud.hytora.driver.node.NodeManager;
+import cloud.hytora.driver.node.INodeManager;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter @Setter
-public abstract class DefaultNodeManager implements NodeManager {
+public abstract class DefaultNodeManager implements INodeManager {
 
     protected List<INode> allCachedNodes;
 
@@ -39,7 +39,7 @@ public abstract class DefaultNodeManager implements NodeManager {
             return false;
         }
 
-        AdvancedNetworkExecutor executor = CloudDriver.getInstance().getExecutor();
+        IHandlerNetworkExecutor executor = CloudDriver.getInstance().getNetworkExecutor();
         INode headNode = this.getHeadNode();
 
         if (headNode == null) {

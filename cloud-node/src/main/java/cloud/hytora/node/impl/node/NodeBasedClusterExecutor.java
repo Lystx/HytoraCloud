@@ -6,6 +6,7 @@ import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.server.ServiceClusterConnectEvent;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.cluster.client.ClusterParticipant;
@@ -13,6 +14,7 @@ import cloud.hytora.driver.networking.cluster.client.SimpleClusterClientExecutor
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.packets.StorageUpdatePacket;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
+import cloud.hytora.driver.node.INodeManager;
 import cloud.hytora.driver.node.packet.NodeConnectionDataRequestPacket;
 import cloud.hytora.driver.node.packet.NodeConnectionDataResponsePacket;
 import cloud.hytora.driver.networking.protocol.packets.*;
@@ -22,10 +24,13 @@ import cloud.hytora.driver.node.data.DefaultNodeData;
 import cloud.hytora.driver.node.UniversalNode;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
 import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudServiceManager;
+import cloud.hytora.driver.storage.INetworkDocumentStorage;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.config.MainConfiguration;
 import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
 import cloud.hytora.driver.networking.cluster.ClusterExecutor;
+
 
 import io.netty.channel.ChannelHandlerContext;
 import lombok.Getter;
@@ -55,7 +60,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
         this.bootAsync().handlePacketsAsync().openConnection(this.hostName, this.port)
                 .registerListener(wrapper -> {
                     if (wrapper.isSuccess()) {
-                        NodeDriver.getInstance().getLogger().debug("Networking was successfully booted up and is ready to accept connections!");
+                        NodeDriver.getInstance().getLogger().info("Networking was successfully booted up and is ready to accept connections!");
                     } else {
                         wrapper.error().printStackTrace();
                     }
@@ -88,7 +93,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
 
                         INode currentNode = new UniversalNode(NodeDriver.getInstance().getNode().getConfig(), NodeDriver.getInstance().getNode().getLastCycleData());
 
-                        if (CloudDriver.getInstance().getNodeManager().getNode(nodeConfig.getNodeName()).isPresent()) {
+                        if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).getNode(nodeConfig.getNodeName()).isPresent()) {
                             wrapper.sendPacket(new NodeConnectionDataResponsePacket(nodeConfig.getNodeName(), NodeConnectionDataResponsePacket.PayLoad.ALREADY_NODE_EXISTS, currentNode));
                             return;
                         } else if (getNodeName().equalsIgnoreCase(nodeConfig.getNodeName())) {
@@ -102,7 +107,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
 
                             //right auth key -> registering node
                             INode node = new UniversalNode(nodeConfig, data);
-                            CloudDriver.getInstance().getNodeManager().registerNode(node);
+                            NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).registerNode(node);
 
                             NodeDriver.getInstance().getServiceQueue().dequeue();
 
@@ -113,13 +118,13 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
                     }
                 });
             } else {
-                Task<INode> node = CloudDriver.getInstance().getNodeManager().getNode(executor.getName());
-                node.ifPresent(CloudDriver.getInstance().getNodeManager()::unRegisterNode);
+                Task<INode> node = NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).getNode(executor.getName());
+                node.ifPresent(NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class)::unRegisterNode);
             }
         } else {
             if (state == ConnectionState.CONNECTED) {
                 // set online
-                ICloudServer service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(executor.getName());
+                ICloudServer service = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNull(executor.getName());
                 if (service == null) {
                     //other remote connection
 
@@ -127,7 +132,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
 
                     executor.sendPacket(new StorageUpdatePacket(
                             StorageUpdatePacket.StoragePayLoad.UPDATE,
-                            CloudDriver.getInstance().getStorage().getRawData()
+                            CloudDriver.getInstance().getProviderRegistry().getUnchecked(INetworkDocumentStorage.class).getRawData()
                     ));
 
                     if (executor.getName().equalsIgnoreCase("Application")) {
@@ -143,12 +148,12 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
 
                 service.sendPacket(new StorageUpdatePacket(
                         StorageUpdatePacket.StoragePayLoad.UPDATE,
-                        CloudDriver.getInstance().getStorage().getRawData()
+                        CloudDriver.getInstance().getProviderRegistry().getUnchecked(INetworkDocumentStorage.class).getRawData()
                 ));
 
                 service.update();
 
-                CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceClusterConnectEvent(service));
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(new ServiceClusterConnectEvent(service));
 
             } else {
                 String service = executor.getName();
@@ -157,9 +162,9 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
                     return;
                 }
                 NodeDriver base = NodeDriver.getInstance();
-                ICloudServer ICloudServer = base.getServiceManager().getServiceByNameOrNull(service);
+                ICloudServer ICloudServer = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNull(service);
                 if (ICloudServer != null) {
-                    CloudDriver.getInstance().getServiceManager().unregisterService(ICloudServer);
+                    CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).unregisterService(ICloudServer);
                 } else {
                     NodeDriver.getInstance().getLogger().warn("§a==> Channel §e{} - {} tried to disconnect but no matching Service was found!", executor.getName(), executor.getChannel());
                 }
@@ -244,7 +249,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
             switch (payLoad) {
                 case SUCCESS:
                     INode nodeInfo = packet.getNodeInfo();
-                    NodeDriver.getInstance().getNodeManager().registerNode(nodeInfo); //registering node that we connected to
+                    NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).registerNode(nodeInfo); //registering node that we connected to
                     CloudDriver.getInstance().getLogger().info("This Node §asuccessfully §7connected to §b{}§8.", nodeInfo);
                     break;
                 case WRONG_AUTH_KEY:

@@ -3,7 +3,7 @@ package cloud.hytora.driver.services.template.def;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.template.ServiceTemplate;
-import cloud.hytora.driver.services.template.TemplateManager;
+import cloud.hytora.driver.services.template.ITemplateManager;
 import cloud.hytora.driver.services.template.TemplateStorage;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 @Getter
-public class DefaultTemplateManager implements TemplateManager {
+public class DefaultTemplateManager implements ITemplateManager {
 
     /**
      * All cached storages

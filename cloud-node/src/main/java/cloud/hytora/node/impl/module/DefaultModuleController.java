@@ -8,7 +8,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.module.controller.AbstractModule;
 import cloud.hytora.driver.module.controller.ModuleClassLoader;
 import cloud.hytora.driver.module.ModuleController;
-import cloud.hytora.driver.module.ModuleManager;
+import cloud.hytora.driver.module.IModuleManager;
 import cloud.hytora.driver.module.controller.base.*;
 import cloud.hytora.driver.module.controller.task.ModuleTask;
 import cloud.hytora.driver.module.controller.task.ScheduledModuleTask;
@@ -27,13 +27,12 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 
 public class DefaultModuleController implements ModuleController {
 
-    private final ModuleManager manager;
+    private final IModuleManager manager;
     private final Path jarFile;
     private final ClassLoader mainClassLoader;
     private final Consumer<ModuleClassLoader> unregisterClassLoader;
@@ -48,7 +47,7 @@ public class DefaultModuleController implements ModuleController {
 
     private final Map<Object, Collection<HandlerMethod<ModuleTask>>> moduleTasks;
 
-    public DefaultModuleController(ClassLoader mainClassLoader, @Nonnull ModuleManager manager, @Nonnull Path jarFile, Consumer<ModuleClassLoader> unregisterClassLoader) {
+    public DefaultModuleController(ClassLoader mainClassLoader, @Nonnull IModuleManager manager, @Nonnull Path jarFile, Consumer<ModuleClassLoader> unregisterClassLoader) {
         this.mainClassLoader = mainClassLoader;
         this.manager = manager;
         this.jarFile = jarFile;
@@ -123,33 +122,16 @@ public class DefaultModuleController implements ModuleController {
 
         classLoader.setModule((module = abstractModule));
 
-
-        /*
-        if (!(instance instanceof AbstractModule)) {
-            throw new IllegalArgumentException(
-                    "Main class (" + moduleConfig.getMainClass() + ") does not extend "
-                            + AbstractModule.class.getName()
-                            + ", but "
-                            + instance.getClass().getSuperclass()
-            );
-        }
-        module = (AbstractModule) instance;
-        module.setController(this);
-        module.setHttpServer(NodeDriver.getInstance().getWebServer());
-        this.registerModuleTasks(module);
-
-        classLoader.setModule(module);*/
-
     }
 
     @Override
     public void loadModule() {
         synchronized (this) {
             if (module == null) return; // was never initialized
-            if (state != ModuleState.DISABLED) return; // must be disabled first
+            if (state != ModuleState.DISABLED && state != ModuleState.UNREGISTERED ) return; // must be disabled first
 
             this.reloadConfig();
-            Logger.constantInstance().info("Module " + module + " is being loaded...");
+            Logger.constantInstance().info("§e=> §fModule §b" + module + " §7is being loaded§8...");
             try {
 
                 state = ModuleState.LOADED;
@@ -170,7 +152,7 @@ public class DefaultModuleController implements ModuleController {
             if (module == null) return; // was never initialized
             if (state != ModuleState.LOADED) return; // must be loaded first
 
-            Logger.constantInstance().info("Module " + module + " is being enabled...");
+            Logger.constantInstance().info("§a=> §fModule §b" + module + " §7is being enabled§8...");
 
             try {
                 state = ModuleState.ENABLED;
@@ -191,7 +173,7 @@ public class DefaultModuleController implements ModuleController {
             if (module == null) return; // Was never initialized
             if (state == ModuleState.DISABLED) return; // Is already disabled
 
-            Logger.constantInstance().info("Module " + module + " is being disabled..");
+            Logger.constantInstance().info("§c=> §fModule " + module + " §7is being disabled§8...");
 
             try {
                 state = ModuleState.DISABLED;
@@ -250,7 +232,7 @@ public class DefaultModuleController implements ModuleController {
             for (HandlerMethod<ModuleTask> em : handlers) {
                 if (em.getObjects() != null && em.getObjects()[0] instanceof ScheduledModuleTask) {
                     ScheduledModuleTask scheduledModuleTask = (ScheduledModuleTask) em.getObjects()[0];
-                    Scheduler scheduler = CloudDriver.getInstance().getScheduler();
+                    Scheduler scheduler = Scheduler.runTimeScheduler();
 
                     long delay = scheduledModuleTask.delay();
                     boolean sync = scheduledModuleTask.sync();
@@ -340,7 +322,7 @@ public class DefaultModuleController implements ModuleController {
 
     @Nonnull
     @Override
-    public ModuleManager getManager() {
+    public IModuleManager getManager() {
         return manager;
     }
 

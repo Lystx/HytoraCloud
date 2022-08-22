@@ -3,6 +3,7 @@ package cloud.hytora.driver.services.template.def;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
+import cloud.hytora.driver.services.template.ITemplateManager;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
 import lombok.AllArgsConstructor;
@@ -48,7 +49,7 @@ public class CloudTemplate implements ServiceTemplate {
 
     @Override
     public TemplateStorage getStorage() {
-        return CloudDriver.getInstance().getTemplateManager().getStorage(this.storageName);
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ITemplateManager.class).getStorage(this.storageName);
     }
 
     @Override

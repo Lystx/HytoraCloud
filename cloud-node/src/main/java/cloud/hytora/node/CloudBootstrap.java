@@ -4,15 +4,14 @@ import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.common.logging.handler.HandledLogger;
-import cloud.hytora.common.logging.handler.LogEntry;
-import cloud.hytora.common.logging.handler.LogHandler;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.command.Console;
+import cloud.hytora.driver.console.Console;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
+import cloud.hytora.driver.node.INode;
 import cloud.hytora.node.console.handler.ConsoleLogHandler;
 import cloud.hytora.node.console.handler.FileLogHandler;
-import cloud.hytora.node.console.jline3.JLine3Console;
-import org.jetbrains.annotations.NotNull;
+import cloud.hytora.node.console.jline2.JLine2Console;
 
 import java.util.Arrays;
 
@@ -21,7 +20,7 @@ public class CloudBootstrap {
     public static void main(String[] args) {
 
         try {
-            Console console = new JLine3Console("§8| §bCloud §8» §b%screen% §8» §r");
+            Console console = new JLine2Console("§c%node%@§f%screen% §8» §r");
             HandledLogger logger = new HandledAsyncLogger(LogLevel.fromName(System.getProperty("cloud.logging.level", "INFO")));
 
             Logger.setFactory(logger.addHandler(new ConsoleLogHandler(console), new FileLogHandler()));
@@ -31,9 +30,9 @@ public class CloudBootstrap {
 
             String modulePath = Arrays.stream(args).filter(s -> s.startsWith("--moduleFolder=")).findFirst().orElse("--moduleFolder=modules/").split("=")[1];
 
-            CloudDriver driver = new NodeDriver(logger, console, Arrays.asList(args).contains("--devMode"), modulePath);
+            CloudDriver<INode> driver = new NodeDriver(logger, console, Arrays.asList(args).contains("--devMode"), modulePath);
 
-            logger.addHandler(entry -> driver.getEventManager().callEventGlobally(new DriverLogEvent(entry)));
+            logger.addHandler(entry -> driver.getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(new DriverLogEvent(entry)));
         } catch (Exception e) {
             e.printStackTrace();
         }

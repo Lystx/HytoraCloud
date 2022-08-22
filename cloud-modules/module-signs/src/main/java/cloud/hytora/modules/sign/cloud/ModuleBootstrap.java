@@ -1,11 +1,13 @@
 package cloud.hytora.modules.sign.cloud;
 
 import cloud.hytora.common.logging.Logger;
+import cloud.hytora.context.annotations.Constructor;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.commands.ICommandManager;
+import cloud.hytora.driver.event.IEventManager;
+import cloud.hytora.driver.message.IChannelMessenger;
+import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.controller.AbstractModule;
-import cloud.hytora.driver.module.controller.base.ModuleConfiguration;
-import cloud.hytora.driver.module.controller.base.ModuleCopyType;
-import cloud.hytora.driver.module.controller.base.ModuleEnvironment;
 import cloud.hytora.driver.module.controller.base.ModuleState;
 import cloud.hytora.driver.module.controller.task.ModuleTask;
 import cloud.hytora.modules.sign.api.CloudSignAPI;
@@ -13,18 +15,17 @@ import cloud.hytora.modules.sign.api.config.SignConfiguration;
 import cloud.hytora.modules.sign.cloud.command.ModuleCloudSignCommand;
 import cloud.hytora.modules.sign.cloud.handler.ModuleMessageHandler;
 import cloud.hytora.modules.sign.cloud.listener.ModuleServiceReadyListener;
+import lombok.Getter;
 
-@ModuleConfiguration(
-        name = "module-signs",
-        main = ModuleBootstrap.class,
-        author = "Lystx",
-        description = "Manages the sign selectors",
-        version = "SNAPSHOT-1.0",
-        website = "https://github.com/Lystx/HytoraCloud/tree/master/cloud-modules/module-signs",
-        copyType = ModuleCopyType.SERVER_FALLBACK,
-        environment = ModuleEnvironment.ALL
-)
-public class ModuleBootstrap extends AbstractModule {
+public class ModuleBootstrap {
+
+    @Getter
+    private final ModuleController controller;
+
+    @Constructor
+    public ModuleBootstrap(ModuleController controller) {
+        this.controller = controller;
+    }
 
     @ModuleTask(id = 1, state = ModuleState.LOADED)
     public void load() {
@@ -34,7 +35,6 @@ public class ModuleBootstrap extends AbstractModule {
     @ModuleTask(id = 2, state = ModuleState.LOADED)
     public void loadConfig() {
         SignConfiguration configuration;
-        Logger.constantInstance().debug("Loading signs config...");
         if (controller.getConfig().isEmpty()) {
             controller.getConfig().set(configuration = new SignConfiguration());
             controller.getConfig().save();
@@ -44,14 +44,13 @@ public class ModuleBootstrap extends AbstractModule {
 
         //setting value in api
         CloudSignAPI.getInstance().setSignConfiguration(configuration);
-        Logger.constantInstance().debug("Loaded config {}", CloudSignAPI.getInstance().getSignConfiguration());
     }
 
     @ModuleTask(id = 3, state = ModuleState.ENABLED)
     public void enable() {
-        CloudDriver.getInstance().getChannelMessenger().registerChannel(CloudSignAPI.CHANNEL_NAME, new ModuleMessageHandler());
-        CloudDriver.getInstance().getEventManager().registerListener(new ModuleServiceReadyListener());
-        CloudDriver.getInstance().getCommandManager().registerCommand(new ModuleCloudSignCommand());
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(IChannelMessenger.class).registerChannel(CloudSignAPI.CHANNEL_NAME, new ModuleMessageHandler());
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).registerListener(new ModuleServiceReadyListener());
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICommandManager.class).registerCommands(new ModuleCloudSignCommand());
 
 
         CloudSignAPI.getInstance().publishConfiguration();
@@ -61,8 +60,8 @@ public class ModuleBootstrap extends AbstractModule {
 
     @ModuleTask(id = 4, state = ModuleState.DISABLED)
     public void disable() {
-        CloudDriver.getInstance().getCommandManager().unregisterCommand(ModuleCloudSignCommand.class);
-        CloudDriver.getInstance().getChannelMessenger().unregisterChannel(CloudSignAPI.CHANNEL_NAME);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICommandManager.class).unregister(ModuleCloudSignCommand.class);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(IChannelMessenger.class).unregisterChannel(CloudSignAPI.CHANNEL_NAME);
     }
 
 }

@@ -7,7 +7,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.*;
 import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
-import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
+import cloud.hytora.driver.networking.IHandlerNetworkExecutor;
 import cloud.hytora.driver.networking.packets.DriverCallEventPacket;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,13 +20,13 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 
-public class DefaultEventManager implements EventManager {
+public class DefaultEventManager implements IEventManager {
 
 	private final Map<Class<? extends CloudEvent>, List<RegisteredListener>> listeners = new LinkedHashMap<>();
 
 	@Nonnull
 	@Override
-	public EventManager removeListener(@Nonnull RegisteredListener listener) {
+	public IEventManager removeListener(@Nonnull RegisteredListener listener) {
 		for (Class<? extends CloudEvent> aClass : listeners.keySet()) {
 			List<RegisteredListener> registeredListeners = new ArrayList<>(listeners.get(aClass));
 			registeredListeners.removeIf(current -> current == listener);
@@ -37,13 +37,13 @@ public class DefaultEventManager implements EventManager {
 
 	@Nonnull
 	@Override
-	public EventManager addListener(@Nonnull RegisteredListener listener) {
+	public IEventManager addListener(@Nonnull RegisteredListener listener) {
 		return addListeners(Collections.singletonList(listener));
 	}
 
 	@Nonnull
 	@Override
-	public EventManager addListeners(@Nonnull Collection<? extends RegisteredListener> listeners) {
+	public IEventManager addListeners(@Nonnull Collection<? extends RegisteredListener> listeners) {
 		for (RegisteredListener listener : listeners) {
 			List<RegisteredListener> registeredListeners = this.listeners.computeIfAbsent(listener.getEventClass(), key -> new ArrayList<>());
 			registeredListeners.add(listener);
@@ -54,7 +54,7 @@ public class DefaultEventManager implements EventManager {
 
 	@Nonnull
 	@Override
-	public EventManager registerListener(@Nonnull Object listener) {
+	public IEventManager registerListener(@Nonnull Object listener) {
 		for (Method method : ReflectionUtils.getMethodsAnnotatedWith(listener.getClass(), EventListener.class)) {
 
 			if (method.getParameterCount() != 1 || !Modifier.isPublic(method.getModifiers())) {
@@ -84,7 +84,7 @@ public class DefaultEventManager implements EventManager {
 
 	@Nonnull
 	@Override
-	public EventManager unregisterListener(@Nonnull Object holder) {
+	public IEventManager unregisterListener(@Nonnull Object holder) {
 		listeners.forEach((eventClass, listeners) -> listeners.removeIf(listener -> listener.getHolder() == listener));
 		return this;
 	}
@@ -120,7 +120,7 @@ public class DefaultEventManager implements EventManager {
 
 	@Nonnull
 	@Override
-	public EventManager unregisterListener(@Nonnull Class<?> listenerClass) {
+	public IEventManager unregisterListener(@Nonnull Class<?> listenerClass) {
 		for (Class<? extends CloudEvent> aClass : listeners.keySet()) {
 			List<RegisteredListener> registeredListeners = new ArrayList<>(listeners.get(aClass));
 			registeredListeners.removeIf(current -> current.getHolder().getClass() == listenerClass);
@@ -131,7 +131,7 @@ public class DefaultEventManager implements EventManager {
 
 	@Nonnull
 	@Override
-	public EventManager unregisterListeners(@Nonnull ClassLoader loader) {
+	public IEventManager unregisterListeners(@Nonnull ClassLoader loader) {
 		for (Class<? extends CloudEvent> aClass : listeners.keySet()) {
 			List<RegisteredListener> registeredListeners = new CopyOnWriteArrayList<>(listeners.get(aClass));
 			registeredListeners.removeIf(listener -> listener != null && listener.getHolder() != null && loader != null && listener.getHolder().getClass().getClassLoader().equals(loader));
@@ -142,7 +142,7 @@ public class DefaultEventManager implements EventManager {
 
 	@Nonnull
 	@Override
-	public EventManager unregisterAll() {
+	public IEventManager unregisterAll() {
 		listeners.clear();
 		return this;
 	}
@@ -161,7 +161,7 @@ public class DefaultEventManager implements EventManager {
 	@NotNull
 	@Override
 	public <E extends ProtocolTansferableEvent> E callEventOnlyPacketBased(@NotNull E event) {
-		AdvancedNetworkExecutor executor = CloudDriver.getInstance().getExecutor();
+		IHandlerNetworkExecutor executor = CloudDriver.getInstance().getNetworkExecutor();
 		executor.sendPacket(new DriverCallEventPacket(event));
 		return event;
 	}

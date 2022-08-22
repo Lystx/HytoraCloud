@@ -2,6 +2,7 @@ package cloud.hytora.node.impl.node;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.IProcessCloudServer;
 import cloud.hytora.driver.services.packet.ServiceForceShutdownPacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
@@ -29,7 +30,7 @@ public class BaseNode extends AbstractNode {
 
     @Override
     public void sendPacket(IPacket packet) {
-        NodeDriver.getInstance().getExecutor().handlePacket(NodeDriver.getInstance().getExecutor().getPacketChannel(), packet);
+        NodeDriver.getInstance().getNetworkExecutor().handlePacket(NodeDriver.getInstance().getNetworkExecutor().getPacketChannel(), packet);
     }
 
     @Override
@@ -45,7 +46,7 @@ public class BaseNode extends AbstractNode {
 
     @Override
     public List<ICloudServer> getRunningServers() {
-        return CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream().filter(s -> {
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllCachedServices().stream().filter(s -> {
             s.getTask();
             return s.getTask().getPossibleNodes().contains(this.config.getNodeName());
         }).collect(Collectors.toList());
@@ -53,7 +54,7 @@ public class BaseNode extends AbstractNode {
 
     @Override
     public Task<Collection<ICloudServer>> getRunningServersAsync() {
-        return Task.callAsync(() -> CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream().filter(s -> {
+        return Task.callAsync(() -> CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllCachedServices().stream().filter(s -> {
             s.getTask();
             return s.getRunningNodeName().equalsIgnoreCase(this.config.getNodeName());
         }).collect(Collectors.toList()));
@@ -91,7 +92,7 @@ public class BaseNode extends AbstractNode {
 
     @Override
     public void startServer(ICloudServer server) {
-        CloudDriver.getInstance().getServiceManager().startService(server);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).startService(server);
     }
 
     @Override

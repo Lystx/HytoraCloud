@@ -1,6 +1,7 @@
 package cloud.hytora.driver.common;
 
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.storage.INetworkDocumentStorage;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -27,6 +28,6 @@ public class CloudMessages {
     }
 
     public static CloudMessages getInstance() {
-        return CloudDriver.getInstance().getStorage().get("cloud::messages").toInstance(CloudMessages.class);
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(INetworkDocumentStorage.class).get("cloud::messages").toInstance(CloudMessages.class);
     }
 }

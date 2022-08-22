@@ -3,6 +3,7 @@ package cloud.hytora.driver.networking.packets;
 import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.ProtocolTansferableEvent;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
@@ -40,9 +41,9 @@ public class DriverCallEventPacket extends AbstractPacket {
                     if (event != null) {
                         event.applyBuffer(BufferState.READ, buf);
                         if (allowProtocolCall) {
-                            CloudDriver.getInstance().getEventManager().callEventGlobally(event); //make sure to prevent packet-transfer cycle
+                            CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(event); //make sure to prevent packet-transfer cycle
                         } else {
-                            CloudDriver.getInstance().getEventManager().callEventOnlyLocally(event); //make sure to prevent packet-transfer cycle
+                            CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventOnlyLocally(event); //make sure to prevent packet-transfer cycle
                         }
                     }
                 } catch (ClassNotFoundException e) {

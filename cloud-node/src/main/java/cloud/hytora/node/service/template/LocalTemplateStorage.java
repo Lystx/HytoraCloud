@@ -3,6 +3,7 @@ package cloud.hytora.node.service.template;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.IProcessCloudServer;
+import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.template.ServiceTemplate;
@@ -54,7 +55,7 @@ public class LocalTemplateStorage implements TemplateStorage {
     }
 
     private void checkIfTemplateFoldersNeeded() {
-        for (IServiceTask con : CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks()) {
+        for (IServiceTask con : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getAllCachedTasks()) {
             for (ServiceTemplate template : con.getTaskGroup().getTemplates()) {
                 this.createTemplate(template);
             }
@@ -72,7 +73,7 @@ public class LocalTemplateStorage implements TemplateStorage {
                 if (name.equalsIgnoreCase("GLOBAL") || name.equals("GLOBAL_SERVICE") || name.equals("GLOBAL_PROXY")) {
                     continue;
                 }
-                IServiceTask con = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
+                IServiceTask con = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskByNameOrNull(name);
                 if (con == null) {
                     FileUtils.deleteDirectory(file);
                 }
@@ -85,7 +86,7 @@ public class LocalTemplateStorage implements TemplateStorage {
         IServiceTask serviceTask = server.getTask();
 
         //do not perform if wrong node
-        if (!server.getRunningNodeName().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName())) {
+        if (!server.getRunningNodeName().equalsIgnoreCase(NodeDriver.getInstance().getNetworkExecutor().getNodeName())) {
             return;
         }
 
@@ -107,7 +108,7 @@ public class LocalTemplateStorage implements TemplateStorage {
     public void deployService(@NotNull ICloudServer server, @NotNull ServiceDeployment deployment) {
 
         //do not perform if wrong node
-        if (!server.getRunningNodeName().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName())) {
+        if (!server.getRunningNodeName().equalsIgnoreCase(NodeDriver.getInstance().getNetworkExecutor().getNodeName())) {
             return;
         }
 

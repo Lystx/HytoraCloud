@@ -8,6 +8,7 @@ import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.ICloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayerManager;
 import cloud.hytora.driver.player.TemporaryProperties;
 import lombok.*;
 import org.jetbrains.annotations.NotNull;
@@ -61,13 +62,13 @@ public class DefaultCloudOfflinePlayer implements CloudOfflinePlayer {
 
     @Override
     public boolean isOnline() {
-        return CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(this.uniqueId) != null;
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getCloudPlayerByUniqueIdOrNull(this.uniqueId) != null;
     }
 
     @Override
     public ICloudPlayer asOnlinePlayer() throws PlayerNotOnlineException {
         if (this.isOnline()) {
-            return CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(this.uniqueId);
+            return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getCloudPlayerByUniqueIdOrNull(this.uniqueId);
         }
         throw new PlayerNotOnlineException();
     }
@@ -86,7 +87,7 @@ public class DefaultCloudOfflinePlayer implements CloudOfflinePlayer {
 
     @Override
     public void saveOfflinePlayer() {
-        CloudDriver.getInstance().getPlayerManager().saveOfflinePlayerAsync(this);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).saveOfflinePlayerAsync(this);
     }
 
     @Nonnull

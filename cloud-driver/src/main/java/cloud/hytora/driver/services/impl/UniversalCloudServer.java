@@ -6,22 +6,22 @@ import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.gson.adapter.ExcludeJsonField;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
+import cloud.hytora.driver.services.*;
 import cloud.hytora.driver.services.packet.ServiceCommandPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
-import cloud.hytora.driver.services.IProcessCloudServer;
-import cloud.hytora.driver.services.IServiceCycleData;
-import cloud.hytora.driver.services.ServicePingProperties;
+import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
+import cloud.hytora.driver.services.template.ITemplateManager;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
 
-import cloud.hytora.driver.services.ICloudServer;
 import lombok.NoArgsConstructor;
 
 import lombok.Getter;
@@ -101,7 +101,7 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
 
     @Override
     public void deploy(ServiceDeployment... deployments) {
-        CloudDriver.getInstance().getTemplateManager().deployService(this, deployments);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ITemplateManager.class).deployService(this, deployments);
     }
 
     @Override
@@ -116,12 +116,12 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
 
     @Override
     public IServiceTask getTask() {
-        return CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(this.task);
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskByNameOrNull(this.task);
     }
 
     @Override
     public Task<IServiceTask> getTaskAsync() {
-        return CloudDriver.getInstance().getServiceTaskManager().getTaskByNameAsync(this.task);
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskByNameAsync(this.task);
     }
 
     @Override
@@ -132,7 +132,7 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
 
     @Override
     public void shutdown() {
-        CloudDriver.getInstance().getServiceManager().shutdownService(this);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).shutdownService(this);
     }
 
     @Override
@@ -158,18 +158,18 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
     }
 
     public void update() {
-        CloudDriver.getInstance().getServiceManager().updateService(this);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).updateService(this);
     }
 
     @Override
     public void sendPacket(IPacket packet) {
-        CloudDriver.getInstance().getServiceManager().sendPacketToService(this, packet);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).sendPacketToService(this, packet);
     }
 
     @Override
     public void setReady(boolean ready) {
         if (!this.ready && ready) { //if not ready yet but parameter is true
-            CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceReadyEvent(this.getName()));
+            CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(new ServiceReadyEvent(this.getName()));
         }
         this.ready = ready;
     }
@@ -206,7 +206,7 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
     }
 
     @Override
-    public void clone(ICloudServer from) {
+    public void copy(ICloudServer from) {
 
         this.setServiceState(from.getServiceState());
         this.setServiceVisibility(from.getServiceVisibility());

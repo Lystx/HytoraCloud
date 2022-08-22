@@ -1,15 +1,18 @@
 package cloud.hytora.driver.services.task;
 
 import cloud.hytora.common.task.Task;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.task.TaskMaintenanceChangeEvent;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.node.INode;
+import cloud.hytora.driver.node.INodeManager;
 import cloud.hytora.driver.property.ProtocolPropertyObject;
 import cloud.hytora.driver.services.ConfigurableService;
 import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.impl.DefaultConfigurableService;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.fallback.SimpleFallback;
@@ -37,7 +40,7 @@ import java.util.stream.Collectors;
 public class UniversalServiceTask extends ProtocolPropertyObject implements IServiceTask {
 
     private String name, parent;
-    private Collection<String>possibleNodes;
+    private Collection<String> possibleNodes;
     private String motd, permission;
     private int memory, defaultMaxPlayers, minOnlineService, maxOnlineService, startOrder;
     private boolean maintenance;
@@ -49,7 +52,7 @@ public class UniversalServiceTask extends ProtocolPropertyObject implements ISer
     private Collection<CloudTemplate> templates = new ArrayList<>();
 
     public void setTemplates(Collection<ServiceTemplate> templates) {
-        this.templates = templates.stream().map(t -> ((CloudTemplate)t)).collect(Collectors.toList());
+        this.templates = templates.stream().map(t -> ((CloudTemplate) t)).collect(Collectors.toList());
     }
 
     public Collection<ServiceTemplate> getTemplates() {
@@ -58,7 +61,7 @@ public class UniversalServiceTask extends ProtocolPropertyObject implements ISer
 
     @Override
     public INode findAnyNode() {
-        return this.possibleNodes.isEmpty() ? null : CloudDriver.getInstance().getNodeManager().getNodeByNameOrNull(this.possibleNodes.stream().findAny().get());
+        return this.possibleNodes.isEmpty() ? null : CloudDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).getNodeByNameOrNull(this.possibleNodes.stream().findAny().get());
     }
 
     @Override
@@ -93,21 +96,21 @@ public class UniversalServiceTask extends ProtocolPropertyObject implements ISer
     }
 
     public TaskGroup getTaskGroup() {
-        return CloudDriver
-                .getInstance()
-                .getServiceTaskManager()
+        return CloudDriver.getInstance()
+                .getProviderRegistry()
+                .getUnchecked(ICloudServiceTaskManager.class)
                 .getTaskGroupByNameOrNull(
                         this.parent);
     }
 
     @Override
     public List<ICloudServer> getOnlineServices() {
-        return CloudDriver.getInstance().getServiceManager().getAllServicesByTask(this);
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllServicesByTask(this);
     }
 
     @Override
     public void update() {
-        CloudDriver.getInstance().getServiceTaskManager().update(this);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).update(this);
     }
 
     @Override
@@ -164,13 +167,13 @@ public class UniversalServiceTask extends ProtocolPropertyObject implements ISer
     public void setMaintenance(boolean maintenance) {
         if (this.maintenance != maintenance) {
             //change incoming
-            CloudDriver.getInstance().getEventManager().callEventGlobally(new TaskMaintenanceChangeEvent(this, maintenance));
+            CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(new TaskMaintenanceChangeEvent(this, maintenance));
         }
         this.maintenance = maintenance;
     }
 
     @Override
-    public void clone(IServiceTask from) {
+    public void copy(IServiceTask from) {
 
         this.setName(from.getName());
         this.setPermission(from.getPermission());

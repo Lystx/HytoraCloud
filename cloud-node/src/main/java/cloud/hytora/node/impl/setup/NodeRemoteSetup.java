@@ -1,6 +1,6 @@
 package cloud.hytora.node.impl.setup;
 
-import cloud.hytora.driver.command.Console;
+import cloud.hytora.driver.console.Console;
 import cloud.hytora.driver.setup.Setup;
 import cloud.hytora.driver.setup.annotations.Question;
 import cloud.hytora.driver.setup.annotations.QuestionTip;

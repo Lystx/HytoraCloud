@@ -1,0 +1,11 @@
+{
+  "name": "module-hubcommand",
+  "description": "Adds a hub-command to the network",
+  "version": "SNAPSHOT-1.1",
+  "main": "cloud.hytora.modules.hubcommand.HubCommandModule",
+  "author": "Lystx",
+  "website": "https://github.com/Lystx/HytoraCloud/tree/master/cloud-modules/module-hubcommand",
+  "copy": "NONE",
+  "environment": "NODE",
+  "depends": []
+}

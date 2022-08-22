@@ -5,6 +5,26 @@
       "name": "module-proxy",
       "url": "{cloud.baseUrl}/{module.name}.jar",
       "version": "SNAPSHOT-1.2"
+    },
+    {
+      "name": "module-hubcommand",
+      "url": "{cloud.baseUrl}/{module.name}.jar",
+      "version": "SNAPSHOT-1.0"
+    },
+    {
+      "name": "module-notify",
+      "url": "{cloud.baseUrl}/{module.name}.jar",
+      "version": "SNAPSHOT-1.0"
+    },
+    {
+      "name": "module-perms",
+      "url": "{cloud.baseUrl}/{module.name}.jar",
+      "version": "SNAPSHOT-1.0"
+    },
+    {
+      "name": "module-signs",
+      "url": "{cloud.baseUrl}/{module.name}.jar",
+      "version": "SNAPSHOT-1.0"
     }
   ],
   "updates": [

@@ -7,6 +7,7 @@ import cloud.hytora.driver.event.ProtocolTansferableEvent;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudServiceManager;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -45,10 +46,10 @@ public class ServiceReadyEvent implements ProtocolTansferableEvent {
     }
 
     public ICloudServer getCloudServer() {
-        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(this.name);
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNull(this.name);
     }
 
     public Task<ICloudServer> getCloudServerAsync() {
-        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNullAsync(this.name);
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNullAsync(this.name);
     }
 }

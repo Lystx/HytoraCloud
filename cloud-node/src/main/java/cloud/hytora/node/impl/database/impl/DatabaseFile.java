@@ -5,6 +5,7 @@ import cloud.hytora.document.DocumentFactory;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
+import cloud.hytora.driver.node.INodeManager;
 import cloud.hytora.node.NodeDriver;
 
 
@@ -41,7 +42,7 @@ public class DatabaseFile implements IDatabase {
         File collectionFolder = new File(NodeDriver.STORAGE_FOLDER, collection + "/");
         try {
 
-            if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE && !CloudDriver.getInstance().getNodeManager().isHeadNode()) {
+            if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE && !NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
                 return collectionFolder;
             }
         } catch (Exception e) {

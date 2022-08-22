@@ -27,14 +27,6 @@ public class AbstractModule implements IModule {
 		controller.registerModuleTasks(moduleTasksClassInstance);
 	}
 
-	public void registerEvent(Object eventClassInstance) {
-		CloudDriver.getInstance().getEventManager().registerListener(eventClassInstance);
-	}
-
-	public void registerCommand(Object commandClassInstance) {
-		CloudDriver.getInstance().getCommandManager().registerCommand(commandClassInstance);
-	}
-
 	@Override
 	public String toString() {
 		return getController().getModuleConfig().getFullName() + " (" + getController().getJarFile().getFileName() + ")";

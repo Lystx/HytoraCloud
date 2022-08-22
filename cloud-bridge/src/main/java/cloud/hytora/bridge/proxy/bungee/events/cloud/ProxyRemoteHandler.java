@@ -8,6 +8,7 @@ import cloud.hytora.driver.component.event.ComponentEvent;
 import cloud.hytora.driver.component.event.click.ClickEvent;
 import cloud.hytora.driver.component.event.hover.HoverEvent;
 import cloud.hytora.driver.event.EventListener;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.driver.DriverCacheUpdateEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
@@ -18,7 +19,9 @@ import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
 import cloud.hytora.driver.player.packet.*;
 import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.task.IServiceTask;
+import cloud.hytora.driver.storage.INetworkDocumentStorage;
 import cloud.hytora.remote.Remote;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -34,7 +37,7 @@ public class ProxyRemoteHandler {
     public ProxyRemoteHandler() {
 
         //load all current groups
-        for (ICloudServer allCachedService : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
+        for (ICloudServer allCachedService : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllCachedServices()) {
             IServiceTask serviceGroup = allCachedService.getTask();
             if (!serviceGroup.getVersion().isProxy()) {
                 registerService(allCachedService);
@@ -42,26 +45,26 @@ public class ProxyRemoteHandler {
         }
 
         //register events
-        CloudDriver.getInstance().getEventManager().registerListener(this);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).registerListener(this);
 
         //register network handler
-        Remote.getInstance().getExecutor().registerPacketHandler(new KickHandler());
-        Remote.getInstance().getExecutor().registerPacketHandler(new SendHandler());
-        Remote.getInstance().getExecutor().registerPacketHandler(new MessageHandler());
-        Remote.getInstance().getExecutor().registerPacketHandler(new ComponentHandler());
-        Remote.getInstance().getExecutor().registerPacketHandler(new TabHandler());
+        Remote.getInstance().getNetworkExecutor().registerPacketHandler(new KickHandler());
+        Remote.getInstance().getNetworkExecutor().registerPacketHandler(new SendHandler());
+        Remote.getInstance().getNetworkExecutor().registerPacketHandler(new MessageHandler());
+        Remote.getInstance().getNetworkExecutor().registerPacketHandler(new ComponentHandler());
+        Remote.getInstance().getNetworkExecutor().registerPacketHandler(new TabHandler());
     }
 
     @EventListener
     public void handle(TaskMaintenanceChangeEvent event) {
         IServiceTask task = event.getTask();
-        CloudMessages cloudMessages = CloudDriver.getInstance().getStorage().get("cloud::messages").toInstance(CloudMessages.class);
+        CloudMessages cloudMessages = CloudDriver.getInstance().getProviderRegistry().getUnchecked(INetworkDocumentStorage.class).get("cloud::messages").toInstance(CloudMessages.class);
 
-        ICloudServer thisService = CloudDriver.getInstance().getServiceManager().thisServiceOrNull();
+        ICloudServer thisService = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).thisServiceOrNull();
 
         if (event.isNewMaintenanceValue() && task.getName().equalsIgnoreCase(thisService.getTask().getName())) {
 
-            List<String> whitelistedPlayers = CloudDriver.getInstance().getStorage().getBundle("cloud::whitelist").toInstances(String.class);
+            List<String> whitelistedPlayers = CloudDriver.getInstance().getProviderRegistry().getUnchecked(INetworkDocumentStorage.class).getBundle("cloud::whitelist").toInstances(String.class);
             for (ICloudPlayer cp : thisService.getOnlinePlayers()) {
                 if (whitelistedPlayers.contains(cp.getName())) {
                     PlayerExecutor.forPlayer(cp).sendMessage(cloudMessages.getMaintenanceKickByPassedMessage());
@@ -93,7 +96,7 @@ public class ProxyRemoteHandler {
     @EventListener
     public void handle(DriverCacheUpdateEvent event) {
         ProxyServer.getInstance().getServers().clear();
-        for (ICloudServer service : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
+        for (ICloudServer service : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllCachedServices()) {
             if (!service.getTask().getVersion().isProxy()) {
                 this.registerService(service);
             }

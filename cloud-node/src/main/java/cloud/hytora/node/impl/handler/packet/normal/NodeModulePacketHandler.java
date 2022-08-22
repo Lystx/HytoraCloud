@@ -2,6 +2,7 @@ package cloud.hytora.node.impl.handler.packet.normal;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.module.ModuleController;
+import cloud.hytora.driver.module.IModuleManager;
 import cloud.hytora.driver.module.controller.base.ModuleCopyType;
 import cloud.hytora.driver.module.packet.RemoteModuleExecutionPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
@@ -22,26 +23,26 @@ public class NodeModulePacketHandler implements PacketHandler<RemoteModuleExecut
 
         switch (payLoad) {
             case LOAD_MODULES:
-                CloudDriver.getInstance().getModuleManager().loadModules();
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(IModuleManager.class).loadModules();
                 break;
             case ENABLE_MODULES:
-                CloudDriver.getInstance().getModuleManager().enableModules();
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(IModuleManager.class).enableModules();
                 break;
             case DISABLE_MODULES:
-                CloudDriver.getInstance().getModuleManager().disableModules();
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(IModuleManager.class).disableModules();
                 break;
             case UNREGISTER_MODULES:
-                CloudDriver.getInstance().getModuleManager().unregisterModules();
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(IModuleManager.class).unregisterModules();
                 break;
             case RESOLVE_MODULES:
-                CloudDriver.getInstance().getModuleManager().resolveModules();
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(IModuleManager.class).resolveModules();
                 break;
             case RETRIEVE_MODULES:
-                wrapper.prepareResponse().buffer(buf -> buf.writeObjectCollection(CloudDriver.getInstance().getModuleManager().getModules())).execute(packet);
+                wrapper.prepareResponse().buffer(buf -> buf.writeObjectCollection(CloudDriver.getInstance().getProviderRegistry().getUnchecked(IModuleManager.class).getModules())).execute(packet);
                 break;
             case TRANSFER_MODULES:
                 ChanneledPacketAction<Void> response = wrapper.prepareResponse();
-                List<ModuleController> copyModules = CloudDriver.getInstance().getModuleManager().getModules().stream().filter(m -> m.getModuleConfig().getCopyType() != ModuleCopyType.NONE).collect(Collectors.toList());
+                List<ModuleController> copyModules = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IModuleManager.class).getModules().stream().filter(m -> m.getModuleConfig().getCopyType() != ModuleCopyType.NONE).collect(Collectors.toList());
                 response.buffer(buf -> buf.writeInt(copyModules.size()));
                 for (ModuleController module : copyModules) {
                     response.buffer(buf -> {

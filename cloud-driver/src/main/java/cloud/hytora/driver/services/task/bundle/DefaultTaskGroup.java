@@ -3,6 +3,7 @@ package cloud.hytora.driver.services.task.bundle;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
+import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
 import cloud.hytora.driver.services.task.TaskDownloadEntry;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
@@ -63,6 +64,6 @@ public class DefaultTaskGroup implements TaskGroup {
 
     @Override
     public Collection<IServiceTask> getChildren() {
-        return CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks().stream().filter(c -> c.getTaskGroup().getName().equals(this.name)).collect(Collectors.toList());
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getAllCachedTasks().stream().filter(c -> c.getTaskGroup().getName().equals(this.name)).collect(Collectors.toList());
     }
 }

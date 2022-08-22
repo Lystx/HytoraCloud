@@ -1,0 +1,11 @@
+{
+  "name": "module-notify",
+  "description": "Manages the notify module",
+  "version": "SNAPSHOT-1.2",
+  "main": "cloud.hytora.modules.notify.NotifyModule",
+  "author": "Lystx",
+  "website": "https://github.com/Lystx/HytoraCloud/tree/master/cloud-modules/module-notify",
+  "copy": "NONE",
+  "environment": "NODE",
+  "depends": []
+}

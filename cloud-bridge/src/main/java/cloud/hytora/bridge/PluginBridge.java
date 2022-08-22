@@ -2,6 +2,7 @@ package cloud.hytora.bridge;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
@@ -14,7 +15,8 @@ public interface PluginBridge {
     default void bootstrap() {
         //updating service
         CloudDriver.getInstance()
-                .getServiceManager()
+                .getProviderRegistry()
+                .getUnchecked(ICloudServiceManager.class)
                 .thisService()
                 .onTaskSucess(cloudServer -> {
                     cloudServer.setServiceVisibility(ServiceVisibility.VISIBLE);

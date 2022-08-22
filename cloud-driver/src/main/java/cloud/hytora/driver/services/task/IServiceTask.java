@@ -3,7 +3,7 @@ package cloud.hytora.driver.services.task;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.common.IPlaceHolderObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
-import cloud.hytora.driver.common.ICloneableObject;
+import cloud.hytora.driver.common.ICopyableObject;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.property.IPropertyObject;
 import cloud.hytora.driver.services.ConfigurableService;
@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 
-public interface IServiceTask extends IBufferObject, IPlaceHolderObject, IPropertyObject, ICloneableObject<IServiceTask> {
+public interface IServiceTask extends IBufferObject, IPlaceHolderObject, IPropertyObject, ICopyableObject<IServiceTask> {
 
     ConfigurableService configureFutureService();
 

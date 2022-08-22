@@ -3,6 +3,7 @@ package cloud.hytora.driver.player.executor;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.component.Component;
 import cloud.hytora.driver.player.ICloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayerManager;
 import cloud.hytora.driver.services.ICloudServer;
 
 import java.util.UUID;
@@ -19,35 +20,35 @@ public class GlobalPlayerExecutor implements PlayerExecutor {
 
     @Override
     public void sendMessage(String message) {
-        for (ICloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
+        for (ICloudPlayer player : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getAllCachedCloudPlayers()) {
             PlayerExecutor.forPlayer(player).sendMessage(message);
         }
     }
 
     @Override
     public void sendMessage(Component component) {
-        for (ICloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
+        for (ICloudPlayer player : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getAllCachedCloudPlayers()) {
             PlayerExecutor.forPlayer(player).sendMessage(component);
         }
     }
 
     @Override
     public void disconnect(String reason) {
-        for (ICloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
+        for (ICloudPlayer player : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getAllCachedCloudPlayers()) {
             PlayerExecutor.forPlayer(player).disconnect(reason);
         }
     }
 
     @Override
     public void setTabList(String header, String footer) {
-        for (ICloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
+        for (ICloudPlayer player : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getAllCachedCloudPlayers()) {
             PlayerExecutor.forPlayer(player).setTabList(header, footer);
         }
     }
 
     @Override
     public void connect(ICloudServer server) {
-        for (ICloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
+        for (ICloudPlayer player : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getAllCachedCloudPlayers()) {
             PlayerExecutor.forPlayer(player).connect(server);
         }
     }

@@ -1,56 +1,36 @@
 package cloud.hytora.driver;
 
 import cloud.hytora.common.DriverUtility;
-import cloud.hytora.common.collection.NamedThreadFactory;
 import cloud.hytora.common.logging.Logger;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.scheduler.def.DefaultScheduler;
 import cloud.hytora.context.IApplicationContext;
-import cloud.hytora.driver.command.CommandManager;
 import cloud.hytora.driver.common.IClusterObject;
-import cloud.hytora.driver.event.EventManager;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.DefaultEventManager;
-import cloud.hytora.driver.exception.CloudException;
 import cloud.hytora.driver.http.api.HttpRequest;
 import cloud.hytora.driver.http.api.HttpServer;
-import cloud.hytora.driver.message.ChannelMessage;
-import cloud.hytora.driver.message.ChannelMessenger;
-import cloud.hytora.driver.module.IModule;
-import cloud.hytora.driver.module.ModuleManager;
-import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
+import cloud.hytora.driver.networking.IHandlerNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.node.INode;
-import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.player.*;
 import cloud.hytora.common.scheduler.Scheduler;
-import cloud.hytora.driver.player.executor.PlayerExecutor;
 import cloud.hytora.driver.provider.ProviderRegistry;
 import cloud.hytora.driver.provider.defaults.DefaultProviderRegistry;
 import cloud.hytora.driver.services.ICloudServer;
-import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.task.ServiceTaskManager;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
-import cloud.hytora.driver.services.template.TemplateManager;
+import cloud.hytora.driver.services.template.ITemplateManager;
 import cloud.hytora.driver.services.template.def.DefaultTemplateManager;
-import cloud.hytora.driver.storage.DriverStorage;
-import cloud.hytora.driver.command.sender.CommandSender;
 
 import cloud.hytora.driver.networking.PacketProvider;
-import cloud.hytora.driver.tps.TickWorker;
+import cloud.hytora.driver.tps.ICloudTickWorker;
 import cloud.hytora.driver.tps.def.DefaultTickWorker;
-import cloud.hytora.driver.uuid.DriverUUIDCache;
 import io.netty.util.ResourceLeakDetector;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.JdkLoggerFactory;
 import lombok.Getter;
 import lombok.Setter;
-
-import javax.annotation.Nonnull;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 
 /**
@@ -61,7 +41,7 @@ import java.util.function.Supplier;
  * Or you could manage the {@link HttpServer} and create {@link HttpRequest} as you'd like to. <br>
  * Or you could manage all the different connected {@link INode}s and tell them to start or stop a certain Server
  * <br><br>
- * So you see a <b>CloudDriver</b> is the key to everything Code-Related that you wanna do concerning HytoraCloud
+ * So you see a <b>CloudDriver</b> is the key to everything Code-Related that you want to do concerning HytoraCloud
  * <br><br>
  *
  * @author Lystx
@@ -70,58 +50,6 @@ import java.util.function.Supplier;
  */
 @Getter
 public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUtility {
-
-    /**
-     * The static instance of this Driver
-     */
-    @Getter
-    private static CloudDriver<?> instance;
-
-    /**
-     * The current driver environment
-     */
-    protected final DriverEnvironment environment;
-
-    /**
-     * The default logger service
-     */
-    protected final Logger logger;
-
-    /**
-     * The provider registry to register/get providers
-     */
-    protected final ProviderRegistry providerRegistry;
-
-    /**
-     * The default event manager
-     */
-    protected final EventManager eventManager;
-
-    /**
-     * The default template manager
-     */
-    protected final TemplateManager templateManager;
-
-    /**
-     * The java executor service
-     */
-    protected final ScheduledExecutorService scheduledExecutor;
-
-    /**
-     * The tps manager
-     */
-    protected final TickWorker tickWorker;
-
-    /**
-     * The cloud provided scheduler api
-     */
-    protected final Scheduler scheduler;
-
-    /**
-     * If the current driver instance is running
-     */
-    @Setter
-    protected boolean running;
 
     /**
      * The interval that services take to publish their data to the cluster
@@ -134,7 +62,6 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
      * (here: 3 minutes)
      */
     public static final int SERVER_MAX_LOST_CYCLES = 2;
-
 
     /**
      * The interval that nodes take to publish their data to the cluster
@@ -153,10 +80,50 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
      */
     public static final String APPLICATION_NAME = "Application";
 
+
+    /**
+     * The static instance of this Driver
+     */
+    @Getter
+    private static CloudDriver<?> instance;
+
+    /**
+     * The current environment that defines this whole driver side
+     * It is important to check on which side a method or command or something
+     * else is being executed and to check which environment it is on you can use
+     * the lombok-generated getter-method
+     */
+    protected final DriverEnvironment environment;
+
+    /**
+     * The current logger instance that helps you to log all of your output
+     * If you want to display a colored message or debug something it is very useful
+     * You can also use the lombok-generated getter-method
+     */
+    protected final Logger logger;
+
+    /**
+     * The current ProviderRegistry instance.
+     * Very important to access all the managers you'd like to access
+     *
+     * @see ProviderRegistry for further information
+     */
+    protected final ProviderRegistry providerRegistry;
+
+    /**
+     * Variable to check if the current driver instance
+     * is still running or if it has been terminated already
+     *
+     * There is a lombok-generated setter-method for internal use
+     * Only use if you know what you are doing!
+     */
+    @Setter
+    protected boolean running;
+
     /**
      * Constructs a new {@link CloudDriver} instance with a provided {@link Logger} instance <br>
      * and a provided {@link DriverEnvironment} to declare the environment this Instance runs on
-     * Then setting default instances for Interfaces like {@link EventManager} or {@link Scheduler}
+     * Then setting default instances for Interfaces like {@link IEventManager} or {@link Scheduler}
      * and finally registering all {@link AbstractPacket}s
      * <br><br>
      *
@@ -164,16 +131,20 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
      * @param environment the environment
      */
     public CloudDriver(Logger logger, DriverEnvironment environment) {
-        instance = this;
+        instance = this; //setting instance to constructed driver
 
+        this.running = true;
         this.environment = environment;
         this.logger = logger;
-        this.eventManager = new DefaultEventManager(); //eventManager needs to come before Registry bc it is needed in Registry
-        this.providerRegistry = new DefaultProviderRegistry(true);
-        this.templateManager = new DefaultTemplateManager();
-        this.tickWorker = new DefaultTickWorker(20);
-        this.scheduler = Scheduler.runTimeScheduler();
-        this.scheduledExecutor = Executors.newScheduledThreadPool(4, new NamedThreadFactory("Scheduler"));
+
+        //registering default providers
+        IEventManager eventManager = new DefaultEventManager();
+        this.providerRegistry = new DefaultProviderRegistry(true, eventManager);
+        this.providerRegistry.setProvider(PlayerFullJoinExecutor.class, new DefaultFullJoinExecutor());
+        this.providerRegistry.setProvider(IEventManager.class, eventManager);
+        this.providerRegistry.setProvider(ICloudTickWorker.class, new DefaultTickWorker(20));
+        this.providerRegistry.setProvider(Scheduler.class, new DefaultScheduler());
+        this.providerRegistry.setProvider(ITemplateManager.class, new DefaultTemplateManager());
 
         // use jdk logger to prevent issues with older slf4j versions
         // like them bundled in spigot 1.8
@@ -192,11 +163,9 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
         if (System.getProperty("io.netty.leakDetection.level") == null) {
             ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
         }
+
+        //registering packets for current instance
         PacketProvider.registerPackets();
-
-        this.running = true;
-
-        this.providerRegistry.setProvider(PlayerFullJoinExecutor.class, new DefaultFullJoinExecutor());
     }
 
     /**
@@ -222,7 +191,6 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
     /**
      * Sends a message to the provided {@link NetworkComponent} and also logs this message<br>
      * to the <b>current Driver Instance</b>
-     * <br> <br>
      *
      * @param component the component to send a message to
      * @param message   the message to send (use {} to replace arguments)
@@ -235,171 +203,22 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
     }
 
     /**
-     * Public Method that tries to execute a given {@link Runnable} if a provided {@link Supplier} returns {@code true} <br>
-     * or until the provided timeout in milliseconds has expired from the start of the operation
-     * <br> <br>
+     * Returns the current {@link IHandlerNetworkExecutor} that is an extension
+     * of the normal {@link cloud.hytora.driver.networking.INetworkExecutor}<br>
+     * With the executor you can send Packets or listen to incoming packets etc.<br>
+     * You can also create and send queries to await for important responses!
      *
-     * @param runnable the runnable to execute
-     * @param request  the condition that has to be true
-     * @param timeOut  the timeOut for this request in milliseconds
+     * @return network instance
      */
-    public void executeIf(Runnable runnable, Supplier<Boolean> request, long timeOut) {
-        this.scheduledExecutor.execute(() -> {
-            long deadline = System.currentTimeMillis() + timeOut;
-            boolean done;
-
-            do {
-                done = request.get();
-                if (!done) {
-                    long msRemaining = deadline - System.currentTimeMillis();
-                    if (msRemaining < 0) {
-                        done = true;
-                    }
-                } else {
-                    runnable.run();
-                }
-            } while (!done);
-        });
-    }
+    public abstract IHandlerNetworkExecutor getNetworkExecutor();
 
     /**
-     * Executes a given {@link Runnable} if a provided {@link Supplier} returns {@code true} <br>
-     * with a default timeout of <b>1 DAY</b>
-     * <br> <br>
+     * Returns the current {@link IClusterObject} of this sides participant<br>
+     * For example if you call this method on a Node-Side it will return the current Node,<br>
+     * if you call it on the Service-Side it will return the current Service
      *
-     * @param runnable the runnable to execute
-     * @param request  the condition that has to be true
-     * @see CloudDriver#executeIf(Runnable, Supplier, long)
+     * @return cluster participant
      */
-    public void executeIf(Runnable runnable, Supplier<Boolean> request) {
-        this.executeIf(runnable, request, TimeUnit.DAYS.toMillis(1));
-    }
-
-    /**
-     * The current {@link DriverStorage} instance where
-     * you can store every type of data you want
-     * @see DriverStorage
-     */
-    @Nonnull
-    public abstract DriverStorage getStorage();
-
-    /**
-     * The current {@link CommandSender} instance where
-     * @see CommandSender
-     */
-    @Nonnull
-    public abstract CommandSender getCommandSender();
-
-    /**
-     * The current {@link NodeManager} instance where
-     * you can manage every {@link INode}
-     * @see NodeManager
-     */
-    @Nonnull
-    public abstract NodeManager getNodeManager();
-
-    /**
-     * The current {@link ChannelMessenger} instance where
-     * you can send and receive {@link ChannelMessage}s
-     * @see ChannelMessenger
-     */
-    @Nonnull
-    public abstract ChannelMessenger getChannelMessenger();
-
-    /**
-     * The current {@link CommandManager} instance where
-     * you manage every registered Command
-     * @see CommandManager
-     */
-    @Nonnull
-    public abstract CommandManager getCommandManager();
-
-    /**
-     * The current {@link PlayerManager} instance where
-     * you can manage every {@link ICloudPlayer} and {@link CloudOfflinePlayer}
-     * @see PlayerManager
-     */
-    @Nonnull
-    public abstract PlayerManager getPlayerManager();
-
-    /**
-     * The current {@link ServiceManager} instance where
-     * you can manage every {@link ICloudServer}
-     * @see ServiceManager
-     */
-    @Nonnull
-    public abstract ServiceManager getServiceManager();
-
-    /**
-     * The current {@link ModuleManager} instance where
-     * you can manage every {@link IModule}
-     * @see ModuleManager
-     */
-    @Nonnull
-    public abstract ModuleManager getModuleManager();
-
-    /**
-     * The current {@link DriverUUIDCache} instance where
-     * you can manage cached {@link java.util.UUID}s by their name
-     */
-    public abstract DriverUUIDCache getUUIDCache();
-
-    /**
-     * The current {@link ServiceTaskManager} instance where
-     * you can manage every {@link IServiceTask} and {@link TaskGroup}
-     * @see ServiceTaskManager
-     */
-    @Nonnull
-    public abstract ServiceTaskManager getServiceTaskManager();
-
-    public abstract IApplicationContext getApplicationContext();
-
-    /**
-     * The current {@link AdvancedNetworkExecutor} instance
-     * @see AdvancedNetworkExecutor
-     */
-    public abstract AdvancedNetworkExecutor getExecutor();
-
     public abstract T thisSidesClusterParticipant();
 
-    public <V> V thisSidesClusterParticipant(Class<V> typeClass) {
-        return (V) thisSidesClusterParticipant();
-    }
-
-
-
-    private static class DefaultFullJoinExecutor implements PlayerFullJoinExecutor {
-
-        @Override
-        public Task<Void> execute(ICloudPlayer cloudPlayer, boolean sentToHub, boolean disconnect) {
-
-            Task<Void> task = Task.empty();
-            boolean kickPlayersThatAreNotOnFallback = !cloudPlayer.isOnline(); // TODO: 02.08.2022 custom config
-            CloudDriver.getInstance().getProviderRegistry().get(PlayerFullJoinChecker.class).ifPresent(playerFullJoinExecutor -> {
-                int kickedPlayers = 0;
-                for (ICloudPlayer onlinePlayer : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
-                    if ((kickPlayersThatAreNotOnFallback && (onlinePlayer.getServer() == null || onlinePlayer.getServer().getTask().getFallback().isEnabled())) || playerFullJoinExecutor.compare(cloudPlayer, onlinePlayer).equals(cloudPlayer)) {
-                        PlayerExecutor playerExecutor = PlayerExecutor.forPlayer(onlinePlayer);
-                        if (sentToHub) {
-                            playerExecutor.sendToFallback();
-                        }
-                        if (disconnect) {
-                            playerExecutor.disconnect("§cA player with a higher priority joined");
-                        }
-                        kickedPlayers += 1;
-                    }
-                }
-
-
-                if (kickedPlayers > 0) {
-                    task.setResult(null);
-                } else {
-                    task.setFailure(new CloudException("No player with lower priority than self"));
-                }
-            });
-
-            return task;
-        }
-    }
 }
-

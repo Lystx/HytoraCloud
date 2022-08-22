@@ -2,6 +2,7 @@ package cloud.hytora.driver.services.task;
 
 import cloud.hytora.driver.CloudDriver;
 
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,13 +13,13 @@ import java.util.Collection;
 
 @Getter
 @Setter
-public abstract class DefaultServiceTaskManager implements ServiceTaskManager {
+public abstract class DefaultServiceTaskManager implements ICloudServiceTaskManager {
 
     protected Collection<IServiceTask> allCachedTasks = new ArrayList<>();
     protected Collection<TaskGroup> allTaskGroups = new ArrayList<>();
 
     public DefaultServiceTaskManager() {
-        CloudDriver.getInstance().getEventManager().registerListener(this);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).registerListener(this);
     }
 
     @Override

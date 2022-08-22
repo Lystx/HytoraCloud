@@ -1,12 +1,18 @@
 package cloud.hytora.node.impl.command.impl;
 
-import cloud.hytora.context.annotations.ApplicationParticipant;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.command.CommandScope;
-import cloud.hytora.driver.command.annotation.*;
-import cloud.hytora.driver.command.completer.TaskCompleter;
-import cloud.hytora.driver.command.sender.CommandSender;
+import cloud.hytora.driver.commands.context.CommandContext;
+import cloud.hytora.driver.commands.data.Command;
+import cloud.hytora.driver.commands.data.enums.AllowedCommandSender;
+import cloud.hytora.driver.commands.data.enums.CommandScope;
+import cloud.hytora.driver.commands.help.ArgumentHelp;
+import cloud.hytora.driver.commands.help.ArgumentHelper;
+import cloud.hytora.driver.commands.parameter.CommandArguments;
+import cloud.hytora.driver.commands.tabcomplete.TabCompleter;
+import cloud.hytora.driver.commands.tabcomplete.TabCompletion;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
+import cloud.hytora.driver.services.ICloudServiceManager;
+import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.task.bundle.DefaultTaskGroup;
 import cloud.hytora.driver.services.fallback.SimpleFallback;
@@ -27,48 +33,66 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
-@CommandDescription("Manages all service tasks")
-@Command({"task", "tasks"})
-@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
-@CommandPermission("cloud.command.use")
-@CommandAutoHelp
-@ApplicationParticipant
+@Command(
+        label = "task",
+        aliases = {"tasks"},
+        desc = "Manages all tasks",
+        invalidUsageIfEmptyInput = true,
+        autoHelpAliases = {"help", "?"}
+)
 public class TaskCommand {
 
-    
-    @Command("info")
-    @Syntax("<name>")
-    @CommandDescription("Shows info about a task")
-    public void execute(CommandSender sender, @Argument(value = "name", completer = TaskCompleter.class) String name) {
+    @ArgumentHelp
+    public void onArgumentHelp(ArgumentHelper helper) {
+        helper.performTemplateHelp();
+    }
 
-        IServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
+    @TabCompletion
+    public void onTabComplete(TabCompleter completer) {
+        completer.reactWithSubCommands("task");
+    }
 
+
+    @Command(
+            label = "info",
+            parent = "task",
+            usage = "<task>",
+            desc = "Gives info about a task",
+            scope = CommandScope.CONSOLE_AND_INGAME
+    )
+    public void infoCommand(CommandContext<?> ctx, CommandArguments args) {
+
+        IServiceTask task = args.get(0, IServiceTask.class);
         if (task == null) {
-            sender.sendMessage("§cThis ServiceTask does not exists");
+            ctx.sendMessage("§cThis ServiceTask does not exists");
             return;
         }
 
-        sender.sendMessage("§8");
-        sender.sendMessage("§bInformation§8: ");
-        sender.sendMessage("§bName: §f" + task.getName());
-        sender.sendMessage("§bTemplates: §f" + task.getTaskGroup().getTemplates().stream().map(ServiceTemplate::getPrefix).collect(Collectors.toList()));
-        sender.sendMessage("§bNode: §f" + task.getPossibleNodes());
-        sender.sendMessage("§bMemory: §f" + task.getMemory() + "MB");
-        sender.sendMessage("§bStartOrder: §f" + task.getStartOrder());
-        sender.sendMessage("§bJava: §f" + task.getJavaVersion());
-        sender.sendMessage("§bPermission: §f" + task.getPermission());
-        sender.sendMessage("§bProperties: §f" + task.getProperties().asRawJsonString());
-        sender.sendMessage("§bMaintenance: §f" + (task.isMaintenance() ? "§aYes" : "§cNo"));
-        sender.sendMessage("§bMin online services: §f" + task.getMinOnlineService());
-        sender.sendMessage("§bServices: §f" + task.getOnlineServices().size() + "/" + (task.getMaxOnlineService() == -1 ? "XXX" : String.valueOf(task.getMaxOnlineService())));
-        sender.sendMessage("§bBehaviour: §f" + task.getTaskGroup().getShutdownBehaviour());
-        sender.sendMessage("§bVersion: §f" + task.getVersion().getTitle());
-        sender.sendMessage("§8");
+        ctx.sendMessage("§8");
+        ctx.sendMessage("§bInformation§8: ");
+        ctx.sendMessage("§bName: §f" + task.getName());
+        ctx.sendMessage("§bTemplates: §f" + task.getTaskGroup().getTemplates().stream().map(ServiceTemplate::getPrefix).collect(Collectors.toList()));
+        ctx.sendMessage("§bNode: §f" + task.getPossibleNodes());
+        ctx.sendMessage("§bMemory: §f" + task.getMemory() + "MB");
+        ctx.sendMessage("§bStartOrder: §f" + task.getStartOrder());
+        ctx.sendMessage("§bJava: §f" + task.getJavaVersion());
+        ctx.sendMessage("§bPermission: §f" + task.getPermission());
+        ctx.sendMessage("§bProperties: §f" + task.getProperties().asRawJsonString());
+        ctx.sendMessage("§bMaintenance: §f" + (task.isMaintenance() ? "§aYes" : "§cNo"));
+        ctx.sendMessage("§bMin online services: §f" + task.getMinOnlineService());
+        ctx.sendMessage("§bServices: §f" + task.getOnlineServices().size() + "/" + (task.getMaxOnlineService() == -1 ? "XXX" : String.valueOf(task.getMaxOnlineService())));
+        ctx.sendMessage("§bBehaviour: §f" + task.getTaskGroup().getShutdownBehaviour());
+        ctx.sendMessage("§bVersion: §f" + task.getVersion().getTitle());
+        ctx.sendMessage("§8");
     }
-    @Command("create")
-    @CommandDescription("Creates a new task")
-    @CommandExecutionScope(CommandScope.CONSOLE)
-    public void executeCreate(CommandSender sender) {
+
+    @Command(
+            label = "create",
+            parent = "task",
+            desc = "Creates a task",
+            scope = CommandScope.CONSOLE
+    )
+    public void createCommand(CommandContext<?> ctx, CommandArguments args) {
 
         new TaskSetup(NodeDriver.getInstance().getConsole()).start((setup, state) -> {
             if (state == SetupControlState.FINISHED) {
@@ -89,7 +113,7 @@ public class TaskCommand {
 
                 UniversalServiceTask serviceTask = new UniversalServiceTask();
 
-                if (!CloudDriver.getInstance().getServiceTaskManager().getTaskGroupByName(parentName).isPresent()) {
+                if (!CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskGroupByName(parentName).isPresent()) {
                     DefaultTaskGroup parent = new DefaultTaskGroup(name, version.getEnvironment(), shutdownBehaviour, new String[]{
                             "-XX:+UseG1GC",
                             "-XX:+ParallelRefProcEnabled",
@@ -117,7 +141,7 @@ public class TaskCommand {
                             "-Dio.netty.recycler.maxCapacity.default=0",
                             "-Djline.terminal=jline.UnsupportedTerminal"
                     }, new ArrayList<>(), Collections.singleton(new CloudTemplate(name, "default", templateStorage, true)));
-                    CloudDriver.getInstance().getServiceTaskManager().addTaskGroup(parent);
+                    CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).addTaskGroup(parent);
                 }
 
                 serviceTask.setName(name);
@@ -153,7 +177,7 @@ public class TaskCommand {
                 serviceTask.setMinOnlineService(minServers);
                 serviceTask.setMaxOnlineService(maxServers);
 
-                CloudDriver.getInstance().getServiceTaskManager().addTask(serviceTask);
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).addTask(serviceTask);
 
                 //creating templates
                 for (ServiceTemplate template : serviceTask.getTaskGroup().getTemplates()) {
@@ -163,59 +187,71 @@ public class TaskCommand {
                     }
                 }
 
-                sender.sendMessage("§7The ServiceTask §b" + name + " §7was created§8!");
+                ctx.sendMessage("§7The ServiceTask §b" + name + " §7was created§8!");
                 NodeDriver.getInstance().getServiceQueue().dequeue();
-                DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+                DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());
 
             } else {
-                sender.sendMessage("§cNo ServiceTask has been created!");
+                ctx.sendMessage("§cNo ServiceTask has been created!");
             }
         });
     }
 
-    @Command("delete")
-    @Syntax("<name>")
-    @CommandDescription("Deletes a task")
-    public void executeDelete(CommandSender sender, @Argument(value = "name", completer = TaskCompleter.class) String name) {
-        IServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
+    @Command(
+            label = "delete",
+            parent = "task",
+            usage = "<task>",
+            desc = "Deletes a task",
+            scope = CommandScope.CONSOLE_AND_INGAME
+    )
+    public void deleteCommand(CommandContext<?> ctx, CommandArguments args) {
+        IServiceTask task = args.get(0, IServiceTask.class);
         if (task == null) {
-            sender.sendMessage("§cThere is no existing ServiceTask with the name §e" + name + "§c!");
+            ctx.sendMessage("§cThere is no existing ServiceTask with the name §e" + args.get(0) + "§c!");
             return;
         }
-        CloudDriver.getInstance().getServiceTaskManager().removeTask(task);
-        CloudDriver.getInstance().getServiceManager().getAllServicesByTask(task).forEach(ser -> CloudDriver.getInstance().getServiceManager().shutdownService(ser));
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).removeTask(task);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllServicesByTask(task).forEach(ser -> CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).shutdownService(ser));
 
-        sender.sendMessage("§7The ServiceTask §b" + task.getName() + " §7was deleted§8!");
+        ctx.sendMessage("§7The ServiceTask §b" + task.getName() + " §7was deleted§8!");
     }
 
-    @Command("toggleMaintenance")
-    @Syntax("<name>")
-    @CommandDescription("Toggles maintenance mode for a task")
-    public void executeToggleMaintenance(CommandSender sender, @Argument(value = "name", completer = TaskCompleter.class) String name) {
-        IServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
+    @Command(
+            label = "toggleMaintenance",
+            parent = "task",
+            usage = "<task>",
+            desc = "Toggles maintenance for a task",
+            scope = CommandScope.CONSOLE_AND_INGAME
+    )
+    public void toggleMaintenanceTask(CommandContext<?> ctx, CommandArguments args) {
+        IServiceTask task = args.get(0, IServiceTask.class);
         if (task == null) {
-            sender.sendMessage("§cThere is no existing ServiceTask with the name §e" + name + "§c!");
+            ctx.sendMessage("§cThere is no existing ServiceTask with the name §e" + args.get(0) + "§c!");
             return;
         }
         boolean maintenance = !task.isMaintenance();
         task.setMaintenance(maintenance);
         task.update();
 
-        sender.sendMessage("§7The maintenance state of ServiceTask §b" + task.getName() + " §7is now " + (maintenance ? "§aEnabled": "§cDisabled") + "§8!");
+        ctx.sendMessage("§7The maintenance state of ServiceTask §b" + task.getName() + " §7is now " + (maintenance ? "§aEnabled": "§cDisabled") + "§8!");
     }
 
-    @Command("list")
-    @CommandDescription("Lists all configurations")
-    public void executeList(CommandSender sender) {
-        Collection<IServiceTask> cachedTasks = CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks();
+    @Command(
+            label = "list",
+            parent = "task",
+            desc = "Lists all tasks",
+            scope = CommandScope.CONSOLE_AND_INGAME
+    )
+    public void listCommand(CommandContext<?> ctx, CommandArguments args) {
+        Collection<IServiceTask> cachedTasks = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getAllCachedTasks();
         if (cachedTasks.isEmpty()) {
-            sender.sendMessage("§cThere are no ServiceTasks cached at the moment!");
+            ctx.sendMessage("§cThere are no ServiceTasks cached at the moment!");
             return;
         }
-        sender.sendMessage("§8");
+        ctx.sendMessage("§8");
         for (IServiceTask g : cachedTasks) {
-            sender.sendMessage("§8=> §b" + g.getName() + " §8(§b" + (g.getVersion().isProxy() ? "PROXY" : "MINECRAFT") + "§8)");
+            ctx.sendMessage("§8=> §b" + g.getName() + " §8(§b" + (g.getVersion().isProxy() ? "PROXY" : "MINECRAFT") + "§8)");
         }
-        sender.sendMessage("§8");
+        ctx.sendMessage("§8");
     }
 }

@@ -34,6 +34,7 @@ import java.util.function.Supplier;
  * The immutable changed can be retrieved or change using {@link Task#isImmutable()}
  * and {@link Task#setImmutable(boolean)} at any time
  */
+// TODO: 22.08.2022 full documentation
 public interface Task<T> extends Serializable {
 
     /**
@@ -118,7 +119,7 @@ public interface Task<T> extends Serializable {
         return new SimpleTask<T>(value).setImmutable(immutable);
     }
 
-    static Task<Void> runSync(@Nonnull Runnable runnable) {
+    static Task<java.lang.Void> runSync(@Nonnull Runnable runnable) {
         return callSync(() -> {
             runnable.run();
             return null;
@@ -126,27 +127,27 @@ public interface Task<T> extends Serializable {
     }
 
 
-    static Task<TaskHolder> runTaskLater(@NotNull Runnable runnable, TimeUnit unit, long delay) {
-        Task<TaskHolder> task = Task.empty();
+    static Task<Null> runTaskLater(@NotNull Runnable runnable, TimeUnit unit, long delay) {
+        Task<Null> task = Task.empty();
         Scheduler.runTimeScheduler().scheduleDelayedTask(() -> {
             runnable.run();
-            task.setResult(TaskHolder.INSTANCE);
+            task.setResult(Null.INSTANCE);
         }, unit.toMillis(delay));
         return task;
     }
 
-    static Task<Void> runAsync(@Nonnull Runnable runnable) {
+    static Task<java.lang.Void> runAsync(@Nonnull Runnable runnable) {
         return callAsync(() -> {
             runnable.run();
             return null;
         });
     }
 
-    static Task<Void> runExceptionally(@Nonnull ExceptionallyRunnable runnable) {
+    static Task<java.lang.Void> runExceptionally(@Nonnull ExceptionallyRunnable runnable) {
         return runSync(runnable);
     }
 
-    static Task<Void> runAsyncExceptionally(@Nonnull ExceptionallyRunnable runnable) {
+    static Task<java.lang.Void> runAsyncExceptionally(@Nonnull ExceptionallyRunnable runnable) {
         return runAsync(runnable);
     }
 

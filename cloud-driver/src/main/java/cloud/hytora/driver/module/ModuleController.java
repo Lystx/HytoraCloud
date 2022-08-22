@@ -30,7 +30,7 @@ public interface ModuleController extends IBufferObject {
 	void unregisterModule();
 
 	@Nonnull
-	ModuleManager getManager();
+    IModuleManager getManager();
 
 	@Nonnull
 	Path getJarFile();
@@ -55,4 +55,7 @@ public interface ModuleController extends IBufferObject {
 
 	void registerModuleTasks(Object classHolder);
 
+	void initConfig() throws Exception;
+
+	void initModule() throws Exception;
 }

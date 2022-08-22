@@ -1,0 +1,11 @@
+{
+  "name": "module-rest",
+  "description": "Manages the rest api",
+  "version": "SNAPSHOT-1.0",
+  "main": "cloud.hytora.modules.rest.RestModule",
+  "author": "Lystx",
+  "website": "https://github.com/Lystx/HytoraCloud/tree/master/cloud-modules/module-rest",
+  "copy": "NODE",
+  "environment": "NODE",
+  "depends": []
+}

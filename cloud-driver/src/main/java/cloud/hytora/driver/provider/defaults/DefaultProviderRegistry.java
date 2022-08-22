@@ -1,8 +1,10 @@
 
 package cloud.hytora.driver.provider.defaults;
 
+import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.provider.*;
 
 import java.util.Collection;
@@ -14,9 +16,11 @@ public class DefaultProviderRegistry implements ProviderRegistry {
 
     private final Map<Class<?>, ProviderEntry<?>> entries;
     private final boolean registerInstancesAsEventListener;
+    private final IEventManager eventManager;
 
-    public DefaultProviderRegistry(boolean registerInstancesAsEventListener) {
+    public DefaultProviderRegistry(boolean registerInstancesAsEventListener, IEventManager eventManager) {
         this.registerInstancesAsEventListener = registerInstancesAsEventListener;
+        this.eventManager = eventManager;
         this.entries = new ConcurrentHashMap<>();
     }
 
@@ -28,12 +32,9 @@ public class DefaultProviderRegistry implements ProviderRegistry {
         }
 
         if (registerInstancesAsEventListener) {
-            CloudDriver.getInstance().getEventManager().registerListener(provider);
+            eventManager.registerListener(provider);
         }
         this.entries.put(service, new DefaultProviderEntry<>(service, provider, immutable, needsReplacement));
-        CloudDriver.getInstance().executeIf(() -> {
-            CloudDriver.getInstance().getApplicationContext().setInstance(service.getSimpleName(), provider);
-        }, () -> CloudDriver.getInstance().getApplicationContext() != null);
         return Task.build(provider);
     }
 
@@ -94,7 +95,7 @@ public class DefaultProviderRegistry implements ProviderRegistry {
             throw new ProviderNeedsReplacementException(service);
         }
 
-        CloudDriver.getInstance().getEventManager().unregisterListener(service);
+        eventManager.unregisterListener(service);
         this.entries.remove(service);
     }
 

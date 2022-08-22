@@ -34,6 +34,39 @@ public final class CollectionUtils {
 		logMappingError = false;
 	}
 
+
+	/**
+	 * Checks if the array contains given value
+	 *
+	 * @param array The array
+	 * @param v     The value
+	 * @param <V>   The type of the value
+	 * @return The result
+	 */
+	public static <V> boolean contains(V[] array, V v) {
+		return Arrays.asList(array).contains(v);
+	}
+	/**
+	 * Sorts given map by given comparator
+	 *
+	 * @param map        The map
+	 * @param comparator The comparator to sort the map
+	 * @param <K>        The key type
+	 * @param <V>        The value type
+	 * @return The sorted map
+	 */
+	public static <K, V> Map<K, V> sortMapByValue(Map<K, V> map, Comparator<Map.Entry<K, V>> comparator) {
+		List<Map.Entry<K, V>> list = new LinkedList<>(map.entrySet());
+		list.sort(comparator);
+
+		Map<K, V> result = new LinkedHashMap<>();
+		for(Map.Entry<K, V> entry : list) {
+			result.put(entry.getKey(), entry.getValue());
+		}
+		return result;
+	}
+
+
 	/**
 	 * You should not use this to serialize maps due to it's unsafe because of strings which may contain the regex chars = or ,
 	 * Use better and safer serialization strategies like json.

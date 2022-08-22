@@ -1,8 +1,6 @@
 package cloud.hytora.node.impl.setup.database;
 
-import cloud.hytora.common.function.BiSupplier;
-import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.command.Console;
+import cloud.hytora.driver.console.Console;
 import cloud.hytora.driver.setup.Setup;
 import cloud.hytora.driver.setup.annotations.Question;
 import lombok.Getter;

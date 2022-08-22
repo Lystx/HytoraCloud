@@ -6,6 +6,7 @@ import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
+import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.modules.sign.api.ICloudSign;
 import lombok.AllArgsConstructor;
@@ -55,11 +56,11 @@ public class UniversalCloudSign implements ICloudSign {
 
     @Override
     public Task<IServiceTask> findTaskAsync() {
-        return CloudDriver.getInstance().getServiceTaskManager().getTaskByNameAsync(this.taskName);
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskByNameAsync(this.taskName);
     }
 
     @Override
     public IServiceTask findTask() {
-        return CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(this.taskName);
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskByNameOrNull(this.taskName);
     }
 }

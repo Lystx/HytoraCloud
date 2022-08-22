@@ -1,13 +1,19 @@
 package cloud.hytora.bridge.proxy.bungee;
 
-import cloud.hytora.bridge.proxy.bungee.adapter.BungeeLocalProxyPlayer;
 import cloud.hytora.bridge.proxy.bungee.events.cloud.ProxyRemoteHandler;
 import cloud.hytora.bridge.proxy.bungee.events.server.ProxyPlayerCommandListener;
 import cloud.hytora.bridge.proxy.bungee.events.server.ProxyPingListener;
 import cloud.hytora.bridge.proxy.bungee.events.server.ProxyPlayerConnectionListener;
 import cloud.hytora.bridge.proxy.bungee.utils.CloudReconnectHandler;
 
+import cloud.hytora.common.logging.Logger;
 import cloud.hytora.document.DocumentFactory;
+import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.commands.data.DriverCommand;
+import cloud.hytora.driver.commands.data.enums.CommandType;
+import cloud.hytora.driver.commands.events.CommandRegisterEvent;
+import cloud.hytora.driver.event.EventListener;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.IServiceCycleData;
 import cloud.hytora.driver.services.impl.DefaultServiceCycleData;
@@ -15,13 +21,11 @@ import cloud.hytora.driver.services.utils.*;
 import cloud.hytora.bridge.PluginBridge;
 import cloud.hytora.bridge.proxy.bungee.events.server.ProxyPlayerServerListener;
 import cloud.hytora.remote.Remote;
-import cloud.hytora.remote.adapter.proxy.RemoteProxyAdapter;
-import cloud.hytora.remote.adapter.proxy.LocalProxyPlayer;
+import cloud.hytora.remote.adapter.RemoteProxyAdapter;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
 
 import java.net.InetSocketAddress;
-import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -35,8 +39,14 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
             remote.nexCacheUpdate().syncUninterruptedly().get();
         }
 
-        ProxyServer.getInstance().setReconnectHandler(new CloudReconnectHandler());
+        //setting bridge adapter
         Remote.getInstance().setAdapter(this);
+
+        //setting reconnect handler
+        ProxyServer.getInstance().setReconnectHandler(new CloudReconnectHandler());
+
+        //registering as listener
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).registerListener(this);
     }
 
     @Override
@@ -60,11 +70,20 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
 
     @Override
     public void onDisable() {
-        ICloudServer ICloudServer = Remote.getInstance().thisService();
-        ICloudServer.setServiceState(ServiceState.STOPPING);
-        ICloudServer.setReady(false);
-        ICloudServer.setServiceVisibility(ServiceVisibility.INVISIBLE);
-        ICloudServer.update();
+        ICloudServer cloudServer = Remote.getInstance().thisSidesClusterParticipant();
+        cloudServer.setReady(false);
+        cloudServer.setServiceState(ServiceState.STOPPING);
+        cloudServer.setServiceVisibility(ServiceVisibility.INVISIBLE);
+        cloudServer.update();
+    }
+
+
+    @EventListener
+    public void handle(CommandRegisterEvent event) {
+        DriverCommand command = event.getCommand();
+        if (command.getCommandType() == CommandType.ROOT) {
+            Logger.constantInstance().info("Registered Command[name={}, permission={}, path={}, desc={}]", command.getNames(), command.getPermission(), command.getPath(), command.getDescription());
+        }
     }
 
     @Override
@@ -95,10 +114,6 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
         ));
     }
 
-    @Override
-    public Collection<LocalProxyPlayer> getPlayers() {
-        return ProxyServer.getInstance().getPlayers().stream().map(BungeeLocalProxyPlayer::new).collect(Collectors.toList());
-    }
 
     @Override
     public void registerService(ICloudServer server) {

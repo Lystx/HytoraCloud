@@ -5,13 +5,18 @@ import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.context.annotations.Constructor;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.commands.ICommandManager;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.controller.AbstractModule;
 import cloud.hytora.driver.module.controller.base.ModuleState;
 import cloud.hytora.driver.module.controller.task.ModuleTask;
 import cloud.hytora.driver.player.ICloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayerManager;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
 import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudServiceManager;
+import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 import cloud.hytora.modules.proxy.command.ProxyCommand;
@@ -44,7 +49,6 @@ public class ProxyModule {
 
     public ProxyModule(ModuleController controller) {
         this.controller = controller;
-        System.out.println("Loaded ModuleController => " + controller);
     }
 
     @ModuleTask(id = 1, state = ModuleState.LOADED)
@@ -57,8 +61,8 @@ public class ProxyModule {
     @ModuleTask(id = 2, state = ModuleState.ENABLED)
     public void enable() {
 
-        CloudDriver.getInstance().getEventManager().registerListener(new ModuleListener());
-        CloudDriver.getInstance().getCommandManager().registerCommand(new ProxyCommand());
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).registerListener(new ModuleListener());
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICommandManager.class).registerCommands(new ProxyCommand());
 
         //scheduling tab update
         Scheduler.runTimeScheduler().scheduleRepeatingTask(this::updateTabList, 0L, (long) (proxyConfig.getTablist().getAnimationInterval() * 1000));
@@ -66,8 +70,8 @@ public class ProxyModule {
 
     @ModuleTask(id = 3, state = ModuleState.DISABLED)
     public void disable() {
-        CloudDriver.getInstance().getEventManager().unregisterListener(ModuleListener.class);
-        CloudDriver.getInstance().getCommandManager().unregisterCommand(ProxyCommand.class);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).unregisterListener(ModuleListener.class);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICommandManager.class).unregister(ProxyCommand.class);
     }
 
 
@@ -99,7 +103,7 @@ public class ProxyModule {
         final String[] footer = {tabList[1]};
 
         //setting tabList
-        for (ICloudPlayer cloudPlayer : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
+        for (ICloudPlayer cloudPlayer : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getAllCachedCloudPlayers()) {
             cloudPlayer.getProxyServerAsync().onTaskSucess(proxyServer -> {
 
                 PlayerExecutor executor = PlayerExecutor.forPlayer(cloudPlayer);
@@ -118,10 +122,10 @@ public class ProxyModule {
                 footer[0] = footer[0].replace("{service}", (cloudPlayer.getServer() == null ? "UNKNOWN" : cloudPlayer.getServer().getName()));
 
                 //player placeholder
-                header[0] = header[0].replace("{players.online}", "" + CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers().size());
-                footer[0] = footer[0].replace("{players.online}", "" + CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers().size());
-                footer[0] = footer[0].replace("{players.max}", "" + CloudDriver.getInstance().getPlayerManager().countPlayerCapacity());
-                header[0] = header[0].replace("{players.max}", "" + CloudDriver.getInstance().getPlayerManager().countPlayerCapacity());
+                header[0] = header[0].replace("{players.online}", "" + CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getAllCachedCloudPlayers().size());
+                footer[0] = footer[0].replace("{players.online}", "" + CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getAllCachedCloudPlayers().size());
+                footer[0] = footer[0].replace("{players.max}", "" + CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).countPlayerCapacity());
+                header[0] = header[0].replace("{players.max}", "" + CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).countPlayerCapacity());
 
                 executor.setTabList(header[0], footer[0]);
             });
@@ -130,13 +134,13 @@ public class ProxyModule {
     }
 
     public void updateMotd() {
-        for (IServiceTask serviceTask : CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks().stream().filter(t -> t.getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY).collect(Collectors.toList())) {
+        for (IServiceTask serviceTask : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getAllCachedTasks().stream().filter(t -> t.getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY).collect(Collectors.toList())) {
 
             MotdLayOut motd = selectMotd(serviceTask);
             if (motd == null) {
                 continue;
             }
-            for (ICloudServer ICloudServer : CloudDriver.getInstance().getServiceManager().getAllServicesByEnvironment(SpecificDriverEnvironment.PROXY)) {
+            for (ICloudServer ICloudServer : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllServicesByEnvironment(SpecificDriverEnvironment.PROXY)) {
                 ICloudServer.editPingProperties(ping -> {
                     ping.setMotd(replaceDefault(ICloudServer, (motd.getFirstLine() + "\n" + motd.getSecondLine())));
                     ping.setVersionText(replaceDefault(ICloudServer, motd.getProtocolText()));
@@ -158,7 +162,7 @@ public class ProxyModule {
         return content
                 .replace("{proxy}", info.getName())
                 .replace("{node}", info.getRunningNodeName())
-                .replace("{players.online}", CloudDriver.getInstance().getPlayerManager().getCloudPlayerOnlineAmount() + "")
+                .replace("{players.online}", CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getCloudPlayerOnlineAmount() + "")
                 .replace("{players.max}", maxPlayers + "")
                 ;
     }
@@ -174,13 +178,11 @@ public class ProxyModule {
 
 
     public void loadConfig() {
-        logger.info("Loading proxy config...");
         if (controller.getConfig().isEmpty()) {
             controller.getConfig().set(proxyConfig = ProxyConfig.defaultConfig());
             controller.getConfig().save();
         } else {
             proxyConfig = controller.getConfig().toInstance(ProxyConfig.class);
         }
-        logger.info("Loaded config {}", proxyConfig);
     }
 }

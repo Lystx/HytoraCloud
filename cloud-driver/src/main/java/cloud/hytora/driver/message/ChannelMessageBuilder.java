@@ -54,6 +54,6 @@ public class ChannelMessageBuilder {
      * @return built message
      */
     public ChannelMessage build() {
-        return new DefaultChannelMessage(key, this.channel, this.document, this.buffer, receivers, CloudDriver.getInstance().getExecutor(), UUID.randomUUID());
+        return new DefaultChannelMessage(key, this.channel, this.document, this.buffer, receivers, CloudDriver.getInstance().getNetworkExecutor(), UUID.randomUUID());
     }
 }

@@ -1,32 +1,49 @@
 package cloud.hytora.node.impl.command.impl;
 
 import cloud.hytora.common.logging.LogLevel;
-import cloud.hytora.context.annotations.ApplicationParticipant;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.command.CommandScope;
-import cloud.hytora.driver.command.annotation.*;
-import cloud.hytora.driver.command.completer.CommandCompleter;
-import cloud.hytora.driver.command.sender.CommandSender;
+import cloud.hytora.driver.commands.data.Command;
+import cloud.hytora.driver.commands.context.CommandContext;
+import cloud.hytora.driver.commands.help.ArgumentHelp;
+import cloud.hytora.driver.commands.help.ArgumentHelper;
+import cloud.hytora.driver.commands.parameter.CommandArguments;
+import cloud.hytora.driver.commands.tabcomplete.TabCompletion;
+import cloud.hytora.driver.commands.tabcomplete.TabCompleter;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.config.MainConfiguration;
-import org.jetbrains.annotations.NotNull;
+import cloud.hytora.node.impl.database.config.DatabaseType;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.stream.Collectors;
 
-@CommandExecutionScope(CommandScope.CONSOLE)
-@Command("logger")
-@CommandPermission("cloud.command.use")
-@CommandDescription("Changes the level of Logger")
-@CommandAutoHelp
-@ApplicationParticipant
 public class LoggerCommand {
 
-    @Command("setLevel")
-    @Syntax("<level>")
-    public void executeClear(CommandSender sender, @Argument(value = "level", completer = Completer.class) LogLevel level) {
+    @ArgumentHelp
+    public void argumentHelp(ArgumentHelper helper) {
+        helper.react(0, () -> {
+            helper.setHelpMessages(
+                    "§cUse §elogger <LogLevel>!",
+                    "§cAvailable types: " + Arrays.stream(LogLevel.values()).map(LogLevel::name).collect(Collectors.toList()).toString().replace("[", "").replace("]", "")
+            );
+        });
+    }
+
+    @TabCompletion
+    public void tabComplete(TabCompleter completer) {
+        completer.react(1, Arrays.stream(LogLevel.values()).map(LogLevel::name).collect(Collectors.toList()));
+    }
+
+
+    @Command(label = "logger", usage = "[level]", flags = "?[]")
+    public void execute(CommandContext<?> context, CommandArguments args) {
+
+
+        if (args.size() != 1) {
+            context.sendHelp();
+            return;
+        }
+        LogLevel level = LogLevel.fromName(args.getString(0, "INFO"));
 
         try {
             MainConfiguration instance = MainConfiguration.getInstance();
@@ -37,7 +54,7 @@ public class LoggerCommand {
 
 
             CloudDriver.getInstance().getLogger().setMinLevel(level);
-            sender.sendMessage("Changed LogLevel to {}", level);
+            context.sendMessage("Changed LogLevel to {}", level);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -45,12 +62,4 @@ public class LoggerCommand {
     }
 
 
-    public static class Completer implements CommandCompleter {
-
-        @NotNull
-        @Override
-        public Collection<String> complete(@NotNull CommandSender sender, @NotNull String message, @NotNull String argument) {
-            return Arrays.stream(LogLevel.values()).map(LogLevel::getName).collect(Collectors.toList());
-        }
-    }
 }

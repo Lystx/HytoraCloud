@@ -4,11 +4,9 @@ import cloud.hytora.common.task.Task;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
-import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.EndpointNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.packets.RedirectPacket;
-import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 
 import java.util.UUID;
@@ -43,7 +41,7 @@ public abstract class AbstractPacket implements IPacket {
         this.buffer = PacketBuffer.unsafe();
         this.transferInfo = new SimplePacketTransferInfo(
                 UUID.randomUUID(),
-                CloudDriver.getInstance() == null ? null : CloudDriver.getInstance().getExecutor(),
+                CloudDriver.getInstance() == null ? null : CloudDriver.getInstance().getNetworkExecutor(),
                 DocumentFactory.newJsonDocument()
         );
         this.destinationChannel = "global_packet_channel";
@@ -64,7 +62,7 @@ public abstract class AbstractPacket implements IPacket {
 
     public void publish() {
         Task.callSync(() -> {
-            CloudDriver.getInstance().getExecutor().sendPacket(AbstractPacket.this);
+            CloudDriver.getInstance().getNetworkExecutor().sendPacket(AbstractPacket.this);
             return null;
         });
     }
@@ -72,30 +70,30 @@ public abstract class AbstractPacket implements IPacket {
     @Override
     public void publishTo(String... receivers) {
         if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
-            EndpointNetworkExecutor executor = (EndpointNetworkExecutor) CloudDriver.getInstance().getExecutor();
+            EndpointNetworkExecutor executor = (EndpointNetworkExecutor) CloudDriver.getInstance().getNetworkExecutor();
             for (String receiver : receivers) {
 
                 executor.sendPacket(this, NetworkComponent.of(receiver));
             }
         }
         for (String receiver : receivers) {
-            CloudDriver.getInstance().getExecutor().sendPacket(new RedirectPacket(receiver, this));
+            CloudDriver.getInstance().getNetworkExecutor().sendPacket(new RedirectPacket(receiver, this));
         }
     }
 
     public Task<Void> publishAsync() {
         return Task.callAsync(() -> {
-            CloudDriver.getInstance().getExecutor().sendPacket(AbstractPacket.this);
+            CloudDriver.getInstance().getNetworkExecutor().sendPacket(AbstractPacket.this);
             return null;
         });
     }
 
     public Task<BufferedResponse> awaitResponse() {
-        return CloudDriver.getInstance().getExecutor().getPacketChannel().prepareSingleQuery().execute(this);
+        return CloudDriver.getInstance().getNetworkExecutor().getPacketChannel().prepareSingleQuery().execute(this);
     }
 
     @Override
     public Task<BufferedResponse> awaitResponse(String receiver) {
-        return CloudDriver.getInstance().getExecutor().getPacketChannel().prepareSingleQuery().receivers(receiver).execute(this);
+        return CloudDriver.getInstance().getNetworkExecutor().getPacketChannel().prepareSingleQuery().receivers(receiver).execute(this);
     }
 }

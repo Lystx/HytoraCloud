@@ -2,7 +2,7 @@ package cloud.hytora.remote.impl;
 
 import cloud.hytora.driver.message.ChannelMessage;
 import cloud.hytora.driver.message.DefaultChannelMessenger;
-import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
+import cloud.hytora.driver.networking.IHandlerNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.message.packet.ChannelMessageExecutePacket;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
@@ -13,9 +13,6 @@ import java.util.Arrays;
 
 public class RemoteChannelMessenger extends DefaultChannelMessenger {
 
-    public RemoteChannelMessenger(AdvancedNetworkExecutor executor) {
-        super(executor);
-    }
 
     @Override
     public void sendChannelMessage(ChannelMessage message, NetworkComponent[] receivers) {

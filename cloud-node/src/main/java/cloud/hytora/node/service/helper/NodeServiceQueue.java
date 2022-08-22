@@ -5,7 +5,9 @@ import cloud.hytora.driver.CloudDriver;
 
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.impl.UniversalCloudServer;
+import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.node.NodeDriver;
@@ -43,8 +45,10 @@ public class NodeServiceQueue {
             return;
         }
 
-        CloudDriver.getInstance()
-                .getServiceManager()
+        CloudDriver
+                .getInstance()
+                .getProviderRegistry()
+                .getUnchecked(ICloudServiceManager.class)
                 .getAllCachedServices()
                 .stream()
                 .filter(ser -> ser.getServiceState() == ServiceState.PREPARED)
@@ -68,7 +72,7 @@ public class NodeServiceQueue {
     }
 
     private void queue() {
-        CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks().stream()
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getAllCachedTasks().stream()
                 .filter(con -> this.getAmountOfGroupServices(con) < con.getMinOnlineService())
                 .filter(con -> !pausedGroups.contains(con.getName()))
                 .sorted(Comparator.comparingInt(IServiceTask::getStartOrder))
@@ -89,7 +93,7 @@ public class NodeServiceQueue {
 
                     ICloudServer service = new UniversalCloudServer(task.getName(), this.getPossibleServiceIDByGroup(task), port, node.getConfig().getAddress().getHost());
                     service.setRunningNodeName(node.getName());
-                    CloudDriver.getInstance().getServiceManager().registerService(service);
+                    CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).registerService(service);
 
                 });
     }
@@ -99,11 +103,11 @@ public class NodeServiceQueue {
     }
 
     private int getAmountOfBootableServices() {
-        return CloudDriver.getInstance().getServiceManager().getAllServicesByState(ServiceState.STARTING).size();
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllServicesByState(ServiceState.STARTING).size();
     }
 
     public int getAmountOfGroupServices(IServiceTask serviceGroup) {
-        return (int) CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream()
+        return (int) CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllCachedServices().stream()
                 .filter(it -> it.getTask().equals(serviceGroup)).count();
     }
 
@@ -114,12 +118,12 @@ public class NodeServiceQueue {
     }
 
     private boolean isServiceIDAlreadyExists(IServiceTask serviceGroup, int id) {
-        return CloudDriver.getInstance().getServiceManager().getAllServicesByTask(serviceGroup).stream().anyMatch(it -> id == it.getServiceID());
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllServicesByTask(serviceGroup).stream().anyMatch(it -> id == it.getServiceID());
     }
 
     private boolean isPortUsed(int port) {
-        for (ICloudServer service : NodeDriver.getInstance().getServiceManager().getAllCachedServices()) {
-            if (service.getTask().getPossibleNodes().equals(NodeDriver.getInstance().getExecutor().getNodeName())) {
+        for (ICloudServer service : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllCachedServices()) {
+            if (service.getTask().getPossibleNodes().equals(NodeDriver.getInstance().getNetworkExecutor().getNodeName())) {
                 if (service.getPort() == port) {
                     return true;
                 }

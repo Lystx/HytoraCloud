@@ -1,12 +1,11 @@
 package cloud.hytora.bridge.proxy.bungee.events.server;
 
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.common.CloudMessages;
 import cloud.hytora.driver.player.ICloudPlayer;
-import cloud.hytora.driver.services.ServiceManager;
-import cloud.hytora.driver.player.PlayerManager;
+import cloud.hytora.driver.services.ICloudServiceManager;
+import cloud.hytora.driver.player.ICloudPlayerManager;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.remote.Remote;
@@ -19,14 +18,12 @@ import net.md_5.bungee.api.event.*;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
-import java.util.stream.Collectors;
-
 public class ProxyPlayerServerListener implements Listener {
 
-    private final PlayerManager playerManager;
+    private final ICloudPlayerManager playerManager;
 
     public ProxyPlayerServerListener() {
-        this.playerManager = CloudDriver.getInstance().getPlayerManager();
+        this.playerManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class);
     }
 
     @EventHandler
@@ -36,9 +33,9 @@ public class ProxyPlayerServerListener implements Listener {
 
         CloudMessages cloudMessages = CloudMessages.getInstance();
 
-        ServiceManager serviceManager = CloudDriver.getInstance().getServiceManager();
+        ICloudServiceManager serviceManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class);
         ICloudServer server = serviceManager.getServiceByNameOrNull(target.getName());
-        ICloudPlayer cloudPlayer = CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(player.getUniqueId());
+        ICloudPlayer cloudPlayer = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getCloudPlayerByUniqueIdOrNull(player.getUniqueId());
 
         if (server == null) {
             player.disconnect(cloudMessages.getPrefix() + " §cAn error occured whilst trying to connect you to " + target.getName() + ": This Service is not registered in CloudCache!");
@@ -75,10 +72,10 @@ public class ProxyPlayerServerListener implements Listener {
         }
 
         //setting new service
-        ICloudServer service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(server.getInfo().getName());
+        ICloudServer service = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNull(server.getInfo().getName());
         if (service != null) {
             cloudPlayer.setServer(service);
-            cloudPlayer.setProxyServer(Remote.getInstance().thisService());
+            cloudPlayer.setProxyServer(Remote.getInstance().thisSidesClusterParticipant());
             cloudPlayer.update();
         }
     }
@@ -86,7 +83,7 @@ public class ProxyPlayerServerListener implements Listener {
     @EventHandler
     public void handle(ServerKickEvent event) {
         ProxiedPlayer player = event.getPlayer();
-        ICloudServer fallback = CloudDriver.getInstance().getServiceManager().getFallbackAsServiceOrNull();
+        ICloudServer fallback = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getFallbackAsServiceOrNull();
         CloudMessages cloudMessages = CloudMessages.getInstance();
 
         if (fallback == null) {

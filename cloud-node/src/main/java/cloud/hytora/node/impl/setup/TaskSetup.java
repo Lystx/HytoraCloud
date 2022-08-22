@@ -2,7 +2,8 @@ package cloud.hytora.node.impl.setup;
 
 import cloud.hytora.common.function.BiSupplier;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.command.Console;
+import cloud.hytora.driver.console.Console;
+import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 import cloud.hytora.driver.setup.Setup;
 import cloud.hytora.driver.setup.annotations.*;
@@ -98,7 +99,7 @@ public class TaskSetup extends Setup<TaskSetup> {
 
         @Override
         public Boolean supply(String name) {
-            return CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name) != null;
+            return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskByNameOrNull(name) != null;
         }
     }
 

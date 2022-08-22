@@ -11,6 +11,7 @@ import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.node.data.DefaultNodeData;
 import cloud.hytora.driver.node.data.INodeData;
 import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.utils.ServiceState;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -38,8 +39,10 @@ public abstract class AbstractNode implements INode {
 
     @Override
     public List<ICloudServer> getRunningServers() {
-        return CloudDriver.getInstance()
-                .getServiceManager()
+        return CloudDriver
+                .getInstance()
+                .getProviderRegistry()
+                .getUnchecked(ICloudServiceManager.class)
                 .getAllCachedServices()
                 .stream()
                 .filter(it ->
@@ -50,7 +53,7 @@ public abstract class AbstractNode implements INode {
 
     @Override
     public boolean hasEnoughMemoryToStart(ICloudServer cloudServer) {
-        return getConfig().getMemory() >= (config.getMemory() + cloudServer.getTask().getMemory());
+        return getConfig().getMemory() >= (getUsedMemoryByServices() + cloudServer.getTask().getMemory());
     }
 
 
@@ -58,7 +61,7 @@ public abstract class AbstractNode implements INode {
     public long getUsedMemoryByServices() {
         long memory = 0L;
 
-        for (ICloudServer cloudServer : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
+        for (ICloudServer cloudServer : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllServicesByState(ServiceState.STARTING)) {
             if (!cloudServer.getRunningNodeName().equalsIgnoreCase(this.getName())) {
                 continue;
             }
@@ -94,7 +97,7 @@ public abstract class AbstractNode implements INode {
     }
 
     @Override
-    public void clone(INode from) {
+    public void copy(INode from) {
 
     }
 

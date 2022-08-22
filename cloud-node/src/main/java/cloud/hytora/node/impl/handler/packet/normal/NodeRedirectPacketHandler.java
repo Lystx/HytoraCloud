@@ -16,10 +16,10 @@ public class NodeRedirectPacketHandler implements PacketHandler<RedirectPacket> 
     public void handle(PacketChannel wrapper, RedirectPacket packet) {
 
         if (packet.getClient().equalsIgnoreCase(MainConfiguration.getInstance().getNodeConfig().getNodeName())) {
-            NodeDriver.getInstance().getExecutor().handlePacket(wrapper, packet.getPacket()); //handle if should be redirected to this node
+            NodeDriver.getInstance().getNetworkExecutor().handlePacket(wrapper, packet.getPacket()); //handle if should be redirected to this node
             return;
         }
-        NodeBasedClusterExecutor executor = NodeDriver.getInstance().getExecutor();
+        NodeBasedClusterExecutor executor = NodeDriver.getInstance().getNetworkExecutor();
         Optional<ClusterClientExecutor> client = executor.getClient(packet.getClient());
         client.ifPresent(s -> s.sendPacket(packet.getPacket()));
     }

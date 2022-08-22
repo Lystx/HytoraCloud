@@ -7,12 +7,14 @@ import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.event.DestructiveListener;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
 import cloud.hytora.driver.networking.EndpointNetworkExecutor;
 import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
+import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.packet.ServiceConfigPacket;
 import cloud.hytora.driver.node.INode;
-import cloud.hytora.driver.node.NodeManager;
+import cloud.hytora.driver.node.INodeManager;
 import cloud.hytora.driver.services.ConfigurableService;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.task.IServiceTask;
@@ -131,10 +133,10 @@ public class DefaultConfigurableService implements ConfigurableService {
 
         Task.runAsync(() -> {
             if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
-                EndpointNetworkExecutor executor = (EndpointNetworkExecutor) CloudDriver.getInstance().getExecutor();
+                EndpointNetworkExecutor executor = (EndpointNetworkExecutor) CloudDriver.getInstance().getNetworkExecutor();
 
                 ClusterClientExecutor nodeClient = executor.getClient(node).orElse(null);
-                boolean thisSidesNode = serviceTask.getPossibleNodes().contains(CloudDriver.getInstance().getExecutor().getName());
+                boolean thisSidesNode = serviceTask.getPossibleNodes().contains(CloudDriver.getInstance().getNetworkExecutor().getName());
 
                 if (nodeClient == null && !thisSidesNode) {
                     CloudDriver.getInstance().getLogger().info("Tried to start a Service of Task '" + serviceTask.getName() + "' but no Node with name '" + node + "' is connected!");
@@ -157,14 +159,14 @@ public class DefaultConfigurableService implements ConfigurableService {
                 service.setRunningNodeName(node);
                 service.setMotd(motd);
 
-                CloudDriver.getInstance().getServiceManager().registerService(service);
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).registerService(service);
 
 
                 if (!CloudDriver.getInstance().isRunning()) {
                     return;
                 }
 
-                NodeManager nodeManager = CloudDriver.getInstance().getNodeManager();
+                INodeManager nodeManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class);
                 Task<INode> node = nodeManager.getNode(this.node);
 
                 node.ifPresent(n -> n.startServer(service));
@@ -186,7 +188,7 @@ public class DefaultConfigurableService implements ConfigurableService {
                         version
                 );
 
-                CloudDriver.getInstance().getEventManager().registerDestructiveHandler(ServiceReadyEvent.class, (ExceptionallyBiConsumer<ServiceReadyEvent, DestructiveListener>) (event, listener) -> {
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).registerDestructiveHandler(ServiceReadyEvent.class, (ExceptionallyBiConsumer<ServiceReadyEvent, DestructiveListener>) (event, listener) -> {
 
                     ICloudServer cloudServer = event.getCloudServer();
                     if (cloudServer.getUniqueId().equals(this.uniqueId)) {
@@ -202,12 +204,12 @@ public class DefaultConfigurableService implements ConfigurableService {
     }
 
     private int newServiceId() {
-        return (CloudDriver.getInstance().getServiceManager().getAllServicesByTask(serviceTask).size() + 1);
+        return (CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllServicesByTask(serviceTask).size() + 1);
     }
 
     private boolean isPortUsed(int port) {
-        for (ICloudServer service : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
-            if (service.getTask().getPossibleNodes().contains(CloudDriver.getInstance().getExecutor().getName()) && service.getPort() == port) {
+        for (ICloudServer service : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllCachedServices()) {
+            if (service.getTask().getPossibleNodes().contains(CloudDriver.getInstance().getNetworkExecutor().getName()) && service.getPort() == port) {
                 if (service.getPort() == port) {
                     return true;
                 }

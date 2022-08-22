@@ -6,7 +6,7 @@ import cloud.hytora.driver.node.packet.NodeCycleDataPacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.node.INode;
-import cloud.hytora.driver.node.NodeManager;
+import cloud.hytora.driver.node.INodeManager;
 import cloud.hytora.driver.node.data.INodeData;
 
 
@@ -18,7 +18,7 @@ public class NodeDataCycleHandler implements PacketHandler<NodeCycleDataPacket> 
 		String name = packet.getNodeName();
 		INodeData data = packet.getData();
 		Logger logger = CloudDriver.getInstance().getLogger();
-		NodeManager nodeManager = CloudDriver.getInstance().getNodeManager();
+		INodeManager nodeManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class);
 
 		INode node = nodeManager.getNodeByNameOrNull(name);
 

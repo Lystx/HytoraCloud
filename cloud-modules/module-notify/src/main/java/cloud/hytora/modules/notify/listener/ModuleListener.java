@@ -6,6 +6,7 @@ import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 import cloud.hytora.driver.player.ICloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayerManager;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.modules.notify.NotifyModule;
@@ -78,7 +79,7 @@ public class ModuleListener {
 
 
         //iterating through all players
-        for (ICloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
+        for (ICloudPlayer player : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getAllCachedCloudPlayers()) {
             if (!config.getEnabledNotifications().contains(player.getUniqueId())) {
                 continue; //player has disabled messages or is not empowered to receive some
             }

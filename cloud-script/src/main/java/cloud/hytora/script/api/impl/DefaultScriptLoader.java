@@ -1,11 +1,10 @@
 package cloud.hytora.script.api.impl;
 
+import cloud.hytora.common.function.BiSupplier;
 import cloud.hytora.common.logging.Logger;
-import cloud.hytora.script.api.IScript;
-import cloud.hytora.script.api.IScriptCommand;
-import cloud.hytora.script.api.IScriptLoader;
+import cloud.hytora.script.ScriptSyntax;
+import cloud.hytora.script.api.*;
 
-import cloud.hytora.script.api.IScriptTask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,12 +15,10 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
+
 public class DefaultScriptLoader implements IScriptLoader {
 
 
-    private static final String COMMENT_LINE_START = "#";
-    private static final String TASK_LINE_START = "Task ";
-    private static final String TASK_END = "} :";
 
     private final Collection<IScriptCommand> commands = new CopyOnWriteArrayList<>();
 
@@ -42,40 +39,121 @@ public class DefaultScriptLoader implements IScriptLoader {
                 .orElse(null);
     }
 
-
     @Nullable
     @Override
     public IScript loadScript(@NotNull Path script) {
         try {
             List<String> allLines = new CopyOnWriteArrayList<>(Files.readAllLines(script));
-            Collection<String> comments = allLines
-                    .stream()
-                    .filter(e -> e.startsWith(COMMENT_LINE_START))
-                    .collect(Collectors.toList());
-
-            return this.loadScript(script, allLines, comments);
+            return this.loadScript(script, allLines);
         } catch (final IOException ex) {
-            Logger.constantInstance().error("Unable to read reform script located at {} : {}", script.toString(), ex);
+            Logger.constantInstance().error("Unable to read  script located at {} : {}", script.toString(), ex);
         }
 
         return null;
     }
 
     boolean loadsTask = false;
+    boolean multiComment = false;
+    boolean loadDecision, loadsFalseDecision = false;
+    DefaultScriptDecision currentDecision = null;
 
     @Nullable
-    private IScript loadScript(@NotNull Path path, @NotNull List<String> allLines, @NotNull Collection<String> comments) {
+    private IScript loadScript(@NotNull Path path, @NotNull List<String> allLines) {
         Map<String, Map.Entry<Integer, IScriptCommand>> commandsPerLine = new LinkedHashMap<>();
+        Map<String, Map.Entry<Integer, IScriptDecision>> decisionsPerLine = new LinkedHashMap<>();
+        Map<Integer, IScriptDecision> decisions = new HashMap<>();
         int cursorPosition = 0;
         List<String> taskLines = new ArrayList<>();
 
         for (String line : allLines) {
-            if (comments.contains(line) || line.trim().isEmpty()) {
+            if (line.trim().startsWith(ScriptSyntax.COMMENT_LINE_START) || line.trim().isEmpty()) {
                 cursorPosition++;
                 continue;
             }
 
-            if (line.startsWith(TASK_LINE_START)) {
+
+            //start ignoring lines
+            if (line.trim().startsWith(ScriptSyntax.MULTI_COMMENT_LINE_START)) {
+                multiComment = true;
+                cursorPosition++;
+                continue;
+            }
+
+            //end ignoring lines
+            if (line.trim().startsWith(ScriptSyntax.MULTI_COMMENT_LINE_END) || line.trim().endsWith(ScriptSyntax.MULTI_COMMENT_LINE_END)) {
+                multiComment = false;
+                cursorPosition++;
+                continue;
+            }
+
+            //check if ignoring lines
+            if (multiComment) {
+                cursorPosition++;
+                continue;
+            }
+
+            if (line.trim().startsWith("if")) {
+                if (line.endsWith("-> {")) {
+                    loadDecision = true;
+                    String checker = line
+                            .replace("if", "")
+                            .replace("(", "")
+                            .replace(")", "")
+                            .replace("->", "")
+                            .replace("{", "")
+                            .trim();
+                    currentDecision = new DefaultScriptDecision();
+                    currentDecision.setChecker(script -> {
+                        return Boolean.parseBoolean(script.replaceVariables(checker).trim());
+                    });
+                    cursorPosition++;
+                    continue;
+                } else {
+                    throw new IllegalArgumentException("If-Action must be closed with ' -> {' !");
+                }
+            }
+
+            //decision request over and closed
+            if (line.trim().equalsIgnoreCase("}") && (loadDecision || loadsFalseDecision)) {
+                loadDecision = false;
+                loadsFalseDecision = false;
+                decisionsPerLine.put(line.trim(), new AbstractMap.SimpleEntry<>(cursorPosition, currentDecision));
+                currentDecision = null;
+
+                cursorPosition++;
+                continue;
+            }
+
+            //decision request over and closed
+            if (line.trim().equalsIgnoreCase("} else -> {")) {
+                loadDecision = false;
+                loadsFalseDecision = true;
+                cursorPosition++;
+                continue;
+            }
+
+            if (loadDecision) {
+                IScriptCommand command = this.getCommandOfLine(line.trim());
+                if (command != null) {
+                    currentDecision.getTrueCommands().put(line.trim(), command);
+                }
+
+                cursorPosition++;
+                continue;
+            }
+
+            if (loadsFalseDecision) {
+                IScriptCommand command = this.getCommandOfLine(line.trim());
+                if (command != null) {
+                    currentDecision.getFalseCommands().put(line.trim(), command);
+                }
+
+                cursorPosition++;
+                continue;
+            }
+
+            //start loading task
+            if (line.startsWith(ScriptSyntax.TASK_LINE_START)) {
                 taskLines.add(line);
                 loadsTask = true;
                 cursorPosition++;
@@ -94,12 +172,6 @@ public class DefaultScriptLoader implements IScriptLoader {
                     continue;
                 }
 
-                int index = allLines.indexOf(line);
-                if (index != -1) {
-                    allLines.remove(index);
-                    allLines.add(index, line = this.replaceLineVariables(line, allLines));
-                }
-
                 commandsPerLine.put(line, new AbstractMap.SimpleEntry<>(cursorPosition, command));
             } catch (final IllegalArgumentException ex) {
                 System.out.println("Unable to handle script line " + cursorPosition + ": " + line);
@@ -114,7 +186,7 @@ public class DefaultScriptLoader implements IScriptLoader {
             return null;
         }
 
-        return new DefaultScript(path, this, allLines, tasks, commandsPerLine);
+        return new DefaultScript(path, this, allLines, tasks, commandsPerLine, decisionsPerLine);
     }
 
     @Nullable
@@ -126,7 +198,7 @@ public class DefaultScriptLoader implements IScriptLoader {
 
         IScriptCommand result = this.getCommand(arguments[0]);
         if (result == null) {
-            throw new IllegalArgumentException("Unable to find command by name " + arguments[0]);
+            throw new IllegalArgumentException("Unable to find command by name " + arguments[0] + " [Line: '" + line + "]");
         }
 
         return result;
@@ -134,22 +206,6 @@ public class DefaultScriptLoader implements IScriptLoader {
 
     @NotNull
     private String replaceLineVariables(@NotNull String line, @NotNull Collection<String> allLines) {
-        String[] arguments = line.split(" ");
-        if (arguments.length <= 1) {
-            return line;
-        }
-
-        arguments = Arrays.copyOfRange(arguments, 1, arguments.length);
-        for (String argument : arguments) {
-            /*
-            InterpreterVariable variable = this.getVariable(argument);
-            if (variable == null) {
-                continue;
-            }
-
-            line = line.replace(argument, variable.unwrap(line, allLines));*/ // TODO: 18.08.2022 variables
-        }
-
         return line;
     }
 
@@ -159,16 +215,34 @@ public class DefaultScriptLoader implements IScriptLoader {
 
         List<String> task = new CopyOnWriteArrayList<>();
         for (String line : allLines) {
-            if (line.startsWith(TASK_END)) {
+            if (line.startsWith(ScriptSyntax.TASK_END)) {
+                loadsTask = false;
                 tasks.add(this.parseTask(task, allLines));
                 task.clear();
                 continue;
             }
 
-            if (line.startsWith(COMMENT_LINE_START) || line.trim().isEmpty()) {
+            if (line.trim().startsWith(ScriptSyntax.COMMENT_LINE_START) || line.trim().isEmpty()) {
                 continue;
             }
 
+
+            //start ignoring lines
+            if (line.startsWith(ScriptSyntax.MULTI_COMMENT_LINE_START)) {
+                multiComment = true;
+                continue;
+            }
+
+            //end ignoring lines
+            if (line.startsWith(ScriptSyntax.MULTI_COMMENT_LINE_END) || line.endsWith(ScriptSyntax.MULTI_COMMENT_LINE_END)) {
+                multiComment = false;
+                continue;
+            }
+
+            //check if ignoring lines
+            if (multiComment) {
+                continue;
+            }
             task.add(line);
         }
 
@@ -185,12 +259,67 @@ public class DefaultScriptLoader implements IScriptLoader {
         }
 
         String taskOpener = taskLines.remove(0);
-        String name = taskOpener.replaceFirst(TASK_LINE_START, "").replace("->", "").replace("{", "").trim();
+        String name = taskOpener.replaceFirst(ScriptSyntax.TASK_LINE_START, "").replace("->", "").replace("{", "").trim();
 
         Map<String, IScriptCommand> commandsPerLine = new LinkedHashMap<>();
+        Map<String, IScriptDecision> decisionsPerLine = new LinkedHashMap<>();
 
         for (String taskLine : taskLines) {
             taskLine = taskLine.trim();
+
+
+            if (taskLine.trim().startsWith("if")) {
+                if (taskLine.endsWith("-> {")) {
+                    loadDecision = true;
+                    String checker = taskLine
+                            .replace("if", "")
+                            .replace("(", "")
+                            .replace(")", "")
+                            .replace("->", "")
+                            .replace("{", "")
+                            .trim();
+                    currentDecision = new DefaultScriptDecision();
+                    currentDecision.setChecker(script -> {
+                        return Boolean.parseBoolean(script.replaceVariables(checker).trim());
+                    });
+                    continue;
+                } else {
+                    throw new IllegalArgumentException("If-Action must be closed with ' -> {' !");
+                }
+            }
+
+            //decision request over and closed
+            if (taskLine.trim().equalsIgnoreCase("}") && (loadDecision || loadsFalseDecision)) {
+                loadDecision = false;
+                loadsFalseDecision = false;
+                decisionsPerLine.put(taskLine.trim(), currentDecision);
+                currentDecision = null;
+                continue;
+            }
+
+            //decision request over and closed
+            if (taskLine.trim().equalsIgnoreCase("} else -> {")) {
+                loadDecision = false;
+                loadsFalseDecision = true;
+                continue;
+            }
+
+            if (loadDecision) {
+                IScriptCommand command = this.getCommandOfLine(taskLine.trim());
+                if (command != null) {
+                    currentDecision.getTrueCommands().put(taskLine.trim(), command);
+                }
+                continue;
+            }
+
+            if (loadsFalseDecision) {
+                IScriptCommand command = this.getCommandOfLine(taskLine.trim());
+                if (command != null) {
+                    currentDecision.getFalseCommands().put(taskLine.trim(), command);
+                }
+                continue;
+            }
+
             try {
                 IScriptCommand command = this.getCommandOfLine(taskLine);
                 if (command == null) {
@@ -211,6 +340,6 @@ public class DefaultScriptLoader implements IScriptLoader {
         }
 
         loadsTask = false;
-        return new DefaultScriptTask(name, commandsPerLine);
+        return new DefaultScriptTask(name, commandsPerLine, decisionsPerLine);
     }
 }

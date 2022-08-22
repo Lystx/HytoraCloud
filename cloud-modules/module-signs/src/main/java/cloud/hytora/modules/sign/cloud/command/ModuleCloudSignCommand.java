@@ -1,22 +1,23 @@
 package cloud.hytora.modules.sign.cloud.command;
 
-import cloud.hytora.driver.command.CommandScope;
-import cloud.hytora.driver.command.annotation.*;
-import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.services.task.IServiceTask;
+import cloud.hytora.driver.commands.context.CommandContext;
+import cloud.hytora.driver.commands.data.Command;
+import cloud.hytora.driver.commands.data.enums.AllowedCommandSender;
+import cloud.hytora.driver.commands.data.enums.CommandScope;
+import cloud.hytora.driver.commands.parameter.CommandArguments;
 import cloud.hytora.modules.sign.api.CloudSignAPI;
 
-@Command("signsReload")
-@CommandPermission("cloud.modules.sign.command.use")
-@CommandExecutionScope(CommandScope.CONSOLE)
-@CommandDescription("reloads the sign config")
 public class ModuleCloudSignCommand {
 
-    @Root
-    public void handle(CommandSender sender) {
+    @Command(
+            label = "signsRl",
+            permission = "cloud.modules.sign.command.use",
+            scope = CommandScope.CONSOLE
+    )
+    public void reload(CommandContext<?> ctx, CommandArguments args) {
 
         CloudSignAPI.getInstance().publishConfiguration();
         CloudSignAPI.getInstance().getSignManager().update();
-        sender.sendMessage("Reloaded!");
+        ctx.sendMessage("Reloaded!");
     }
 }

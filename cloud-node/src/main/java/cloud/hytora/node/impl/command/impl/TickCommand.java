@@ -1,31 +1,25 @@
 package cloud.hytora.node.impl.command.impl;
 
-import cloud.hytora.context.annotations.ApplicationParticipant;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.command.CommandScope;
-import cloud.hytora.driver.command.annotation.*;
-import cloud.hytora.driver.command.sender.CommandSender;
+import cloud.hytora.driver.commands.context.CommandContext;
+import cloud.hytora.driver.commands.data.Command;
+import cloud.hytora.driver.commands.parameter.CommandArguments;
 import cloud.hytora.driver.tps.TickCounter;
 import cloud.hytora.driver.tps.TickType;
+import cloud.hytora.driver.tps.ICloudTickWorker;
 
-@Command("tps")
-@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
-@CommandPermission("cloud.command.use")
-@CommandDescription("Shows performance of cloud")
-@ApplicationParticipant
 public class TickCommand {
 
-    @Command("")
-    @CommandDescription("Shows performance of cloud")
-    public void execute(CommandSender sender) {
+    @Command(label = "tps", aliases = "ticks", desc = "Shows performance of cloud")
+    public void execute(CommandContext<?> ctx, CommandArguments args) {
 
-        sender.sendMessage("§8");
-        sender.sendMessage("§7Tps§8:");
+        ctx.sendMessage("§8");
+        ctx.sendMessage("§7Tps§8:");
         for (TickType type : TickType.values()) {
-            TickCounter tick = CloudDriver.getInstance().getTickWorker().getTick(type);
+            TickCounter tick = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudTickWorker.class).getTick(type);
             double tps = tick.getAverage();
-            sender.sendMessage("§b" + type.getLabel() + ": §7" + tps);
+            ctx.sendMessage("§b" + type.getLabel() + ": §7" + tps);
         }
-        sender.sendMessage("§8");
+        ctx.sendMessage("§8");
     }
 }

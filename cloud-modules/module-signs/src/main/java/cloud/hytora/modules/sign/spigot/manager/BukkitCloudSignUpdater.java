@@ -3,6 +3,7 @@ package cloud.hytora.modules.sign.spigot.manager;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
@@ -73,14 +74,18 @@ public class BukkitCloudSignUpdater implements Runnable {
 
                 freeSigns.clear();
                 serviceMap.clear();
-                List<ICloudServer> servers = CloudDriver.getInstance()
-                        .getServiceManager()
+                List<ICloudServer> servers = CloudDriver
+                        .getInstance()
+                        .getProviderRegistry()
+                        .getUnchecked(ICloudServiceManager.class)
                         .getAllServicesByEnvironment(SpecificDriverEnvironment.MINECRAFT)
                         .stream()
                         .filter(server ->
                                 !server.getName().equalsIgnoreCase(
-                                        CloudDriver.getInstance()
-                                                .getServiceManager()
+                                        CloudDriver
+                                                .getInstance()
+                                                .getProviderRegistry()
+                                                .getUnchecked(ICloudServiceManager.class)
                                                 .thisServiceOrNull()
                                                 .getName()
                                 )
@@ -258,8 +263,8 @@ public class BukkitCloudSignUpdater implements Runnable {
             Collection<ICloudSign> offlineSigns = new ArrayList<>();
             for (Integer count : allSigns) {
                 ICloudSign sign = new BukkitCloudSignGroup(name, CloudSignAPI.getInstance().getSignManager().getAllCachedCloudSigns()).getCloudSigns().get(count);
-                ICloudServer s = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(sign.getTaskName() + "-" + count);
-                if (s == null || s.getServiceVisibility().equals(ServiceVisibility.INVISIBLE) || s.getServiceState().equals(ServiceState.STOPPING) || s.getName().equalsIgnoreCase(CloudDriver.getInstance().getServiceManager().thisServiceOrNull().getName())) {
+                ICloudServer s = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNull(sign.getTaskName() + "-" + count);
+                if (s == null || s.getServiceVisibility().equals(ServiceVisibility.INVISIBLE) || s.getServiceState().equals(ServiceState.STOPPING) || s.getName().equalsIgnoreCase(CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).thisServiceOrNull().getName())) {
                     offlineSigns.add(sign);
                 }
             }

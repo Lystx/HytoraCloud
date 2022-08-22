@@ -9,7 +9,7 @@ import cloud.hytora.driver.exception.IncompatibleDriverEnvironment;
 import cloud.hytora.driver.module.IModule;
 import cloud.hytora.driver.module.controller.ModuleClassLoader;
 import cloud.hytora.driver.module.ModuleController;
-import cloud.hytora.driver.module.ModuleManager;
+import cloud.hytora.driver.module.IModuleManager;
 import cloud.hytora.driver.module.controller.base.ModuleConfig;
 import cloud.hytora.driver.module.controller.base.ModuleState;
 import cloud.hytora.driver.module.packet.RemoteModuleControllerPacket;
@@ -44,23 +44,23 @@ public class RemoteModuleController implements ModuleController {
 
     @Override
     public void loadModule() {
-        CloudDriver.getInstance().getExecutor().sendPacket(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.LOAD_MODULE));
+        CloudDriver.getInstance().getNetworkExecutor().sendPacket(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.LOAD_MODULE));
     }
 
     @Override
     public void enableModule() {
-        CloudDriver.getInstance().getExecutor().sendPacket(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.ENABLE_MODULE));
+        CloudDriver.getInstance().getNetworkExecutor().sendPacket(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.ENABLE_MODULE));
 
     }
 
     @Override
     public void disableModule() {
-        CloudDriver.getInstance().getExecutor().sendPacket(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.DISABLE_MODULE));
+        CloudDriver.getInstance().getNetworkExecutor().sendPacket(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.DISABLE_MODULE));
     }
 
     @Override
     public void unregisterModule() {
-        CloudDriver.getInstance().getExecutor().sendPacket(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.UNREGISTER_MODULE));
+        CloudDriver.getInstance().getNetworkExecutor().sendPacket(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.UNREGISTER_MODULE));
     }
 
     public @NotNull IModule getModule() {
@@ -69,8 +69,8 @@ public class RemoteModuleController implements ModuleController {
 
     @NotNull
     @Override
-    public ModuleManager getManager() {
-        return CloudDriver.getInstance().getModuleManager();
+    public IModuleManager getManager() {
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(IModuleManager.class);
     }
 
     Path jarFile;
@@ -79,7 +79,7 @@ public class RemoteModuleController implements ModuleController {
     @Override
     public Path getJarFile() {
         if (jarFile == null) {
-            jarFile = Paths.get(CloudDriver.getInstance().getExecutor().getPacketChannel().prepareSingleQuery().execute(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.GET_JAR_FILE)).syncUninterruptedly().get().buffer().readString());
+            jarFile = Paths.get(CloudDriver.getInstance().getNetworkExecutor().getPacketChannel().prepareSingleQuery().execute(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.GET_JAR_FILE)).syncUninterruptedly().get().buffer().readString());
         }
         return jarFile;
     }
@@ -90,7 +90,7 @@ public class RemoteModuleController implements ModuleController {
     @Override
     public Path getDataFolder() {
         if (dataFolder == null) {
-            dataFolder = Paths.get(CloudDriver.getInstance().getExecutor().getPacketChannel().prepareSingleQuery().execute(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.GET_DATA_FOLDER)).syncUninterruptedly().get().buffer().readString());
+            dataFolder = Paths.get(CloudDriver.getInstance().getNetworkExecutor().getPacketChannel().prepareSingleQuery().execute(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.GET_DATA_FOLDER)).syncUninterruptedly().get().buffer().readString());
         }
         return dataFolder;
     }
@@ -98,7 +98,7 @@ public class RemoteModuleController implements ModuleController {
     @NotNull
     @Override
     public StorableDocument reloadConfig() {
-        return DocumentFactory.newStorableDocument(CloudDriver.getInstance().getExecutor().getPacketChannel().prepareSingleQuery().execute(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.RELOAD_CONFIG)).syncUninterruptedly().get().buffer().readDocument(), getJarFile());
+        return DocumentFactory.newStorableDocument(CloudDriver.getInstance().getNetworkExecutor().getPacketChannel().prepareSingleQuery().execute(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.RELOAD_CONFIG)).syncUninterruptedly().get().buffer().readDocument(), getJarFile());
     }
 
     @NotNull

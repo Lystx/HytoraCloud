@@ -1,41 +1,60 @@
 
-# This is the hytoraCloud launcher config.
-# Use '#' to make a comment
+/*
+This is the hytoraCloud launcher config.
+Use '#' to make a comment
+*/
 
 #if enabled "Lystx" has all permisisons
-var cloud.hytora.launcher.devmode false
-var cloud.hytora.launcher.autoupdater true
-var cloud.hytora.launcher.module.autoupdater true
-var cloud.hytora.launcher.application.file https://raw.githubusercontent.com/Lystx/HytoraCloud/master/application.json
-var cloud.hytora.launcher.updater.baseUrl https://github.com/Lystx/HytoraCloud/releases/download/v{version}
-var cloud.hytora.launcher.updater.url {cloud.baseUrl}/HytoraCloud-{type}-{version}.zip
-var cloud.hytora.launcher.customVersion null
+var cloud.hytora.launcher.devmode = false
+
+var cloud.hytora.launcher.autoupdater = true
+var cloud.hytora.launcher.module.autoupdater = true
+var cloud.hytora.launcher.application.file = https://raw.githubusercontent.com/Lystx/HytoraCloud/master/application.json
+var cloud.hytora.launcher.updater.baseUrl = https://github.com/Lystx/HytoraCloud/releases/download/v{version}
+var cloud.hytora.launcher.updater.url = {cloud.baseUrl}/HytoraCloud-{type}-{version}.zip
+var cloud.hytora.launcher.customVersion = null
 
 
-print('Installing Dependencies...');
+if ($cloud.hytora.launcher.devmode$) -> {
+    log INFO "DevMode is activated!"
+} else -> {
+    log INFO "DevMode is not activated!"
+}
+
+run includeRepositories();
+run includeDependencies();
+
 
 #Including repositories
-includeRepository('ossrh@https://oss.sonatype.org/content/repositories/snapshots');
-includeRepository('mvn@https://repo1.maven.org/maven2');
+Task includeRepositories() -> {
+    log INFO "Including Repositories"
+    repo ossrh https://oss.sonatype.org/content/repositories/snapshots
+    repo mvn https://repo1.maven.org/maven2
 
+} : Void
 
 #Including dependencies
-includeDependency('org.fusesource.jansi jansi 2.4.0');
-includeDependency('me.tongfei progressbar 0.5.5');
-includeDependency('mysql mysql-connector-java 8.0.27');
-includeDependency('org.mongodb mongodb-driver-core 4.2.0-beta1');
-includeDependency('org.mongodb mongodb-driver-sync 4.2.0-beta1');
-includeDependency('org.fusesource.jansi jansi 2.4.0');
-includeDependency('org.zeroturnaround zt-exec 1.12');
-includeDependency('dnsjava dnsjava 3.4.0');
-includeDependency('commons-io commons-io 2.11.0');
-includeDependency('org.reflections reflections 0.10.2');
-includeDependency('com.google.code.gson gson 2.8.9');
-includeDependency('com.google.guava guava 31.0.1-jre');
-includeDependency('io.netty netty-all 4.1.72.Final');
-includeDependency('io.netty netty-transport 4.1.72.Final');
-includeDependency('io.netty netty-transport-classes-epoll 4.1.72.Final');
-includeDependency('io.netty netty-codec 4.1.72.Final');
-includeDependency('org.jline jline 3.20.0');
+Task includeDependencies() -> {
 
-print('Launched script!');
+    log INFO "Including Dependencies!"
+    dependency org.fusesource.jansi jansi 2.4.0
+    dependency me.tongfei progressbar 0.5.5
+    dependency mysql mysql-connector-java 8.0.27
+    dependency org.mongodb mongodb-driver-core 4.2.0-beta1
+    dependency org.mongodb mongodb-driver-sync 4.2.0-beta1
+    dependency org.fusesource.jansi jansi 2.4.0
+    dependency org.zeroturnaround zt-exec 1.12
+    dependency dnsjava dnsjava 3.4.0
+    dependency commons-io commons-io 2.11.0
+    dependency org.reflections reflections 0.10.2
+    dependency com.google.code.gson gson 2.8.9
+    dependency com.google.guava guava 31.0.1-jre
+    dependency io.netty netty-all 4.1.72.Final
+    dependency io.netty netty-transport 4.1.72.Final
+    dependency io.netty netty-transport-classes-epoll 4.1.72.Final
+    dependency io.netty netty-codec 4.1.72.Final
+    dependency org.jline jline 3.20.0
+
+} : Void
+
+

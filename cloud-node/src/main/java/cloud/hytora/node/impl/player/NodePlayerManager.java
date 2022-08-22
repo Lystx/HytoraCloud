@@ -4,11 +4,13 @@ import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.event.EventManager;
+import cloud.hytora.driver.database.IDatabaseManager;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.player.CloudPlayerDisconnectEvent;
 import cloud.hytora.driver.event.defaults.player.CloudPlayerLoginEvent;
-import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
+import cloud.hytora.driver.networking.IHandlerNetworkExecutor;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
+import cloud.hytora.driver.node.INodeManager;
 import cloud.hytora.driver.player.packet.CloudPlayerDisconnectPacket;
 import cloud.hytora.driver.player.packet.CloudPlayerLoginPacket;
 import cloud.hytora.driver.player.packet.CloudPlayerUpdatePacket;
@@ -19,7 +21,8 @@ import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.impl.DefaultPlayerManager;
 import cloud.hytora.driver.player.impl.UniversalCloudPlayer;
 import cloud.hytora.driver.player.impl.DefaultTemporaryProperties;
-import cloud.hytora.driver.uuid.DriverUUIDCache;
+import cloud.hytora.driver.services.ICloudServiceManager;
+import cloud.hytora.driver.uuid.IdentificationCache;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.driver.database.SectionedDatabase;
 import cloud.hytora.driver.database.DatabaseSection;
@@ -32,18 +35,18 @@ import java.util.concurrent.Callable;
 
 public class NodePlayerManager extends DefaultPlayerManager {
 
-    public NodePlayerManager(EventManager eventManager) {
-        super(eventManager);
+    public NodePlayerManager() {
 
-        AdvancedNetworkExecutor executor = CloudDriver.getInstance().getExecutor();
+        IHandlerNetworkExecutor executor = CloudDriver.getInstance().getNetworkExecutor();
+        IEventManager eventManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class);
 
         executor.registerPacketHandler((PacketHandler<CloudPlayerLoginPacket>) (wrapper, packet) -> {
             CloudDriver.getInstance().getLogger().debug("Player[name={}, uuid={}] logged in on {}!", packet.getUsername(), packet.getUuid(), packet.getProxy());
             ICloudPlayer cloudPlayer = constructPlayer(packet.getUuid(), packet.getUsername());
-            cloudPlayer.setProxyServer(CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(packet.getProxy()));
+            cloudPlayer.setProxyServer(CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNull(packet.getProxy()));
 
 
-            DriverUUIDCache cache = CloudDriver.getInstance().getUUIDCache();
+            IdentificationCache cache = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IdentificationCache.class);
             if (cache.getUUID(cloudPlayer.getName()) == null) {
                 cache.setUUID(cloudPlayer.getName(), cloudPlayer.getUniqueId());
                 cache.update();
@@ -82,7 +85,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
             this.cachedCloudPlayers.put(packet.getUuid(), cloudPlayer);
             eventManager.callEventGlobally(new CloudPlayerLoginEvent(cloudPlayer));
 
-            DriverUpdatePacket.publishUpdate(NodeDriver.getInstance().getExecutor());
+            DriverUpdatePacket.publishUpdate(NodeDriver.getInstance().getNetworkExecutor());
         });
 
         executor.registerPacketHandler((PacketHandler<CloudPlayerDisconnectPacket>) (wrapper, packet) -> {
@@ -93,8 +96,8 @@ public class NodePlayerManager extends DefaultPlayerManager {
                 CloudDriver.getInstance().getLogger().debug("Player[name={}, uuid={}] dissconnected from [proxy={}, server={}]!", cloudPlayer.getName(), cloudPlayer.getUniqueId(), cloudPlayer.getProxyServer() == null ? "No Proxy" : cloudPlayer.getProxyServer().getName(), (cloudPlayer.getServer() == null ? "none" : cloudPlayer.getServer().getName()));
                 this.cachedCloudPlayers.remove(cloudPlayer.getUniqueId());
                 eventManager.callEventGlobally(new CloudPlayerDisconnectEvent(cloudPlayer));
-                if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
-                    DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+                if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
+                    DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());
                 }
 
             });
@@ -106,7 +109,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
         return Task.callAsync(new Callable<Collection<CloudOfflinePlayer>>() {
             @Override
             public Collection<CloudOfflinePlayer> call() throws Exception {
-                SectionedDatabase database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
+                SectionedDatabase database = NodeDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
                 DatabaseSection<CloudOfflinePlayer> db = database.getSection(CloudOfflinePlayer.class);
                 return db.getAll();
             }
@@ -116,14 +119,14 @@ public class NodePlayerManager extends DefaultPlayerManager {
     @Override
     public @Nullable CloudOfflinePlayer getOfflinePlayerByUniqueIdBlockingOrNull(@NotNull UUID uniqueId) {
 
-        SectionedDatabase database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
+        SectionedDatabase database = NodeDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
         DatabaseSection<CloudOfflinePlayer> db = database.getSection(CloudOfflinePlayer.class);
         return db.findById(uniqueId.toString());
     }
 
     @Override
     public @NotNull Collection<CloudOfflinePlayer> getAllOfflinePlayersBlockingOrEmpty() {
-        SectionedDatabase database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
+        SectionedDatabase database = NodeDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
         DatabaseSection<CloudOfflinePlayer> db = database.getSection(CloudOfflinePlayer.class);
         return db.getAll();
     }
@@ -133,7 +136,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
         return Task.callAsync(new Callable<CloudOfflinePlayer>() {
             @Override
             public CloudOfflinePlayer call() throws Exception {
-                SectionedDatabase database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
+                SectionedDatabase database = NodeDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
                 DatabaseSection<CloudOfflinePlayer> db = database.getSection(CloudOfflinePlayer.class);
                 return db.findById(uniqueId.toString());
             }
@@ -144,7 +147,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
 
     @Override
     public @Nullable CloudOfflinePlayer getOfflinePlayerByNameBlockingOrNull(@NotNull String name) {
-        SectionedDatabase database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
+        SectionedDatabase database = NodeDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
         DatabaseSection<CloudOfflinePlayer> db = database.getSection(CloudOfflinePlayer.class);
         return db.findByMatch("name", name);
     }
@@ -154,7 +157,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
         return Task.callAsync(new Callable<CloudOfflinePlayer>() {
             @Override
             public CloudOfflinePlayer call() throws Exception {
-                SectionedDatabase database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
+                SectionedDatabase database = NodeDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
                 DatabaseSection<CloudOfflinePlayer> db = database.getSection(CloudOfflinePlayer.class);
                 return db.findByMatch("name", name);
             }
@@ -165,7 +168,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
     @Override
     public void saveOfflinePlayerAsync(@NotNull CloudOfflinePlayer player) {
         Task.runAsync(() -> {
-            SectionedDatabase database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
+            SectionedDatabase database = NodeDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
             DatabaseSection<CloudOfflinePlayer> db = database.getSection(CloudOfflinePlayer.class);
             db.upsert(player);
 
@@ -176,8 +179,8 @@ public class NodePlayerManager extends DefaultPlayerManager {
     @Override
     public void registerCloudPlayer(@NotNull UUID uniqueID, @NotNull String username) {
         this.cachedCloudPlayers.put(uniqueID, constructPlayer(uniqueID, username));
-        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
-            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
+            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());
         }
     }
 
@@ -190,8 +193,8 @@ public class NodePlayerManager extends DefaultPlayerManager {
     @Override
     public void unregisterCloudPlayer(@NotNull UUID uuid, @NotNull String name) {
         this.cachedCloudPlayers.remove(uuid);
-        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
-            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
+            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());
         }
     }
 
@@ -199,9 +202,9 @@ public class NodePlayerManager extends DefaultPlayerManager {
     public void updateCloudPlayer(@NotNull ICloudPlayer cloudPlayer) {
         //Update cache of every component
         CloudPlayerUpdatePacket packet = new CloudPlayerUpdatePacket(cloudPlayer);
-        NodeDriver.getInstance().getExecutor().sendPacketToAll(packet);
-        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
-            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        NodeDriver.getInstance().getNetworkExecutor().sendPacketToAll(packet);
+        if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
+            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());
         }
     }
 }

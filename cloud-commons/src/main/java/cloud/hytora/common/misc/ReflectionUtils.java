@@ -4,15 +4,13 @@ import cloud.hytora.common.collection.ArrayWalker;
 import cloud.hytora.common.collection.ClassWalker;
 import cloud.hytora.common.collection.ExposedSecurityManager;
 import cloud.hytora.common.collection.WrappedException;
+import cloud.hytora.common.util.Validation;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -21,6 +19,204 @@ public final class ReflectionUtils {
 
 	private ReflectionUtils() {}
 
+
+	/**
+	 * Invokes a method
+	 *
+	 * @param m        The method
+	 * @param instance The instance
+	 * @param val      The value
+	 * @return The object
+	 */
+	public static Object invokeMethod(Method m, Object instance, Object... val) {
+		try {
+			if(val.length == 0) {
+				return m.invoke(instance);
+			}
+			else {
+				return m.invoke(instance, val);
+			}
+		}
+		catch(IllegalAccessException | InvocationTargetException e) {
+			return null;
+		}
+	}
+
+	public static Object invokeMethod(String name, Class<?> c, Object instance, Object... val) {
+		return invokeMethod(getDeclaredMethod(c, name, getParameterTypes(val)), instance, val);
+	}
+
+	public static Method getDeclaredMethod(Class<?> c, String name, Class<?>[] parameterTypes) {
+		try {
+			return c.getMethod(name, parameterTypes);
+		}
+		catch(NoSuchMethodException e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Get parameterTypes
+	 *
+	 * @param objects The objects
+	 * @return The class array (types)
+	 */
+	public static Class<?>[] getParameterTypes(Object... objects) {
+		List<Class<?>> types = new ArrayList<>();
+
+		for(Object o : objects) {
+			types.add(o.getClass());
+		}
+		return types.toArray(new Class<?>[]{});
+	}
+
+
+
+	/**
+	 * Get method by name (declared)
+	 *
+	 * @param c    The class
+	 * @param name The name
+	 * @return The method
+	 */
+	public static Method getDeclaredMethod(Class<?> c, String name) {
+		for(Method m : c.getDeclaredMethods()) {
+			if(m.getName().equals(name)) return m;
+		}
+		return null;
+	}
+	/**
+	 * Gets a field from given name out of given class
+	 *
+	 * @param name  The name of the field
+	 * @param clazz The class
+	 * @return The field
+	 */
+	public static Field getField(String name, Class<?> clazz) {
+		for(Field f : clazz.getDeclaredFields()) {
+			if(f.getName().equals(name)) return f;
+		}
+		return null;
+	}
+	/**
+	 * Gets the object behind a field from given instance
+	 *
+	 * @param instance The instance
+	 * @param field    The field
+	 * @return The object
+	 */
+	public static Object getFieldObject(Field field, Object instance) {
+		try {
+			field.setAccessible(true);
+			return field.get(instance);
+		}
+		catch(IllegalAccessException e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Casts a string to maybe a number which is behind the char array?<br>
+	 * Options are: Numerics, UUIDs, Lists or nothing
+	 *
+	 * @param s The string
+	 * @return The object
+	 */
+	public static Object safeCast(String s) {
+		return Validation.INTEGER.matches(s) ? Integer.valueOf(s)
+				: Validation.LONG.matches(s) ? Long.valueOf(s)
+				: Validation.DOUBLE.matches(s) ? Double.valueOf(s)
+				: Validation.UNIQUEID.matches(s) ? UUID.fromString(s)
+				: Validation.LIST.matches(s) ? safeCast(StringUtils.split(s.replace("[", "").replace("]", ""), ", "))
+				: s.equals("null") ? null
+				: s;
+	}
+
+	public static List<Object> safeCast(List<String> s) {
+		List<Object> l = new ArrayList<>();
+		if(!s.isEmpty() && !s.get(0).isEmpty()) s.forEach(s1 -> l.add(safeCast(s1)));
+		return l;
+	}
+
+	/**
+	 * Casts the given string like {@link #safeCast(String)} but it minds the type (as class)<br>
+	 * This can be used to cast a string for a specific field
+	 *
+	 * @param s The string
+	 * @param c The class (type)
+	 * @return The casted object
+	 */
+	public static Object safeCast(String s, Class<?> c) {
+		if(Validation.NUMBER.matches(s)) {
+			if(c.equals(Short.class) || c.equals(short.class)) return Short.valueOf(s);
+			else if(c.equals(Integer.class) || c.equals(int.class)) return Integer.valueOf(s);
+			else if(c.equals(Long.class) || c.equals(long.class)) return Long.valueOf(s);
+		}
+		else if(s.equalsIgnoreCase("true")
+				|| s.equalsIgnoreCase("false")) return Boolean.valueOf(s);
+		else if(Enum.class.isAssignableFrom(c)) {
+			for(Object e : c.getEnumConstants()) {
+				if((e + "").equalsIgnoreCase(s)) {
+					return e;
+				}
+			}
+		}
+		else {
+			return safeCast(s);
+		}
+		return s;
+	}
+
+	public static Object safeCast(String s, Field f) {
+		return safeCast(s, f.getType());
+	}
+
+	/**
+	 * Checks a method for different conditions
+	 *
+	 * @param m           The method
+	 * @param beStatic    Method must be static?
+	 * @param bePublic    Method must be public?
+	 * @param returnType  Method must return ..?
+	 * @param annotations Method must have annotations..?
+	 * @param parameter   Method must have parameter..?
+	 * @return The result
+	 */
+	public static boolean checkMethod(Method m, boolean beStatic, boolean bePublic, Class<?> returnType,
+									  Class<? extends Annotation>[] annotations, Class<?>[] parameter) {
+		// check modifier
+		if((beStatic != Modifier.isStatic(m.getModifiers()))
+				|| (bePublic != Modifier.isPublic(m.getModifiers()))) {
+			return false;
+		}
+
+		// check return type
+		if((returnType == null && !m.getReturnType().equals(Void.TYPE))
+				|| (returnType != null && !returnType.isAssignableFrom(m.getReturnType()))) {
+			return false;
+		}
+
+		// check annotations
+		for(Class<? extends Annotation> an : annotations) {
+			if(!m.isAnnotationPresent(an)) {
+				return false;
+			}
+		}
+
+		// check parameter
+		for(int i = 0; i < m.getParameters().length; i++) {
+			if(i >= parameter.length) return false;
+			Class<?> paramType = m.getParameters()[i].getType();
+			if(!parameter[i].isAssignableFrom(paramType)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public static boolean checkMethod(Method m, Class<? extends Annotation> annotation, Class<?>[] parameter) {
+		return checkMethod(m, false, true, null, new Class[]{annotation}, parameter);
+	}
 
 	/**
 	 * Clears the console screen

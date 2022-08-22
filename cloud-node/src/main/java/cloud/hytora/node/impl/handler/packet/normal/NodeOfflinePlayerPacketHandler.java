@@ -1,5 +1,7 @@
 package cloud.hytora.node.impl.handler.packet.normal;
 
+import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.player.ICloudPlayerManager;
 import cloud.hytora.driver.player.packet.OfflinePlayerRequestPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
@@ -21,23 +23,23 @@ public class NodeOfflinePlayerPacketHandler implements PacketHandler<OfflinePlay
 
             //saving player on this node side
             DefaultCloudOfflinePlayer player = buffer.readObject(DefaultCloudOfflinePlayer.class);
-            NodeDriver.getInstance().getPlayerManager().saveOfflinePlayerAsync(player);
+            CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).saveOfflinePlayerAsync(player);
             return;
         }
 
         if (payLoad == OfflinePlayerRequestPacket.PayLoad.GET_ALL) {
-            wrapper.prepareResponse().buffer(buf -> buf.writeObjectCollection(NodeDriver.getInstance().getPlayerManager().getAllOfflinePlayersBlockingOrEmpty())).execute(packet);
+            wrapper.prepareResponse().buffer(buf -> buf.writeObjectCollection(CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getAllOfflinePlayersBlockingOrEmpty())).execute(packet);
             return;
         }
 
         if (payLoad == OfflinePlayerRequestPacket.PayLoad.GET_BY_NAME) {
             String name = buffer.readString();
-            wrapper.prepareResponse().buffer(buf -> buf.writeOptionalObject(NodeDriver.getInstance().getPlayerManager().getOfflinePlayerByNameBlockingOrNull(name))).execute(packet);
+            wrapper.prepareResponse().buffer(buf -> buf.writeOptionalObject(CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getOfflinePlayerByNameBlockingOrNull(name))).execute(packet);
             return;
         }
         if (payLoad == OfflinePlayerRequestPacket.PayLoad.GET_BY_UUID) {
             UUID uuid = buffer.readUniqueId();
-            wrapper.prepareResponse().buffer(buf -> buf.writeOptionalObject(NodeDriver.getInstance().getPlayerManager().getOfflinePlayerByUniqueIdBlockingOrNull(uuid))).execute(packet);
+            wrapper.prepareResponse().buffer(buf -> buf.writeOptionalObject(CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getOfflinePlayerByUniqueIdBlockingOrNull(uuid))).execute(packet);
         }
     }
 }

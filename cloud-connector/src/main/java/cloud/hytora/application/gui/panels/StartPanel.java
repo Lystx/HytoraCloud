@@ -9,13 +9,16 @@ import cloud.hytora.application.elements.data.CloudUpdateInfo;
 import cloud.hytora.application.elements.StartPanelInfoBox;
 import cloud.hytora.application.elements.event.CommitHistoryLoadedEvent;
 import cloud.hytora.application.gui.Application;
+import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.document.Bundle;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.IEntry;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.EventListener;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.node.INode;
+import cloud.hytora.driver.node.INodeManager;
 import cloud.hytora.remote.Remote;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import org.kohsuke.github.GHCommit;
@@ -116,9 +119,9 @@ public class StartPanel extends JPanel {
 
         add(lowestCpuUsageBar);
 
-        CloudDriver.getInstance().getEventManager().registerListener(this);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).registerListener(this);
 
-        CloudDriver.getInstance().getScheduler().scheduleRepeatingTask(() -> {
+        Scheduler.runTimeScheduler().scheduleRepeatingTask(() -> {
             for (Integer boxId : boxPanes.keySet()) {
                 JOptionPane pane = boxPanes.get(boxId);
                 StartPanelInfoBox infoBox = instance.getInfoBox(boxId);
@@ -130,7 +133,7 @@ public class StartPanel extends JPanel {
                 });
             }
 
-            Collection<INode> nodes = Remote.getInstance().getNodeManager().getAllCachedNodes();
+            Collection<INode> nodes = CloudDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).getAllCachedNodes();
 
             INode highestCpuNode = nodes.stream().max(Comparator.comparingDouble(n -> n.getLastCycleData().getCpuUsage())).orElse(null);
             INode lowestCpuNode = nodes.stream().min(Comparator.comparingDouble(n -> n.getLastCycleData().getCpuUsage())).orElse(null);

@@ -3,14 +3,14 @@ package cloud.hytora.driver.player.impl;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.event.EventListener;
-import cloud.hytora.driver.event.EventManager;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.player.CloudPlayerUpdateEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 import cloud.hytora.driver.player.packet.CloudPlayerUpdatePacket;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.ICloudPlayer;
-import cloud.hytora.driver.player.PlayerManager;
-import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
+import cloud.hytora.driver.player.ICloudPlayerManager;
+import cloud.hytora.driver.networking.IHandlerNetworkExecutor;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,7 +19,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-public abstract class DefaultPlayerManager implements PlayerManager {
+public abstract class DefaultPlayerManager implements ICloudPlayerManager {
 
     protected Map<UUID, ICloudPlayer> cachedCloudPlayers = new ConcurrentHashMap<>();
 
@@ -35,9 +35,10 @@ public abstract class DefaultPlayerManager implements PlayerManager {
     }
 
 
-    public DefaultPlayerManager(EventManager eventManager) {
+    public DefaultPlayerManager() {
 
-        AdvancedNetworkExecutor executor = CloudDriver.getInstance().getExecutor();
+        IEventManager eventManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class);
+        IHandlerNetworkExecutor executor = CloudDriver.getInstance().getNetworkExecutor();
         if (executor == null) {
             return;
         }
@@ -46,7 +47,7 @@ public abstract class DefaultPlayerManager implements PlayerManager {
             ICloudPlayer player = packet.getPlayer();
 
             this.getCloudPlayer(player.getUniqueId()).ifPresent(cp -> {
-                cp.clone(player);
+                cp.copy(player);
                 if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
                     cp.update();
                 }

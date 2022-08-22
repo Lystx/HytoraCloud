@@ -2,6 +2,7 @@ package cloud.hytora.bridge.spigot;
 
 import cloud.hytora.bridge.spigot.listener.BukkitPlayerCommandListener;
 import cloud.hytora.document.DocumentFactory;
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.IServiceCycleData;
 import cloud.hytora.driver.services.impl.DefaultServiceCycleData;
@@ -37,7 +38,7 @@ public class SpigotBootstrap extends JavaPlugin implements PluginBridge, RemoteA
 
     @Override
     public void onDisable() {
-        ICloudServer cloudServer = Remote.getInstance().thisService();
+        ICloudServer cloudServer = (ICloudServer) CloudDriver.getInstance().thisSidesClusterParticipant();
         cloudServer.setServiceState(ServiceState.STOPPING);
         cloudServer.setServiceVisibility(ServiceVisibility.INVISIBLE);
         cloudServer.update();

@@ -15,6 +15,6 @@ public class DefaultPrintCommand implements IScriptCommand {
 
     @Override
     public void execute(@NotNull String commandLine, @NotNull IScript script, @NotNull Collection<String> allLines) {
-        System.out.println(commandLine.trim().isEmpty() ? "" : commandLine.replaceFirst(" ", ""));
+        System.out.println(commandLine);
     }
 }

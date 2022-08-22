@@ -1,81 +1,99 @@
 package cloud.hytora.node.impl.command.impl;
 
-import cloud.hytora.context.annotations.ApplicationParticipant;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.command.CommandScope;
-import cloud.hytora.driver.command.annotation.*;
-import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.component.Component;
-import cloud.hytora.driver.component.event.ComponentEvent;
-import cloud.hytora.driver.component.event.click.ClickAction;
-import cloud.hytora.driver.component.event.hover.HoverAction;
-import cloud.hytora.driver.component.style.ComponentStyle;
+import cloud.hytora.driver.commands.context.CommandContext;
+import cloud.hytora.driver.commands.data.Command;
+import cloud.hytora.driver.commands.data.enums.AllowedCommandSender;
+import cloud.hytora.driver.commands.data.enums.CommandScope;
+import cloud.hytora.driver.commands.help.ArgumentHelp;
+import cloud.hytora.driver.commands.help.ArgumentHelper;
+import cloud.hytora.driver.commands.parameter.CommandArguments;
+import cloud.hytora.driver.commands.tabcomplete.TabCompleter;
+import cloud.hytora.driver.commands.tabcomplete.TabCompletion;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.ICloudPlayer;
-import cloud.hytora.driver.player.PlayerManager;
-import cloud.hytora.driver.player.executor.PlayerExecutor;
+import cloud.hytora.driver.player.ICloudPlayerManager;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-@Command({"players", "player"})
-@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
-@CommandPermission("cloud.command.use")
-@CommandAutoHelp
-@CommandDescription("Manages all players")
-@ApplicationParticipant
+@Command(
+        label = "player",
+        aliases = {"p", "players"},
+        desc = "Manages all players",
+        invalidUsageIfEmptyInput = true,
+        autoHelpAliases = {"help", "?"}
+)
 public class PlayerCommand {
 
+    @ArgumentHelp
+    public void onArgumentHelp(ArgumentHelper helper) {
+        helper.performTemplateHelp();
+    }
 
-    @Command("list")
-    @CommandDescription("Lists all players")
-    public void executeList(CommandSender sender) {
+    @TabCompletion
+    public void onTabComplete(TabCompleter completer) {
+        completer.reactWithSubCommands("player");
+    }
 
-        List<ICloudPlayer> players = CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers();
+    @Command(
+            label = "list",
+            parent = "player",
+            desc = "Lists all online players",
+            scope = CommandScope.CONSOLE_AND_INGAME
+    )
+    public void listCommand(CommandContext<?> ctx, CommandArguments args) {
+
+        List<ICloudPlayer> players = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getAllCachedCloudPlayers();
 
         if (players.isEmpty()) {
-            sender.sendMessage("§cThere are currently no players online!");
+            ctx.sendMessage("§cThere are currently no players online!");
             return;
         }
 
-        sender.sendMessage("§8");
-        sender.sendMessage("§7Players (" + players.size() + ")§8:");
+        ctx.sendMessage("§8");
+        ctx.sendMessage("§7Players (" + players.size() + ")§8:");
 
         for (ICloudPlayer player : players) {
-            sender.sendMessage("§b" + player.getName() + " §8[§e" + player.getProxyServer() + " | " + player.getServer() + "§8]");
+            ctx.sendMessage("§b" + player.getName() + " §8[§e" + player.getProxyServer() + " | " + player.getServer() + "§8]");
         }
-        sender.sendMessage("§8");
+        ctx.sendMessage("§8");
     }
 
-    @Command("info")
-    @Syntax("<name>")
-    @CommandDescription("debug command")
-    public void executeInfo(CommandSender sender, @Argument("name") String name) {
 
-        PlayerManager playerManager = CloudDriver.getInstance().getPlayerManager();
+    @Command(
+            label = "list",
+            parent = "player",
+            usage = "<name>",
+            desc = "Gives info about a player",
+            scope = CommandScope.CONSOLE_AND_INGAME
+    )
+    public void infoCommand(CommandContext<?> ctx, CommandArguments args) {
+        String name = args.get(0, String.class);
+        ICloudPlayerManager playerManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class);
         CloudOfflinePlayer player = playerManager.getOfflinePlayerByNameBlockingOrNull(name);
 
         if (player == null) {
-            sender.sendMessage("§cNo such player with the name §e" + name + " §chas ever joined the network!");
+            ctx.sendMessage("§cNo such player with the name §e" + name + " §chas ever joined the network!");
             return;
         }
 
         SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy - HH:mm:ss");
 
-        sender.sendMessage("§8");
-        sender.sendMessage("Service information:");
-        sender.sendMessage("§bName: §7" + player.getName() + " §8[§3" + player.getUniqueId() + "§8]");
-        sender.sendMessage("§bFirst Login: §7" +  sdf.format(new Date(player.getFirstLogin())));
-        sender.sendMessage("§bLast Login: §7" +  sdf.format(new Date(player.getLastLogin())));
-        sender.sendMessage("§bProperties: §7" +  player.getProperties().asRawJsonString());
-        sender.sendMessage("§bStatus: §7" + (player.isOnline() ? "§aOnline" : "§cOffline"));
+        ctx.sendMessage("§8");
+        ctx.sendMessage("Service information:");
+        ctx.sendMessage("§bName: §7" + player.getName() + " §8[§3" + player.getUniqueId() + "§8]");
+        ctx.sendMessage("§bFirst Login: §7" +  sdf.format(new Date(player.getFirstLogin())));
+        ctx.sendMessage("§bLast Login: §7" +  sdf.format(new Date(player.getLastLogin())));
+        ctx.sendMessage("§bProperties: §7" +  player.getProperties().asRawJsonString());
+        ctx.sendMessage("§bStatus: §7" + (player.isOnline() ? "§aOnline" : "§cOffline"));
         if (player.isOnline()) {
             ICloudPlayer onlinePlayer = player.asOnlinePlayer();
-            sender.sendMessage("§bProxy: §7" + onlinePlayer.getProxyServer());
-            sender.sendMessage("§bServer: §7" + onlinePlayer.getServer());
+            ctx.sendMessage("§bProxy: §7" + onlinePlayer.getProxyServer());
+            ctx.sendMessage("§bServer: §7" + onlinePlayer.getServer());
 
         }
-        sender.sendMessage("§8");
+        ctx.sendMessage("§8");
     }
 }

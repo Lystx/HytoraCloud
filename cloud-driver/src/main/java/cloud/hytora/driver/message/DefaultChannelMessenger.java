@@ -1,6 +1,7 @@
 package cloud.hytora.driver.message;
 
-import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
+import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.networking.IHandlerNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.message.packet.ChannelMessageExecutePacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
@@ -9,16 +10,15 @@ import lombok.Getter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 @Getter
-public abstract class DefaultChannelMessenger implements ChannelMessenger {
+public abstract class DefaultChannelMessenger implements IChannelMessenger {
 
     private final Map<String, ChannelMessageListener> cache;
-    protected final AdvancedNetworkExecutor executor;
+    protected final IHandlerNetworkExecutor executor;
 
-    public DefaultChannelMessenger(AdvancedNetworkExecutor executor) {
-        this.executor = executor;
+    public DefaultChannelMessenger() {
+        this.executor = CloudDriver.getInstance().getNetworkExecutor();
         this.cache = new HashMap<>();
 
         executor.registerPacketHandler((PacketHandler<ChannelMessageExecutePacket>) (wrapper, packet) -> {

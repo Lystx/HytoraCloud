@@ -3,7 +3,6 @@ package cloud.hytora.driver.networking;
 import cloud.hytora.common.collection.ThreadRunnable;
 import cloud.hytora.driver.networking.protocol.SimpleNetworkComponent;
 import cloud.hytora.driver.networking.protocol.packets.*;
-import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @Getter
-public abstract class AbstractNetworkComponent<T extends AbstractNetworkComponent<T>> extends SimpleNetworkComponent implements AdvancedNetworkExecutor {
+public abstract class AbstractNetworkComponent<T extends AbstractNetworkComponent<T>> extends SimpleNetworkComponent implements IHandlerNetworkExecutor {
 
     /**
      * All cached packet handlers

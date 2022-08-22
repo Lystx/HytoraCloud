@@ -45,6 +45,13 @@
           </archive>
         </configuration>
       </plugin>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>10</source>
+          <target>10</target>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
   <dependencies>
@@ -62,7 +69,7 @@
     </dependency>
   </dependencies>
   <properties>
-    <maven.compiler.source>8</maven.compiler.source>
     <maven.compiler.target>8</maven.compiler.target>
+    <maven.compiler.source>8</maven.compiler.source>
   </properties>
 </project>

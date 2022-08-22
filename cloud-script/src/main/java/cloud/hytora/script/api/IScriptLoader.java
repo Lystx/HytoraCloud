@@ -7,7 +7,6 @@ import java.nio.file.Path;
 
 public interface IScriptLoader {
 
-
     @NotNull
     IScriptLoader registerCommand(@NotNull IScriptCommand command);
 

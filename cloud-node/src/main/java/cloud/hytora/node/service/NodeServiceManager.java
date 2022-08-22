@@ -1,23 +1,21 @@
 package cloud.hytora.node.service;
 
+import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.common.task.Task;
-import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
-import cloud.hytora.document.gson.GsonDocument;
-import cloud.hytora.document.gson.GsonHelper;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.console.Screen;
-import cloud.hytora.driver.console.ScreenManager;
+import cloud.hytora.driver.console.screen.Screen;
+import cloud.hytora.driver.console.screen.ScreenManager;
 import cloud.hytora.driver.event.EventListener;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUpdateEvent;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.node.INode;
+import cloud.hytora.driver.node.INodeManager;
 import cloud.hytora.driver.node.config.ServiceCrashPrevention;
 import cloud.hytora.driver.services.ICloudServer;
-import cloud.hytora.driver.services.impl.UniversalCloudServer;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.impl.DefaultServiceManager;
 import cloud.hytora.node.NodeDriver;
@@ -52,19 +50,18 @@ public class NodeServiceManager extends DefaultServiceManager {
         ScreenManager screenManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
         screenManager.registerScreen(service.getName(), false);
 
-        CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceRegisterEvent(service));
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(new ServiceRegisterEvent(service));
 
-        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
-            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
+            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());
         }
     }
 
 
     @Override
     public void unregisterService(ICloudServer service) {
-        CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceUnregisterEvent(service.getName()));
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(new ServiceUnregisterEvent(service.getName()));
         super.unregisterService(service);
-
 
         ScreenManager screenManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
         Screen screen = screenManager.getScreenByNameOrNull(service.getName());
@@ -97,7 +94,7 @@ public class NodeServiceManager extends DefaultServiceManager {
 
                 NodeDriver.getInstance().getServiceQueue().getPausedGroups().add(con.getName());
 
-                CloudDriver.getInstance().getScheduler().scheduleDelayedTask(() -> {
+                Scheduler.runTimeScheduler().scheduleDelayedTask(() -> {
                     NodeDriver.getInstance().getServiceQueue().getPausedGroups().remove(con.getName());
                     NodeDriver.getInstance().getServiceQueue().dequeue();
                 }, scp.getTimeUnit().toMillis(scp.getTime()));
@@ -128,10 +125,13 @@ public class NodeServiceManager extends DefaultServiceManager {
             }
         }
 
+        if (screenManager.isScreenActive(screen.getName())) {
+            screen.leave();
+        }
         screenManager.unregisterScreen(service.getName());
 
-        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
-            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
+            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());
         }
     }
 
@@ -152,7 +152,7 @@ public class NodeServiceManager extends DefaultServiceManager {
 
     @Override
     public void sendPacketToService(ICloudServer service, IPacket packet) {
-        NodeDriver.getInstance().getExecutor().getAllCachedConnectedClients().stream().filter(it -> it.getName().equals(service.getName())).findAny().ifPresent(it -> it.sendPacket(packet));
+        NodeDriver.getInstance().getNetworkExecutor().getAllCachedConnectedClients().stream().filter(it -> it.getName().equals(service.getName())).findAny().ifPresent(it -> it.sendPacket(packet));
     }
 
 
@@ -168,9 +168,9 @@ public class NodeServiceManager extends DefaultServiceManager {
         this.updateServerInternally(service);
 
         //calling update event on every other side
-        CloudDriver.getInstance().getEventManager().callEventOnlyPacketBased(new ServiceUpdateEvent(service));
-        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
-            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventOnlyPacketBased(new ServiceUpdateEvent(service));
+        if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
+            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());
         }
     }
 

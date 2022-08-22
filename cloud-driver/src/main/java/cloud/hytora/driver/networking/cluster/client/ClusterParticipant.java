@@ -1,9 +1,11 @@
 package cloud.hytora.driver.networking.cluster.client;
 
 import cloud.hytora.common.collection.ThreadRunnable;
+import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.driver.DriverConnectEvent;
 import cloud.hytora.driver.networking.protocol.codec.NetworkBossHandler;
 import cloud.hytora.driver.networking.protocol.codec.PacketDecoder;
@@ -88,14 +90,14 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
                                             ClusterParticipant.this.sendPacket(new HandshakePacket(authKey, getName(), ClusterParticipant.this.type, customData));
 
                                             //fire connect event
-                                            CloudDriver.getInstance().getEventManager().callEventGlobally(new DriverConnectEvent());
+                                            CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(new DriverConnectEvent());
                                             super.channelActive(ctx);
 
                                         }
 
                                         @Override
                                         public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-                                            CloudDriver.getInstance().getEventManager().callEventGlobally(new DriverConnectEvent());
+                                            CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(new DriverConnectEvent());
                                             onClose(ctx);
                                             super.channelInactive(ctx);
                                         }
@@ -158,7 +160,7 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
         if (this.channel == null) {
             //re-schedule request
 
-            CloudDriver.getInstance().executeIf(() -> sendPacket(packet), () -> getChannel() != null);
+            Scheduler.runTimeScheduler().executeIf(() -> sendPacket(packet), () -> getChannel() != null);
             return;
         }
         this.getChannel().writeAndFlush(packet).addListener((ChannelFutureListener) future -> {

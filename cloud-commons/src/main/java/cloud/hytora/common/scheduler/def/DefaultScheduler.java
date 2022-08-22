@@ -1,12 +1,17 @@
 package cloud.hytora.common.scheduler.def;
 
 
+import cloud.hytora.common.collection.NamedThreadFactory;
 import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.common.scheduler.SchedulerFuture;
 import lombok.Getter;
 
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 
 @Getter
@@ -22,11 +27,17 @@ public class DefaultScheduler implements Scheduler {
 	 */
 	private final Timer timer;
 
+	/**
+	 * The java executor service
+	 */
+	protected final ScheduledExecutorService scheduledExecutor;
+
 	public static final DefaultScheduler INSTANCE = new DefaultScheduler();
 
 	public DefaultScheduler() {
 		this.tasks = new ArrayList<>();
 		this.timer = new Timer("Scheduler");
+		this.scheduledExecutor = Executors.newScheduledThreadPool(4, new NamedThreadFactory("Scheduler"));
 	}
 
 	@Override
@@ -46,6 +57,33 @@ public class DefaultScheduler implements Scheduler {
 			this.tasks.removeIf(task1 -> task1 != null && task.getId() == task1.getId());
 		}
 	}
+
+
+	@Override
+	public void executeIf(Runnable runnable, Supplier<Boolean> request, long timeOut) {
+		this.scheduledExecutor.execute(() -> {
+			long deadline = System.currentTimeMillis() + timeOut;
+			boolean done;
+
+			do {
+				done = request.get();
+				if (!done) {
+					long msRemaining = deadline - System.currentTimeMillis();
+					if (msRemaining < 0) {
+						done = true;
+					}
+				} else {
+					runnable.run();
+				}
+			} while (!done);
+		});
+	}
+
+	@Override
+	public void executeIf(Runnable runnable, Supplier<Boolean> request) {
+		this.executeIf(runnable, request, TimeUnit.DAYS.toMillis(1));
+	}
+
 
 	@Override
 	public void cancelAllTasks() {

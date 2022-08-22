@@ -3,6 +3,7 @@ package cloud.hytora.remote.impl;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.EventListener;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUpdateEvent;
@@ -13,7 +14,7 @@ import cloud.hytora.driver.services.packet.ServiceRequestShutdownPacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.impl.DefaultServiceManager;
-import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
+import cloud.hytora.driver.networking.IHandlerNetworkExecutor;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 
 import cloud.hytora.remote.Remote;
@@ -22,9 +23,9 @@ import org.jetbrains.annotations.NotNull;
 public class RemoteServiceManager extends DefaultServiceManager {
 
     public RemoteServiceManager() {
-        AdvancedNetworkExecutor executor = CloudDriver.getInstance().getExecutor();
+        IHandlerNetworkExecutor executor = CloudDriver.getInstance().getNetworkExecutor();
         executor.registerPacketHandler((PacketHandler<ServiceForceShutdownPacket>) (ctx, packet) -> {
-            if (packet.getService().equalsIgnoreCase(Remote.getInstance().thisService().getName())) {
+            if (packet.getService().equalsIgnoreCase(Remote.getInstance().thisSidesClusterParticipant().getName())) {
                 Remote.getInstance().shutdown();
             }
         });
@@ -72,23 +73,23 @@ public class RemoteServiceManager extends DefaultServiceManager {
 
     @Override
     public void shutdownService(ICloudServer service) {
-        CloudDriver.getInstance().getExecutor().sendPacket(new ServiceRequestShutdownPacket(service.getName()));
+        CloudDriver.getInstance().getNetworkExecutor().sendPacket(new ServiceRequestShutdownPacket(service.getName()));
     }
 
 
     @Override
     public void updateService(@NotNull ICloudServer service) {
         this.updateServerInternally(service);
-        CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceUpdateEvent(service));
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(new ServiceUpdateEvent(service));
     }
 
     @Override
     public void sendPacketToService(ICloudServer service, IPacket packet) {
-        if (service.getName().equalsIgnoreCase(Remote.getInstance().thisService().getName())) {
-            CloudDriver.getInstance().getExecutor().handlePacket(null, packet);
+        if (service.getName().equalsIgnoreCase(Remote.getInstance().thisSidesClusterParticipant().getName())) {
+            CloudDriver.getInstance().getNetworkExecutor().handlePacket(null, packet);
             return;
         }
-        Remote.getInstance().getClient().sendPacket(new RedirectPacket(service.getName(), packet));
+        Remote.getInstance().getNetworkExecutor().sendPacket(new RedirectPacket(service.getName(), packet));
     }
 
 }

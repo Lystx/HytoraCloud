@@ -7,6 +7,7 @@ import cloud.hytora.driver.networking.protocol.packets.NetworkResponseState;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.node.NodeDriver;
 
 import java.util.Optional;
@@ -16,7 +17,7 @@ public class NodeRemoteServerStopHandler implements PacketHandler<NodeRequestSer
     @Override
     public void handle(PacketChannel wrapper, NodeRequestServerStopPacket packet) {
         String server = packet.getServerName();
-        Task<ICloudServer> service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNullAsync(server);
+        Task<ICloudServer> service = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNullAsync(server);
         service.ifPresent(s -> NodeDriver.getInstance().getNode().stopServer(s));
         if (packet.isDemandsResponse()) {
             wrapper.prepareResponse().state(service.isPresent() ? NetworkResponseState.OK : NetworkResponseState.FAILED).execute(packet);

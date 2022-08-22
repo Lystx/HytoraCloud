@@ -1,7 +1,8 @@
 package cloud.hytora.node.impl.handler.packet.normal;
 
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.module.ModuleController;
-import cloud.hytora.driver.module.ModuleManager;
+import cloud.hytora.driver.module.IModuleManager;
 import cloud.hytora.driver.module.controller.base.ModuleConfig;
 import cloud.hytora.driver.module.packet.RemoteModuleControllerPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
@@ -17,7 +18,7 @@ public class NodeModuleControllerPacketHandler implements PacketHandler<RemoteMo
         PacketBuffer buffer = packet.buffer();
         RemoteModuleControllerPacket.PayLoad payLoad = buffer.readEnum(RemoteModuleControllerPacket.PayLoad.class);
         ModuleConfig moduleConfig = buffer.readObject(ModuleConfig.class);
-        ModuleManager moduleManager = NodeDriver.getInstance().getModuleManager();
+        IModuleManager moduleManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IModuleManager.class);
         ModuleController controller = moduleManager.getModules().stream().filter(mc -> mc.getModuleConfig().getName().equalsIgnoreCase(moduleConfig.getName())).findFirst().orElse(null);
         if (controller == null) {
             return;

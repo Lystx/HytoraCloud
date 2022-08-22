@@ -4,14 +4,14 @@ package cloud.hytora.driver.tps.def;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.tps.TickCounter;
 import cloud.hytora.driver.tps.TickType;
-import cloud.hytora.driver.tps.TickWorker;
+import cloud.hytora.driver.tps.ICloudTickWorker;
 import lombok.Getter;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
-public class DefaultTickWorker implements TickWorker {
+public class DefaultTickWorker implements ICloudTickWorker {
 
     /**
      * All registered tick counters

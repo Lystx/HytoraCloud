@@ -5,9 +5,10 @@ import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.IdentifiableClassLoader;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.exception.CloudException;
 import cloud.hytora.driver.module.ModuleController;
-import cloud.hytora.driver.module.ModuleManager;
+import cloud.hytora.driver.module.IModuleManager;
 import cloud.hytora.driver.module.packet.RemoteModuleExecutionPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.node.NodeDriver;
@@ -23,7 +24,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 
-public class NodeModuleManager implements ModuleManager {
+public class NodeModuleManager implements IModuleManager {
 
     private List<DefaultModuleController> modules = Collections.emptyList();
     private Path directory;
@@ -60,13 +61,13 @@ public class NodeModuleManager implements ModuleManager {
 
     @Override
     public synchronized void resolveModules() {
-        Logger.constantInstance().debug("Resolving Modules...");
+        Logger.constantInstance().info("Resolving Modules...");
         FileUtils.createDirectory(directory);
 
         if (NodeDriver.getInstance().getNode().getConfig().isRemote()) {
             //is remote
             PacketBuffer buffer = NodeDriver.getInstance()
-                    .getExecutor()
+                    .getNetworkExecutor()
                     .getNodeAsClient()
                     .getPacketChannel()
                     .prepareSingleQuery()
@@ -101,7 +102,7 @@ public class NodeModuleManager implements ModuleManager {
         // resolve modules and load configs
         for (Path file : FileUtils.list(directory).filter(path -> path.toString().endsWith(".jar")).collect(Collectors.toList())) {
             try {
-                CloudDriver.getInstance().getLogger().info("Resolving module {}..", file.getFileName());
+                CloudDriver.getInstance().getLogger().info("§6=> §fResolving module §b{}§8..", file.getFileName());
                 Path selfBasePath = new File(CloudDriver.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath();
 
                 ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -109,7 +110,7 @@ public class NodeModuleManager implements ModuleManager {
                     throw new CloudException("Wrong SystemClassLoader : " + classLoader.getClass().getName());
                 }
 
-                DefaultModuleController module = new DefaultModuleController(classLoader, this, file, moduleClassLoader -> CloudDriver.getInstance().getEventManager().unregisterListeners(moduleClassLoader));
+                DefaultModuleController module = new DefaultModuleController(classLoader, this, file, moduleClassLoader -> CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).unregisterListeners(moduleClassLoader));
                 module.initConfig();
 
                 modules.add(module);

@@ -2,8 +2,10 @@ package cloud.hytora.node;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.node.INode;
+import cloud.hytora.driver.node.INodeManager;
 import cloud.hytora.driver.node.data.INodeData;
 import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.utils.ServiceState;
 
@@ -19,7 +21,7 @@ public class TimeOutChecker implements Runnable {
 	}
 
 	private void checkServiceTimeout() {
-		for (ICloudServer service : NodeDriver.getInstance().getServiceManager().getAllServicesByState(ServiceState.ONLINE)) {
+		for (ICloudServer service : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllServicesByState(ServiceState.ONLINE)) {
 			if (!service.isTimedOut()) {
 				continue; //if not timed out ignoring
 			}
@@ -28,7 +30,7 @@ public class TimeOutChecker implements Runnable {
 			IServiceTask serviceTask = service.getTask();
 			if ((serviceTask == null || serviceTask.getTaskGroup().getShutdownBehaviour().isDynamic())) {
 				CloudDriver.getInstance().getLogger().warn("=> Probably crashed -> Deleting..");
-				CloudDriver.getInstance().getServiceManager().shutdownService(service);
+				CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).shutdownService(service);
 				return;
 			}
 		}
@@ -37,7 +39,7 @@ public class TimeOutChecker implements Runnable {
 	private final List<String> highPingNodes = new ArrayList<>();
 
 	private void checkNodeTimeout() {
-		for (INode node : NodeDriver.getInstance().getNodeManager().getAllCachedNodes()) {
+		for (INode node : NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).getAllCachedNodes()) {
 			if (node.getName().equalsIgnoreCase(NodeDriver.getInstance().getNode().getName())) {
 				continue;
 			}

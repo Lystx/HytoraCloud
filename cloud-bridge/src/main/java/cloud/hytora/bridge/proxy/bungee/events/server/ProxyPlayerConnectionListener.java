@@ -3,15 +3,14 @@ package cloud.hytora.bridge.proxy.bungee.events.server;
 import cloud.hytora.bridge.proxy.bungee.BungeeBootstrap;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.exception.CloudException;
 import cloud.hytora.driver.player.ICloudPlayer;
-import cloud.hytora.driver.player.PlayerFullJoinChecker;
 import cloud.hytora.driver.player.PlayerFullJoinExecutor;
-import cloud.hytora.driver.player.PlayerManager;
-import cloud.hytora.driver.player.executor.PlayerExecutor;
+import cloud.hytora.driver.player.ICloudPlayerManager;
 import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.uuid.DriverUUIDCache;
+import cloud.hytora.driver.storage.INetworkDocumentStorage;
+import cloud.hytora.driver.uuid.IdentificationCache;
 import cloud.hytora.driver.uuid.PlayerLoginProcessing;
 import cloud.hytora.remote.Remote;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -27,17 +26,16 @@ import net.md_5.bungee.event.EventPriority;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class ProxyPlayerConnectionListener implements Listener {
 
 
-    private final PlayerManager playerManager;
+    private final ICloudPlayerManager playerManager;
     private final BungeeBootstrap bungeeBootstrap;
 
     public ProxyPlayerConnectionListener(BungeeBootstrap bungeeBootstrap) {
         this.bungeeBootstrap = bungeeBootstrap;
-        this.playerManager = CloudDriver.getInstance().getPlayerManager();
+        this.playerManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class);
     }
 
 
@@ -53,18 +51,18 @@ public class ProxyPlayerConnectionListener implements Listener {
 
         ICloudPlayer cloudPlayer = null;
 
-        if (Remote.getInstance().getProperty().getPlayerLoginProcessing() == PlayerLoginProcessing.UUID_CACHE && CloudDriver.getInstance().getUUIDCache().getUUID(event.getConnection().getName()) != null) {
+        if (Remote.getInstance().getProperty().getPlayerLoginProcessing() == PlayerLoginProcessing.UUID_CACHE && CloudDriver.getInstance().getProviderRegistry().getUnchecked(IdentificationCache.class).getUUID(event.getConnection().getName()) != null) {
             String name = event.getConnection().getName();
-            UUID uuid = CloudDriver.getInstance().getUUIDCache().getUUID(name);
+            UUID uuid = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IdentificationCache.class).getUUID(name);
 
-            CloudDriver.getInstance().getPlayerManager().registerCloudPlayer(uuid, name);
-            cloudPlayer = CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(uuid);
+            CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).registerCloudPlayer(uuid, name);
+            cloudPlayer = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getCloudPlayerByUniqueIdOrNull(uuid);
         }
 
-        ICloudServer cloudServer = CloudDriver.getInstance().getServiceManager().thisServiceOrNull();
+        ICloudServer cloudServer = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).thisServiceOrNull();
         IServiceTask serviceTask = cloudServer.getTask();
 
-        List<String> whitelistedPlayers = CloudDriver.getInstance().getStorage().getBundle("cloud::whitelist").toInstances(String.class);
+        List<String> whitelistedPlayers = CloudDriver.getInstance().getProviderRegistry().getUnchecked(INetworkDocumentStorage.class).getBundle("cloud::whitelist").toInstances(String.class);
 
         if (event.getConnection().getName() != null) {
             if (serviceTask.isMaintenance() && !whitelistedPlayers.contains(event.getConnection().getName()) && !(cloudPlayer != null && cloudPlayer.hasPermission("cloud.maintenance.bypass"))) {
@@ -86,7 +84,7 @@ public class ProxyPlayerConnectionListener implements Listener {
             return;
         }
 
-        Task<ICloudServer> fallback = CloudDriver.getInstance().getServiceManager().getFallbackAsService();
+        Task<ICloudServer> fallback = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getFallbackAsService();
 
         if (fallback.isNull()) {
             event.setCancelReason(new TextComponent("§cCould not find any fallback to connect you to..."));
@@ -101,7 +99,7 @@ public class ProxyPlayerConnectionListener implements Listener {
     @EventHandler
     public void handle(PostLoginEvent event) {
         ProxiedPlayer player = event.getPlayer();
-        DriverUUIDCache cache = CloudDriver.getInstance().getUUIDCache();
+        IdentificationCache cache = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IdentificationCache.class);
 
 
         if (cache.getUUID(player.getName()) == null || !cache.getUUID(player.getName()).equals(player.getUniqueId())) {
@@ -113,7 +111,7 @@ public class ProxyPlayerConnectionListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void handle(LoginEvent event) {
         PendingConnection c = event.getConnection();
-        if (CloudDriver.getInstance().getPlayerManager().getCloudPlayer(c.getName()).isPresent()) {
+        if (CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getCloudPlayer(c.getName()).isPresent()) {
             return;
         }
         CloudDriver.getInstance().getLogger().info("Logging in Player[uuid={}, name={}]", c.getUniqueId(), c.getName());

@@ -1,17 +1,14 @@
 package cloud.hytora.driver.setup;
 
 import cloud.hytora.common.function.BiSupplier;
-import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.misc.ReflectionUtils;
-import cloud.hytora.driver.command.Console;
-import cloud.hytora.driver.console.Screen;
-import cloud.hytora.driver.console.ScreenManager;
+import cloud.hytora.driver.console.screen.Screen;
+import cloud.hytora.driver.console.screen.ScreenManager;
 import cloud.hytora.driver.console.TabCompleter;
 import cloud.hytora.driver.setup.annotations.*;
 import cloud.hytora.driver.CloudDriver;
 import com.google.gson.internal.Primitives;
 import lombok.Getter;
-import org.jline.reader.Candidate;
 
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
@@ -27,11 +24,11 @@ import java.util.stream.Collectors;
 public abstract class Setup<T extends Setup<?>> {
 
     private static final Map<Class<?>, SetupInputParser<?>> inputTransformers = new HashMap<>();
-    
+
     public static <T> void registerTransformer(Class<T> clazz, SetupInputParser<T> supplier) {
         inputTransformers.put(clazz, supplier);
     }
-    
+
     static {
 
         registerTransformer(int.class, (entry, input) -> Integer.parseInt(input));
@@ -60,7 +57,7 @@ public abstract class Setup<T extends Setup<?>> {
             return Enum.valueOf(value, input.trim().toUpperCase());
         });
     }
-    
+
     /**
      * The setup parts
      */
@@ -100,7 +97,7 @@ public abstract class Setup<T extends Setup<?>> {
     private final String uniqueSetupName;
 
     private final Collection<String> cachedCommandHistory;
-    
+
     /**
      * If this setup is allowed to be cancelled
      */
@@ -120,11 +117,11 @@ public abstract class Setup<T extends Setup<?>> {
 
         this.loadSetupParts();
         this.uniqueSetupName = "setup#" + UUID.randomUUID();
-        
+
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class).registerScreen(uniqueSetupName, false);
         this.cachedCommandHistory = getSetupScreen().getHistory();
     }
-    
+
     public Screen getSetupScreen() {
         return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class).getScreenByNameOrNull(this.uniqueSetupName);
     }
@@ -132,22 +129,25 @@ public abstract class Setup<T extends Setup<?>> {
     public void start(SetupListener<T> finishHandler) {
         this.setupListener = finishHandler;
 
-        ScreenManager screenManager = CloudDriver.getInstance().getProviderRegistry().get(ScreenManager.class).get();
-        Screen screen = screenManager.getScreenByNameOrNull(this.uniqueSetupName);
-        screen.registerTabCompleter(buffer -> {
 
-            SetupEntry value = getSetup().getValue();
-            if (value.getCompleter() != null) {
-                Class<? extends SetupSuggester> value1 = value.getCompleter().value();
-                SetupSuggester completer = ReflectionUtils.createEmpty(value1);
-                if (completer == null) {
-                    return new ArrayList<>();
-                }
-                return completer.suggest(Setup.this, getSetup().getValue());
-            }
-            return new ArrayList<>();
-        });
-        screenManager.joinScreen(screen); //joining setup screen
+        CloudDriver.getInstance()
+                .getProviderRegistry()
+                .getUnchecked(ScreenManager.class)
+                .getScreenByNameOrNull(this.uniqueSetupName)
+                .registerTabCompleter(new TabCompleter() {
+                    @Override
+                    public int onTabComplete(String buffer, int cursor, List<CharSequence> result) {
+                        SetupEntry value = getSetup().getValue();
+                        if (value.getCompleter() != null) {
+                            Class<? extends SetupSuggester> value1 = value.getCompleter().value();
+                            SetupSuggester completer = ReflectionUtils.createEmpty(value1);
+                            if (completer != null) {
+                                result.addAll(completer.suggest(Setup.this, getSetup().getValue()));
+                            }
+                        }
+                        return result.isEmpty() ? -1 : 0;
+                    }
+                }).join();  //joining setup screen
 
         //Setting current setup
         this.setup = this.getEntry(1);
@@ -175,8 +175,6 @@ public abstract class Setup<T extends Setup<?>> {
 
         unchecked.leaveCurrentScreen();
         unchecked.unregisterScreen(this.uniqueSetupName);
-
-
 
 
         //If already exited by another code line

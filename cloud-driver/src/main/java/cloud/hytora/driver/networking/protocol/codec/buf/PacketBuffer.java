@@ -31,7 +31,7 @@ public interface PacketBuffer {
 
 
 	static PacketBuffer unPooled() {
-		return unPooled(CloudDriver.getInstance().getExecutor());
+		return unPooled(CloudDriver.getInstance().getNetworkExecutor());
 	}
 
 	@Deprecated

@@ -2,41 +2,38 @@ package cloud.hytora.remote;
 
 import cloud.hytora.common.collection.WrappedException;
 import cloud.hytora.common.logging.Logger;
-import cloud.hytora.common.logging.LogLevel;
+import cloud.hytora.driver.commands.parameter.defaults.*;
 import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.common.misc.StringUtils;
+import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.context.ApplicationContext;
 import cloud.hytora.context.IApplicationContext;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
-import cloud.hytora.driver.command.CommandManager;
-import cloud.hytora.driver.command.DefaultCommandSender;
-import cloud.hytora.driver.command.sender.CommandSender;
+import cloud.hytora.driver.commands.sender.defaults.DefaultCommandSender;
+import cloud.hytora.driver.commands.ICommandManager;
+import cloud.hytora.driver.commands.sender.CommandSender;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
-import cloud.hytora.driver.message.ChannelMessenger;
-import cloud.hytora.driver.module.ModuleManager;
+import cloud.hytora.driver.message.IChannelMessenger;
+import cloud.hytora.driver.module.IModuleManager;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
-import cloud.hytora.driver.node.INode;
-import cloud.hytora.driver.node.NodeManager;
-import cloud.hytora.driver.player.CloudOfflinePlayer;
-import cloud.hytora.driver.player.ICloudPlayer;
-import cloud.hytora.driver.player.PlayerManager;
+import cloud.hytora.driver.node.INodeManager;
+import cloud.hytora.driver.player.ICloudPlayerManager;
 import cloud.hytora.driver.services.ICloudServer;
-import cloud.hytora.driver.services.ServiceManager;
-import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.task.ServiceTaskManager;
+import cloud.hytora.driver.services.ICloudServiceManager;
+import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
-import cloud.hytora.driver.services.utils.version.ServiceVersion;
-import cloud.hytora.driver.storage.DriverStorage;
-import cloud.hytora.driver.storage.RemoteDriverStorage;
-import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
-import cloud.hytora.driver.uuid.DriverUUIDCache;
+import cloud.hytora.driver.storage.INetworkDocumentStorage;
+import cloud.hytora.driver.storage.RemoteNetworkDocumentStorage;
+import cloud.hytora.driver.networking.IHandlerNetworkExecutor;
+import cloud.hytora.driver.uuid.IdentificationCache;
 import cloud.hytora.remote.adapter.RemoteAdapter;
-import cloud.hytora.remote.adapter.proxy.RemoteProxyAdapter;
+import cloud.hytora.remote.adapter.RemoteProxyAdapter;
 import cloud.hytora.remote.impl.*;
 import cloud.hytora.remote.impl.handler.*;
 import cloud.hytora.remote.impl.log.DefaultLogHandler;
@@ -44,7 +41,6 @@ import cloud.hytora.remote.impl.module.RemoteModuleManager;
 import lombok.Getter;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import lombok.Setter;
-import lombok.val;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -55,7 +51,6 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.jar.*;
 
@@ -63,18 +58,9 @@ import java.util.jar.*;
 public class Remote extends CloudDriver<ICloudServer> {
 
     private static Remote instance;
-    private final ServiceTaskManager serviceTaskManager;
-    private final ServiceManager serviceManager;
 
     private final IApplicationContext applicationContext;
-    private final PlayerManager playerManager;
-    private final DriverUUIDCache cache;
-    private final CommandManager commandManager;
     private final CommandSender commandSender;
-    private final DriverStorage storage;
-    private final ChannelMessenger channelMessenger;
-    private final NodeManager nodeManager;
-    private final ModuleManager moduleManager;
     private final Instrumentation instrumentation;
 
     private ClassLoader applicationClassLoader;
@@ -87,14 +73,12 @@ public class Remote extends CloudDriver<ICloudServer> {
     @Setter
     private Thread applicationThread;
 
-    private final RemoteNetworkClient client;
+    private final RemoteNetworkClient networkExecutor;
     private final RemoteIdentity property;
 
 
     public Remote(RemoteIdentity identity) {
-        this(identity, new HandledAsyncLogger(LogLevel.TRACE).addHandler(new DefaultLogHandler()).addHandler(entry -> CloudDriver.getInstance().getEventManager().callEventGlobally(new DriverLogEvent(entry))), null, null);
-
-
+        this(identity, new HandledAsyncLogger(identity.getLogLevel()).addHandler(new DefaultLogHandler()).addHandler(entry -> CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(new DriverLogEvent(entry))), null, null);
     }
 
     public Remote(RemoteIdentity identity, Logger logger, Instrumentation instrumentation, String[] arguments) {
@@ -110,40 +94,38 @@ public class Remote extends CloudDriver<ICloudServer> {
         this.commandSender = new DefaultCommandSender("Remote", null).function(System.out::println);
         this.property = identity;
 
-        this.client = new RemoteNetworkClient(property.getAuthKey(), property.getName(), property.getHostname(), property.getPort(), DocumentFactory.emptyDocument());
+        this.networkExecutor = new RemoteNetworkClient(property.getAuthKey(), property.getName(), property.getHostname(), property.getPort(), DocumentFactory.emptyDocument());
 
         //registering handlers
-        this.client.registerPacketHandler(new RemoteLoggingHandler());
-        this.client.registerPacketHandler(new RemoteCommandHandler());
-        this.client.registerPacketHandler(new RemoteCacheUpdateHandler());
-        this.client.registerPacketHandler(new RemoteNodeUpdateHandler());
+        this.networkExecutor.registerPacketHandler(new RemoteLoggingHandler());
+        this.networkExecutor.registerPacketHandler(new RemoteCommandHandler());
+        this.networkExecutor.registerPacketHandler(new RemoteCacheUpdateHandler());
+        this.networkExecutor.registerPacketHandler(new RemoteNodeUpdateHandler());
 
-        this.serviceTaskManager = new RemoteServiceTaskManager();
-        this.serviceManager = new RemoteServiceManager();
-        this.playerManager = new RemotePlayerManager(this.eventManager);
-        this.commandManager = new RemoteCommandManager();
-        this.channelMessenger = new RemoteChannelMessenger(this.client);
-        this.nodeManager = new RemoteNodeManager();
-        this.moduleManager = new RemoteModuleManager();
+        this.providerRegistry.setProvider(ICloudServiceTaskManager.class, new RemoteServiceTaskManager());
+        this.providerRegistry.setProvider(ICloudServiceManager.class, new RemoteServiceManager());
+        this.providerRegistry.setProvider(ICloudPlayerManager.class, new RemotePlayerManager());
+        this.providerRegistry.setProvider(ICommandManager.class, new RemoteCommandManager());
+        this.providerRegistry.setProvider(IChannelMessenger.class, new RemoteChannelMessenger());
+        this.providerRegistry.setProvider(INodeManager.class, new RemoteNodeManager());
+        this.providerRegistry.setProvider(IModuleManager.class, new RemoteModuleManager());
+        this.providerRegistry.setProvider(INetworkDocumentStorage.class, new RemoteNetworkDocumentStorage(this.networkExecutor));
+        this.providerRegistry.setProvider(IdentificationCache.class, new RemoteIdentificationCache());
 
-        this.storage = new RemoteDriverStorage(this.client);
-        this.cache = new RemoteUUIDCache();
-
-        //registering command argument parsers
-        this.commandManager.registerParser(ServiceVersion.class, ServiceVersion::valueOf);
-        this.commandManager.registerParser(LogLevel.class, LogLevel::valueOf);
-        this.commandManager.registerParser(ICloudServer.class, this.serviceManager::getServiceByNameOrNull);
-        this.commandManager.registerParser(IServiceTask.class, this.serviceTaskManager::getTaskByNameOrNull);
-        this.commandManager.registerParser(ICloudPlayer.class, this.playerManager::getCloudPlayerByNameOrNull);
-        this.commandManager.registerParser(CloudOfflinePlayer.class, this.playerManager::getOfflinePlayerByNameBlockingOrNull);
-        this.commandManager.registerParser(INode.class, this.nodeManager::getNodeByNameOrNull);
-
-
+        this.providerRegistry
+                .getUnchecked(ICommandManager.class)
+                .getParamTypeRegistry()
+                .register(
+                        new PlayerParamType(),
+                        new TaskParamType(),
+                        new ServiceParamType(),
+                        new NodeParamType()
+                );
         //service cycle update task
-        this.scheduler.scheduleRepeatingTaskAsync(() -> {
+        Scheduler.runTimeScheduler().scheduleRepeatingTaskAsync(() -> {
 
             RemoteAdapter remoteAdapter = getAdapter();
-            ICloudServer server = this.thisService();
+            ICloudServer server = this.thisSidesClusterParticipant();
 
             if (remoteAdapter == null || server == null) {
                 return;
@@ -276,17 +258,12 @@ public class Remote extends CloudDriver<ICloudServer> {
     public Task<DriverUpdatePacket> nexCacheUpdate() {
         Task<DriverUpdatePacket> task = Task.empty();
         task.denyNull();
-        CloudDriver.getInstance().getExecutor().registerSelfDestructivePacketHandler((PacketHandler<DriverUpdatePacket>) (wrapper1, packet) -> task.setResult(packet));
+        CloudDriver.getInstance().getNetworkExecutor().registerSelfDestructivePacketHandler((PacketHandler<DriverUpdatePacket>) (wrapper1, packet) -> task.setResult(packet));
         return task;
     }
 
     public static Remote getInstance() {
         return instance;
-    }
-
-    @Override
-    public DriverUUIDCache getUUIDCache() {
-        return cache;
     }
 
     public RemoteProxyAdapter getProxyAdapter() {
@@ -295,10 +272,6 @@ public class Remote extends CloudDriver<ICloudServer> {
 
     public RemoteProxyAdapter getProxyAdapterOrNull() {
         return perform(adapter instanceof RemoteProxyAdapter, () -> cast(adapter), (Supplier<RemoteProxyAdapter>) () -> null);
-    }
-
-    public ICloudServer thisService() {
-        return this.serviceManager == null ? null : this.serviceManager.getAllCachedServices().stream().filter(it -> it.getName().equalsIgnoreCase(this.property.getName())).findAny().orElse(null);
     }
 
     @Override
@@ -317,18 +290,12 @@ public class Remote extends CloudDriver<ICloudServer> {
     public void logToExecutor(NetworkComponent component, String message, Object... args) {
         message = StringUtils.formatMessage(message, args);
         DriverLoggingPacket packet = new DriverLoggingPacket(component, message);
-        this.client.sendPacket(packet);
-    }
-
-    @NotNull
-    @Override
-    public AdvancedNetworkExecutor getExecutor() {
-        return client;
+        this.networkExecutor.sendPacket(packet);
     }
 
     @Override
     public ICloudServer thisSidesClusterParticipant() {
-        return thisService();
+        return this.providerRegistry.get(ICloudServiceManager.class).mapOrElse(sm -> sm.getServiceByNameOrNull(this.property.getName()), () -> null);
     }
 
 

@@ -2,7 +2,7 @@ package cloud.hytora.remote.impl;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.event.EventManager;
+import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.player.CloudPlayerDisconnectEvent;
 import cloud.hytora.driver.event.defaults.player.CloudPlayerLoginEvent;
 import cloud.hytora.driver.player.packet.CloudPlayerDisconnectPacket;
@@ -14,6 +14,7 @@ import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.impl.DefaultCloudOfflinePlayer;
 import cloud.hytora.driver.player.impl.DefaultPlayerManager;
 import cloud.hytora.driver.player.impl.UniversalCloudPlayer;
+import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.remote.Remote;
 import org.jetbrains.annotations.NotNull;
 
@@ -24,9 +25,6 @@ import java.util.stream.Collectors;
 
 public class RemotePlayerManager extends DefaultPlayerManager {
 
-    public RemotePlayerManager(EventManager eventManager) {
-        super(eventManager);
-    }
 
     @Override
     public ICloudPlayer constructPlayer(@NotNull UUID uniqueId, @NotNull String name) {
@@ -39,7 +37,7 @@ public class RemotePlayerManager extends DefaultPlayerManager {
             @Override
             public Collection<CloudOfflinePlayer> call() throws Exception {
                 return CloudDriver.getInstance()
-                        .getExecutor()
+                        .getNetworkExecutor()
                         .getPacketChannel()
                         .prepareSingleQuery()
                         .execute(new OfflinePlayerRequestPacket())
@@ -60,7 +58,7 @@ public class RemotePlayerManager extends DefaultPlayerManager {
             @Override
             public CloudOfflinePlayer call() throws Exception {
                 return Remote.getInstance()
-                        .getClient()
+                        .getNetworkExecutor()
                         .getPacketChannel()
                         .prepareSingleQuery()
                         .execute(new OfflinePlayerRequestPacket(uniqueId))
@@ -74,7 +72,7 @@ public class RemotePlayerManager extends DefaultPlayerManager {
 
     @Override
     public void saveOfflinePlayerAsync(@NotNull CloudOfflinePlayer player) {
-        Task.runAsync(() -> Remote.getInstance().getClient().sendPacket(new OfflinePlayerRequestPacket(player)));
+        Task.runAsync(() -> Remote.getInstance().getNetworkExecutor().sendPacket(new OfflinePlayerRequestPacket(player)));
     }
 
     @Override
@@ -83,7 +81,7 @@ public class RemotePlayerManager extends DefaultPlayerManager {
             @Override
             public CloudOfflinePlayer call() throws Exception {
                 return Remote.getInstance()
-                        .getClient()
+                        .getNetworkExecutor()
                         .getPacketChannel()
                         .prepareSingleQuery()
                         .execute(new OfflinePlayerRequestPacket(name))
@@ -98,11 +96,11 @@ public class RemotePlayerManager extends DefaultPlayerManager {
     @Override
     public void registerCloudPlayer(@NotNull UUID uniqueId, @NotNull String username) {
         ICloudPlayer cloudPlayer = constructPlayer(uniqueId, username);
-        cloudPlayer.setProxyServer(CloudDriver.getInstance().getServiceManager().thisServiceOrNull());
+        cloudPlayer.setProxyServer(CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).thisServiceOrNull());
 
         this.cachedCloudPlayers.put(uniqueId, cloudPlayer);
-        Remote.getInstance().getEventManager().callEventGlobally(new CloudPlayerLoginEvent(cloudPlayer));
-        Remote.getInstance().getClient().sendPacket(new CloudPlayerLoginPacket(username, uniqueId, cloudPlayer.getProxyServer().getName()));
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(new CloudPlayerLoginEvent(cloudPlayer));
+        Remote.getInstance().getNetworkExecutor().sendPacket(new CloudPlayerLoginPacket(username, uniqueId, cloudPlayer.getProxyServer().getName()));
     }
 
     @Override
@@ -110,13 +108,13 @@ public class RemotePlayerManager extends DefaultPlayerManager {
         if (this.getCloudPlayerByUniqueIdOrNull(uuid) == null) {
             return;
         }
-        Remote.getInstance().getEventManager().callEventGlobally(new CloudPlayerDisconnectEvent(this.cachedCloudPlayers.remove(uuid)));
-        Remote.getInstance().getClient().sendPacket(new CloudPlayerDisconnectPacket(uuid, username));
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(new CloudPlayerDisconnectEvent(this.cachedCloudPlayers.remove(uuid)));
+        Remote.getInstance().getNetworkExecutor().sendPacket(new CloudPlayerDisconnectPacket(uuid, username));
     }
 
     @Override
     public void updateCloudPlayer(@NotNull ICloudPlayer cloudPlayer) {
-        Remote.getInstance().getClient().sendPacket(new CloudPlayerUpdatePacket(cloudPlayer));
+        Remote.getInstance().getNetworkExecutor().sendPacket(new CloudPlayerUpdatePacket(cloudPlayer));
     }
 
 }

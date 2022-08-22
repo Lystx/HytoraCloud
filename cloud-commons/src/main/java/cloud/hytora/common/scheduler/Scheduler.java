@@ -3,6 +3,7 @@ package cloud.hytora.common.scheduler;
 import cloud.hytora.common.scheduler.def.DefaultScheduler;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 public interface Scheduler {
 
@@ -45,6 +46,29 @@ public interface Scheduler {
      * Cancels all tasks
      */
     void cancelAllTasks();
+
+
+    /**
+     * Public Method that tries to execute a given {@link Runnable} if a provided {@link Supplier} returns {@code true} <br>
+     * or until the provided timeout in milliseconds has expired from the start of the operation
+     * <br> <br>
+     *
+     * @param runnable the runnable to execute
+     * @param request  the condition that has to be true
+     * @param timeOut  the timeOut for this request in milliseconds
+     */
+    void executeIf(Runnable runnable, Supplier<Boolean> request, long timeOut);
+
+    /**
+     * Executes a given {@link Runnable} if a provided {@link Supplier} returns {@code true} <br>
+     * with a default timeout of <b>1 DAY</b>
+     * <br> <br>
+     *
+     * @param runnable the runnable to execute
+     * @param request  the condition that has to be true
+     * @see #executeIf(Runnable, Supplier, long)
+     */
+    void executeIf(Runnable runnable, Supplier<Boolean> request);
 
     /**
      * Repeats a task for a given amount of time

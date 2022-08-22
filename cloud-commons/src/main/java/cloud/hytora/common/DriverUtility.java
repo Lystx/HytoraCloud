@@ -2,20 +2,25 @@ package cloud.hytora.common;
 
 import cloud.hytora.common.collection.WrappedException;
 import cloud.hytora.common.function.ExceptionallyRunnable;
+import cloud.hytora.common.logging.ConsoleColor;
+import cloud.hytora.common.progressbar.ProgressBar;
+import cloud.hytora.common.progressbar.ProgressBarStyle;
 import cloud.hytora.common.task.Task;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -24,6 +29,75 @@ public class DriverUtility {
     @SuppressWarnings("unchecked")
     public static <T> T cast(Object object) {
         return (T) object;
+    }
+
+    public static Task<Boolean> downloadVersion(String urlStr, Path location, ProgressBar pb) {
+        Task<Boolean> task = Task.empty();
+
+        try {
+            URL url = new URL(urlStr);
+            String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36";
+            URLConnection con = url.openConnection();
+            con.setRequestProperty("User-Agent", USER_AGENT);
+
+            int contentLength = con.getContentLength();
+            InputStream inputStream = con.getInputStream();
+
+            OutputStream outputStream = Files.newOutputStream(location);
+            byte[] buffer = new byte[2048];
+            int length;
+            int downloaded = 0;
+
+            while ((length = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, length);
+                downloaded += length;
+                pb.stepTo((long) ((downloaded * 100L) / (contentLength * 1.0)));
+            }
+            outputStream.close();
+            inputStream.close();
+            pb.close();
+            task.setResult(true);
+        } catch (Exception e) {
+            task.setFailure(e);
+        }
+        return task;
+    }
+
+    public static Task<Void> downloadVersion(String urlStr, Path location) {
+        Task<Void> task = Task.empty();
+        try {
+            ProgressBar pb = new ProgressBar(ProgressBarStyle.UNICODE_BLOCK, 300);
+
+            pb.setPrintAutomatically(true);
+            pb.setExpandingAnimation(false);
+
+            URL url = new URL(urlStr);
+            String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36";
+            URLConnection con = url.openConnection();
+            con.setRequestProperty("User-Agent", USER_AGENT);
+
+            int contentLength = con.getContentLength();
+            InputStream inputStream = con.getInputStream();
+
+            OutputStream outputStream = Files.newOutputStream(location);
+            byte[] buffer = new byte[2048];
+            int length;
+            int downloaded = 0;
+
+            while ((length = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, length);
+                downloaded += length;
+                pb.stepTo((long) ((downloaded * 100L) / (contentLength * 1.0)));
+            }
+            pb.setExtraMessage("Cleaning up...");
+            outputStream.close();
+            inputStream.close();
+            pb.close();
+            task.setResult(null);
+        } catch (Exception e) {
+            task.setFailure(e);
+        }
+        return task;
     }
 
     public static boolean hasInternetConnection() {
@@ -76,6 +150,45 @@ public class DriverUtility {
         return urlConnection.getInputStream();
     }
 
+    /**
+     * Gets the percent of match of two strings
+     *
+     * @param s1         the string to compare
+     * @param s2         the string to get compared
+     * @param ignoreCase if strings should be lowercased
+     * @return percent as double (1.0 = 100%, 0.94 = 94%)
+     */
+    public static double getPercentMatch(String s1, String s2, boolean ignoreCase) {
+
+        if (ignoreCase) {
+            s1 = s1.toLowerCase();
+            s2 = s2.toLowerCase();
+        }
+
+        Set<String> nx = new HashSet<>(); //Set 1
+        Set<String> ny = new HashSet<>(); //Set 2
+
+        //String 1 match
+        for (int i = 0; i < s1.length() - 1; i++) {
+            char x1 = s1.charAt(i);
+            char x2 = s1.charAt(i + 1);
+            nx.add("" + x1 + x2);
+        }
+
+        //String 2 match
+        for (int j = 0; j < s2.length() - 1; j++) {
+            char y1 = s2.charAt(j);
+            char y2 = s2.charAt(j + 1);
+            ny.add("" + y1 + y2);
+        }
+
+        //New set for the match
+        Set<String> intersection = new HashSet<>(nx);
+        intersection.retainAll(ny); //Removes all not containing elements
+
+        return (2 * intersection.size()) / (nx.size() + ny.size());
+    }
+
     @Nonnull
     @CheckReturnValue
     public static String args(@Nullable Object messageObject, @Nonnull Object... args) {
@@ -113,6 +226,7 @@ public class DriverUtility {
             return ifFalse.get();
         }
     }
+
     public static void perform(boolean condition, Runnable ifTrue, Runnable ifFalse) {
         if (condition) {
             ifTrue.run();

@@ -1,6 +1,9 @@
 package cloud.hytora;
 
 
+import cloud.hytora.commands.IncludeDependencyCommand;
+import cloud.hytora.commands.IncludeRepositoryCommand;
+import cloud.hytora.commands.LoggerCommand;
 import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.VersionInfo;
 import cloud.hytora.common.collection.ThreadRunnable;
@@ -14,21 +17,25 @@ import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.ZipUtils;
 import cloud.hytora.context.ApplicationContext;
 import cloud.hytora.context.IApplicationContext;
-import cloud.hytora.script.dependency.Dependency;
-import cloud.hytora.script.dependency.DependencyLoader;
-import cloud.hytora.script.dependency.Repository;
-import cloud.hytora.script.module.ModuleUpdater;
-import cloud.hytora.script.ScriptLoader;
-import cloud.hytora.script.commands.IncludeDependencyCommandI;
-import cloud.hytora.script.commands.IncludeRepositoryCommandI;
-import cloud.hytora.script.commands.PrintCommandI;
-import cloud.hytora.script.commands.RunIScriptCommand;
+import cloud.hytora.dependency.Dependency;
+import cloud.hytora.dependency.DependencyLoader;
+import cloud.hytora.dependency.Repository;
+import cloud.hytora.document.Document;
+import cloud.hytora.module.ModuleUpdater;
+import cloud.hytora.script.api.IScript;
+import cloud.hytora.script.api.IScriptLoader;
+import cloud.hytora.script.api.impl.DefaultScriptLoader;
+import cloud.hytora.script.defaults.DefaultModifyCommand;
+import cloud.hytora.script.defaults.DefaultPrintCommand;
+import cloud.hytora.script.defaults.DefaultRunCommand;
+import cloud.hytora.script.defaults.DefaultVarCommand;
 import lombok.Getter;
 import org.fusesource.jansi.AnsiConsole;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,10 +43,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.jar.JarFile;
 
-/**
- * Launcher highly inspired by
- * => <a href="https://github.com/CloudNetService/CloudNet-v3/blob/development/cloudnet-launcher/src/main/java/de/dytanic/cloudnet/launcher/CloudNetLauncher.java">CloudNet V3</a>
- */
+
 @Getter
 public class Launcher extends DriverUtility {
 
@@ -63,11 +67,16 @@ public class Launcher extends DriverUtility {
             System.out.println(formatted);
         }));
         System.setErr(logger.asPrintStream(LogLevel.ERROR));
-        new Launcher(logger, args);
+        try {
+            new Launcher(logger, args);
+        } catch (URISyntaxException e) {
+            System.out.println("Couldn't load Launcher.jar!");
+        }
     }
 
     private final String[] args;
     private final Logger logger;
+    private final IdentifiableClassLoader classLoader;
 
     private final Collection<Dependency> dependencies;
     private final Map<String, Repository> repositories;
@@ -75,11 +84,13 @@ public class Launcher extends DriverUtility {
     private final DependencyLoader dependencyLoader;
     private final ModuleUpdater moduleUpdater;
 
-    public Launcher(Logger logger, String[] args) throws IOException {
+    public Launcher(Logger logger, String[] args) throws IOException, URISyntaxException {
         this.args = args;
         this.logger = logger;
         this.dependencies = newList();
         this.repositories = new HashMap<>();
+
+        classLoader = new IdentifiableClassLoader(new URL[]{new File(Launcher.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toURL()});
 
         VersionInfo version = VersionInfo.getCurrentVersion();
 
@@ -106,11 +117,15 @@ public class Launcher extends DriverUtility {
         this.moduleUpdater = context.getInstance(ModuleUpdater.class);
 
         logger.info("Loading 'launcher.cloud'...");
-        ScriptLoader loader = ScriptLoader.getInstance();
-        loader.registerCommand("runScript", new RunIScriptCommand());
-        loader.registerCommand("print", new PrintCommandI());
-        loader.registerCommand("includeDependency", new IncludeDependencyCommandI(this.dependencies::add));
-        loader.registerCommand("includeRepository", new IncludeRepositoryCommandI(repository -> repositories.put(repository.getName(), repository)));
+        IScriptLoader loader = new DefaultScriptLoader();
+
+        loader.registerCommand(new DefaultPrintCommand());
+        loader.registerCommand(new DefaultRunCommand());
+        loader.registerCommand(new DefaultVarCommand());
+        loader.registerCommand(new DefaultModifyCommand());
+        loader.registerCommand(new LoggerCommand());
+        loader.registerCommand(new IncludeDependencyCommand(this.dependencies::add));
+        loader.registerCommand(new IncludeRepositoryCommand(r -> this.repositories.put(r.getName(), r)));
 
         Path launcherFile = Paths.get("launcher.cloud");
         if (!Files.exists(launcherFile)) {
@@ -124,7 +139,13 @@ public class Launcher extends DriverUtility {
             }
         }
 
-        loader.executeScript(launcherFile)
+
+        IScript script = loader.loadScript(Paths.get("launcher.cloud"));
+        if (script == null) {
+            System.out.println("Couldn't load script!");
+            return;
+        }
+        script.executeAsync()
                 .onTaskSucess(n -> {
                     APPLICATION_FILE_URL = System.getProperty("cloud.hytora.launcher.application.file");
                     BASE_URL = System.getProperty("cloud.hytora.launcher.updater.baseUrl");
@@ -265,11 +286,13 @@ public class Launcher extends DriverUtility {
     private void startApplication(String[] args, Collection<URL> dependencyResources) throws Throwable {
         
         String jarName;
-        if (!CUSTOM_VERSION.equalsIgnoreCase("null")) {
+
+        try {
             jarName = VersionInfo.fromString(CUSTOM_VERSION).formatCloudJarName();
-        } else {
+        } catch (Exception e) {
             jarName = VersionInfo.getNewestVersion().formatCloudJarName();
         }
+
         Path targetPath = LAUNCHER_VERSIONS.resolve(jarName);
         Path driverTargetPath = LAUNCHER_VERSIONS.resolve("api.jar");
 
@@ -285,7 +308,14 @@ public class Launcher extends DriverUtility {
         dependencyResources.add(targetPath.toUri().toURL());
        // dependencyResources.add(driverTargetPath.toUri().toURL());
 
-        IdentifiableClassLoader classLoader = new IdentifiableClassLoader(dependencyResources.toArray(new URL[0]));
+        /*
+        for (URL dependencyResource : dependencyResources) {
+            if (!this.classLoader.containsUrl(dependencyResource)) {
+                this.classLoader.addURL(dependencyResource);
+            }
+        }*/
+
+        //IdentifiableClassLoader classLoader = new IdentifiableClassLoader(dependencyResources.toArray(new URL[0]));
         Method method = classLoader.loadClass(mainClass).getMethod("main", String[].class);
 
         Collection<String> arguments = listOf(args);
