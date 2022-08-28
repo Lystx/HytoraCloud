@@ -1,7 +1,7 @@
 package cloud.hytora.driver.services.impl;
 
 import cloud.hytora.common.function.ExceptionallyBiConsumer;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
@@ -15,10 +15,10 @@ import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.packet.ServiceConfigPacket;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.INodeManager;
-import cloud.hytora.driver.services.ConfigurableService;
+import cloud.hytora.driver.services.IFutureCloudServer;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.template.ServiceTemplate;
+import cloud.hytora.driver.services.template.ITemplate;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 
 import java.net.InetSocketAddress;
@@ -27,7 +27,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.UUID;
 
-public class DefaultConfigurableService implements ConfigurableService {
+public class DefaultConfigurableService implements IFutureCloudServer {
 
     private final IServiceTask serviceTask;
 
@@ -46,7 +46,7 @@ public class DefaultConfigurableService implements ConfigurableService {
 
     private Document properties;
 
-    private Collection<ServiceTemplate> templates;
+    private Collection<ITemplate> templates;
 
     private ServiceVersion version;
 
@@ -66,72 +66,72 @@ public class DefaultConfigurableService implements ConfigurableService {
     }
 
     @Override
-    public ConfigurableService port(int port) {
+    public IFutureCloudServer port(int port) {
         this.port = port;
         return this;
     }
 
     @Override
-    public ConfigurableService uniqueId(UUID uniqueId) {
+    public IFutureCloudServer uniqueId(UUID uniqueId) {
         this.uniqueId = uniqueId;
         return this;
     }
 
     @Override
-    public ConfigurableService memory(int memoryInMB) {
+    public IFutureCloudServer memory(int memoryInMB) {
         this.memory = memoryInMB;
         return this;
     }
 
     @Override
-    public ConfigurableService motd(String motd) {
+    public IFutureCloudServer motd(String motd) {
         this.motd = motd;
         return this;
     }
 
     @Override
-    public ConfigurableService properties(Document document) {
+    public IFutureCloudServer properties(Document document) {
         this.properties = document;
         return this;
     }
 
     @Override
-    public ConfigurableService maxPlayers(int maxPlayers) {
+    public IFutureCloudServer maxPlayers(int maxPlayers) {
         this.maxPlayers = maxPlayers;
         return this;
     }
 
     @Override
-    public ConfigurableService node(String node) {
+    public IFutureCloudServer node(String node) {
         this.node = node;
         return this;
     }
 
     @Override
-    public ConfigurableService version(ServiceVersion version) {
+    public IFutureCloudServer version(ServiceVersion version) {
         this.version = version;
         return this;
     }
 
     @Override
-    public ConfigurableService templates(ServiceTemplate... templates) {
+    public IFutureCloudServer templates(ITemplate... templates) {
         this.templates = Arrays.asList(templates);
         return this;
     }
 
     @Override
-    public ConfigurableService ignoreIfLimitOfServicesReached() {
+    public IFutureCloudServer ignoreIfLimitOfServicesReached() {
         this.ignoreOfLimit = true;
         return this;
     }
 
 
     @Override
-    public Task<ICloudServer> start() {
-        Task<ICloudServer> task = Task.empty();
+    public ITask<ICloudServer> start() {
+        ITask<ICloudServer> task = ITask.empty();
 
 
-        Task.runAsync(() -> {
+        ITask.runAsync(() -> {
             if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
                 EndpointNetworkExecutor executor = (EndpointNetworkExecutor) CloudDriver.getInstance().getNetworkExecutor();
 
@@ -157,7 +157,9 @@ public class DefaultConfigurableService implements ConfigurableService {
                 service.setMaxPlayers(maxPlayers);
                 service.setUniqueId(uniqueId);
                 service.setRunningNodeName(node);
-                service.setMotd(motd);
+                service.editPingProperties(ping -> {
+                    ping.setMotd(motd);
+                });
 
                 CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).registerService(service);
 
@@ -167,7 +169,7 @@ public class DefaultConfigurableService implements ConfigurableService {
                 }
 
                 INodeManager nodeManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class);
-                Task<INode> node = nodeManager.getNode(this.node);
+                ITask<INode> node = nodeManager.getNode(this.node);
 
                 node.ifPresent(n -> n.startServer(service));
                 node.ifEmpty(n -> CloudDriver.getInstance().getLogger().error("Tried to start {} but the Node {} for Servers of Configuration {} is not connected!", service.getName(), this.node, serviceTask.getName()));

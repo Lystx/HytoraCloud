@@ -1,6 +1,6 @@
 package cloud.hytora.remote.impl;
 
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.player.CloudPlayerDisconnectEvent;
@@ -32,8 +32,8 @@ public class RemotePlayerManager extends DefaultPlayerManager {
     }
 
     @Override
-    public @NotNull Task<Collection<CloudOfflinePlayer>> getAllOfflinePlayersAsync() {
-        return Task.callAsync(new Callable<Collection<CloudOfflinePlayer>>() {
+    public @NotNull ITask<Collection<CloudOfflinePlayer>> getAllOfflinePlayersAsync() {
+        return ITask.callAsync(new Callable<Collection<CloudOfflinePlayer>>() {
             @Override
             public Collection<CloudOfflinePlayer> call() throws Exception {
                 return CloudDriver.getInstance()
@@ -53,8 +53,8 @@ public class RemotePlayerManager extends DefaultPlayerManager {
     }
 
     @Override
-    public @NotNull Task<CloudOfflinePlayer> getOfflinePlayerByUniqueIdAsync(@NotNull UUID uniqueId) {
-        return Task.callAsync(new Callable<CloudOfflinePlayer>() {
+    public @NotNull ITask<CloudOfflinePlayer> getOfflinePlayerByUniqueIdAsync(@NotNull UUID uniqueId) {
+        return ITask.callAsync(new Callable<CloudOfflinePlayer>() {
             @Override
             public CloudOfflinePlayer call() throws Exception {
                 return Remote.getInstance()
@@ -72,12 +72,12 @@ public class RemotePlayerManager extends DefaultPlayerManager {
 
     @Override
     public void saveOfflinePlayerAsync(@NotNull CloudOfflinePlayer player) {
-        Task.runAsync(() -> Remote.getInstance().getNetworkExecutor().sendPacket(new OfflinePlayerRequestPacket(player)));
+        ITask.runAsync(() -> Remote.getInstance().getNetworkExecutor().sendPacket(new OfflinePlayerRequestPacket(player)));
     }
 
     @Override
-    public @NotNull Task<CloudOfflinePlayer> getOfflinePlayerByNameAsync(@NotNull String name) {
-        return Task.callAsync(new Callable<CloudOfflinePlayer>() {
+    public @NotNull ITask<CloudOfflinePlayer> getOfflinePlayerByNameAsync(@NotNull String name) {
+        return ITask.callAsync(new Callable<CloudOfflinePlayer>() {
             @Override
             public CloudOfflinePlayer call() throws Exception {
                 return Remote.getInstance()

@@ -22,7 +22,7 @@ public class BungeeConfiguration extends VersionFile {
         ICloudServer firstService = services.isEmpty() ? null : services.get(0);
 
         String firstServerName = firstService == null ? "fallback": firstService.getName();
-        String firstServerMotd = firstService == null ? "Default HytoraCloud Fallback" : firstService.getMotd();
+        String firstServerMotd = firstService == null ? "Default HytoraCloud Fallback" : firstService.getPingProperties().getMotd();
         int firstServerPort = firstService == null ? 50000 : firstService.getPort();
 
         writer.write("player_limit: " + ICloudServer.getMaxPlayers() + "\n" +

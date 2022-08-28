@@ -338,4 +338,6 @@ public interface PacketBuffer {
 
 	void writeBuffer(@Nonnull PacketBuffer buffer);
 
+    <T> Class<T> readClass();
+    <T> PacketBuffer writeClass(Class<T> clazz);
 }

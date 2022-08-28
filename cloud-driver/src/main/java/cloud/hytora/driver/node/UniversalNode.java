@@ -2,7 +2,7 @@ package cloud.hytora.driver.node;
 
 import cloud.hytora.common.function.ExceptionallyConsumer;
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
 import cloud.hytora.driver.node.packet.NodeRequestServerStartPacket;
 import cloud.hytora.driver.node.packet.NodeRequestServerStopPacket;
@@ -12,22 +12,28 @@ import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.networking.protocol.packets.NetworkResponseState;
 import cloud.hytora.driver.node.base.AbstractNode;
 import cloud.hytora.driver.node.config.INodeConfig;
-import cloud.hytora.driver.node.data.INodeData;
+import cloud.hytora.driver.node.data.INodeCycleData;
 import cloud.hytora.driver.services.ICloudServer;
 import lombok.*;
+import org.jetbrains.annotations.NotNull;
 
 @Getter
 @NoArgsConstructor
 @Setter
 public class UniversalNode extends AbstractNode {
 
-    public UniversalNode(INodeConfig config, INodeData lastCycleData) {
+    public UniversalNode(INodeConfig config, INodeCycleData lastCycleData) {
         super(config, lastCycleData);
     }
 
     @Override
     public void sendPacket(IPacket packet) {
         packet.publishTo(this.getName());
+    }
+
+    @Override
+    public ITask<Void> sendPacketAsync(IPacket packet) {
+        return packet.publishToAsync(this.getName());
     }
 
     @Override
@@ -46,10 +52,10 @@ public class UniversalNode extends AbstractNode {
     }
 
     @Override
-    public Task<NetworkResponseState> stopServerAsync(ICloudServer server) {
+    public @NotNull ITask<NetworkResponseState> stopServerAsync(@NotNull ICloudServer server) {
         return new NodeRequestServerStartPacket(server, true)
                 .awaitResponse(this.getName())
-                .registerListener((ExceptionallyConsumer<Task<BufferedResponse>>) task -> {
+                .registerListener((ExceptionallyConsumer<ITask<BufferedResponse>>) task -> {
                     if (!task.isPresent()) {
                         task.setFailure(task.error());
                     }
@@ -57,15 +63,15 @@ public class UniversalNode extends AbstractNode {
     }
 
     @Override
-    public void startServer(ICloudServer server) {
+    public void startServer(@NotNull ICloudServer server) {
         this.sendPacket(new NodeRequestServerStartPacket(server, false));
     }
 
     @Override
-    public Task<NetworkResponseState> startServerAsync(ICloudServer server) {
+    public @NotNull ITask<NetworkResponseState> startServerAsync(ICloudServer server) {
         return new NodeRequestServerStopPacket(server.getName(), true)
                 .awaitResponse(this.getName())
-                .registerListener((ExceptionallyConsumer<Task<BufferedResponse>>) task -> {
+                .registerListener((ExceptionallyConsumer<ITask<BufferedResponse>>) task -> {
                     if (!task.isPresent()) {
                         task.setFailure(task.error());
                     }

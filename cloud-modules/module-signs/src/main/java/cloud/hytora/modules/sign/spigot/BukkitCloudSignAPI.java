@@ -46,7 +46,7 @@ public class BukkitCloudSignAPI extends CloudSignAPI {
         ChannelMessage message = ChannelMessage
                 .builder()
                 .channel(CloudSignAPI.CHANNEL_NAME)
-               // .receivers(NetworkComponent.of(CloudDriver.getInstance().getServiceManager().thisServiceOrNull().getRunningNodeName(), ConnectionType.NODE))
+               // .receivers(NetworkComponent.of(CloudDriver.retrieveFromStorage().getServiceManager().thisServiceOrNull().getRunningNodeName(), ConnectionType.NODE))
                 .buffer(buf -> {
                     buf.writeEnum(type);
                     buf.append(buffer);

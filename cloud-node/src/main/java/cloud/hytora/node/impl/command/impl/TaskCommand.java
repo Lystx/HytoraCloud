@@ -3,7 +3,6 @@ package cloud.hytora.node.impl.command.impl;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.commands.context.CommandContext;
 import cloud.hytora.driver.commands.data.Command;
-import cloud.hytora.driver.commands.data.enums.AllowedCommandSender;
 import cloud.hytora.driver.commands.data.enums.CommandScope;
 import cloud.hytora.driver.commands.help.ArgumentHelp;
 import cloud.hytora.driver.commands.help.ArgumentHelper;
@@ -17,8 +16,8 @@ import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.task.bundle.DefaultTaskGroup;
 import cloud.hytora.driver.services.fallback.SimpleFallback;
 import cloud.hytora.driver.services.task.UniversalServiceTask;
-import cloud.hytora.driver.services.template.ServiceTemplate;
-import cloud.hytora.driver.services.template.TemplateStorage;
+import cloud.hytora.driver.services.template.ITemplate;
+import cloud.hytora.driver.services.template.ITemplateStorage;
 import cloud.hytora.driver.services.template.def.CloudTemplate;
 import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
@@ -71,7 +70,7 @@ public class TaskCommand {
         ctx.sendMessage("§8");
         ctx.sendMessage("§bInformation§8: ");
         ctx.sendMessage("§bName: §f" + task.getName());
-        ctx.sendMessage("§bTemplates: §f" + task.getTaskGroup().getTemplates().stream().map(ServiceTemplate::getPrefix).collect(Collectors.toList()));
+        ctx.sendMessage("§bTemplates: §f" + task.getTaskGroup().getTemplates().stream().map(ITemplate::getPrefix).collect(Collectors.toList()));
         ctx.sendMessage("§bNode: §f" + task.getPossibleNodes());
         ctx.sendMessage("§bMemory: §f" + task.getMemory() + "MB");
         ctx.sendMessage("§bStartOrder: §f" + task.getStartOrder());
@@ -113,7 +112,7 @@ public class TaskCommand {
 
                 UniversalServiceTask serviceTask = new UniversalServiceTask();
 
-                if (!CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskGroupByName(parentName).isPresent()) {
+                if (!CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskGroup(parentName).isPresent()) {
                     DefaultTaskGroup parent = new DefaultTaskGroup(name, version.getEnvironment(), shutdownBehaviour, new String[]{
                             "-XX:+UseG1GC",
                             "-XX:+ParallelRefProcEnabled",
@@ -141,7 +140,7 @@ public class TaskCommand {
                             "-Dio.netty.recycler.maxCapacity.default=0",
                             "-Djline.terminal=jline.UnsupportedTerminal"
                     }, new ArrayList<>(), Collections.singleton(new CloudTemplate(name, "default", templateStorage, true)));
-                    CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).addTaskGroup(parent);
+                    CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).registerTaskGroup(parent);
                 }
 
                 serviceTask.setName(name);
@@ -177,11 +176,11 @@ public class TaskCommand {
                 serviceTask.setMinOnlineService(minServers);
                 serviceTask.setMaxOnlineService(maxServers);
 
-                CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).addTask(serviceTask);
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).registerTask(serviceTask);
 
                 //creating templates
-                for (ServiceTemplate template : serviceTask.getTaskGroup().getTemplates()) {
-                    TemplateStorage storage = template.getStorage();
+                for (ITemplate template : serviceTask.getTaskGroup().getTemplates()) {
+                    ITemplateStorage storage = template.getStorage();
                     if (storage != null) {
                         storage.createTemplate(template);
                     }
@@ -210,7 +209,7 @@ public class TaskCommand {
             ctx.sendMessage("§cThere is no existing ServiceTask with the name §e" + args.get(0) + "§c!");
             return;
         }
-        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).removeTask(task);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).unregisterTask(task);
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllServicesByTask(task).forEach(ser -> CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).shutdownService(ser));
 
         ctx.sendMessage("§7The ServiceTask §b" + task.getName() + " §7was deleted§8!");

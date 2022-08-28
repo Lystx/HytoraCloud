@@ -41,7 +41,7 @@ public class GlowstoneConfiguration extends VersionFile {
                 "  difficulty: NORMAL\n" +
                 "  hardcore: false\n" +
                 "  pvp: true\n" +
-                "  max-build-height: 256\n" +
+                "  max-newInstance-height: 256\n" +
                 "  announce-achievements: true\n" +
                 "  allow-flight: false\n" +
                 "  command-blocks: false\n" +
@@ -62,7 +62,7 @@ public class GlowstoneConfiguration extends VersionFile {
                 "    animal: 400\n" +
                 "folders:\n" +
                 "  plugins: plugins\n" +
-                "  update: update\n" +
+                "  updateTask: updateTask\n" +
                 "  worlds: worlds\n" +
                 "files:\n" +
                 "  permissions: permissions.yml\n" +

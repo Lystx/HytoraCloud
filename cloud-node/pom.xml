@@ -103,10 +103,27 @@
     </dependencies>
 
 
-
     <build>
         <finalName>cloud</finalName>
 
+        <pluginManagement>
+            <plugins>
+
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>1.2.1</version>
+                    <executions>
+                        <execution>
+                            <phase>process-resources</phase>
+                            <goals>
+                                <goal>exec</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -145,6 +162,20 @@
                             <Implementation-Version>${project.version}</Implementation-Version>
                         </manifestEntries>
                     </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <configuration>
+                    <executable>mvn</executable>
+                    <arguments>
+                        <argument>-DskipTests=true</argument>
+                        <argument>-f</argument>
+                        <argument>${basedir}/cloud-bridge/pom.xml</argument>
+                        <argument>clean</argument>
+                        <argument>install</argument>
+                    </arguments>
                 </configuration>
             </plugin>
 

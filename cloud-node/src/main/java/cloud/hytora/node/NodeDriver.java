@@ -10,10 +10,8 @@ import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.common.logging.Logger;
-import cloud.hytora.context.ApplicationContext;
-import cloud.hytora.context.IApplicationContext;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.commands.sender.ConsoleCommandSender;
@@ -28,7 +26,6 @@ import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
 import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.http.impl.NettyHttpServer;
 import cloud.hytora.driver.message.IChannelMessenger;
-import cloud.hytora.driver.networking.cluster.ClusterExecutor;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.permission.PermissionChecker;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
@@ -70,10 +67,10 @@ import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.task.UniversalServiceTask;
-import cloud.hytora.driver.services.task.bundle.TaskGroup;
+import cloud.hytora.driver.services.task.bundle.ITaskGroup;
 import cloud.hytora.driver.services.task.bundle.DefaultTaskGroup;
-import cloud.hytora.driver.services.template.ServiceTemplate;
-import cloud.hytora.driver.services.template.TemplateStorage;
+import cloud.hytora.driver.services.template.ITemplate;
+import cloud.hytora.driver.services.template.ITemplateStorage;
 import cloud.hytora.driver.database.SectionedDatabase;
 import cloud.hytora.node.impl.handler.http.V1PingRouter;
 import cloud.hytora.node.impl.handler.http.V1StatusRouter;
@@ -220,7 +217,7 @@ public class NodeDriver extends CloudDriver<INode> {
         screen.registerTabCompleter(new NodeCommandCompleter());
         screen.join();
 
-        Task.runAsync(() -> {
+        ITask.runAsync(() -> {
             if (running) {
                 return;
             }
@@ -343,11 +340,11 @@ public class NodeDriver extends CloudDriver<INode> {
 
 
                 //checking if directories got deleted meanwhile
-                for (TaskGroup parent : this.providerRegistry.getUnchecked(ICloudServiceTaskManager.class).getAllTaskGroups()) {
+                for (ITaskGroup parent : this.providerRegistry.getUnchecked(ICloudServiceTaskManager.class).getAllCachedTaskGroups()) {
 
                     //creating templates
-                    for (ServiceTemplate template : parent.getTemplates()) {
-                        TemplateStorage storage = template.getStorage();
+                    for (ITemplate template : parent.getTemplates()) {
+                        ITemplateStorage storage = template.getStorage();
                         if (storage != null) {
                             storage.createTemplate(template);
                         }
@@ -617,11 +614,11 @@ public class NodeDriver extends CloudDriver<INode> {
                 proxyTask.setProperty("onlineMode", true);
                 proxyTask.setProperty("proxyProtocol", false);
 
-                taskManager.addTaskGroup(proxyGroup);
-                taskManager.addTaskGroup(lobbyGroup);
+                taskManager.registerTaskGroup(proxyGroup);
+                taskManager.registerTaskGroup(lobbyGroup);
 
-                taskManager.addTask(lobbyTask);
-                taskManager.addTask(proxyTask);
+                taskManager.registerTask(lobbyTask);
+                taskManager.registerTask(proxyTask);
 
                 this.logger.info("Created default Proxy & Lobby ServiceTasks!");
                 this.logger.info("§7You §acompleted §7the NodeSetup§8!");
@@ -659,7 +656,7 @@ public class NodeDriver extends CloudDriver<INode> {
         this.logger.info("§7Trying to terminate the §cCloudsystem§8...");
         PlayerExecutor.forAll().disconnect("§cThe network was shut down!");
 
-        Task.runTaskLater(() -> {
+        ITask.runTaskLater(() -> {
 
 
             IModuleManager moduleManager = providerRegistry.getUnchecked(IModuleManager.class);
@@ -678,13 +675,13 @@ public class NodeDriver extends CloudDriver<INode> {
                 }
             }
 
-            Task.runSync(() -> logger.info("Terminating in §8[§c3§8]"));
-            Task.runTaskLater(() -> logger.info("Terminating in §8[§c2§8]"), TimeUnit.SECONDS, 1);
-            Task.runTaskLater(() -> logger.info("Terminating in §8[§c1§8]"), TimeUnit.SECONDS, 2);
+            logger.info("Terminating in §8[§c3§8]");
+            ITask.runTaskLater(() -> logger.info("Terminating in §8[§c2§8]"), TimeUnit.SECONDS, 1);
+            ITask.runTaskLater(() -> logger.info("Terminating in §8[§c1§8]"), TimeUnit.SECONDS, 2);
 
             //Shutting down networking and database
-            Task.multiTasking(this.networkExecutor.shutdown(), this.providerRegistry.getUnchecked(IDatabaseManager.class).shutdown()).registerListener(wrapper -> {
-                Task.runTaskLater(() -> {
+            ITask.multiTasking(this.networkExecutor.shutdown(), this.providerRegistry.getUnchecked(IDatabaseManager.class).shutdown()).registerListener(wrapper -> {
+                ITask.runTaskLater(() -> {
                     FileUtils.delete(NodeDriver.SERVICE_DIR_DYNAMIC.toPath());
                     FileUtils.delete(NodeDriver.STORAGE_TEMP_FOLDER.toPath());
 

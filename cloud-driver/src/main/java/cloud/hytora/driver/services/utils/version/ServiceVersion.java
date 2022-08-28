@@ -36,7 +36,7 @@ public enum ServiceVersion {
     ),
     WATERFALL(
             VersionType.BUNGEE,
-            null, //auto build url link
+            null, //auto newInstance url link
             "Waterfall",
             "latest",
             BungeeConfiguration.class, ServerIconFile.class //configurations

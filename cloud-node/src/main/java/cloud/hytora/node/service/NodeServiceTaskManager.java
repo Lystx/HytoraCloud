@@ -12,9 +12,9 @@ import cloud.hytora.driver.node.INodeManager;
 import cloud.hytora.driver.services.task.DefaultServiceTaskManager;
 import cloud.hytora.driver.services.task.packet.ServiceTaskExecutePacket;
 import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.task.bundle.TaskGroup;
-import cloud.hytora.driver.services.template.ServiceTemplate;
-import cloud.hytora.driver.services.template.TemplateStorage;
+import cloud.hytora.driver.services.task.bundle.ITaskGroup;
+import cloud.hytora.driver.services.template.ITemplate;
+import cloud.hytora.driver.services.template.ITemplateStorage;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.driver.database.SectionedDatabase;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
@@ -31,7 +31,7 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
         this.database = NodeDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
 
         // loading all database groups and configurations
-        this.getAllTaskGroups().addAll(this.database.getSection(TaskGroup.class).getAll());
+        this.getAllCachedTaskGroups().addAll(this.database.getSection(ITaskGroup.class).getAll());
         this.getAllCachedTasks().addAll(this.database.getSection(IServiceTask.class).getAll());
 
         if (CloudDriver.getInstance().getNetworkExecutor() != null) {
@@ -51,7 +51,7 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
             CloudDriver.getInstance().getLogger().warn("There are no ServiceTasks loaded!");
             CloudDriver.getInstance().getLogger().warn("Maybe you want to create some?");
         } else {
-            CloudDriver.getInstance().getLogger().info("§7Cached following TaskGroups: §b" + this.getAllTaskGroups().stream().map(TaskGroup::getName).collect(Collectors.joining("§8, §b")));
+            CloudDriver.getInstance().getLogger().info("§7Cached following TaskGroups: §b" + this.getAllCachedTaskGroups().stream().map(ITaskGroup::getName).collect(Collectors.joining("§8, §b")));
             CloudDriver.getInstance().getLogger().info("§7Cached following ServiceTasks: §b" + this.getAllCachedTasks().stream().map(IServiceTask::getName).collect(Collectors.joining("§8, §b")));
         }
 
@@ -61,7 +61,7 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
     @EventListener
     public void handle(TaskUpdateEvent event) {
         IServiceTask packetTask = event.getTask();
-        IServiceTask task = getTaskByNameOrNull(packetTask.getName());
+        IServiceTask task = getTaskOrNull(packetTask.getName());
 
         if (task == null) {
             return;
@@ -79,12 +79,12 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
     }
 
     @Override
-    public void addTask(@NotNull IServiceTask task) {
+    public void registerTask(@NotNull IServiceTask task) {
         this.database.getSection(IServiceTask.class).insert(task.getName(), task);
         if (NodeDriver.getInstance().getNetworkExecutor() != null) {
             NodeDriver.getInstance().getNetworkExecutor().sendPacketToAll(new ServiceTaskExecutePacket(task, ServiceTaskExecutePacket.ExecutionPayLoad.CREATE));
         }
-        super.addTask(task);
+        super.registerTask(task);
 
         if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());
@@ -92,9 +92,9 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
     }
 
     @Override
-    public void addTaskGroup(@NotNull TaskGroup task) {
-        this.database.getSection(TaskGroup.class).insert(task.getName(), task);
-        super.addTaskGroup(task);
+    public void registerTaskGroup(@NotNull ITaskGroup task) {
+        this.database.getSection(ITaskGroup.class).insert(task.getName(), task);
+        super.registerTaskGroup(task);
 
         if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());
@@ -102,9 +102,9 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
     }
 
     @Override
-    public void removeTaskGroup(@NotNull TaskGroup task) {
-        this.database.getSection(TaskGroup.class).delete(task.getName());
-        super.removeTaskGroup(task);
+    public void unregisterTaskGroup(@NotNull ITaskGroup task) {
+        this.database.getSection(ITaskGroup.class).delete(task.getName());
+        super.unregisterTaskGroup(task);
 
         if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());
@@ -112,12 +112,12 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
     }
 
     @Override
-    public void removeTask(@NotNull IServiceTask task) {
+    public void unregisterTask(@NotNull IServiceTask task) {
         this.database.getSection(IServiceTask.class).delete(task.getName());
         if (NodeDriver.getInstance().getNetworkExecutor() != null) {
             NodeDriver.getInstance().getNetworkExecutor().sendPacketToAll(new ServiceTaskExecutePacket(task, ServiceTaskExecutePacket.ExecutionPayLoad.REMOVE));
         }
-        super.removeTask(task);
+        super.unregisterTask(task);
 
         if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());
@@ -125,7 +125,7 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
     }
 
     @Override
-    public void update(@NotNull IServiceTask task) {
+    public void updateTask(@NotNull IServiceTask task) {
         this.database.getSection(IServiceTask.class).update(task.getName(), task);
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(new TaskUpdateEvent(task));
         if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
@@ -140,8 +140,8 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
             this.getAllCachedTasks().add(packet.getServiceTask());
 
             //creating templates
-            for (ServiceTemplate template : packet.getServiceTask().getTaskGroup().getTemplates()) {
-                TemplateStorage storage = template.getStorage();
+            for (ITemplate template : packet.getServiceTask().getTaskGroup().getTemplates()) {
+                ITemplateStorage storage = template.getStorage();
                 if (storage != null) {
                     storage.createTemplate(template);
                 }

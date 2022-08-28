@@ -3,6 +3,7 @@ cloud\hytora\bridge\proxy\bungee\events\cloud\ProxyRemoteHandler.class
 cloud\hytora\bridge\proxy\bungee\events\server\ProxyPlayerCommandListener.class
 cloud\hytora\bridge\proxy\bungee\utils\BungeeCommandSender.class
 cloud\hytora\bridge\proxy\bungee\utils\CloudReconnectHandler.class
+cloud\hytora\bridge\proxy\bungee\BungeeBootstrap$1.class
 cloud\hytora\bridge\proxy\bungee\events\cloud\ProxyRemoteHandler$1.class
 cloud\hytora\bridge\proxy\bungee\events\cloud\ProxyRemoteHandler$TabHandler.class
 cloud\hytora\bridge\proxy\bungee\events\server\ProxyPlayerConnectionListener.class

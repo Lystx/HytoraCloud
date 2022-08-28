@@ -17,27 +17,63 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 
-@AllArgsConstructor
-@Getter
-@Setter
+/**
+ * The {@link ProtocolAddress} describes an easy-to-use address for internal Cloud-API-Use
+ * It contains the host, and port (as normal addresses like {@link InetSocketAddress} also do)
+ * and it also contains the option to provide an authKey to authenticate certain objects within the cluster
+ *
+ * @author Lystx
+ * @since SNAPSHOT-1.3
+ */
+@AllArgsConstructor @Getter @Setter
 public class ProtocolAddress implements IBufferObject {
 
+    /**
+     * The hos that this address belongs to
+     */
     private String host;
+
+    /**
+     * The port of this address
+     */
     private int port;
 
+    /**
+     * The authKey (will not be put into any json-context)
+     * that might help to authenticate certain objects
+     */
     @ExcludeIfNull
     private String authKey;
 
+    /**
+     * Constructs a new {@link ProtocolAddress} without an authKey
+     *
+     * @param host the host of this address
+     * @param port the port of this address
+     */
     public ProtocolAddress(String host, int port) {
         this.host = host;
         this.port = port;
     }
 
+    /**
+     * Constructs a new {@link ProtocolAddress} by getting values
+     * from an already existing {@link InetSocketAddress}
+     *
+     * @param socketAddress the address
+     */
     public ProtocolAddress(@Nonnull InetSocketAddress socketAddress) {
         this.host = socketAddress.getAddress().getHostAddress();
         this.port = socketAddress.getPort();
     }
 
+    /**
+     * Constructs a new {@link ProtocolAddress} by using an already
+     * existing {@link InetSocketAddress} and also appends an authKey
+     *
+     * @param socketAddress the address
+     * @param authKey the key to authenticate
+     */
     public ProtocolAddress(@Nonnull InetSocketAddress socketAddress, String authKey) {
         this.host = socketAddress.getAddress().getHostAddress();
         this.port = socketAddress.getPort();

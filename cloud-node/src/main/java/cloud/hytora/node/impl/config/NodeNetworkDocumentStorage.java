@@ -1,7 +1,7 @@
 package cloud.hytora.node.impl.config;
 
 import cloud.hytora.common.logging.Logger;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.networking.packets.StorageUpdatePacket;
@@ -43,8 +43,8 @@ public class NodeNetworkDocumentStorage implements INetworkDocumentStorage {
 	}
 
 	@Override
-	public Task<Document> fetchAsync() {
-		return Task.callAsync(() -> {
+	public ITask<Document> fetchAsync() {
+		return ITask.callAsync(() -> {
 			fetch();
 			return rawData;
 		});

@@ -14,7 +14,7 @@ public class ServiceParamType extends CommandParameterType<ICloudServer> {
 
     @Override
     public ICloudServer resolve(String s) {
-        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNull(s);
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getService(s);
     }
 
     @Override

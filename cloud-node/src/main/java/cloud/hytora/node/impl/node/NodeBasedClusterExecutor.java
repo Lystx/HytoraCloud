@@ -2,7 +2,7 @@ package cloud.hytora.node.impl.node;
 
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.scheduler.Scheduler;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
@@ -20,7 +20,7 @@ import cloud.hytora.driver.node.packet.NodeConnectionDataResponsePacket;
 import cloud.hytora.driver.networking.protocol.packets.*;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.node.INode;
-import cloud.hytora.driver.node.data.DefaultNodeData;
+import cloud.hytora.driver.node.data.DefaultNodeCycleData;
 import cloud.hytora.driver.node.UniversalNode;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
 import cloud.hytora.driver.services.ICloudServer;
@@ -89,7 +89,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
                     @Override
                     public void accept(BufferedResponse response) {
                         DefaultNodeConfig nodeConfig = response.buffer().readObject(DefaultNodeConfig.class);
-                        DefaultNodeData data = response.buffer().readObject(DefaultNodeData.class);
+                        DefaultNodeCycleData data = response.buffer().readObject(DefaultNodeCycleData.class);
 
                         INode currentNode = new UniversalNode(NodeDriver.getInstance().getNode().getConfig(), NodeDriver.getInstance().getNode().getLastCycleData());
 
@@ -118,13 +118,13 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
                     }
                 });
             } else {
-                Task<INode> node = NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).getNode(executor.getName());
+                ITask<INode> node = NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).getNode(executor.getName());
                 node.ifPresent(NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class)::unRegisterNode);
             }
         } else {
             if (state == ConnectionState.CONNECTED) {
                 // set online
-                ICloudServer service = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNull(executor.getName());
+                ICloudServer service = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getService(executor.getName());
                 if (service == null) {
                     //other remote connection
 
@@ -144,7 +144,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
                 }
 
                 DriverUpdatePacket.publishUpdate(service);
-                // update cache
+                // updateTask cache
 
                 service.sendPacket(new StorageUpdatePacket(
                         StorageUpdatePacket.StoragePayLoad.UPDATE,
@@ -162,7 +162,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
                     return;
                 }
                 NodeDriver base = NodeDriver.getInstance();
-                ICloudServer ICloudServer = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNull(service);
+                ICloudServer ICloudServer = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getService(service);
                 if (ICloudServer != null) {
                     CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).unregisterService(ICloudServer);
                 } else {
@@ -179,8 +179,8 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
     private ClusterParticipant nodeAsClient;
 
 
-    public Task<Void> connectToAllOtherNodes(String name, ProtocolAddress... nodeAddresses) {
-        return Task.callAsync(() -> {
+    public ITask<Void> connectToAllOtherNodes(String name, ProtocolAddress... nodeAddresses) {
+        return ITask.callAsync(() -> {
 
             Logger.constantInstance().info("This Node is a SubNode and will now connect to all provided Nodes in Cluster...");
 
@@ -195,8 +195,8 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
         });
     }
 
-    public Task<Boolean> connectToOtherNode(String authKey, String name, String hostname, int port, Document customData) {
-        Task<Boolean> task = Task.empty();
+    public ITask<Boolean> connectToOtherNode(String authKey, String name, String hostname, int port, Document customData) {
+        ITask<Boolean> task = ITask.empty();
         ClusterParticipant client = new ClusterParticipant(authKey, name, ConnectionType.NODE, customData) {
 
             @Override
@@ -242,7 +242,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
         };
 
 
-        client.registerPacketHandler((PacketHandler<NodeConnectionDataRequestPacket>) (wrapper1, packet) -> wrapper1.prepareResponse().buffer(buf -> buf.writeObject(NodeDriver.getInstance().getNode().getConfig()).writeObject(DefaultNodeData.current())).execute(packet));
+        client.registerPacketHandler((PacketHandler<NodeConnectionDataRequestPacket>) (wrapper1, packet) -> wrapper1.prepareResponse().buffer(buf -> buf.writeObject(NodeDriver.getInstance().getNode().getConfig()).writeObject(DefaultNodeCycleData.current())).execute(packet));
         client.registerPacketHandler((PacketHandler<NodeConnectionDataResponsePacket>) (wrapper12, packet) -> {
             NodeConnectionDataResponsePacket.PayLoad payLoad = packet.getPayLoad();
             String node = packet.getNode();

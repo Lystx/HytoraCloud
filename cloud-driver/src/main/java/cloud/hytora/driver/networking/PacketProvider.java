@@ -3,6 +3,7 @@ package cloud.hytora.driver.networking;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.message.packet.ChannelMessageExecutePacket;
 import cloud.hytora.driver.networking.packets.*;
+import cloud.hytora.driver.networking.protocol.packets.defaults.GenericQueryPacket;
 import cloud.hytora.driver.node.packet.*;
 import cloud.hytora.driver.services.task.packet.ServiceTaskExecutePacket;
 
@@ -57,6 +58,7 @@ public class PacketProvider {
         //updating packet
         PacketProvider.autoRegister(DriverUpdatePacket.class);
         PacketProvider.autoRegister(StorageUpdatePacket.class);
+        PacketProvider.autoRegister(GenericQueryPacket.class);
 
         //module packets
         PacketProvider.autoRegister(RemoteModuleExecutionPacket.class);

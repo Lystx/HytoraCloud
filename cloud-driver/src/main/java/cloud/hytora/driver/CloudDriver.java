@@ -3,7 +3,6 @@ package cloud.hytora.driver;
 import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.scheduler.def.DefaultScheduler;
-import cloud.hytora.context.IApplicationContext;
 import cloud.hytora.driver.common.IClusterObject;
 import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.DefaultEventManager;
@@ -19,7 +18,7 @@ import cloud.hytora.driver.provider.ProviderRegistry;
 import cloud.hytora.driver.provider.defaults.DefaultProviderRegistry;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.task.bundle.TaskGroup;
+import cloud.hytora.driver.services.task.bundle.ITaskGroup;
 import cloud.hytora.driver.services.template.ITemplateManager;
 import cloud.hytora.driver.services.template.def.DefaultTemplateManager;
 
@@ -37,7 +36,7 @@ import lombok.Setter;
  * The <b>CloudDriver</b> is the core of the API of HytoraCloud.
  * It allows the System internally and developers to make use of every Manager across the Network
  * For example you can get information about a specific {@link ICloudPlayer}, a specific {@link ICloudServer},
- * a specific {@link IServiceTask}, a specific {@link TaskGroup}. <br>
+ * a specific {@link IServiceTask}, a specific {@link ITaskGroup}. <br>
  * Or you could manage the {@link HttpServer} and create {@link HttpRequest} as you'd like to. <br>
  * Or you could manage all the different connected {@link INode}s and tell them to start or stop a certain Server
  * <br><br>

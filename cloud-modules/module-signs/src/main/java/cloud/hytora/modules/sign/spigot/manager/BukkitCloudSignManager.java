@@ -1,6 +1,6 @@
 package cloud.hytora.modules.sign.spigot.manager;
 
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.modules.sign.api.CloudSignAPI;
 import cloud.hytora.modules.sign.api.ICloudSign;
 import cloud.hytora.modules.sign.api.ICloudSignManager;
@@ -30,9 +30,9 @@ public class BukkitCloudSignManager implements ICloudSignManager {
     }
 
     @Override
-    public Task<Collection<ICloudSign>> loadCloudSignsAsync() {
+    public ITask<Collection<ICloudSign>> loadCloudSignsAsync() {
         loadCloudSignsSync();
-        return Task.empty(); //not needed on spigot side
+        return ITask.empty(); //not needed on spigot side
     }
 
 
@@ -42,8 +42,8 @@ public class BukkitCloudSignManager implements ICloudSignManager {
     }
 
     @Override
-    public Task<ICloudSign> getCloudSignAsync(UUID uniqueId) {
-        return Task.callAsync(() -> this.allCachedCloudSigns.stream().filter(s -> s.getUniqueId().equals(uniqueId)).findFirst().orElse(null));
+    public ITask<ICloudSign> getCloudSignAsync(UUID uniqueId) {
+        return ITask.callAsync(() -> this.allCachedCloudSigns.stream().filter(s -> s.getUniqueId().equals(uniqueId)).findFirst().orElse(null));
     }
 
     @Override

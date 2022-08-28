@@ -44,6 +44,7 @@
         <module>cloud-connector</module>
         <module>cloud-launcher</module>
         <module>cloud-script</module>
+        <module>cloud-build-executor</module>
     </modules>
 
     <dependencies>
@@ -70,7 +71,24 @@
 
     <build>
         <defaultGoal>clean install</defaultGoal>
+        <pluginManagement>
+            <plugins>
 
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>1.2.1</version>
+                    <executions>
+                        <execution>
+                            <phase>process-resources</phase>
+                            <goals>
+                                <goal>exec</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>net.md-5</groupId>

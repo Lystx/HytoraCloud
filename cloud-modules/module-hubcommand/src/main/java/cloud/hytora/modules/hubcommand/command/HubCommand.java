@@ -2,10 +2,8 @@ package cloud.hytora.modules.hubcommand.command;
 
 import cloud.hytora.driver.commands.context.defaults.PlayerCommandContext;
 import cloud.hytora.driver.commands.data.Command;
-import cloud.hytora.driver.commands.data.enums.AllowedCommandSender;
 import cloud.hytora.driver.commands.data.enums.CommandScope;
 import cloud.hytora.driver.commands.parameter.CommandArguments;
-import cloud.hytora.driver.commands.sender.PlayerCommandSender;
 import cloud.hytora.driver.common.CloudMessages;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
@@ -28,7 +26,7 @@ public class HubCommand {
                 .onTaskSucess(server -> {
 
                     if (server.isRegisteredAsFallback()) {
-                        player.sendMessage(CloudMessages.getInstance().getAlreadyOnFallbackMessage());
+                        player.sendMessage(CloudMessages.retrieveFromStorage().getAlreadyOnFallbackMessage());
                         return;
                     }
                     executor.sendToFallback();

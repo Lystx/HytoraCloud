@@ -4,7 +4,7 @@ import cloud.hytora.Launcher;
 import cloud.hytora.LauncherUtils;
 import cloud.hytora.common.VersionInfo;
 import cloud.hytora.common.misc.FileUtils;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.context.annotations.CacheContext;
 import cloud.hytora.context.annotations.ApplicationParticipant;
 import cloud.hytora.document.Document;
@@ -17,7 +17,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -58,8 +57,8 @@ public class ModuleUpdater {
         return (cachedModules = modules);
     }
 
-    public Task<Integer> updateModules() {
-        Task<Integer> task = Task.empty();
+    public ITask<Integer> updateModules() {
+        ITask<Integer> task = ITask.empty();
         Collection<ModuleInfo> modules = loadProvidedModules();
 
         AtomicInteger updateCount = new AtomicInteger(0);

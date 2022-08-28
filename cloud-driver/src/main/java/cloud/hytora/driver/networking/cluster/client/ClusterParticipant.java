@@ -2,7 +2,7 @@ package cloud.hytora.driver.networking.cluster.client;
 
 import cloud.hytora.common.collection.ThreadRunnable;
 import cloud.hytora.common.scheduler.Scheduler;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.IEventManager;
@@ -13,7 +13,6 @@ import cloud.hytora.driver.networking.protocol.codec.PacketEncoder;
 import cloud.hytora.driver.networking.protocol.codec.prepender.NettyPacketLengthDeserializer;
 import cloud.hytora.driver.networking.protocol.codec.prepender.NettyPacketLengthSerializer;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
-import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.networking.protocol.packets.defaults.HandshakePacket;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
@@ -57,8 +56,8 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
     }
 
 
-    public Task<Channel> openConnection(String hostname, int port) {
-        Task<Channel> result = Task.empty(Channel.class).denyNull();
+    public ITask<Channel> openConnection(String hostname, int port) {
+        ITask<Channel> result = ITask.empty();
 
         if (active) {
             result.setFailure(new AlreadyConnectedException());
@@ -143,8 +142,8 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
     }
 
 
-    public Task<Boolean> shutdown() {
-        Task<Boolean> task = Task.empty();
+    public ITask<Boolean> shutdown() {
+        ITask<Boolean> task = ITask.empty();
         this.workerGroup.shutdownGracefully().addListener(future -> {
             if (future.isSuccess()) {
                 task.setResult(true);
@@ -152,6 +151,27 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
                 task.setFailure(future.cause());
             }
         });
+        return task;
+    }
+
+    @Override
+    public ITask<Void> sendPacketAsync(IPacket packet) {
+        ITask<Void> task = ITask.empty();
+
+        if (this.channel == null) {
+            System.out.println("CHANNEL NULL");
+            //re-schedule request
+            Scheduler.runTimeScheduler().executeIf(() -> sendPacket(packet), () -> getChannel() != null);
+        } else {
+            this.getChannel().writeAndFlush(packet).addListener((ChannelFutureListener) future -> {
+                if (!future.isSuccess()) {
+                    task.setFailure(future.cause());
+                } else {
+                    task.setResult(null);
+                }
+            });
+        }
+
         return task;
     }
 

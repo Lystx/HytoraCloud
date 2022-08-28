@@ -1,6 +1,6 @@
 package cloud.hytora.script.api;
 
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,7 +31,7 @@ public interface IScript {
     @NotNull
     Path getScriptPath();
 
-    Task<Void> executeAsync();
+    ITask<Void> executeAsync();
 
     void execute();
 }

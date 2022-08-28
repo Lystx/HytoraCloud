@@ -1,7 +1,5 @@
 package cloud.hytora.document.wrapped;
 
-import cloud.hytora.common.task.Task;
-
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.nio.file.Path;
@@ -29,10 +27,5 @@ public interface Storable {
 	}
 
 	void saveExceptionally() throws Exception;
-
-	@Nonnull
-	default Task<Void> saveAsync() {
-		return Task.runAsyncExceptionally(this::saveExceptionally);
-	}
 
 }

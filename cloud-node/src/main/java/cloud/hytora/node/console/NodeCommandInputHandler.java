@@ -1,7 +1,7 @@
 package cloud.hytora.node.console;
 
 import cloud.hytora.common.logging.Logger;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.commands.ICommandManager;
 import cloud.hytora.driver.commands.context.defaults.ConsoleCommandContext;
@@ -25,7 +25,7 @@ public class NodeCommandInputHandler implements Consumer<String> {
                     "§cThis command is not known by the system! Use '§ehelp§c' for help." :
                     "§cWrong command! Did you mean '§e" + similar.getLabel() + "§c'?"));
         } else {
-            Task.runAsync(() -> commandManager.executeCommand(args, new ConsoleCommandContext(NodeDriver.getInstance().getCommandSender())));
+            ITask.runAsync(() -> commandManager.executeCommand(args, new ConsoleCommandContext(NodeDriver.getInstance().getCommandSender())));
         }
     }
 }

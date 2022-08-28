@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 public class RemoteServiceTaskManager extends DefaultServiceTaskManager {
 
     @Override
-    public void update(@NotNull IServiceTask task) {
+    public void updateTask(@NotNull IServiceTask task) {
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(new TaskUpdateEvent(task));
     }
 
@@ -21,7 +21,7 @@ public class RemoteServiceTaskManager extends DefaultServiceTaskManager {
     @EventListener
     public void handleUpdate(TaskUpdateEvent event) {
         IServiceTask packetTask = event.getTask();
-        IServiceTask task = getTaskByNameOrNull(packetTask.getName());
+        IServiceTask task = getTaskOrNull(packetTask.getName());
         if (task != null) {
             task.copy(packetTask);
         }

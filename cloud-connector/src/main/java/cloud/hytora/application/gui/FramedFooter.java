@@ -127,7 +127,7 @@ public class FramedFooter extends JPanel {
         // make the "close" button the default button
         frame.getRootPane().setDefaultButton(closeButton);
 
-        // update info label and move focus to "close" button
+        // updateTask info label and move focus to "close" button
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent e) {
@@ -136,7 +136,7 @@ public class FramedFooter extends JPanel {
             }
         });
 
-        // update info label when moved to another screen
+        // updateTask info label when moved to another screen
         frame.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentMoved(ComponentEvent e) {
@@ -182,7 +182,7 @@ public class FramedFooter extends JPanel {
                 if (!(UIManager.getLookAndFeel() instanceof FlatLaf))
                     UIManager.put("defaultFont", null);
 
-                // update all components
+                // updateTask all components
                 FlatLaf.updateUI();
                 FlatAnimatedLafChange.hideSnapshotWithAnimation();
 

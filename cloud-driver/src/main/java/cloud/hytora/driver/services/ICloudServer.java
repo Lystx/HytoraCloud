@@ -1,157 +1,275 @@
 package cloud.hytora.driver.services;
 
 import cloud.hytora.common.identification.ModifiableUUIDHolder;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.document.Document;
-import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.common.IClusterObject;
-import cloud.hytora.driver.exception.IncompatibleDriverEnvironment;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.IPacketExecutor;
+import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.player.ICloudPlayer;
-import cloud.hytora.driver.player.ICloudPlayerManager;
+import cloud.hytora.driver.services.fallback.ICloudFallback;
 import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.deployment.ServiceDeployment;
+import cloud.hytora.driver.services.deployment.IDeployment;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
-import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
-// TODO: 04.08.2022 documentation
+/**
+ * The {@link ICloudServer} describes the minecraft-servers and proxy-servers that are running
+ * on different {@link INode}s and grouped by different {@link IServiceTask}s 
+ * You can work with the latest {@link IServiceCycleData}, the properties in form of a {@link Document}.
+ * But you can also modify the {@link ServiceState} ({@link #setServiceState(ServiceState)})
+ * or many other values that you can customize on your own
+ *
+ * @author Lystx
+ * @since SNAPSHOT-1.0
+ */
 public interface ICloudServer extends IClusterObject<ICloudServer>, NetworkComponent, IPacketExecutor, ModifiableUUIDHolder {
 
+    /**
+     * Returns the latest {@link IServiceCycleData} that
+     * was sent to the {@link INode} this {@link ICloudServer}
+     * is currently running on<br>
+     * If no data has been cycled yet, the default value will be returned
+     * 
+     * @return data never null
+     * @see IServiceCycleData
+     */
+    @NotNull
     IServiceCycleData getLastCycleData();
 
+    /**
+     * Sets the latest {@link IServiceCycleData} of this server<br>
+     * <b>ATTENTION: </b> Only use if you know what you are doing!
+     * 
+     * @param data the latest data
+     * @see IServiceCycleData
+     * @see #getLastCycleData() 
+     */
+    void setLastCycleData(@NotNull IServiceCycleData data);
+
+    /**
+     * Returns if this {@link ICloudServer} is registered as an {@link ICloudFallback}
+     * and is usable to fallback players to this server
+     */
     boolean isRegisteredAsFallback();
 
-    ServicePingProperties getPingProperties();
+    /**
+     * Returns the {@link IPingProperties} of this server
+     * that define the values that will be displayed in the motd when
+     * pinging this server
+     * 
+     * @return properties
+     * @see IPingProperties
+     */
+    @NotNull
+    IPingProperties getPingProperties();
 
+    /**
+     * Edits the current {@link IPingProperties} of this server
+     * The provided {@link Consumer} handles your modification 
+     * and then automatically updates the properties
+     *
+     * @param ping the consumer
+     */
+    void editPingProperties(@NotNull Consumer<IPingProperties> ping);
+    
+    /**
+     * Returns the temporary properties in form of a {@link Document}
+     * Where you can store properties as long as this server is online
+     * 
+     * @return properties instance
+     * @see Document
+     */
+    @NotNull
     Document getProperties();
 
-    void setProperties(Document properties);
+    /**
+     * Sets the properties of this server
+     * 
+     * @param properties the properties to set
+     * @see #getProperties() 
+     * @see Document
+     */
+    void setProperties(@NotNull Document properties);
 
-    void editPingProperties(Consumer<ServicePingProperties> ping);
-
-    void setLastCycleData(IServiceCycleData data);
-
+    /**
+     * Returns the name of the {@link INode} that this {@link ICloudServer} is running on
+     */
+    @NotNull
     String getRunningNodeName();
 
-    void setRunningNodeName(String name);
+    /**
+     * Sets the name of the {@link INode} that this server is running on
+     * 
+     * @param name the name of the node 
+     * @see #getRunningNodeName() 
+     */
+    void setRunningNodeName(@NotNull String name);
 
-    void deploy(ServiceDeployment... deployments);
+    /**
+     * Deploys this server with the given {@link IDeployment}s
+     * 
+     * @param deployments the deployments
+     * @see IDeployment
+     */
+    void deploy(@NotNull IDeployment... deployments);
 
+    /**
+     * Checks if this server has timed out based on the latest {@link IServiceCycleData}
+     * and its latency 
+     */
     boolean isTimedOut();
 
+    /**
+     * Returns if the option "ready" of this server is true
+     * and if this service is ready to be joined and use completely
+     */
     boolean isReady();
 
-    void shutdown();
-
+    /**
+     * Sets the option "ready" of this server<br>
+     * <b>ATTENTION: </b> Only use if you know what you are doing!
+     * 
+     * @param ready the state
+     * @see #isReady()
+     */
     void setReady(boolean ready);
 
     /**
-     * @return the service id
+     * Returns the number of this service<br>
+     * e.g. => Lobby-1 (1 is the ServiceID here)
+     * e.g. => BedWars-3 (3 is the ServiceID here)
      */
     int getServiceID();
 
     /**
-     * @return the port of the service
+     * Returns the port that this server runs on
      */
     int getPort();
 
     /**
-     * @return the host name of the service
+     * Returns the host that this server runs on
      */
-    @NotNull String getHostName();
+    @NotNull 
+    String getHostName();
 
+    /**
+     * Returns the readable uptime of this service
+     * e.g. => 34 sec
+     * e.g. => 1:34 min
+     * e.g. => 1:34:32 h
+     */
+    @NotNull
     String getReadableUptime();
 
     /**
-     * @return the group of the service
+     * Retrieves the {@link IServiceTask} that was used to start this server
+     * This can never be null, except you did something wrong and provided a non-existing
+     * {@link IServiceTask} for this server that can not be found in cache!
+     * 
+     * @see IServiceTask
      */
+    @NotNull
     IServiceTask getTask();
 
-    Task<IServiceTask> getTaskAsync();
-
     /**
-     * @return the state of the service
-     */
-    @NotNull ServiceState getServiceState();
-
-    /**
-     * sets the service state
+     * Returns an {@link ITask} that might contain an {@link IServiceTask}
      *
-     * @param serviceState the state to set
+     * @see IServiceTask
+     */
+    @NotNull
+    ITask<IServiceTask> getTaskAsync();
+
+    /**
+     * The current {@link ServiceState} of this server
+     * that indicates the progress of this server internally
+     * 
+     * @see ServiceState
+     */
+    @NotNull 
+    ServiceState getServiceState();
+
+    /**
+     * Sets the {@link ServiceState} of this server.
+     * Remember to update this server using {@link #update()} afterwards
+     *
+     * @param serviceState the new state
+     * @see ServiceState
      */
     void setServiceState(@NotNull ServiceState serviceState);
 
     /**
-     * @return the max players of the service
+     * Returns the maximum players of the service
      */
     int getMaxPlayers();
 
     /**
-     * sets the max players of the service
-     *
-     * @param slots the amount to set
+     * Sets the maximum amount of players that are allowed
+     * to be on this server at the same time
+     * 
+     * @param max the maximum amount
      */
-    void setMaxPlayers(int slots);
+    void setMaxPlayers(int max);
 
     /**
-     * @return the service visibility of the service
+     * Returns the {@link ServiceVisibility} of this server
+     * 
+     * @see ServiceVisibility
+     * @see #setServiceVisibility(ServiceVisibility) 
      */
-    @NotNull ServiceVisibility getServiceVisibility();
+    @NotNull 
+    ServiceVisibility getServiceVisibility();
 
     /**
-     * sets the service visibility
-     *
-     * @param serviceVisibility the service visibility to set
+     * Sets the {@link ServiceVisibility} of this server
+     * 
+     * @param serviceVisibility the visibility to set
+     * @see ServiceVisibility
+     * @see #getServiceVisibility() 
      */
     void setServiceVisibility(@NotNull ServiceVisibility serviceVisibility);
 
     /**
-     * @return the online amount of the service
+     * Returns a {@link Collection} with all online {@link ICloudPlayer}s
+     * that are currently on this server (either proxy or minecraft)
      */
-    default int getOnlinePlayerCount() {
-        return (int) CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getAllCachedCloudPlayers()
-                .stream()
-                .filter(it -> {
-                    ICloudServer service = getTask().getVersion().isProxy() ? it.getProxyServer() : it.getServer();
-                    return service != null && service.equals(this);
-                }).count();
-    }
+    @NotNull
+    Collection<ICloudPlayer> getOnlinePlayers();
 
     /**
-     * @return the online amount of the service
+     * Returns if this server is full (online >= max)
      */
-    default Collection<ICloudPlayer> getOnlinePlayers() {
-        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getAllCachedCloudPlayers()
-                .stream()
-                .filter(it -> {
-                    ICloudServer service = getTask().getVersion().isProxy() ? it.getProxyServer() : it.getServer();
-                    return service != null && service.equals(this);
-                }).collect(Collectors.toList());
-    }
+    boolean isFull();
 
     /**
-     * @return if the service is full
+     * The time in millis when this server was created
      */
-    default boolean isFull() {
-        return this.getOnlinePlayerCount() >= this.getMaxPlayers();
-    }
+    long getCreationTimestamp();
 
-    String getMotd();
+    /**
+     * Shuts down this server instance
+     */
+    void shutdown();
 
-    void setMotd(String motd);
-
+    /**
+     * Sends a commandLine to this server's process
+     * Those can either be cloud or (proxy/spigot) commands
+     *
+     * @param commandLine the line to execute
+     */
     void sendCommand(@NotNull String commandLine);
 
+    /**
+     * Updates this {@link ICloudServer} within the whole cluster
+     * and sends every participant the update of this server instance
+     */
     void update();
 
-    long getCreationTimestamp();
 
 }

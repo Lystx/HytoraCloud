@@ -1,13 +1,15 @@
 package cloud.hytora.driver.services.impl;
 
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.gson.adapter.ExcludeJsonField;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
+import cloud.hytora.driver.player.ICloudPlayer;
+import cloud.hytora.driver.player.ICloudPlayerManager;
 import cloud.hytora.driver.services.*;
 import cloud.hytora.driver.services.packet.ServiceCommandPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
@@ -17,7 +19,7 @@ import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
 import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.deployment.ServiceDeployment;
+import cloud.hytora.driver.services.deployment.IDeployment;
 import cloud.hytora.driver.services.template.ITemplateManager;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
@@ -30,8 +32,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @Getter
 @NoArgsConstructor
@@ -48,7 +53,6 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
 
     private UUID uniqueId;
     private int maxPlayers;
-    private String motd;
 
     @ExcludeJsonField
     private Process process;
@@ -61,10 +65,13 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
 
     private long creationTimestamp; // the timestamp this ServiceInfo was created (changing any property will not influence this timestamp)
     private boolean ready;
+
     @ExcludeJsonField
     private Document properties; // custom properties, which are not used internally
+
     @ExcludeJsonField
     private DefaultPingProperties pingProperties;
+
     @ExcludeJsonField
     private IServiceCycleData lastCycleData;
 
@@ -76,7 +83,6 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
         this.serviceID = id;
         this.port = port;
         this.hostName = hostname;
-        this.motd = serviceTask == null ? "Default Motd" : serviceTask.getMotd();
         this.maxPlayers = serviceTask == null ? 10 : serviceTask.getDefaultMaxPlayers();
 
         this.creationTimestamp = System.currentTimeMillis();
@@ -85,7 +91,7 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
         this.runningNodeName = getTask().findAnyNode() == null ? "UNKNOWN": getTask().findAnyNode().getName();
 
         this.pingProperties = new DefaultPingProperties();
-        this.pingProperties.setMotd(this.motd);
+        this.pingProperties.setMotd(serviceTask == null ? "Default Motd" : serviceTask.getMotd());
         this.pingProperties.setUsePlayerPropertiesOfService(true);
         this.pingProperties.setCombineAllProxiesIfProxyService(true);
         this.pingProperties.setPlayerInfo(new String[0]);
@@ -100,7 +106,7 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
 
 
     @Override
-    public void deploy(ServiceDeployment... deployments) {
+    public void deploy(IDeployment... deployments) {
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(ITemplateManager.class).deployService(this, deployments);
     }
 
@@ -114,14 +120,14 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
         return lostCycles >= CloudDriver.SERVER_MAX_LOST_CYCLES;
     }
 
-    @Override
+    @Override @NotNull
     public IServiceTask getTask() {
-        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskByNameOrNull(this.task);
+        return Objects.requireNonNull(CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskOrNull(this.task));
     }
 
-    @Override
-    public Task<IServiceTask> getTaskAsync() {
-        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskByNameAsync(this.task);
+    @Override @NotNull
+    public ITask<IServiceTask> getTaskAsync() {
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTask(this.task);
     }
 
     @Override
@@ -136,7 +142,7 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
     }
 
     @Override
-    public void editPingProperties(Consumer<ServicePingProperties> ping) {
+    public void editPingProperties(@NotNull Consumer<IPingProperties> ping) {
         ping.accept(this.pingProperties);
         this.update();
     }
@@ -157,13 +163,41 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
         return this.task.equals(that.task);
     }
 
+    @Override
     public void update() {
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).updateService(this);
     }
 
     @Override
+    public boolean isFull() {
+        return this.getOnlinePlayers().size() >= this.getMaxPlayers();
+    }
+
+    @Override
+    public @NotNull Collection<ICloudPlayer> getOnlinePlayers() {
+        return CloudDriver
+                .getInstance()
+                .getProviderRegistry()
+                .getUnchecked(ICloudPlayerManager.class)
+                .getAllCachedCloudPlayers()
+                .stream()
+                .filter(it -> {
+                    ICloudServer service = getTask().getVersion().isProxy() ? it.getProxyServer() : it.getServer();
+                    return service != null && service.getName().equalsIgnoreCase(this.getName());
+                }).collect(Collectors.toList());
+    }
+
+    @Override
     public void sendPacket(IPacket packet) {
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).sendPacketToService(this, packet);
+    }
+
+    @Override
+    public ITask<Void> sendPacketAsync(IPacket packet) {
+        return ITask.callAsync(() -> {
+            sendPacket(packet);
+            return null;
+        });
     }
 
     @Override
@@ -196,7 +230,7 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
 
 
     @Override
-    public String getReadableUptime() {
+    public @NotNull String getReadableUptime() {
         return StringUtils.getReadableMillisDifference(this.getCreationTimestamp(), System.currentTimeMillis());
     }
 
@@ -213,7 +247,6 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
         this.setRunningNodeName(from.getRunningNodeName());
 
         this.setMaxPlayers(from.getMaxPlayers());
-        this.setMotd(from.getMotd());
         this.setUniqueId(from.getUniqueId());
         this.setReady(from.isReady());
         this.setCreationTimeStamp(from.getCreationTimestamp());
@@ -225,7 +258,7 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
     @Override
     public String replacePlaceHolders(String input) {
         input = input.replace("{server.name}", this.getName());
-        input = input.replace("{server.motd}", this.getMotd());
+        input = input.replace("{server.motd}", this.getPingProperties().getMotd());
         input = input.replace("{server.host}", this.getHostName());
 
         input = input.replace("{server.ready}", this.isReady() ? "§aYes" : "§cNo");
@@ -235,7 +268,7 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
         input = input.replace("{server.port}", String.valueOf(this.getPort()));
         input = input.replace("{server.capacity}", String.valueOf(this.getMaxPlayers()));
         input = input.replace("{server.max}", String.valueOf(this.getMaxPlayers()));
-        input = input.replace("{server.online}", String.valueOf(this.getOnlinePlayerCount()));
+        input = input.replace("{server.online}", String.valueOf(this.getOnlinePlayers().size()));
 
         input = input.replace("{server.node}", this.getRunningNodeName());
 
@@ -259,7 +292,6 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
                 this.runningNodeName = buf.readString();
                 this.task = buf.readString();
                 this.hostName = buf.readString();
-                this.motd = buf.readString();
 
                 this.ready = buf.readBoolean();
 
@@ -282,7 +314,6 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
                 buf.writeString(this.getRunningNodeName());
                 buf.writeString(this.task);
                 buf.writeString(this.getHostName());
-                buf.writeString(this.getMotd());
 
                 buf.writeBoolean(this.isReady());
 

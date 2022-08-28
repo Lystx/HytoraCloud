@@ -64,7 +64,7 @@ public class ProxyModule {
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).registerListener(new ModuleListener());
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICommandManager.class).registerCommands(new ProxyCommand());
 
-        //scheduling tab update
+        //scheduling tab updateTask
         Scheduler.runTimeScheduler().scheduleRepeatingTask(this::updateTabList, 0L, (long) (proxyConfig.getTablist().getAnimationInterval() * 1000));
     }
 
@@ -140,10 +140,11 @@ public class ProxyModule {
             if (motd == null) {
                 continue;
             }
-            for (ICloudServer ICloudServer : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllServicesByEnvironment(SpecificDriverEnvironment.PROXY)) {
-                ICloudServer.editPingProperties(ping -> {
-                    ping.setMotd(replaceDefault(ICloudServer, (motd.getFirstLine() + "\n" + motd.getSecondLine())));
-                    ping.setVersionText(replaceDefault(ICloudServer, motd.getProtocolText()));
+            for (ICloudServer cloudServer : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllServicesByEnvironment(SpecificDriverEnvironment.PROXY)) {
+
+                cloudServer.editPingProperties(ping -> {
+                    ping.setMotd(replaceDefault(cloudServer, (motd.getFirstLine() + "\n" + motd.getSecondLine())));
+                    ping.setVersionText(replaceDefault(cloudServer, motd.getProtocolText()));
                     ping.setPlayerInfo(motd.getPlayerInfo().toArray(new String[0]));
                     ping.setCombineAllProxiesIfProxyService(true);
                     ping.setUsePlayerPropertiesOfService(true);

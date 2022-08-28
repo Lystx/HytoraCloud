@@ -7,7 +7,7 @@ public class SignAnimation {
 
 
     /**
-     * The update tick of signs
+     * The updateTask tick of signs
      */
     private final int repeatingTick;
 

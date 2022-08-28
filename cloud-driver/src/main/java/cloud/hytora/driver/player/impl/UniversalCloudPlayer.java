@@ -1,6 +1,6 @@
 package cloud.hytora.driver.player.impl;
 
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.gson.adapter.ExcludeJsonField;
@@ -70,23 +70,23 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
     @Nullable
     @Override
     public ICloudServer getServer() {
-        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNull(this.serverName);
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getService(this.serverName);
     }
 
     @NotNull
     @Override
     public ICloudServer getProxyServer() {
-        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNull(this.proxyName);
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getService(this.proxyName);
     }
 
     @Override
-    public Task<ICloudServer> getServerAsync() {
-        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNullAsync(this.serverName);
+    public ITask<ICloudServer> getServerAsync() {
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceAsync(this.serverName);
     }
 
     @Override
-    public Task<ICloudServer> getProxyServerAsync() {
-        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNullAsync(this.proxyName);
+    public ITask<ICloudServer> getProxyServerAsync() {
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceAsync(this.proxyName);
     }
 
     @Override
@@ -101,7 +101,7 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
 
     @Override
     public @NotNull PermissionPlayer asPermissionPlayer() throws ModuleNeededException {
-        Task<PermissionManager> task = CloudDriver.getInstance().getProviderRegistry().get(PermissionManager.class);
+        ITask<PermissionManager> task = CloudDriver.getInstance().getProviderRegistry().get(PermissionManager.class);
         if (task.isNull()) {
             throw new ModuleNeededException("Permission Module");
         }
@@ -152,7 +152,7 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
 
     @Override
     public void sendMessage(@NotNull String message) {
-        PlayerExecutor.forPlayer(this).sendMessage(CloudMessages.getInstance().getPrefix() + " " + message);
+        PlayerExecutor.forPlayer(this).sendMessage(CloudMessages.retrieveFromStorage().getPrefix() + " " + message);
     }
 
     @Override

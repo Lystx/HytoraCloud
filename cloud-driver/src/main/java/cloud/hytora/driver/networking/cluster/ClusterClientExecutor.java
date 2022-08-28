@@ -1,6 +1,6 @@
 package cloud.hytora.driver.networking.cluster;
 
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.networking.INetworkExecutor;
 
@@ -21,8 +21,8 @@ public interface ClusterClientExecutor extends INetworkExecutor {
 
     void setName(String name);
 
-    default Task<Boolean> close() {
-        Task<Boolean> task = Task.empty();
+    default ITask<Boolean> close() {
+        ITask<Boolean> task = ITask.empty();
         getChannel().close().addListener(future -> {
             if (future.isSuccess()) {
                 task.setResult(true);

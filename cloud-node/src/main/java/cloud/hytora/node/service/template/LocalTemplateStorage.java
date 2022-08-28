@@ -5,9 +5,9 @@ import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.IProcessCloudServer;
 import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
 import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.deployment.ServiceDeployment;
-import cloud.hytora.driver.services.template.ServiceTemplate;
-import cloud.hytora.driver.services.template.TemplateStorage;
+import cloud.hytora.driver.services.deployment.IDeployment;
+import cloud.hytora.driver.services.template.ITemplate;
+import cloud.hytora.driver.services.template.ITemplateStorage;
 import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
 import cloud.hytora.node.NodeDriver;
 import lombok.Getter;
@@ -18,7 +18,7 @@ import java.io.File;
 import java.io.IOException;
 
 @Getter
-public class LocalTemplateStorage implements TemplateStorage {
+public class LocalTemplateStorage implements ITemplateStorage {
 
     private final String name;
 
@@ -56,10 +56,10 @@ public class LocalTemplateStorage implements TemplateStorage {
 
     private void checkIfTemplateFoldersNeeded() {
         for (IServiceTask con : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getAllCachedTasks()) {
-            for (ServiceTemplate template : con.getTaskGroup().getTemplates()) {
+            for (ITemplate template : con.getTaskGroup().getTemplates()) {
                 this.createTemplate(template);
             }
-            for (ServiceTemplate template : con.getTemplates()) {
+            for (ITemplate template : con.getTemplates()) {
                 this.createTemplate(template);
             }
         }
@@ -73,7 +73,7 @@ public class LocalTemplateStorage implements TemplateStorage {
                 if (name.equalsIgnoreCase("GLOBAL") || name.equals("GLOBAL_SERVICE") || name.equals("GLOBAL_PROXY")) {
                     continue;
                 }
-                IServiceTask con = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskByNameOrNull(name);
+                IServiceTask con = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskOrNull(name);
                 if (con == null) {
                     FileUtils.deleteDirectory(file);
                 }
@@ -82,7 +82,7 @@ public class LocalTemplateStorage implements TemplateStorage {
     }
 
     @Override
-    public void copyTemplate(@NotNull ICloudServer server, @NotNull ServiceTemplate template, @NotNull File directory) throws Exception {
+    public void copyTemplate(@NotNull ICloudServer server, @NotNull ITemplate template, @NotNull File directory) throws Exception {
         IServiceTask serviceTask = server.getTask();
 
         //do not perform if wrong node
@@ -105,7 +105,7 @@ public class LocalTemplateStorage implements TemplateStorage {
     }
 
     @Override
-    public void deployService(@NotNull ICloudServer server, @NotNull ServiceDeployment deployment) {
+    public void deployService(@NotNull ICloudServer server, @NotNull IDeployment deployment) {
 
         //do not perform if wrong node
         if (!server.getRunningNodeName().equalsIgnoreCase(NodeDriver.getInstance().getNetworkExecutor().getNodeName())) {
@@ -113,7 +113,7 @@ public class LocalTemplateStorage implements TemplateStorage {
         }
 
         IProcessCloudServer nodeCloudServer = (IProcessCloudServer) server;
-        ServiceTemplate template = deployment.getTemplate();
+        ITemplate template = deployment.getTemplate();
 
         if (template != null && template.getStorage() != null && template.getPrefix() != null && template.getName() != null) {
             File workingDirectory = nodeCloudServer.getWorkingDirectory();
@@ -150,7 +150,7 @@ public class LocalTemplateStorage implements TemplateStorage {
     }
 
     @Override
-    public void deleteTemplate(@NotNull ServiceTemplate template) {
+    public void deleteTemplate(@NotNull ITemplate template) {
         try {
             FileUtils.deleteDirectory(new File(NodeDriver.TEMPLATES_DIR, template.getName()));
         } catch (IOException e) {
@@ -159,7 +159,7 @@ public class LocalTemplateStorage implements TemplateStorage {
     }
 
     @Override
-    public void createTemplate(@NotNull ServiceTemplate template) {
+    public void createTemplate(@NotNull ITemplate template) {
         File directory = new File(NodeDriver.TEMPLATES_DIR, template.getName());
         directory.mkdirs();
 

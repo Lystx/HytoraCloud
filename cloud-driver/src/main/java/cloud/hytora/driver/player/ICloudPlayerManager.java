@@ -1,6 +1,6 @@
 package cloud.hytora.driver.player;
 
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.ICloudServiceManager;
@@ -33,16 +33,16 @@ public interface ICloudPlayerManager {
     ICloudPlayer getCloudPlayerByNameOrNull(@NotNull String username);
 
     @NotNull
-    Task<Collection<CloudOfflinePlayer>> getAllOfflinePlayersAsync();
+    ITask<Collection<CloudOfflinePlayer>> getAllOfflinePlayersAsync();
 
     @NotNull
     Collection<CloudOfflinePlayer> getAllOfflinePlayersBlockingOrEmpty();
 
     @NotNull
-    Task<CloudOfflinePlayer> getOfflinePlayerByUniqueIdAsync(@NotNull UUID uniqueId);
+    ITask<CloudOfflinePlayer> getOfflinePlayerByUniqueIdAsync(@NotNull UUID uniqueId);
 
     @NotNull
-    Task<CloudOfflinePlayer> getOfflinePlayerByNameAsync(@NotNull String name);
+    ITask<CloudOfflinePlayer> getOfflinePlayerByNameAsync(@NotNull String name);
 
     @Nullable
     CloudOfflinePlayer getOfflinePlayerByUniqueIdBlockingOrNull(@NotNull UUID uniqueId);
@@ -76,7 +76,7 @@ public interface ICloudPlayerManager {
     void registerCloudPlayer(@NotNull UUID uniqueId, @NotNull String username);
 
     /**
-     * update a cloud player
+     * updateTask a cloud player
      *
      * @param cloudPlayer the unique id of the player
      */

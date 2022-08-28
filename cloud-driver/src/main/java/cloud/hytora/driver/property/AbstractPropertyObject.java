@@ -16,12 +16,12 @@ public abstract class AbstractPropertyObject implements IPropertyObject {
     protected Document properties = DocumentFactory.newJsonDocument();
 
     @Override
-    public <T> T getProperty(@NotNull String name, @NotNull Class<T> typeClass) {
-        return properties.getInstance(name, typeClass);
+    public <T> T getProperty(@NotNull String key, @NotNull Class<T> typeClass) {
+        return properties.getInstance(key, typeClass);
     }
 
     @Override
-    public void setProperty(@NotNull String name, Object value) {
-        this.properties.set(name, value);
+    public void setProperty(@NotNull String key, Object value) {
+        this.properties.set(key, value);
     }
 }

@@ -1,6 +1,6 @@
 package cloud.hytora.modules.perms.global.impl;
 
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
@@ -83,7 +83,7 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
     public Map<IServiceTask, Collection<String>> getTaskPermissions() {
         Map<IServiceTask, Collection<String>> taskPermissions = new ConcurrentHashMap<>();
         for (Map.Entry<String, Collection<String>> e : this.taskPermissions.entrySet()) {
-            taskPermissions.put(CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskByNameOrNull(e.getKey()), e.getValue());
+            taskPermissions.put(CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskOrNull(e.getKey()), e.getValue());
         }
         return taskPermissions;
     }
@@ -179,9 +179,9 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
     }
 
     @Override
-    public Task<Permission> getPermission(String permission) {
+    public ITask<Permission> getPermission(String permission) {
         this.checkForExpiredValues();
-        return Task.callAsync(() -> this.permissions.containsKey(permission) ? Permission.of(permission, this.permissions.getOrDefault(permission, -1L)) : null);
+        return ITask.callAsync(() -> this.permissions.containsKey(permission) ? Permission.of(permission, this.permissions.getOrDefault(permission, -1L)) : null);
     }
 
     @Override

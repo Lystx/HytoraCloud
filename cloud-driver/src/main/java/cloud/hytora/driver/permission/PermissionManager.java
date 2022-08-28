@@ -1,7 +1,6 @@
 package cloud.hytora.driver.permission;
 
-import cloud.hytora.common.task.Task;
-import cloud.hytora.driver.player.CloudOfflinePlayer;
+import cloud.hytora.common.task.ITask;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -74,13 +73,13 @@ public interface PermissionManager extends PermissionChecker {
 	 * @return a task instance that might be holding the found {@link PermissionGroup}
 	 */
 	@Nonnull
-	Task<PermissionGroup> getPermissionGroup(@Nonnull String name);
+    ITask<PermissionGroup> getPermissionGroup(@Nonnull String name);
 
 	/**
 	 * Updates the data of the provided {@link PermissionGroup} and
 	 * syncs it all across the network
 	 *
-	 * @param group the group to update
+	 * @param group the group to updateTask
 	 */
 	void updatePermissionGroup(PermissionGroup group);
 
@@ -120,8 +119,8 @@ public interface PermissionManager extends PermissionChecker {
 
 	PermissionPlayer createPlayer(String name, UUID uniqueId);
 
-	Task<PermissionPlayer> getPlayerAsyncByUniqueId(UUID uniqueId);
-	Task<PermissionPlayer> getPlayerAsyncByName(String name);
+	ITask<PermissionPlayer> getPlayerAsyncByUniqueId(UUID uniqueId);
+	ITask<PermissionPlayer> getPlayerAsyncByName(String name);
 
 	/**
 	 * Updates a {@link PermissionPlayer} in database

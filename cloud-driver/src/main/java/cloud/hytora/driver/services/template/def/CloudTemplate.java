@@ -4,8 +4,8 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.services.template.ITemplateManager;
-import cloud.hytora.driver.services.template.ServiceTemplate;
-import cloud.hytora.driver.services.template.TemplateStorage;
+import cloud.hytora.driver.services.template.ITemplate;
+import cloud.hytora.driver.services.template.ITemplateStorage;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,7 +16,7 @@ import java.io.IOException;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class CloudTemplate implements ServiceTemplate {
+public class CloudTemplate implements ITemplate {
 
     private String name;
     private String prefix;
@@ -43,13 +43,13 @@ public class CloudTemplate implements ServiceTemplate {
 
 
     @Override
-    public String buildTemplatePath() {
+    public @NotNull String buildTemplatePath() {
         return this.name + "/" + this.prefix;
     }
 
     @Override
-    public TemplateStorage getStorage() {
-        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ITemplateManager.class).getStorage(this.storageName);
+    public ITemplateStorage getStorage() {
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ITemplateManager.class).getStorage(this.getStorageName());
     }
 
     @Override

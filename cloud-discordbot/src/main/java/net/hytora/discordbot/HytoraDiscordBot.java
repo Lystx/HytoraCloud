@@ -4,14 +4,13 @@ package net.hytora.discordbot;
 import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.scheduler.Scheduler;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import lombok.Getter;
 import net.dv8tion.jda.api.*;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
@@ -99,7 +98,7 @@ public class HytoraDiscordBot {
 
     private final Logger logger;
 
-    private final Task<Void> guildReadyTask;
+    private final ITask<Void> guildReadyTask;
 
     public HytoraDiscordBot(Logger logger) {
         hytora = this;
@@ -108,7 +107,7 @@ public class HytoraDiscordBot {
         long start = System.currentTimeMillis();
 
         this.logger = logger;
-        this.guildReadyTask = Task.empty();
+        this.guildReadyTask = ITask.empty();
         this.conversationManager = new ConversationManager();
         this.discordButtons = new ArrayList<>();
 

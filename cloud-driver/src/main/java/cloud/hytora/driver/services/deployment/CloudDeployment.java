@@ -2,7 +2,7 @@ package cloud.hytora.driver.services.deployment;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.services.template.ServiceTemplate;
+import cloud.hytora.driver.services.template.ITemplate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,9 +14,9 @@ import java.util.Collection;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class CloudDeployment implements ServiceDeployment {
+public class CloudDeployment implements IDeployment {
 
-    private ServiceTemplate template;
+    private ITemplate template;
     private Collection<String> exclusionFiles;
 
     private Collection<String> onlyIncludedFiles;
@@ -31,7 +31,7 @@ public class CloudDeployment implements ServiceDeployment {
                 break;
 
             case READ:
-                this.template = buf.readObject(ServiceTemplate.class);
+                this.template = buf.readObject(ITemplate.class);
                 this.exclusionFiles = buf.readStringCollection();
                 this.onlyIncludedFiles = buf.readStringCollection();
                 break;

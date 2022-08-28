@@ -2,7 +2,7 @@ package cloud.hytora.driver.services.impl;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.services.ServicePingProperties;
+import cloud.hytora.driver.services.IPingProperties;
 import lombok.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -13,7 +13,7 @@ import java.util.Arrays;
 @Getter
 @NoArgsConstructor
 @Setter
-public class DefaultPingProperties implements ServicePingProperties {
+public class DefaultPingProperties implements IPingProperties {
 
     private String motd;
     private String versionText;

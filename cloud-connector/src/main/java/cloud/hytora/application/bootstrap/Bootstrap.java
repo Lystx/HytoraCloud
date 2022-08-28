@@ -2,26 +2,13 @@
 package cloud.hytora.application.bootstrap;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import javax.swing.*;
 
 import cloud.hytora.application.elements.data.ApplicationData;
-import cloud.hytora.application.elements.StartPanelInfoBox;
-import cloud.hytora.application.elements.event.CommitHistoryLoadedEvent;
-import cloud.hytora.common.task.Task;
-import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.networking.protocol.ProtocolAddress;
-import cloud.hytora.driver.services.utils.RemoteIdentity;
-import cloud.hytora.remote.Remote;
 import com.formdev.flatlaf.*;
-import cloud.hytora.application.gui.Application;
 import cloud.hytora.application.elements.data.CloudTheme;
 import com.formdev.flatlaf.util.SystemInfo;
-import org.kohsuke.github.GHCommit;
-import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.GitHub;
-import org.kohsuke.github.GitHubBuilder;
 
 
 public class Bootstrap {
@@ -66,13 +53,13 @@ public class Bootstrap {
 
             Task.runAsync(() -> {
                 try {
-                    GitHub github = GitHubBuilder.fromEnvironment().build();
+                    GitHub github = GitHubBuilder.fromEnvironment().newInstance();
                     GHRepository repository = github.getRepository("Lystx/HytoraCloud");
                     Collection<GHCommit> cachedCommits = repository.listCommits().toList();
-                    CloudDriver.getInstance().getEventManager().callEventGlobally(new CommitHistoryLoadedEvent(cachedCommits));
-                    CloudDriver.getInstance().getLogger().info("Loaded GitHub data");
+                    CloudDriver.retrieveFromStorage().getEventManager().callEventGlobally(new CommitHistoryLoadedEvent(cachedCommits));
+                    CloudDriver.retrieveFromStorage().getLogger().info("Loaded GitHub data");
                 } catch (Exception e) {
-                    CloudDriver.getInstance().getLogger().info("Couldn't load GitHub data");
+                    CloudDriver.retrieveFromStorage().getLogger().info("Couldn't load GitHub data");
                     e.printStackTrace();
                 }
             });
@@ -88,10 +75,10 @@ public class Bootstrap {
                     Application instance = new Application();
 
                     //first boxes => then init
-                    instance.registerInfoBox(new StartPanelInfoBox(0x00, "Players", "-1/0 Online", "users", () -> Remote.getInstance().getPlayerManager().getCloudPlayerOnlineAmount() + "/" + Remote.getInstance().getPlayerManager().countPlayerCapacity() + " Online"));
-                    instance.registerInfoBox(new StartPanelInfoBox(0x01, "Nodes", "-1/0 Connected", "show", () -> Remote.getInstance().getNodeManager().getAllConnectedNodes().size() + " Connected"));
-                    instance.registerInfoBox(new StartPanelInfoBox(0x02, "Services", "-1 Online", "services", () -> Remote.getInstance().getServiceManager().getAllCachedServices().size() + " Online"));
-                    instance.registerInfoBox(new StartPanelInfoBox(0x03, "Configurations", "-1 Loaded", "services", () -> Remote.getInstance().getServiceTaskManager().getAllCachedTasks().size() + " Loaded"));
+                    instance.registerInfoBox(new StartPanelInfoBox(0x00, "Players", "-1/0 Online", "users", () -> Remote.retrieveFromStorage().getPlayerManager().getCloudPlayerOnlineAmount() + "/" + Remote.retrieveFromStorage().getPlayerManager().countPlayerCapacity() + " Online"));
+                    instance.registerInfoBox(new StartPanelInfoBox(0x01, "Nodes", "-1/0 Connected", "show", () -> Remote.retrieveFromStorage().getNodeManager().getAllConnectedNodes().size() + " Connected"));
+                    instance.registerInfoBox(new StartPanelInfoBox(0x02, "Services", "-1 Online", "services", () -> Remote.retrieveFromStorage().getServiceManager().getAllCachedServices().size() + " Online"));
+                    instance.registerInfoBox(new StartPanelInfoBox(0x03, "Configurations", "-1 Loaded", "services", () -> Remote.retrieveFromStorage().getServiceTaskManager().getAllCachedTasks().size() + " Loaded"));
 
                     instance.init();
 

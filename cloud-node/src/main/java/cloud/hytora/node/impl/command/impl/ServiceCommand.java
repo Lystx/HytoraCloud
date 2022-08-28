@@ -2,7 +2,6 @@ package cloud.hytora.node.impl.command.impl;
 
 import cloud.hytora.common.function.ExceptionallyConsumer;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.commands.data.enums.AllowedCommandSender;
 import cloud.hytora.driver.commands.data.Command;
 import cloud.hytora.driver.commands.data.enums.CommandScope;
 import cloud.hytora.driver.commands.context.CommandContext;
@@ -17,9 +16,9 @@ import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.deployment.CloudDeployment;
-import cloud.hytora.driver.services.deployment.ServiceDeployment;
+import cloud.hytora.driver.services.deployment.IDeployment;
 import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.template.ServiceTemplate;
+import cloud.hytora.driver.services.template.ITemplate;
 import cloud.hytora.driver.services.utils.ServiceState;
 
 import java.text.SimpleDateFormat;
@@ -57,7 +56,7 @@ public class ServiceCommand {
     public void listCommand(CommandContext<?> context, CommandArguments args) {
         context.sendMessage("§8");
         for (ICloudServer service : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllCachedServices()) {
-            context.sendMessage("§b" + service.getName() + " §8[" + service.getServiceState().getName() + " §8/ §7" + service.getServiceVisibility().toString() + "§8] §bSlots §7" + service.getOnlinePlayerCount() + "§8/§7" + service.getMaxPlayers());
+            context.sendMessage("§b" + service.getName() + " §8[" + service.getServiceState().getName() + " §8/ §7" + service.getServiceVisibility().toString() + "§8] §bSlots §7" + service.getOnlinePlayers().size() + "§8/§7" + service.getMaxPlayers());
         }
         context.sendMessage("§8");
     }
@@ -82,7 +81,7 @@ public class ServiceCommand {
             return;
         }
 
-        ServiceTemplate serviceTemplate = service.getTask().getTaskGroup().getTemplates().stream().filter(t -> t.getPrefix().equalsIgnoreCase(templateName)).findFirst().orElse(null);
+        ITemplate serviceTemplate = service.getTask().getTaskGroup().getTemplates().stream().filter(t -> t.getPrefix().equalsIgnoreCase(templateName)).findFirst().orElse(null);
         if (serviceTemplate == null) {
             ctx.sendMessage("§cThere is no template with name '" + templateName + "' for server " + service.getName() + "!");
             return;
@@ -100,7 +99,7 @@ public class ServiceCommand {
             ctx.sendMessage("§8> §7Including every file");
         }
 
-        ServiceDeployment deployment = new CloudDeployment(serviceTemplate, excludedFiles, onlyIncludes);
+        IDeployment deployment = new CloudDeployment(serviceTemplate, excludedFiles, onlyIncludes);
         service.deploy(deployment);
         ctx.sendMessage("§7Deployed §b" + service.getName() + "§8!");
     }
@@ -221,8 +220,8 @@ public class ServiceCommand {
         ctx.sendMessage("§bAddress: §7" + service.getHostName() + ":" + service.getPort());
         ctx.sendMessage("§bState: " + service.getServiceState().getName());
         ctx.sendMessage("§bVisibility: §7" + service.getServiceVisibility());
-        ctx.sendMessage("§bPlayers: §7" + service.getOnlinePlayerCount() + "§8/§7" + service.getMaxPlayers());
-        ctx.sendMessage("§bMotd: §7" + service.getMotd());
+        ctx.sendMessage("§bPlayers: §7" + service.getOnlinePlayers().size() + "§8/§7" + service.getMaxPlayers());
+        ctx.sendMessage("§bMotd: §7" + service.getPingProperties().getMotd());
         ctx.sendMessage("§bReady: §7" + (service.isReady() ? "§aYes" : "§cNo"));
         ctx.sendMessage("§bUptime: §7" + service.getReadableUptime());
         ctx.sendMessage("§bLast Sync: §7" + new SimpleDateFormat("HH:mm:ss").format(service.getLastCycleData().getTimestamp()));

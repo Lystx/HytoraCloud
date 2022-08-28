@@ -1,6 +1,6 @@
 package cloud.hytora.driver.node.base;
 
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
@@ -8,8 +8,8 @@ import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
 import cloud.hytora.driver.node.config.INodeConfig;
-import cloud.hytora.driver.node.data.DefaultNodeData;
-import cloud.hytora.driver.node.data.INodeData;
+import cloud.hytora.driver.node.data.DefaultNodeCycleData;
+import cloud.hytora.driver.node.data.INodeCycleData;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.utils.ServiceState;
@@ -22,8 +22,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.ToIntFunction;
-import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 
 @Getter
@@ -34,11 +32,11 @@ public abstract class AbstractNode implements INode {
     protected INodeConfig config;
 
     @Setter
-    protected INodeData lastCycleData;
+    protected INodeCycleData lastCycleData;
 
 
     @Override
-    public List<ICloudServer> getRunningServers() {
+    public @NotNull List<ICloudServer> getRunningServers() {
         return CloudDriver
                 .getInstance()
                 .getProviderRegistry()
@@ -72,12 +70,12 @@ public abstract class AbstractNode implements INode {
     }
 
     @Override
-    public Task<Collection<ICloudServer>> getRunningServersAsync() {
-        return Task.callAsync(this::getRunningServers);
+    public ITask<Collection<ICloudServer>> getRunningServersAsync() {
+        return ITask.callAsync(this::getRunningServers);
     }
 
     @Override
-    public String getName() {
+    public @NotNull String getName() {
         return this.config.getNodeName();
     }
 
@@ -107,7 +105,7 @@ public abstract class AbstractNode implements INode {
 
             case READ:
                 config = buf.readObject(DefaultNodeConfig.class);
-                lastCycleData = buf.readObject(DefaultNodeData.class);
+                lastCycleData = buf.readObject(DefaultNodeCycleData.class);
                 break;
 
             case WRITE:

@@ -1,6 +1,6 @@
 package cloud.hytora.driver.node.base;
 
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.networking.IHandlerNetworkExecutor;
@@ -24,8 +24,8 @@ public abstract class DefaultNodeManager implements INodeManager {
     }
 
     @Override
-    public @NotNull Task<INode> getNode(@NotNull String username) {
-        return Task.build(getAllCachedNodes().stream().filter(n -> n.getName().equalsIgnoreCase(username)).findFirst().orElse(null));
+    public @NotNull ITask<INode> getNode(@NotNull String username) {
+        return ITask.newInstance(getAllCachedNodes().stream().filter(n -> n.getName().equalsIgnoreCase(username)).findFirst().orElse(null));
     }
 
     @Override

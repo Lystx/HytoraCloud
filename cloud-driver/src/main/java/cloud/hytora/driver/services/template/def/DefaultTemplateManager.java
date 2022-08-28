@@ -1,10 +1,10 @@
 package cloud.hytora.driver.services.template.def;
 
 import cloud.hytora.driver.services.ICloudServer;
-import cloud.hytora.driver.services.deployment.ServiceDeployment;
-import cloud.hytora.driver.services.template.ServiceTemplate;
+import cloud.hytora.driver.services.deployment.IDeployment;
+import cloud.hytora.driver.services.template.ITemplate;
 import cloud.hytora.driver.services.template.ITemplateManager;
-import cloud.hytora.driver.services.template.TemplateStorage;
+import cloud.hytora.driver.services.template.ITemplateStorage;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,20 +17,20 @@ public class DefaultTemplateManager implements ITemplateManager {
     /**
      * All cached storages
      */
-    private final Collection<TemplateStorage> storages = new ArrayList <>();
+    private final Collection<ITemplateStorage> storages = new ArrayList <>();
 
     @Override
-    public void registerStorage(TemplateStorage storage) {
+    public void registerStorage(ITemplateStorage storage) {
         if (this.getStorage(storage.getName()) == null) {
             this.storages.add(storage);
         }
     }
 
     @Override
-    public void deployService(@NotNull ICloudServer server, @NotNull ServiceDeployment... deployments) {
-        for (ServiceDeployment deployment : deployments) {
-            ServiceTemplate template = deployment.getTemplate();
-            TemplateStorage storage = template.getStorage();
+    public void deployService(@NotNull ICloudServer server, @NotNull IDeployment... deployments) {
+        for (IDeployment deployment : deployments) {
+            ITemplate template = deployment.getTemplate();
+            ITemplateStorage storage = template.getStorage();
             if (storage != null) {
                 storage.deployService(server, deployment);
             }
@@ -38,7 +38,7 @@ public class DefaultTemplateManager implements ITemplateManager {
     }
 
     @Override
-    public TemplateStorage getStorage(String name) {
+    public ITemplateStorage getStorage(String name) {
         return this.storages.stream().filter(ts -> ts.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
     }
 }

@@ -5,16 +5,14 @@ import cloud.hytora.common.logging.Logger;
 import cloud.hytora.driver.commands.parameter.defaults.*;
 import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.scheduler.Scheduler;
-import cloud.hytora.common.task.Task;
-import cloud.hytora.context.ApplicationContext;
-import cloud.hytora.context.IApplicationContext;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.commands.sender.defaults.DefaultCommandSender;
 import cloud.hytora.driver.commands.ICommandManager;
 import cloud.hytora.driver.commands.sender.CommandSender;
+import cloud.hytora.driver.common.IClusterObject;
 import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
 import cloud.hytora.driver.message.IChannelMessenger;
@@ -30,10 +28,7 @@ import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.driver.storage.INetworkDocumentStorage;
 import cloud.hytora.driver.storage.RemoteNetworkDocumentStorage;
-import cloud.hytora.driver.networking.IHandlerNetworkExecutor;
 import cloud.hytora.driver.uuid.IdentificationCache;
-import cloud.hytora.remote.adapter.RemoteAdapter;
-import cloud.hytora.remote.adapter.RemoteProxyAdapter;
 import cloud.hytora.remote.impl.*;
 import cloud.hytora.remote.impl.handler.*;
 import cloud.hytora.remote.impl.log.DefaultLogHandler;
@@ -41,7 +36,6 @@ import cloud.hytora.remote.impl.module.RemoteModuleManager;
 import lombok.Getter;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import lombok.Setter;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.lang.instrument.Instrumentation;
@@ -51,32 +45,76 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.function.Supplier;
 import java.util.jar.*;
 
+/**
+ * The {@link Remote} is the Service-Side implementation of the {@link CloudDriver}
+ * The Remote also holds a {@link RemoteIdentity} and the {@link IClusterObject} on this
+ * side is the current {@link ICloudServer} this remote is running for
+ * The main difference between other driver-implementations is that the {@link Remote}
+ * is capable or is even only used to start applications with custom class-loaders etc
+ *
+ * @author Lystx
+ * @since SNAPSHOT-1.1
+ * @see CloudDriver
+ */
 @Getter
 public class Remote extends CloudDriver<ICloudServer> {
 
+    /**
+     * The static instance to override CloudDriver instance
+     */
+    @Getter
     private static Remote instance;
 
-    private final IApplicationContext applicationContext;
+    /**
+     * The current driver command sender instance
+     */
     private final CommandSender commandSender;
+
+    /**
+     * The java instrumentation for class loading
+     */
     private final Instrumentation instrumentation;
 
-    private ClassLoader applicationClassLoader;
+    /**
+     * The class loader that was used on startup
+     */
     private final ClassLoader bootClassLoader = getClass().getClassLoader();
+
+    /**
+     * The provided start-arguments
+     */
     private final String[] arguments;
 
-    @Setter
-    private RemoteAdapter adapter;
+    /**
+     * The network client for remote side
+     */
+    private final RemoteNetworkClient networkExecutor;
 
+    /**
+     * The identity that belongs to this remote
+     */
+    private final RemoteIdentity property;
+
+    /**
+     * The application thread the application runs in
+     */
     @Setter
     private Thread applicationThread;
 
-    private final RemoteNetworkClient networkExecutor;
-    private final RemoteIdentity property;
+    /**
+     * The current class loader for the starting application
+     */
+    private ClassLoader applicationClassLoader;
 
-
+    /**
+     * Constructs a new {@link Remote} instance by just a {@link RemoteIdentity}
+     * The logger is auto-constructed and no arguments or instrumentation are defined
+     *
+     * @param identity the identity to use
+     * @since SNAPSHOT-1.3
+     */
     public Remote(RemoteIdentity identity) {
         this(identity, new HandledAsyncLogger(identity.getLogLevel()).addHandler(new DefaultLogHandler()).addHandler(entry -> CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(new DriverLogEvent(entry))), null, null);
     }
@@ -87,19 +125,14 @@ public class Remote extends CloudDriver<ICloudServer> {
         instance = this;
         this.instrumentation = instrumentation;
         this.arguments = arguments;
-        this.applicationContext = new ApplicationContext(this);
-        this.applicationContext.setInstance("driver", CloudDriver.getInstance());
-
+        this.property = identity;
 
         this.commandSender = new DefaultCommandSender("Remote", null).function(System.out::println);
-        this.property = identity;
 
         this.networkExecutor = new RemoteNetworkClient(property.getAuthKey(), property.getName(), property.getHostname(), property.getPort(), DocumentFactory.emptyDocument());
 
         //registering handlers
         this.networkExecutor.registerPacketHandler(new RemoteLoggingHandler());
-        this.networkExecutor.registerPacketHandler(new RemoteCommandHandler());
-        this.networkExecutor.registerPacketHandler(new RemoteCacheUpdateHandler());
         this.networkExecutor.registerPacketHandler(new RemoteNodeUpdateHandler());
 
         this.providerRegistry.setProvider(ICloudServiceTaskManager.class, new RemoteServiceTaskManager());
@@ -121,21 +154,17 @@ public class Remote extends CloudDriver<ICloudServer> {
                         new ServiceParamType(),
                         new NodeParamType()
                 );
-        //service cycle update task
-        Scheduler.runTimeScheduler().scheduleRepeatingTaskAsync(() -> {
-
-            RemoteAdapter remoteAdapter = getAdapter();
-            ICloudServer server = this.thisSidesClusterParticipant();
-
-            if (remoteAdapter == null || server == null) {
-                return;
-            }
-            server.setLastCycleData(remoteAdapter.createCycleData());
-            server.update();
-        }, SERVER_PUBLISH_INTERVAL, SERVER_PUBLISH_INTERVAL);
-
     }
 
+    /**
+     * Starts the application by using the provied start-arguments
+     * to get the application-main-class, the fileName etc.
+     *
+     * Application is always started in a different thread with a
+     * different {@link ClassLoader}
+     *
+     * @throws Exception if something goes wrong
+     */
     public synchronized void startApplication() throws Exception {
 
         String applicationFileName = this.arguments[0];
@@ -179,7 +208,14 @@ public class Remote extends CloudDriver<ICloudServer> {
         instrumentation.appendToSystemClassLoaderSearch(applicationJarFile);
         logger.info("Appended ApplicationJarFile to system classLoader search!");
 
-        Attributes manifestAttributes = getManifestAttributes(applicationFile);
+        Attributes manifestAttributes;
+        try (JarFile jarFile = new JarFile(applicationFile.toFile())) {
+            Manifest manifest = jarFile.getManifest();
+            if (manifest == null) throw new IllegalStateException("Manifest is null");
+            manifestAttributes = manifest.getMainAttributes();
+        } catch (Exception ex) {
+            throw new WrappedException("Unable to extract manifest attributes from jarfile", ex);
+        }
 
         String mainClassName = manifestAttributes.getValue("Main-Class");
         String premainClassName = manifestAttributes.getValue("Premain-Class");
@@ -229,56 +265,26 @@ public class Remote extends CloudDriver<ICloudServer> {
 
         applicationThread.setContextClassLoader(applicationClassLoader);
         applicationThread.start();
-
-
     }
 
-
-    @Nonnull
-    private Attributes getManifestAttributes(@Nonnull Path applicationFile) {
-        try (JarFile jarFile = new JarFile(applicationFile.toFile())) {
-            Manifest manifest = jarFile.getManifest();
-            if (manifest == null) throw new IllegalStateException("Manifest is null");
-            return manifest.getMainAttributes();
-        } catch (Exception ex) {
-            throw new WrappedException("Unable to extract manifest attributes from jarfile", ex);
-        }
-    }
-
-    // https://github.com/CloudNetService/CloudNet-v3/pull/560/files#diff-3e7f947c6535489177b7860ba2888ac02022f2427f48a6f4e9f12087f2951fbeR47-R55
-    private boolean shouldPreloadClasses(@Nonnull Path applicationFile) {
-        try (JarFile jarFile = new JarFile(applicationFile.toFile())) {
-            return jarFile.getEntry("META-INF/versions.list") != null;
-        } catch (Exception ex) {
-            throw new WrappedException("Unable to find out whether to preload classes of jarfile", ex);
-        }
-    }
-
-
-    public Task<DriverUpdatePacket> nexCacheUpdate() {
-        Task<DriverUpdatePacket> task = Task.empty();
-        task.denyNull();
-        CloudDriver.getInstance().getNetworkExecutor().registerSelfDestructivePacketHandler((PacketHandler<DriverUpdatePacket>) (wrapper1, packet) -> task.setResult(packet));
+    /**
+     * Returns a task that awaits the next {@link DriverUpdatePacket}
+     * to check when the whole cache of this instance has been updated
+     */
+    public ITask<DriverUpdatePacket> nexCacheUpdate() {
+        ITask<DriverUpdatePacket> task = ITask.empty();
+        CloudDriver
+                .getInstance()
+                .getNetworkExecutor()
+                .registerSelfDestructivePacketHandler(
+                        (PacketHandler<DriverUpdatePacket>)
+                                (wrapper1, packet) -> task.setResult(packet)
+                );
         return task;
-    }
-
-    public static Remote getInstance() {
-        return instance;
-    }
-
-    public RemoteProxyAdapter getProxyAdapter() {
-        return perform(adapter instanceof RemoteProxyAdapter, () -> cast(adapter), new IllegalStateException("Not a " + RemoteProxyAdapter.class.getSimpleName()));
-    }
-
-    public RemoteProxyAdapter getProxyAdapterOrNull() {
-        return perform(adapter instanceof RemoteProxyAdapter, () -> cast(adapter), (Supplier<RemoteProxyAdapter>) () -> null);
     }
 
     @Override
     public void shutdown() {
-        if (adapter != null) {
-            adapter.shutdown();
-        }
 
         if (applicationThread != null) {
             //applicationThread.destroy();
@@ -295,8 +301,22 @@ public class Remote extends CloudDriver<ICloudServer> {
 
     @Override
     public ICloudServer thisSidesClusterParticipant() {
-        return this.providerRegistry.get(ICloudServiceManager.class).mapOrElse(sm -> sm.getServiceByNameOrNull(this.property.getName()), () -> null);
+        return this.providerRegistry.get(ICloudServiceManager.class).mapOrElse(sm -> sm.getService(this.property.getName()), () -> null);
     }
 
+    /**
+     * Checks if an application file needs to pre-load all classes of the file
+     * depending on an existing versions.list inside the META-INF
+     *
+     * @param applicationFile the file to check
+     * @return if should pre-load classes
+     */
+    private boolean shouldPreloadClasses(@Nonnull Path applicationFile) {
+        try (JarFile jarFile = new JarFile(applicationFile.toFile())) {
+            return jarFile.getEntry("META-INF/versions.list") != null;
+        } catch (Exception ex) {
+            throw new WrappedException("Unable to find out whether to preload classes of jarfile", ex);
+        }
+    }
 
 }

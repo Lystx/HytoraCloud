@@ -1,7 +1,7 @@
 package cloud.hytora.node.console;
 
 import cloud.hytora.common.function.ExceptionallyBiConsumer;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.commands.ICommandManager;
 import cloud.hytora.driver.commands.sender.CommandSender;
@@ -29,8 +29,8 @@ public class NodeScreenManager implements ScreenManager {
     }
 
     @Override
-    public Task<Screen> getScreenByName(String name) {
-        return Task.build(allCachedScreens.get(name));
+    public ITask<Screen> getScreenByName(String name) {
+        return ITask.newInstance(allCachedScreens.get(name));
     }
 
     @Override
@@ -41,9 +41,9 @@ public class NodeScreenManager implements ScreenManager {
     @Override
     public void joinScreen(Screen screen) {
         this.currentScreenName = screen.getName();
-        if (lastScreenName == null) {
-            this.lastScreenName = screen.getName();
-        }
+        this.lastScreenName = screen.getName();
+
+
         CloudDriver.getInstance()
                 .getProviderRegistry()
                 .getUnchecked(ICommandManager.class)
@@ -73,6 +73,7 @@ public class NodeScreenManager implements ScreenManager {
 
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICommandManager.class).setActive(true, null);
         if (this.lastScreenName != null) {
+            System.out.println("Joining back to " + lastScreenName);
             this.joinScreen(this.getScreenByNameOrNull(lastScreenName));
         }
     }

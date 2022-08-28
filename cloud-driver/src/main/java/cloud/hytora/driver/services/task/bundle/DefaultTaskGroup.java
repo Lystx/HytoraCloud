@@ -6,7 +6,7 @@ import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
 import cloud.hytora.driver.services.task.TaskDownloadEntry;
 import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.template.ServiceTemplate;
+import cloud.hytora.driver.services.template.ITemplate;
 import cloud.hytora.driver.services.template.def.CloudTemplate;
 import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class DefaultTaskGroup implements TaskGroup {
+public class DefaultTaskGroup implements ITaskGroup {
 
     private String name;
     private SpecificDriverEnvironment environment;
@@ -33,7 +33,7 @@ public class DefaultTaskGroup implements TaskGroup {
     private Collection<TaskDownloadEntry> downloadEntries;
     private Collection<CloudTemplate> templates;
 
-    public Collection<ServiceTemplate> getTemplates() {
+    public @NotNull Collection<ITemplate> getTemplates() {
         return new ArrayList<>(templates);
     }
 
@@ -63,7 +63,7 @@ public class DefaultTaskGroup implements TaskGroup {
     }
 
     @Override
-    public Collection<IServiceTask> getChildren() {
+    public @NotNull Collection<IServiceTask> getChildren() {
         return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getAllCachedTasks().stream().filter(c -> c.getTaskGroup().getName().equals(this.name)).collect(Collectors.toList());
     }
 }

@@ -50,7 +50,7 @@ public class ContextProcessorJson implements IPostProcessor {
                 declaredField.set(v, value);
 
             } catch (Exception e) {
-                throw new RuntimeException(e); //TODO Custom Exception
+                throw new RuntimeException(e);
             }
 
         }

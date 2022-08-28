@@ -1,6 +1,6 @@
 package cloud.hytora.modules.perms.global.impl;
 
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
@@ -149,7 +149,7 @@ public class DefaultPermissionGroup implements PermissionGroup {
     public Map<IServiceTask, Collection<String>> getTaskPermissions() {
         Map<IServiceTask, Collection<String>> taskPermissions = new ConcurrentHashMap<>();
         for (Map.Entry<String, Collection<String>> e : this.taskPermissions.entrySet()) {
-            taskPermissions.put(CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskByNameOrNull(e.getKey()), e.getValue());
+            taskPermissions.put(CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskOrNull(e.getKey()), e.getValue());
         }
         return taskPermissions;
     }
@@ -203,8 +203,8 @@ public class DefaultPermissionGroup implements PermissionGroup {
     }
 
     @Override
-    public Task<Permission> getPermission(String permission) {
-        return Task.callAsync(() -> {
+    public ITask<Permission> getPermission(String permission) {
+        return ITask.callAsync(() -> {
             Long timeOut = permissions.get(permission);
             return permissions.containsKey(permission) ? Permission.of(permission, timeOut) : null;
         });

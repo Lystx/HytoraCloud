@@ -7,7 +7,7 @@ import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.progressbar.ProgressBar;
 import cloud.hytora.common.progressbar.ProgressBarStyle;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.IEntry;
@@ -25,7 +25,6 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -74,9 +73,9 @@ public class ModuleDownloader {
         return url;
     }
 
-    public Task<ModuleInfo> updateModule(ModuleInfo module) {
-        Task<ModuleInfo> task = Task.empty();
-        return Task.callAsync(() -> {
+    public ITask<ModuleInfo> updateModule(ModuleInfo module) {
+        ITask<ModuleInfo> task = ITask.empty();
+        return ITask.callAsync(() -> {
 
             String url = module.getUrl();
             String name = module.getName();
@@ -101,15 +100,15 @@ public class ModuleDownloader {
     }
 
 
-    public Task<ModuleInfo> updateModule(String name) {
+    public ITask<ModuleInfo> updateModule(String name) {
 
         Collection<ModuleInfo> modules = loadProvidedModules();
         ModuleInfo moduleInfo = modules.stream().filter(m -> m.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
-        return moduleInfo == null ? Task.empty() : updateModule(moduleInfo);
+        return moduleInfo == null ? ITask.empty() : updateModule(moduleInfo);
     }
 
-    public Task<Integer> updateModules() {
-        Task<Integer> task = Task.empty();
+    public ITask<Integer> updateModules() {
+        ITask<Integer> task = ITask.empty();
         Collection<ModuleInfo> modules = loadProvidedModules();
 
         AtomicInteger updateCount = new AtomicInteger(0);
@@ -126,8 +125,8 @@ public class ModuleDownloader {
         return task;
     }
 
-    public Task<Path> downloadModule(ModuleInfo module, String url) {
-        Task<Path> task = Task.empty();
+    public ITask<Path> downloadModule(ModuleInfo module, String url) {
+        ITask<Path> task = ITask.empty();
         ProgressBar pb = new ProgressBar(ProgressBarStyle.COLORED_UNICODE_BLOCK, 100L);
 
         //manage console

@@ -5,10 +5,10 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.packet.ServiceConfigPacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
-import cloud.hytora.driver.services.ConfigurableService;
+import cloud.hytora.driver.services.IFutureCloudServer;
 import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
 import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.template.ServiceTemplate;
+import cloud.hytora.driver.services.template.ITemplate;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 
 import java.util.Collection;
@@ -19,10 +19,10 @@ public class NodeServiceConfigureHandler implements PacketHandler<ServiceConfigP
     @Override
     public void handle(PacketChannel wrapper, ServiceConfigPacket packet) {
 
-        IServiceTask serviceTask = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskByNameOrNull(packet.getServiceTask());
+        IServiceTask serviceTask = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskOrNull(packet.getServiceTask());
         UUID uniqueId = packet.getUniqueId();
         Document properties = packet.getProperties();
-        Collection<ServiceTemplate> templates = packet.getTemplates();
+        Collection<ITemplate> templates = packet.getTemplates();
 
         String motd = packet.getMotd();
         String node = packet.getNode();
@@ -33,7 +33,7 @@ public class NodeServiceConfigureHandler implements PacketHandler<ServiceConfigP
         int maxPlayers = packet.getMaxPlayers();
         boolean ignoreOfLimit = packet.isIgnoreOfLimit();
 
-        ConfigurableService configurableService = serviceTask.configureFutureService();
+        IFutureCloudServer configurableService = serviceTask.configureFutureService();
         if (ignoreOfLimit) configurableService.ignoreIfLimitOfServicesReached();
 
         configurableService
@@ -44,7 +44,7 @@ public class NodeServiceConfigureHandler implements PacketHandler<ServiceConfigP
                 .port(port)
                 .memory(memory)
                 .maxPlayers(maxPlayers)
-                .templates(templates.toArray(new ServiceTemplate[0]))
+                .templates(templates.toArray(new ITemplate[0]))
                 .properties(properties)
                 .start();
     }

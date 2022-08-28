@@ -2,15 +2,13 @@ package cloud.hytora.common;
 
 import cloud.hytora.common.collection.WrappedException;
 import cloud.hytora.common.function.ExceptionallyRunnable;
-import cloud.hytora.common.logging.ConsoleColor;
 import cloud.hytora.common.progressbar.ProgressBar;
 import cloud.hytora.common.progressbar.ProgressBarStyle;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -31,10 +29,10 @@ public class DriverUtility {
         return (T) object;
     }
 
-    public static Task<Path> downloadVersion(String urlStr, Path location, ProgressBar pb) {
-        Task<Path> task = Task.empty();
+    public static ITask<Path> downloadVersion(String urlStr, Path location, ProgressBar pb) {
+        ITask<Path> task = ITask.empty();
 
-        Task.runAsync(() -> {
+        ITask.runAsync(() -> {
             try {
                 URL url = new URL(urlStr);
                 String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36";
@@ -65,8 +63,8 @@ public class DriverUtility {
         return task;
     }
 
-    public static Task<Void> downloadVersion(String urlStr, Path location) {
-        Task<Void> task = Task.empty();
+    public static ITask<Void> downloadVersion(String urlStr, Path location) {
+        ITask<Void> task = ITask.empty();
         try {
             ProgressBar pb = new ProgressBar(ProgressBarStyle.UNICODE_BLOCK, 300);
 
@@ -242,8 +240,8 @@ public class DriverUtility {
         return iterator.stream().filter(predicate).findFirst().orElse(null);
     }
 
-    public static <T> Task<T> find(Collection<T> iterator, Predicate<? super T> predicate) {
-        return Task.build(findOrNull(iterator, predicate));
+    public static <T> ITask<T> find(Collection<T> iterator, Predicate<? super T> predicate) {
+        return ITask.newInstance(findOrNull(iterator, predicate));
     }
 
     public static <T> List<T> newList() {

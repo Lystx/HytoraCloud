@@ -1,6 +1,6 @@
 package cloud.hytora.driver.event;
 
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -60,7 +60,7 @@ public interface IEventManager {
 	<E extends CloudEvent> E callEventOnlyLocally(@Nonnull E event);
 
 	@Nonnull
-	<E extends CloudEvent> Task<E> nextEvent(@Nonnull Class<E> eventClass);
+	<E extends CloudEvent> ITask<E> nextEvent(@Nonnull Class<E> eventClass);
 
 	@Nonnull
 	default <E extends CloudEvent> E awaitNextEvent(@Nonnull Class<E> eventClass) {

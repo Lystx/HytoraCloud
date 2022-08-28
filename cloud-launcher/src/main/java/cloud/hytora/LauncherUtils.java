@@ -2,7 +2,7 @@ package cloud.hytora;
 
 import cloud.hytora.common.progressbar.ProgressBar;
 import cloud.hytora.common.progressbar.ProgressBarStyle;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -15,8 +15,8 @@ public class LauncherUtils {
 
 
 
-    public static Task<Void> downloadVersion(String urlStr, Path location) {
-        Task<Void> task = Task.empty();
+    public static ITask<Void> downloadVersion(String urlStr, Path location) {
+        ITask<Void> task = ITask.empty();
         try {
             ProgressBar pb = new ProgressBar(ProgressBarStyle.UNICODE_BLOCK, 300);
 

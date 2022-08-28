@@ -1,6 +1,6 @@
 package cloud.hytora.remote.impl;
 
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.IEventManager;
@@ -39,7 +39,7 @@ public class RemoteServiceManager extends DefaultServiceManager {
 
     @EventListener
     public void handleRemove(ServiceUnregisterEvent event) {
-        ICloudServer server = this.getServiceByNameOrNull(event.getService());
+        ICloudServer server = this.getService(event.getService());
         if (server == null) {
             return;
         }
@@ -55,10 +55,10 @@ public class RemoteServiceManager extends DefaultServiceManager {
 
 
     @Override
-    public Task<ICloudServer> startService(@NotNull ICloudServer service) {
+    public ITask<ICloudServer> startService(@NotNull ICloudServer service) {
 
         new NodeRequestServerStartPacket(service, false).publishTo(service.getRunningNodeName());
-        return Task.build(service);
+        return ITask.newInstance(service);
     }
 
     @Override
@@ -67,8 +67,8 @@ public class RemoteServiceManager extends DefaultServiceManager {
     }
 
     @Override
-    public Task<ICloudServer> thisService() {
-        return Task.callAsyncNonNull(() -> getAllCachedServices().stream().filter(s -> s.getName().equalsIgnoreCase(Remote.getInstance().getProperty().getName())).findFirst().orElse(null));
+    public ITask<ICloudServer> thisService() {
+        return ITask.callAsync(() -> getAllCachedServices().stream().filter(s -> s.getName().equalsIgnoreCase(Remote.getInstance().getProperty().getName())).findFirst().orElse(null));
     }
 
     @Override
@@ -84,7 +84,7 @@ public class RemoteServiceManager extends DefaultServiceManager {
     }
 
     @Override
-    public void sendPacketToService(ICloudServer service, IPacket packet) {
+    public void sendPacketToService(ICloudServer service, @NotNull IPacket packet) {
         if (service.getName().equalsIgnoreCase(Remote.getInstance().thisSidesClusterParticipant().getName())) {
             CloudDriver.getInstance().getNetworkExecutor().handlePacket(null, packet);
             return;

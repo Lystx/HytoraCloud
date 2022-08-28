@@ -20,7 +20,7 @@ import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.task.UniversalServiceTask;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.services.ICloudServer;
-import cloud.hytora.driver.services.task.bundle.TaskGroup;
+import cloud.hytora.driver.services.task.bundle.ITaskGroup;
 import cloud.hytora.driver.services.task.bundle.DefaultTaskGroup;
 import cloud.hytora.driver.services.impl.UniversalCloudServer;
 import lombok.AllArgsConstructor;
@@ -36,7 +36,7 @@ import java.util.List;
 public class DriverUpdatePacket extends AbstractPacket {
 
     private Collection<IServiceTask> serviceTasks;
-    private Collection<TaskGroup> parentGroups;
+    private Collection<ITaskGroup> parentGroups;
     private Collection<ICloudServer> allCachedServices;
     private Collection<ICloudPlayer> cloudPlayers;
     private Collection<INode> connectedNodes;
@@ -51,7 +51,7 @@ public class DriverUpdatePacket extends AbstractPacket {
     public DriverUpdatePacket() {
         this(
                 CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getAllCachedTasks(),
-                CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getAllTaskGroups(),
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getAllCachedTaskGroups(),
                 CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllCachedServices(),
                 CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getAllCachedCloudPlayers(),
                 CloudDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).getAllCachedNodes()
@@ -68,7 +68,7 @@ public class DriverUpdatePacket extends AbstractPacket {
             case READ:
 
                 parentGroups = buf.readWrapperObjectCollection(DefaultTaskGroup.class);
-                CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).setAllTaskGroups(parentGroups);
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).setAllCachedTaskGroups(parentGroups);
 
                 serviceTasks = buf.readWrapperObjectCollection(UniversalServiceTask.class);
                 CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).setAllCachedTasks(serviceTasks);

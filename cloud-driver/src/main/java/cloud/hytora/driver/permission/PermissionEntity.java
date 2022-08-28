@@ -1,6 +1,6 @@
 package cloud.hytora.driver.permission;
 
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.services.task.IServiceTask;
 
@@ -93,7 +93,7 @@ public interface PermissionEntity extends IBufferObject {
      * @return task holding the permission
      * @see #getPermissionOrNull(String)
      */
-    Task<Permission> getPermission(String permission);
+    ITask<Permission> getPermission(String permission);
 
     /**
      * Searches for a {@link Permission} instance within the permissions

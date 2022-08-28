@@ -431,6 +431,20 @@ public class DefaultPacketBuffer implements PacketBuffer {
 	}
 
 	@Override
+	public <T> Class<T> readClass() {
+		try {
+			return (Class<T>) Class.forName(readString());
+		} catch (ClassNotFoundException e) {
+			return null;
+		}
+	}
+
+	@Override
+	public <T> PacketBuffer writeClass(Class<T> clazz) {
+		return this.writeString(clazz.getName());
+	}
+
+	@Override
 	public PacketBuffer readBuffer() {
 		return new DefaultPacketBuffer(Unpooled.wrappedBuffer(readByteArray(this.buffer, readVarInt(this.buffer))), getParticipant());
 	}

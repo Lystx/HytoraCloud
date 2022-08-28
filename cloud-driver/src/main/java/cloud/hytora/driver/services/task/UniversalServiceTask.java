@@ -1,22 +1,21 @@
 package cloud.hytora.driver.services.task;
 
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.task.TaskMaintenanceChangeEvent;
-import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.INodeManager;
 import cloud.hytora.driver.property.ProtocolPropertyObject;
-import cloud.hytora.driver.services.ConfigurableService;
+import cloud.hytora.driver.services.IFutureCloudServer;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.impl.DefaultConfigurableService;
-import cloud.hytora.driver.services.task.bundle.TaskGroup;
+import cloud.hytora.driver.services.task.bundle.ITaskGroup;
 import cloud.hytora.driver.services.fallback.SimpleFallback;
-import cloud.hytora.driver.services.template.ServiceTemplate;
+import cloud.hytora.driver.services.template.ITemplate;
 import cloud.hytora.driver.services.template.def.CloudTemplate;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 import lombok.NoArgsConstructor;
@@ -51,11 +50,11 @@ public class UniversalServiceTask extends ProtocolPropertyObject implements ISer
     private ServiceVersion version;
     private Collection<CloudTemplate> templates = new ArrayList<>();
 
-    public void setTemplates(Collection<ServiceTemplate> templates) {
+    public void setTemplates(Collection<ITemplate> templates) {
         this.templates = templates.stream().map(t -> ((CloudTemplate) t)).collect(Collectors.toList());
     }
 
-    public Collection<ServiceTemplate> getTemplates() {
+    public @NotNull Collection<ITemplate> getTemplates() {
         return new ArrayList<>(templates);
     }
 
@@ -65,10 +64,10 @@ public class UniversalServiceTask extends ProtocolPropertyObject implements ISer
     }
 
     @Override
-    public Task<INode> findAnyNodeAsync() {
-        Task<INode> task = Task.empty();
+    public @NotNull ITask<INode> findAnyNodeAsync() {
+        ITask<INode> task = ITask.empty();
 
-        Task.runAsync(() -> {
+        ITask.runAsync(() -> {
             INode anyNode = findAnyNode();
             if (anyNode == null) {
                 task.setFailure(new NullPointerException("No connected Node found!"));
@@ -81,7 +80,7 @@ public class UniversalServiceTask extends ProtocolPropertyObject implements ISer
     }
 
     @Override
-    public Collection<INode> findPossibleNodes() {
+    public @NotNull Collection<INode> findPossibleNodes() {
         return null;
     }
 
@@ -91,26 +90,27 @@ public class UniversalServiceTask extends ProtocolPropertyObject implements ISer
     }
 
     @Override
-    public ConfigurableService configureFutureService() {
+    public @NotNull IFutureCloudServer configureFutureService() {
         return new DefaultConfigurableService(this);
     }
 
-    public TaskGroup getTaskGroup() {
+    @Override
+    public @NotNull ITaskGroup getTaskGroup() {
         return CloudDriver.getInstance()
                 .getProviderRegistry()
                 .getUnchecked(ICloudServiceTaskManager.class)
-                .getTaskGroupByNameOrNull(
+                .getTaskGroupOrNull(
                         this.parent);
     }
 
     @Override
-    public List<ICloudServer> getOnlineServices() {
-        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllServicesByTask(this);
+    public @NotNull List<ICloudServer> getOnlineServices() {
+        return (List<ICloudServer>) CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllServicesByTask(this);
     }
 
     @Override
     public void update() {
-        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).update(this);
+        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).updateTask(this);
     }
 
     @Override

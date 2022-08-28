@@ -20,7 +20,7 @@ public enum SignState {
     public static SignState ofServer(ICloudServer server) {
         if (server.getTask().isMaintenance()) {
             return MAINTENANCE;
-        } else if (server.getOnlinePlayerCount() >= server.getMaxPlayers()) {
+        } else if (server.getOnlinePlayers().size() >= server.getMaxPlayers()) {
             return FULL;
         } else if (server.getServiceState() == ServiceState.ONLINE) {
             return ONLINE;

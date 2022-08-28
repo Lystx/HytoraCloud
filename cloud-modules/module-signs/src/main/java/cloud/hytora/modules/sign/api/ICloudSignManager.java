@@ -1,6 +1,6 @@
 package cloud.hytora.modules.sign.api;
 
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -9,7 +9,7 @@ public interface ICloudSignManager {
 
     void loadCloudSignsSync();
 
-    Task<Collection<ICloudSign>> loadCloudSignsAsync();
+    ITask<Collection<ICloudSign>> loadCloudSignsAsync();
 
     void setAllCachedCloudSigns(Collection<ICloudSign> cloudSigns);
 
@@ -17,7 +17,7 @@ public interface ICloudSignManager {
 
     Collection<ICloudSign> getAllCachedCloudSignsForTask(String taskName);
 
-    Task<ICloudSign> getCloudSignAsync(UUID uniqueId);
+    ITask<ICloudSign> getCloudSignAsync(UUID uniqueId);
 
     ICloudSign getCloudSignOrNull(UUID uniqueId);
 

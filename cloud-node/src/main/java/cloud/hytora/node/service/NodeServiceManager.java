@@ -1,7 +1,7 @@
 package cloud.hytora.node.service;
 
 import cloud.hytora.common.scheduler.Scheduler;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.console.screen.Screen;
 import cloud.hytora.driver.console.screen.ScreenManager;
@@ -136,13 +136,13 @@ public class NodeServiceManager extends DefaultServiceManager {
     }
 
     @Override
-    public Task<ICloudServer> startService(@NotNull ICloudServer service) {
+    public ITask<ICloudServer> startService(@NotNull ICloudServer service) {
         return worker.processService(service);
     }
 
     @Override
-    public Task<ICloudServer> thisService() {
-        return Task.empty();
+    public ITask<ICloudServer> thisService() {
+        return ITask.empty();
     }
 
     @Override
@@ -151,7 +151,7 @@ public class NodeServiceManager extends DefaultServiceManager {
     }
 
     @Override
-    public void sendPacketToService(ICloudServer service, IPacket packet) {
+    public void sendPacketToService(@NotNull ICloudServer service, @NotNull IPacket packet) {
         NodeDriver.getInstance().getNetworkExecutor().getAllCachedConnectedClients().stream().filter(it -> it.getName().equals(service.getName())).findAny().ifPresent(it -> it.sendPacket(packet));
     }
 
@@ -167,7 +167,7 @@ public class NodeServiceManager extends DefaultServiceManager {
         CloudDriver.getInstance().getLogger().debug("Updated Server {}", service.getName());
         this.updateServerInternally(service);
 
-        //calling update event on every other side
+        //calling updateTask event on every other side
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventOnlyPacketBased(new ServiceUpdateEvent(service));
         if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());

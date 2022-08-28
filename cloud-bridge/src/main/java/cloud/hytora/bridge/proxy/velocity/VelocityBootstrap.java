@@ -1,8 +1,8 @@
 package cloud.hytora.bridge.proxy.velocity;
 
-import cloud.hytora.bridge.PluginBridge;
+import cloud.hytora.bridge.IBridgePlugin;
 
-public class VelocityBootstrap implements PluginBridge {
+public class VelocityBootstrap implements IBridgePlugin {
 
     @Override
     public void shutdown() {

@@ -1,17 +1,19 @@
 package cloud.hytora.driver.networking.cluster.client;
 
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.networking.protocol.SimpleNetworkComponent;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
-import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import io.netty.channel.Channel;
 
 import io.netty.channel.ChannelFutureListener;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.nio.channels.ClosedChannelException;
 
 @Getter
 @Setter
@@ -34,6 +36,26 @@ public class SimpleClusterClientExecutor extends SimpleNetworkComponent implemen
         if (channel.isOpen()) {
             channel.writeAndFlush(packet).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
         }
+    }
+
+    @Override
+    public ITask<Void> sendPacketAsync(IPacket packet) {
+        ITask<Void> task = ITask.empty();
+        if (channel.isOpen()) {
+            channel
+                    .writeAndFlush(packet)
+                    .addListener(future -> {
+                        if (future.isSuccess()) {
+                            task.setResult(null);
+                        } else {
+                            task.setFailure(future.cause());
+                        }
+                    });
+        } else {
+            task.setFailure(new ClosedChannelException());
+        }
+
+        return task;
     }
 
 }

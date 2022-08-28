@@ -32,7 +32,7 @@ public class DefaultCommandSender implements ConsoleCommandSender {
     public void sendMessage(@NotNull String message) {
         if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
             message = ComponentColor.translateColorCodes('§', message);
-            CloudMessages messages = CloudMessages.getInstance();
+            CloudMessages messages = CloudMessages.retrieveFromStorage();
             if (messages != null) {
                 message = message.replace(messages.getPrefix(), "");
             }

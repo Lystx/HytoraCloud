@@ -25,12 +25,7 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-/**
-
- *
- * @see Bundle
- * @see IEntry
- */
+//todo documentation
 public interface Document extends JsonEntity {
 
 	@Nonnull

@@ -4,7 +4,7 @@ import cloud.hytora.document.Document;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
-import cloud.hytora.driver.services.template.ServiceTemplate;
+import cloud.hytora.driver.services.template.ITemplate;
 import cloud.hytora.driver.services.template.def.CloudTemplate;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 import lombok.AllArgsConstructor;
@@ -37,7 +37,7 @@ public class ServiceConfigPacket extends AbstractPacket {
 
     private Document properties;
 
-    private Collection<ServiceTemplate> templates;
+    private Collection<ITemplate> templates;
 
     private ServiceVersion version;
 

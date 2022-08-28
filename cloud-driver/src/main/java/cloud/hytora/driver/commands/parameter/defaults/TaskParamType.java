@@ -14,7 +14,7 @@ public class TaskParamType extends CommandParameterType<IServiceTask> {
 
     @Override
     public IServiceTask resolve(String s) {
-        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskByNameOrNull(s);
+        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskOrNull(s);
     }
 
     @Override

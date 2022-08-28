@@ -27,7 +27,7 @@ public class CloudMessages {
         this.maintenanceKickByPassedMessage = "§cThe maintenance for the network was enabled but you didn't get kicked because you are permitted to stay!";
     }
 
-    public static CloudMessages getInstance() {
+    public static CloudMessages retrieveFromStorage() {
         return CloudDriver.getInstance().getProviderRegistry().getUnchecked(INetworkDocumentStorage.class).get("cloud::messages").toInstance(CloudMessages.class);
     }
 }

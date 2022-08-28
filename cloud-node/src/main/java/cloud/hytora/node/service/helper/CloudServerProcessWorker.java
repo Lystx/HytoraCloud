@@ -6,7 +6,7 @@ import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.progressbar.ProgressBar;
 import cloud.hytora.common.progressbar.ProgressBarStyle;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.console.Console;
 import cloud.hytora.driver.console.screen.Screen;
@@ -18,8 +18,8 @@ import cloud.hytora.driver.module.controller.base.ModuleCopyType;
 import cloud.hytora.driver.services.impl.UniversalCloudServer;
 import cloud.hytora.driver.services.task.TaskDownloadEntry;
 import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.template.ServiceTemplate;
-import cloud.hytora.driver.services.template.TemplateStorage;
+import cloud.hytora.driver.services.template.ITemplate;
+import cloud.hytora.driver.services.template.ITemplateStorage;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.driver.services.utils.ServiceProcessType;
@@ -50,9 +50,9 @@ import java.util.jar.JarInputStream;
 public class CloudServerProcessWorker {
 
     @SneakyThrows
-    public Task<ICloudServer> processService(ICloudServer service) {
-        Task<ICloudServer> task = Task.empty();
-        Task.runAsync(() -> {
+    public ITask<ICloudServer> processService(ICloudServer service) {
+        ITask<ICloudServer> task = ITask.empty();
+        ITask.runAsync(() -> {
 
             service.setServiceState(ServiceState.STARTING);
 
@@ -79,11 +79,11 @@ public class CloudServerProcessWorker {
                         ServiceProcessType serviceProcessType = MainConfiguration.getInstance().getServiceProcessType();
 
                         //all templates for this service
-                        Collection<ServiceTemplate> templates = serviceTask.getTaskGroup().getTemplates(); //parent templates
+                        Collection<ITemplate> templates = serviceTask.getTaskGroup().getTemplates(); //parent templates
                         templates.addAll(serviceTask.getTemplates()); //task templates
 
-                        for (ServiceTemplate template : templates) {
-                            TemplateStorage storage = template.getStorage();
+                        for (ITemplate template : templates) {
+                            ITemplateStorage storage = template.getStorage();
                             if (storage != null) {
                                 storage.copyTemplate(service, template, serverDir);
                             }
@@ -267,8 +267,8 @@ public class CloudServerProcessWorker {
     }
 
 
-    private Task<Boolean> downloadVersion(ServiceVersion version) {
-        Task<Boolean> task = Task.empty();
+    private ITask<Boolean> downloadVersion(ServiceVersion version) {
+        ITask<Boolean> task = ITask.empty();
 
         //checking file for version
         File file = new File(NodeDriver.STORAGE_VERSIONS_FOLDER, version.getJar());

@@ -99,7 +99,7 @@ public class TaskSetup extends Setup<TaskSetup> {
 
         @Override
         public Boolean supply(String name) {
-            return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskByNameOrNull(name) != null;
+            return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTaskOrNull(name) != null;
         }
     }
 

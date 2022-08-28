@@ -3,7 +3,7 @@ package cloud.hytora.node;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.INodeManager;
-import cloud.hytora.driver.node.data.INodeData;
+import cloud.hytora.driver.node.data.INodeCycleData;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.task.IServiceTask;
@@ -43,7 +43,7 @@ public class TimeOutChecker implements Runnable {
 			if (node.getName().equalsIgnoreCase(NodeDriver.getInstance().getNode().getName())) {
 				continue;
 			}
-			INodeData cycleData = node.getLastCycleData();
+			INodeCycleData cycleData = node.getLastCycleData();
 			if (cycleData == null) {
 				continue;
 			}

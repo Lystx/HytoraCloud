@@ -1,6 +1,6 @@
 package cloud.hytora.modules.sign.spigot.manager;
 
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.ICloudServiceManager;
@@ -59,7 +59,7 @@ public class BukkitCloudSignUpdater implements Runnable {
     /**
      * Loads the repeat tick
      * for the SignUpdater
-     * and executes the update-Method
+     * and executes the updateTask-Method
      */
     @Override
     public void run() {
@@ -197,7 +197,7 @@ public class BukkitCloudSignUpdater implements Runnable {
             return;
         }
 
-        Task.runAsync(() -> {
+        ITask.runAsync(() -> {
             BukkitCloudSignGroup signGroup = new BukkitCloudSignGroup(current.getTask().getName(), CloudSignAPI.getInstance().getSignManager().getAllCachedCloudSigns());
             Map<Integer, ICloudSign> signs = signGroup.getCloudSigns();
             ICloudSign cloudSign = signs.get(current.getServiceID());
@@ -263,7 +263,7 @@ public class BukkitCloudSignUpdater implements Runnable {
             Collection<ICloudSign> offlineSigns = new ArrayList<>();
             for (Integer count : allSigns) {
                 ICloudSign sign = new BukkitCloudSignGroup(name, CloudSignAPI.getInstance().getSignManager().getAllCachedCloudSigns()).getCloudSigns().get(count);
-                ICloudServer s = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceByNameOrNull(sign.getTaskName() + "-" + count);
+                ICloudServer s = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getService(sign.getTaskName() + "-" + count);
                 if (s == null || s.getServiceVisibility().equals(ServiceVisibility.INVISIBLE) || s.getServiceState().equals(ServiceState.STOPPING) || s.getName().equalsIgnoreCase(CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).thisServiceOrNull().getName())) {
                     offlineSigns.add(sign);
                 }
@@ -293,7 +293,7 @@ public class BukkitCloudSignUpdater implements Runnable {
         } else if (service.getServiceState().equals(ServiceState.STARTING) || service.getServiceState() == ServiceState.PREPARED) {
             signAnimation = CloudSignAPI.getInstance().getSignConfiguration().getStartingLayOut();
             signState = SignState.STARTING;
-        } else if (service.getOnlinePlayerCount() >= service.getMaxPlayers()) {
+        } else if (service.getOnlinePlayers().size() >= service.getMaxPlayers()) {
             signAnimation = CloudSignAPI.getInstance().getSignConfiguration().getFullLayout();
             signState = SignState.FULL;
         } else {
