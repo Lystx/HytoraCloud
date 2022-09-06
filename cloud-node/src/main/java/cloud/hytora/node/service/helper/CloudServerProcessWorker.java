@@ -27,7 +27,7 @@ import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 import cloud.hytora.driver.services.utils.version.VersionFile;
 import cloud.hytora.driver.services.utils.version.VersionType;
-import cloud.hytora.node.impl.config.MainConfiguration;
+import cloud.hytora.node.config.MainConfiguration;
 import cloud.hytora.node.NodeDriver;
 
 

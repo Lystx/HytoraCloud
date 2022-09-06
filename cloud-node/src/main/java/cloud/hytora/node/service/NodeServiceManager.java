@@ -10,7 +10,7 @@ import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUpdateEvent;
-import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
+import cloud.hytora.driver.networking.protocol.packets.defaults.DriverUpdatePacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.INodeManager;
@@ -20,7 +20,7 @@ import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.impl.DefaultServiceManager;
 import cloud.hytora.node.NodeDriver;
 
-import cloud.hytora.node.impl.config.MainConfiguration;
+import cloud.hytora.node.config.MainConfiguration;
 import cloud.hytora.node.service.helper.CloudServerProcessWorker;
 import lombok.Getter;
 import org.apache.commons.io.FileUtils;

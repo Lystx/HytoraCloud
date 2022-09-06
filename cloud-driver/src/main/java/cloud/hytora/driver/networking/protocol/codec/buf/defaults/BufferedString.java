@@ -1,24 +1,16 @@
 package cloud.hytora.driver.networking.protocol.codec.buf.defaults;
 
-import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
-import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.jetbrains.annotations.NotNull;
-
-import java.io.IOException;
+import lombok.Setter;
 
 @Data
 @AllArgsConstructor
-public class BufferedString implements AbstractBuffered<BufferedString, String> {
+@Setter
+public class BufferedString implements IBuffered<BufferedString, String> {
 
     private String wrapped;
-
-    @Override
-    public void setWrapped(BufferedString wrapped) {
-        this.wrapped = wrapped.getWrapped();
-    }
 
     @Override
     public Class<BufferedString> getWrapperClass() {

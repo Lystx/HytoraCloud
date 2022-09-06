@@ -76,8 +76,7 @@ public class CloudBridgeBukkitPlugin extends JavaPlugin implements IBridgePlugin
                 "onlineCount", Bukkit.getOnlinePlayers().size(),
                 "plugins", Arrays.stream(Bukkit.getPluginManager().getPlugins()).map(p -> p.getDescription().getName()).collect(Collectors.toList()),
                 "favicon", Bukkit.getServerIcon() == null ? null : Bukkit.getServerIcon().toString(),
-                "playerLimit", Bukkit.getMaxPlayers(),
-                "worlds", Bukkit.getWorlds().stream().map(WorldInfo::getName).collect(Collectors.toList())
+                "playerLimit", Bukkit.getMaxPlayers()
         ));
     }
 }

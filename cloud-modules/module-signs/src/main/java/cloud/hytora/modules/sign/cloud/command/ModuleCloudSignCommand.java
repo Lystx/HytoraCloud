@@ -10,8 +10,9 @@ import cloud.hytora.modules.sign.api.CloudSignAPI;
 public class ModuleCloudSignCommand {
 
     @Command(
-            label = "signsRl",
-            permission = "cloud.modules.sign.command.use",
+            label = "reloadSigns",
+            permission = "cloud.command.sign",
+            desc = "Reloads the SignModule!",
             scope = CommandScope.CONSOLE
     )
     public void reload(CommandContext<?> ctx, CommandArguments args) {

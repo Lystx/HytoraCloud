@@ -58,16 +58,47 @@ public class GenericQueryPacket<T extends IBufferObject> extends AbstractPacket 
     private boolean querySide;
 
     /**
+     * Error that might occur
+     */
+    @Getter
+    @Setter
+    private Throwable error;
+
+    /**
      * The result that was responded with
      */
     @Getter
     private T result;
 
-    public GenericQueryPacket(@NotNull String key,@NotNull IBufferObject request) {
+    public GenericQueryPacket(@NotNull String key, @NotNull IBufferObject request) {
         this.request = request;
         this.key = key;
         this.requestTypeClass = request.getClass();
         this.queryId = UUID.randomUUID();
+    }
+
+    public GenericQueryPacket(@NotNull String key, @NotNull String request) {
+        this(key, new BufferedString(request));
+    }
+
+    public GenericQueryPacket(@NotNull String key, @NotNull UUID request) {
+        this(key, new BufferedUUID(request));
+    }
+
+    public GenericQueryPacket(@NotNull String key, @NotNull Integer request) {
+        this(key, new BufferedInt(request));
+    }
+
+    public GenericQueryPacket(@NotNull String key, @NotNull Enum<?> request) {
+        this(key, new BufferedEnum(request));
+    }
+
+    public GenericQueryPacket(@NotNull String key, @NotNull Boolean request) {
+        this(key, new BufferedBoolean(request));
+    }
+
+    public GenericQueryPacket(@NotNull String key, @NotNull Document request) {
+        this(key, new BufferedDocument(request));
     }
 
     public ITask<GenericQueryPacket<T>> query() {
@@ -94,44 +125,42 @@ public class GenericQueryPacket<T extends IBufferObject> extends AbstractPacket 
     }
 
     public ITask<Void> respond(String result) {
-        return this.respond0(new BufferedString(result));
+        return this.respond(new BufferedString(result));
     }
 
     public ITask<Void> respond(boolean result) {
-        return this.respond0(new BufferedBoolean(result));
+        return this.respond(new BufferedBoolean(result));
     }
 
     public ITask<Void> respond(Document result) {
-        return this.respond0(new BufferedDocument(result));
+        return this.respond(new BufferedDocument(result));
     }
 
     public ITask<Void> respond(Enum<?> result) {
-        return this.respond0(new BufferedEnum(result));
+        return this.respond(new BufferedEnum(result));
     }
 
-    public ITask<Void> respond(T result) {
-        return this.respond0(new BufferedCustom<>(result));
-    }
 
     public ITask<Void> respond(Number result) {
         if (result instanceof Integer) {
-            return this.respond0(new BufferedInt((Integer) result));
+            return this.respond(new BufferedInt((Integer) result));
         }
         if (result instanceof Long) {
-            return this.respond0(new BufferedLong((Long) result));
+            return this.respond(new BufferedLong((Long) result));
         }
         if (result instanceof Byte) {
-            return this.respond0(new BufferedByte((Byte) result));
+            return this.respond(new BufferedByte((Byte) result));
         }
         if (result instanceof Double) {
-            return this.respond0(new BufferedDouble((Double) result));
+            return this.respond(new BufferedDouble((Double) result));
         }
         return ITask.empty();
     }
 
-    private ITask<Void> respond0(IBufferObject data) {
+    public ITask<Void> respond(IBufferObject data) {
         this.result = (T) data;
         this.querySide = false;
+        this.responseTypeClass = data.getClass();
         return this.publishAsync();
     }
 
@@ -143,6 +172,7 @@ public class GenericQueryPacket<T extends IBufferObject> extends AbstractPacket 
                 buf.writeUniqueId(queryId);
                 buf.writeString(key);
                 buf.writeBoolean(querySide);
+                buf.writeOptionalThrowable(error);
                 if (querySide) {
                     buf.writeClass(requestTypeClass);
                     buf.writeOptionalObject(request);
@@ -155,6 +185,7 @@ public class GenericQueryPacket<T extends IBufferObject> extends AbstractPacket 
                 queryId = buf.readUniqueId();
                 key = buf.readString();
                 boolean querySide = buf.readBoolean();
+                error = buf.readOptionalThrowable();
                 if (querySide) {
                     requestTypeClass = buf.readClass();
                     request = buf.readOptionalObject(requestTypeClass);

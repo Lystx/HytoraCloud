@@ -4,7 +4,7 @@ import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.task.ITask;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
-import cloud.hytora.driver.networking.packets.RedirectPacket;
+import cloud.hytora.driver.networking.protocol.packets.defaults.RedirectPacket;
 import cloud.hytora.driver.networking.IHandlerNetworkExecutor;
 import cloud.hytora.driver.networking.INetworkExecutor;
 import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;

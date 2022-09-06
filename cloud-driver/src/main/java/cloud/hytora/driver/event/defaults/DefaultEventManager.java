@@ -8,7 +8,7 @@ import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.*;
 import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
 import cloud.hytora.driver.networking.IHandlerNetworkExecutor;
-import cloud.hytora.driver.networking.packets.DriverCallEventPacket;
+import cloud.hytora.driver.networking.protocol.packets.defaults.DriverCallEventPacket;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;

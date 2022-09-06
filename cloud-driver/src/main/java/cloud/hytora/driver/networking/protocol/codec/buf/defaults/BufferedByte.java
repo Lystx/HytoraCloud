@@ -3,17 +3,14 @@ package cloud.hytora.driver.networking.protocol.codec.buf.defaults;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Setter;
 
 @Data
 @AllArgsConstructor
-public class BufferedByte implements AbstractBuffered<BufferedByte, Byte> {
+@Setter
+public class BufferedByte implements IBuffered<BufferedByte, Byte> {
 
     private Byte wrapped;
-
-    @Override
-    public void setWrapped(BufferedByte wrapped) {
-        this.wrapped = wrapped.getWrapped();
-    }
 
     @Override
     public Class<BufferedByte> getWrapperClass() {

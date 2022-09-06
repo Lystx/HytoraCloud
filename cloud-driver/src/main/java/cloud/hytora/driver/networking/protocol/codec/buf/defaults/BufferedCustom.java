@@ -4,17 +4,14 @@ import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Setter;
 
 @Data
 @AllArgsConstructor
-public class BufferedCustom<T extends IBufferObject> implements AbstractBuffered<BufferedCustom, T> {
+@Setter
+public class BufferedCustom<T extends IBufferObject> implements IBuffered<BufferedCustom, T> {
 
     private T wrapped;
-
-    @Override
-    public void setWrapped(BufferedCustom wrapped) {
-        this.wrapped = (T) wrapped.getWrapped();
-    }
 
     @Override
     public Class<BufferedCustom> getWrapperClass() {

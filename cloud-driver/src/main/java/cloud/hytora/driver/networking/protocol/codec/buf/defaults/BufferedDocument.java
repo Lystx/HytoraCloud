@@ -7,13 +7,13 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class BufferedDocument implements AbstractBuffered<BufferedDocument, Document> {
+public class BufferedDocument implements IBuffered<BufferedDocument, Document> {
 
     private Document wrapped;
 
     @Override
-    public void setWrapped(BufferedDocument wrapped) {
-        this.wrapped = wrapped.getWrapped();
+    public void setWrapped(Document wrapped) {
+        this.wrapped = wrapped;
     }
 
     @Override

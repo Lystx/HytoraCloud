@@ -14,7 +14,8 @@ import static cloud.hytora.driver.commands.data.enums.AllowedCommandSender.BOTH;
 @Command(
         label = "notify",
         desc = "Manages the notify module",
-        scope = CommandScope.CONSOLE_AND_INGAME
+
+        scope = CommandScope.INGAME_HOSTED_ON_CLOUD_SIDE
 )
 public class NotifyCommand {
 

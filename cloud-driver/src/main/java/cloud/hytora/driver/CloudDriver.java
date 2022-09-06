@@ -3,6 +3,7 @@ package cloud.hytora.driver;
 import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.scheduler.def.DefaultScheduler;
+import cloud.hytora.common.task.ITask;
 import cloud.hytora.driver.common.IClusterObject;
 import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.DefaultEventManager;
@@ -10,6 +11,7 @@ import cloud.hytora.driver.http.api.HttpRequest;
 import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.networking.IHandlerNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.player.*;
@@ -23,11 +25,14 @@ import cloud.hytora.driver.services.template.ITemplateManager;
 import cloud.hytora.driver.services.template.def.DefaultTemplateManager;
 
 import cloud.hytora.driver.networking.PacketProvider;
+import cloud.hytora.driver.sync.ISyncedNetworkPromise;
+import cloud.hytora.driver.sync.SyncedObjectType;
 import cloud.hytora.driver.tps.ICloudTickWorker;
 import cloud.hytora.driver.tps.def.DefaultTickWorker;
 import io.netty.util.ResourceLeakDetector;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.JdkLoggerFactory;
+import javafx.concurrent.Task;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
@@ -228,4 +233,29 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
      * And syncs its data all over the network inside the cluster
      */
     public abstract void updateThisSidesClusterParticipant();
+
+    /**
+     * Retrieves a cache-synced object of your choice that is available in {@link SyncedObjectType}
+     * This method is synchronously and blocks the current thread until a response has been received!
+     *
+     * @param type the type of the object you want to have
+     * @param queryParameters the allowed parameters to search for your object
+     * @param <E> the generic of the object you wish to get
+     * @return the promise instance
+     * @see ISyncedNetworkPromise
+     */
+    public abstract <E extends IBufferObject> ISyncedNetworkPromise<E> getSyncedNetworkObject(SyncedObjectType<E> type, String queryParameters);
+
+    /**
+     * Retrieves a cache-synced object of your choice that is available in {@link SyncedObjectType}
+     * This method is asynchronously and does not block the current thread!
+     *
+     * @param type the type of the object you want to have
+     * @param queryParameters the allowed parameters to search for your object
+     * @param <E> the generic of the object you wish to get
+     * @return the task instance containing the promise
+     * @see ISyncedNetworkPromise
+     */
+    @NotNull
+    public abstract <E extends IBufferObject> ITask<ISyncedNetworkPromise<E>> getSyncedNetworkObjectAsync(SyncedObjectType<E> type, String queryParameters);
 }

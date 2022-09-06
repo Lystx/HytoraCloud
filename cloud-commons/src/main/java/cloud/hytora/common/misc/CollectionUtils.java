@@ -66,6 +66,14 @@ public final class CollectionUtils {
 		return result;
 	}
 
+	public static <T> List<List<T>> splitCollection(List<T> list, int n) {
+		List<List<T>> parts = new ArrayList<>();
+		int size = list.size();
+		for (int i = 0; i < size; i += n) {
+			parts.add(new ArrayList<T>(list.subList(i, Math.min(size, i + n))));
+		}
+		return parts;
+	}
 
 	/**
 	 * You should not use this to serialize maps due to it's unsafe because of strings which may contain the regex chars = or ,
@@ -92,7 +100,7 @@ public final class CollectionUtils {
 		Map<T, T> map = new HashMap<>();
 
 		if (keysAndValues.length % 2 != 0)
-			throw new IllegalArgumentException("Cannot create document of " + keysAndValues.length + " arguments");
+			throw new IllegalArgumentException("Cannot create map of " + keysAndValues.length + " arguments");
 		for (int i = 0; i < keysAndValues.length; i += 2) {
 			map.put(keysAndValues[i], keysAndValues[i + 1]);
 		}

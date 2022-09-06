@@ -1,11 +1,13 @@
 package cloud.hytora.node.console.jline2.helper;
 
 
+import cloud.hytora.common.logging.formatter.SpacePadder;
+import cloud.hytora.common.misc.CollectionUtils;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.commands.data.Command;
-import cloud.hytora.driver.commands.data.DriverCommand;
 import cloud.hytora.driver.commands.ICommandManager;
 import cloud.hytora.driver.commands.context.CommandContext;
+import cloud.hytora.driver.commands.data.Command;
+import cloud.hytora.driver.commands.data.DriverCommand;
 import cloud.hytora.driver.commands.parameter.CommandArguments;
 import cloud.hytora.driver.console.screen.Screen;
 import cloud.hytora.driver.console.screen.ScreenManager;
@@ -13,7 +15,10 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import jline.console.ConsoleReader;
 import lombok.Getter;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -82,28 +87,81 @@ public class CommandTerminal {
         initialised = false;
     }
 
-    @Command(label = "help", aliases = {"?"})
+    @Command(label = "help", aliases = {"?"}, usage = "[page]")
     public void onHelp(CommandContext<?> context, CommandArguments args) {
 
-        context.sendMessage("§8");
-        context.sendMessage("§7Commands§8:");
+        Integer page = args.getInt(0, 1);
+
 
         Collection<String> duplicates = new ArrayList<>();
+        List<DriverCommand> commands = new ArrayList<>();
 
         for (DriverCommand command : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICommandManager.class).getRootCommands().stream().sorted(Comparator.comparing(DriverCommand::getPath)).collect(Collectors.toList())) {
             if (!command.getCommandScope().covers(context.getCommandSender())) {
                 continue;
             }
-            if (duplicates.stream().anyMatch(s -> command.getNames().contains(s))) {
+            if (duplicates.stream().anyMatch(s -> command.getNames().contains(s))) { //to avoid aliases create conflicts
                 continue;
             }
             duplicates.addAll(command.getNames());
+            commands.add(command);
 
-            List<String> aliases = (List<String>) command.getNames();
-            aliases.remove(0); //removing main command trigger
-            context.sendMessage("§b" + command.getNames().stream().findFirst().get() + "§8(§b" + String.join("§7, " + "§b", (aliases.isEmpty() ? "§c/" : aliases.toString()).replace("[", "").replace("]", "") + "§8) × §f" + (!command.getDescription().trim().isEmpty() ? command.getDescription() : "No Description")));
         }
-        context.sendMessage("§8");
+
+        //split command help after 5 command entries
+        List<List<DriverCommand>> splitCommands = CollectionUtils.splitCollection(commands, 5);
+        try {
+            List<DriverCommand> pagedCommands = splitCommands.get((page - 1));
+
+            context.sendMessage("§8");
+            context.sendMessage("§6=> CommandHelp Page §8[§b{}§8/§b{}§8]§8:", page, splitCommands.size());
+            context.sendMessage("§8");
+            for (DriverCommand command : pagedCommands) {
+
+                StringBuilder builder = new StringBuilder();
+
+                int triggerLength = 22;
+                int permissionLength = 25;
+                int descriptionLength = 25;
+
+                String triggers = command.getNames().toString();
+                String permission = (command.getPermission() == null || command.getPermission().trim().isEmpty()) ? "None" : command.getPermission();
+                String description = (!command.getDescription().trim().isEmpty() ? command.getDescription() : "No Desc");
+
+
+                if (triggers.length() > triggerLength) triggers = triggers.substring(triggers.length() - triggerLength);
+                if (permission.length() > permissionLength) permission = permission.substring(permission.length() - permissionLength);
+                if (description.length() > descriptionLength) description = description.substring(description.length() - descriptionLength);
+
+                //command triggers
+                builder.append("  §8» §7Trigger§8: §b");
+                SpacePadder.padRight(builder, triggers, triggerLength);
+                builder.append(" ");
+
+                //command permission
+                builder.append("§8| §7Perm§8: §b");
+                SpacePadder.padRight(builder, permission, permissionLength);
+                builder.append(" ");
+
+                //command description
+                builder.append("§8| §f");
+                SpacePadder.padRight(builder, description, descriptionLength);
+
+                context.sendMessage(builder.toString());
+            }
+
+            context.sendMessage("§8");
+            if (page < splitCommands.size()) {
+                context.sendMessage("§a=> §7Next Page§8: §ehelp {}", (page + 1));
+                context.sendMessage("§8");
+            } else {
+                context.sendMessage("§c=> §7Previous Page§8: §ehelp {}", (page - 1));
+                context.sendMessage("§8");
+            }
+        } catch (Exception e) {
+            context.sendMessage("§cThere is no page with index §e" + page + "§c!");
+        }
+
     }
 
 }

@@ -28,8 +28,8 @@ import java.util.stream.Collectors;
 
 @Command(
         label = "perms",
-        aliases = {"perm", "cloudperms", "cperms"},
-        permission = "cloud.module.perms.command.use",
+        aliases = {"perm"},
+        permission = "cloud.command.perms",
         desc = "Manages the perms module",
         scope = CommandScope.CONSOLE_AND_INGAME,
         invalidUsageIfEmptyInput = true,

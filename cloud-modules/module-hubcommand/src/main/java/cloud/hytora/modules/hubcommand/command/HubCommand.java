@@ -12,7 +12,8 @@ public class HubCommand {
 
     @Command(
             label = "hub",
-            aliases = {"l", "hlobby", "lobby"},
+            aliases = {"l", "lobby", "leave"},
+            desc = "Sends you to a fallback server!",
             scope = CommandScope.INGAME_HOSTED_ON_CLOUD_SIDE
     )
     public void lobbyCommand(PlayerCommandContext ctx, CommandArguments args) {

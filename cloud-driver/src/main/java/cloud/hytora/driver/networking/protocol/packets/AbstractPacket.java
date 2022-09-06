@@ -6,7 +6,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.networking.EndpointNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
-import cloud.hytora.driver.networking.packets.RedirectPacket;
+import cloud.hytora.driver.networking.protocol.packets.defaults.RedirectPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 
 import java.util.UUID;

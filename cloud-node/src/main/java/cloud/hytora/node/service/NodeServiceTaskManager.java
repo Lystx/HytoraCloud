@@ -6,7 +6,7 @@ import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.task.TaskUpdateEvent;
 
-import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
+import cloud.hytora.driver.networking.protocol.packets.defaults.DriverUpdatePacket;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.node.INodeManager;
 import cloud.hytora.driver.services.task.DefaultServiceTaskManager;

@@ -224,23 +224,20 @@ public class JLine2Console implements Console {
     public void printHeader() {
         Logger logger = Logger.constantInstance();
 
-        logger.log(LogLevel.NULL, " ██░ ██▓██   ██▓▄▄▄█████▓ ▒█████   ██▀███   ▄▄▄       ▄████▄   ██▓     ▒█████   █    ██ ▓█████▄ ");
-        logger.log(LogLevel.NULL, "▓██░ ██▒▒██  ██▒▓  ██▒ ▓▒▒██▒  ██▒▓██ ▒ ██▒▒████▄    ▒██▀ ▀█  ▓██▒    ▒██▒  ██▒ ██  ▓██▒▒██▀ ██▌");
-        logger.log(LogLevel.NULL, "▒██▀▀██░ ▒██ ██░▒ ▓██░ ▒░▒██░  ██▒▓██ ░▄█ ▒▒██  ▀█▄  ▒▓█    ▄ ▒██░    ▒██░  ██▒▓██  ▒██░░██   █▌");
-        logger.log(LogLevel.NULL, "░▓█ ░██  ░ ▐██▓░░ ▓██▓ ░ ▒██   ██░▒██▀▀█▄  ░██▄▄▄▄██ ▒▓▓▄ ▄██▒▒██░    ▒██   ██░▓▓█  ░██░░▓█▄   ▌");
-        logger.log(LogLevel.NULL, "░▓█▒░██▓ ░ ██▒▓░  ▒██▒ ░ ░ ████▓▒░░██▓ ▒██▒ ▓█   ▓██▒▒ ▓███▀ ░░██████▒░ ████▓▒░▒▒█████▓ ░▒████▓ ");
-        logger.log(LogLevel.NULL, " ▒ ░░▒░▒  ██▒▒▒   ▒ ░░   ░ ▒░▒░▒░ ░ ▒▓ ░▒▓░ ▒▒   ▓▒█░░ ░▒ ▒  ░░ ▒░▓  ░░ ▒░▒░▒░ ░▒▓▒ ▒ ▒  ▒▒▓  ▒ ");
-        logger.log(LogLevel.NULL, " ▒ ░▒░ ░▓██ ░▒░     ░      ░ ▒ ▒░   ░▒ ░ ▒░  ▒   ▒▒ ░  ░  ▒   ░ ░ ▒  ░  ░ ▒ ▒░ ░░▒░ ░ ░  ░ ▒  ▒ ");
-        logger.log(LogLevel.NULL, " ░  ░░ ░▒ ▒ ░░    ░      ░ ░ ░ ▒    ░░   ░   ░   ▒   ░          ░ ░   ░ ░ ░ ▒   ░░░ ░ ░  ░ ░  ░ ");
-        logger.log(LogLevel.NULL, " ░  ░  ░░ ░                  ░ ░     ░           ░  ░░ ░          ░  ░    ░ ░     ░        ░    ");
-        logger.log(LogLevel.NULL, "        ░ ░                                          ░                                   ░      ");
+        logger.info("HytoraCloud in its current State of Development is presented to you by Lystx and Contributors...");
 
-        logger.log(LogLevel.NULL, "        Launching your CloudSystem...");
-        logger.log(LogLevel.NULL, "            |=>    Where opportunity connects   <=|        ");
-        logger.log(LogLevel.NULL, "            |=>    Your version: " + VersionInfo.getCurrentVersion().toString() + "   <=|        ");
+        logger.log(LogLevel.NULL, "§b                       _                    §f___ _                 _ ");
+        logger.log(LogLevel.NULL, "§b           /\\  /\\_   _| |_ ___  _ __ __ _  §f/ __\\ | ___  _   _  __| |");
+        logger.log(LogLevel.NULL, "§b          / /_/ / | | | __/ _ \\| '__/ _` |§f/ /  | |/ _ \\| | | |/ _` |");
+        logger.log(LogLevel.NULL, "§b         / __  /| |_| | || (_) | | | (_| §f/ /___| | (_) | |_| | (_| |");
+        logger.log(LogLevel.NULL, "§b         \\/ /_/  \\__, |\\__\\___/|_|  §f\\__,_\\____/|_|\\___/ \\__,_|\\__,_|");
+        logger.log(LogLevel.NULL, "§b                 |___/                  §f                            ");
+        logger.log(LogLevel.NULL, "            §8x §eSmurf V1 §8- §fWhere opportunity connects §8x");
+        logger.log(LogLevel.NULL, " ");
+        logger.log(LogLevel.NULL, "           §8=>    §fCloud Version " + VersionInfo.getCurrentVersion().toString());
+        logger.log(LogLevel.NULL, "           §8=>    §fJava Version " + System.getProperty("java.version"));
+        logger.log(LogLevel.NULL, "           §8=>    §fDiscord " + "https://discord.com/invite/WRYH33X7Fu");
         logger.log(LogLevel.NULL, "");
-        logger.info("§8");
-        logger.info("§8");
         logger.info("§8");
     }
 

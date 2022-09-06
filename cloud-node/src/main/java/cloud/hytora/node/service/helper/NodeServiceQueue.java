@@ -12,7 +12,7 @@ import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.node.NodeDriver;
-import cloud.hytora.node.impl.config.MainConfiguration;
+import cloud.hytora.node.config.MainConfiguration;
 import lombok.Getter;
 
 import java.net.InetSocketAddress;

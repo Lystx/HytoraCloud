@@ -144,7 +144,9 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
     @Override
     public void copy(ICloudPlayer from) {
         this.setProxyServer(from.getProxyServer());
-        this.setServer(from.getServer());
+        if (from.getServer() != null) {
+            this.setServer(from.getServer());
+        }
 
         this.setUniqueId(from.getUniqueId());
         this.setName(from.getName());

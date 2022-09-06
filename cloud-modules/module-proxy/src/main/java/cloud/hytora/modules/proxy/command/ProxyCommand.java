@@ -11,7 +11,7 @@ import cloud.hytora.modules.proxy.ProxyModule;
         label = "proxy",
         scope = CommandScope.CONSOLE_AND_INGAME,
         desc = "Manages the proxy module",
-        permission = "cloud.modules.proxy.command.use",
+        permission = "cloud.command.proxy",
         invalidUsageIfEmptyInput = true,
         autoHelpAliases = {"help", "?"}
 )

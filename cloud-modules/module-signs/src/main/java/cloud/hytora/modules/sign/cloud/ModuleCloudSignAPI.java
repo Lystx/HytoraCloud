@@ -23,7 +23,7 @@ public class ModuleCloudSignAPI extends CloudSignAPI {
 
         this.signManager = new ModuleCloudSignManager(module.getController().getDataFolder());
         this.signManager.loadCloudSignsAsync().onTaskSucess(cloudSigns -> {
-            Logger.constantInstance().info("Signs-Module loaded {} Cloudsigns!", cloudSigns.size());
+            Logger.constantInstance().debug("Signs-Module loaded {} Cloudsigns!", cloudSigns.size());
         });
     }
 

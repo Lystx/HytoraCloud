@@ -2,24 +2,31 @@ package cloud.hytora.remote;
 
 import cloud.hytora.common.collection.WrappedException;
 import cloud.hytora.common.logging.Logger;
-import cloud.hytora.driver.commands.parameter.defaults.*;
 import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.task.ITask;
+import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
-import cloud.hytora.driver.commands.sender.defaults.DefaultCommandSender;
 import cloud.hytora.driver.commands.ICommandManager;
+import cloud.hytora.driver.commands.parameter.defaults.NodeParamType;
+import cloud.hytora.driver.commands.parameter.defaults.PlayerParamType;
+import cloud.hytora.driver.commands.parameter.defaults.ServiceParamType;
+import cloud.hytora.driver.commands.parameter.defaults.TaskParamType;
 import cloud.hytora.driver.commands.sender.CommandSender;
+import cloud.hytora.driver.commands.sender.defaults.DefaultCommandSender;
 import cloud.hytora.driver.common.IClusterObject;
 import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
 import cloud.hytora.driver.message.IChannelMessenger;
 import cloud.hytora.driver.module.IModuleManager;
 import cloud.hytora.driver.networking.NetworkComponent;
-import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
-import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
+import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
+import cloud.hytora.driver.networking.protocol.packets.defaults.DriverLoggingPacket;
+import cloud.hytora.driver.networking.protocol.packets.defaults.DriverUpdatePacket;
+import cloud.hytora.driver.networking.protocol.packets.defaults.GenericQueryPacket;
 import cloud.hytora.driver.node.INodeManager;
 import cloud.hytora.driver.player.ICloudPlayerManager;
 import cloud.hytora.driver.services.ICloudServer;
@@ -28,13 +35,15 @@ import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.driver.storage.INetworkDocumentStorage;
 import cloud.hytora.driver.storage.RemoteNetworkDocumentStorage;
+import cloud.hytora.driver.sync.ISyncedNetworkPromise;
+import cloud.hytora.driver.sync.SyncedObjectType;
 import cloud.hytora.driver.uuid.IdentificationCache;
 import cloud.hytora.remote.impl.*;
-import cloud.hytora.remote.impl.handler.*;
+import cloud.hytora.remote.impl.handler.RemoteLoggingHandler;
+import cloud.hytora.remote.impl.handler.RemoteNodeUpdateHandler;
 import cloud.hytora.remote.impl.log.DefaultLogHandler;
 import cloud.hytora.remote.impl.module.RemoteModuleManager;
 import lombok.Getter;
-import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
@@ -56,8 +65,8 @@ import java.util.jar.*;
  * is capable or is even only used to start applications with custom class-loaders etc
  *
  * @author Lystx
- * @since SNAPSHOT-1.1
  * @see CloudDriver
+ * @since SNAPSHOT-1.1
  */
 @Getter
 public class Remote extends CloudDriver<ICloudServer> {
@@ -160,7 +169,7 @@ public class Remote extends CloudDriver<ICloudServer> {
     /**
      * Starts the application by using the provied start-arguments
      * to get the application-main-class, the fileName etc.
-     *
+     * <p>
      * Application is always started in a different thread with a
      * different {@link ClassLoader}
      *
@@ -303,6 +312,65 @@ public class Remote extends CloudDriver<ICloudServer> {
     @Override
     public @NotNull ICloudServer thisSidesClusterParticipant() {
         return this.providerRegistry.get(ICloudServiceManager.class).mapOrElse(sm -> sm.getService(this.property.getName()), () -> null);
+    }
+
+    @Override
+    public void updateThisSidesClusterParticipant() {
+        this.thisSidesClusterParticipant().update();
+    }
+
+    @Override
+    public <E extends IBufferObject> ISyncedNetworkPromise<E> getSyncedNetworkObject(SyncedObjectType<E> type, String queryParameters) {
+        RemoteSyncedNetworkPromise<E> promise = new RemoteSyncedNetworkPromise<>();
+        GenericQueryPacket<E> packet = new GenericQueryPacket<E>
+                (
+                        "cloud_internal_sync",
+                        Document.newJsonDocument
+                                (
+                                        "id", type.getId(),
+                                        "parameter", queryParameters
+                                )
+                ).query()
+                .syncUninterruptedly()
+                .get();
+
+        //getting values from result-packet
+        E result = packet.getResult();
+        Throwable error = packet.getError();
+
+        //setting values to promise
+        promise.setObject(result);
+        promise.setError(error);
+
+        return promise;
+    }
+
+    @Override
+    public @NotNull <E extends IBufferObject> ITask<ISyncedNetworkPromise<E>> getSyncedNetworkObjectAsync(SyncedObjectType<E> type, String queryParameters) {
+        ITask<ISyncedNetworkPromise<E>> task = ITask.empty();
+        new GenericQueryPacket<E>
+                (
+                        "cloud_internal_sync",
+                        Document.newJsonDocument
+                                (
+                                        "id", type.getId(),
+                                        "parameter", queryParameters
+                                )
+                ).query()
+                .onTaskSucess(packet -> {
+                    RemoteSyncedNetworkPromise<E> promise = new RemoteSyncedNetworkPromise<>();
+
+                    //getting values from result-packet
+                    E result = packet.getResult();
+                    Throwable error = packet.getError();
+
+                    //setting values to promise
+                    promise.setObject(result);
+                    promise.setError(error);
+
+                    task.setResult(promise);
+                });
+        return task;
     }
 
     /**

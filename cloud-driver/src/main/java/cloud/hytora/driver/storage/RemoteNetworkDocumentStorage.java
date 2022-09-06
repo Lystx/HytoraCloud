@@ -4,7 +4,7 @@ import cloud.hytora.common.task.ITask;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.cluster.client.ClusterParticipant;
-import cloud.hytora.driver.networking.packets.StorageUpdatePacket;
+import cloud.hytora.driver.networking.protocol.packets.defaults.StorageUpdatePacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import lombok.Getter;
 

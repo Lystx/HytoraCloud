@@ -7,7 +7,7 @@ import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUpdateEvent;
-import cloud.hytora.driver.networking.packets.RedirectPacket;
+import cloud.hytora.driver.networking.protocol.packets.defaults.RedirectPacket;
 import cloud.hytora.driver.node.packet.NodeRequestServerStartPacket;
 import cloud.hytora.driver.services.packet.ServiceForceShutdownPacket;
 import cloud.hytora.driver.services.packet.ServiceRequestShutdownPacket;

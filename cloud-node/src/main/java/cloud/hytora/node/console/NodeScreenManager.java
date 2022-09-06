@@ -41,8 +41,9 @@ public class NodeScreenManager implements ScreenManager {
     @Override
     public void joinScreen(Screen screen) {
         this.currentScreenName = screen.getName();
-        this.lastScreenName = screen.getName();
-
+        if (this.lastScreenName == null) {
+            this.lastScreenName = screen.getName();
+        }
 
         CloudDriver.getInstance()
                 .getProviderRegistry()
@@ -75,6 +76,7 @@ public class NodeScreenManager implements ScreenManager {
         if (this.lastScreenName != null) {
             System.out.println("Joining back to " + lastScreenName);
             this.joinScreen(this.getScreenByNameOrNull(lastScreenName));
+            this.lastScreenName = null;
         }
     }
 

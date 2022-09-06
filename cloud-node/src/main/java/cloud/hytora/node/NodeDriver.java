@@ -5,103 +5,103 @@ import cloud.hytora.common.VersionInfo;
 import cloud.hytora.common.collection.NamedThreadFactory;
 import cloud.hytora.common.function.ExceptionallyConsumer;
 import cloud.hytora.common.logging.LogLevel;
+import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
 import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.task.ITask;
-import cloud.hytora.common.logging.Logger;
+import cloud.hytora.common.util.Validation;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
+import cloud.hytora.driver.commands.ICommandManager;
+import cloud.hytora.driver.commands.parameter.defaults.NodeParamType;
+import cloud.hytora.driver.commands.parameter.defaults.PlayerParamType;
+import cloud.hytora.driver.commands.parameter.defaults.ServiceParamType;
+import cloud.hytora.driver.commands.parameter.defaults.TaskParamType;
 import cloud.hytora.driver.commands.sender.ConsoleCommandSender;
 import cloud.hytora.driver.commands.sender.defaults.DefaultCommandSender;
-import cloud.hytora.driver.commands.ICommandManager;
-
-
+import cloud.hytora.driver.console.Console;
 import cloud.hytora.driver.console.screen.Screen;
 import cloud.hytora.driver.console.screen.ScreenManager;
+import cloud.hytora.driver.database.IDatabaseManager;
+import cloud.hytora.driver.database.SectionedDatabase;
 import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
 import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.http.impl.NettyHttpServer;
 import cloud.hytora.driver.message.IChannelMessenger;
-import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
+import cloud.hytora.driver.module.IModuleManager;
+import cloud.hytora.driver.networking.NetworkComponent;
+import cloud.hytora.driver.networking.PacketProvider;
+import cloud.hytora.driver.networking.protocol.ProtocolAddress;
+import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
+import cloud.hytora.driver.networking.protocol.packets.defaults.DriverLoggingPacket;
+import cloud.hytora.driver.networking.protocol.packets.defaults.DriverUpdatePacket;
+import cloud.hytora.driver.node.INode;
+import cloud.hytora.driver.node.INodeManager;
+import cloud.hytora.driver.node.config.DefaultNodeConfig;
+import cloud.hytora.driver.node.packet.NodeCycleDataPacket;
 import cloud.hytora.driver.permission.PermissionChecker;
+import cloud.hytora.driver.player.ICloudPlayerManager;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
+import cloud.hytora.driver.player.impl.DefaultCloudOfflinePlayer;
+import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudServiceManager;
+import cloud.hytora.driver.services.IProcessCloudServer;
 import cloud.hytora.driver.services.fallback.SimpleFallback;
+import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
+import cloud.hytora.driver.services.task.IServiceTask;
+import cloud.hytora.driver.services.task.UniversalServiceTask;
+import cloud.hytora.driver.services.task.bundle.DefaultTaskGroup;
+import cloud.hytora.driver.services.task.bundle.ITaskGroup;
+import cloud.hytora.driver.services.template.ITemplate;
 import cloud.hytora.driver.services.template.ITemplateManager;
+import cloud.hytora.driver.services.template.ITemplateStorage;
 import cloud.hytora.driver.services.template.def.CloudTemplate;
 import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
+import cloud.hytora.driver.services.utils.version.ServiceVersion;
+import cloud.hytora.driver.setup.SetupControlState;
+import cloud.hytora.driver.storage.INetworkDocumentStorage;
+import cloud.hytora.driver.sync.ISyncedNetworkPromise;
+import cloud.hytora.driver.sync.SyncedObjectType;
 import cloud.hytora.driver.uuid.IdentificationCache;
+import cloud.hytora.node.cache.NodeIdentificationCache;
+import cloud.hytora.node.cache.NodeSyncedNetworkPromise;
 import cloud.hytora.node.console.NodeCommandCompleter;
 import cloud.hytora.node.console.NodeCommandInputHandler;
 import cloud.hytora.node.console.NodeScreenManager;
 import cloud.hytora.node.console.jline2.JLine2Console;
 import cloud.hytora.node.console.jline2.helper.CommandTerminal;
 import cloud.hytora.node.console.log4j.EmptyAppenderSkeleton;
-import cloud.hytora.node.impl.NodeIdentificationCache;
-import cloud.hytora.driver.commands.parameter.defaults.*;
-import cloud.hytora.node.impl.handler.packet.normal.*;
-import cloud.hytora.node.impl.handler.packet.remote.*;
-import cloud.hytora.node.impl.handler.packet.normal.NodeDataCycleHandler;
-import cloud.hytora.node.impl.handler.packet.normal.NodeLoggingPacketHandler;
-import cloud.hytora.node.impl.handler.packet.normal.NodeStoragePacketHandler;
-import cloud.hytora.node.impl.module.NodeModuleManager;
-import cloud.hytora.driver.module.IModuleManager;
-import cloud.hytora.driver.networking.NetworkComponent;
-import cloud.hytora.driver.networking.PacketProvider;
-import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
-import cloud.hytora.driver.node.packet.NodeCycleDataPacket;
-import cloud.hytora.driver.networking.protocol.ProtocolAddress;
-
-import cloud.hytora.driver.node.INode;
-import cloud.hytora.driver.node.INodeManager;
-import cloud.hytora.driver.node.config.DefaultNodeConfig;
-import cloud.hytora.driver.player.ICloudPlayerManager;
-import cloud.hytora.driver.player.impl.DefaultCloudOfflinePlayer;
-import cloud.hytora.driver.services.ICloudServer;
-import cloud.hytora.driver.services.IProcessCloudServer;
-import cloud.hytora.driver.services.ICloudServiceManager;
-import cloud.hytora.driver.services.task.ICloudServiceTaskManager;
-import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.task.UniversalServiceTask;
-import cloud.hytora.driver.services.task.bundle.ITaskGroup;
-import cloud.hytora.driver.services.task.bundle.DefaultTaskGroup;
-import cloud.hytora.driver.services.template.ITemplate;
-import cloud.hytora.driver.services.template.ITemplateStorage;
-import cloud.hytora.driver.database.SectionedDatabase;
-import cloud.hytora.node.impl.handler.http.V1PingRouter;
-import cloud.hytora.node.impl.handler.http.V1StatusRouter;
-import cloud.hytora.node.impl.node.BaseNode;
-import cloud.hytora.node.impl.node.NodeNodeManager;
-import cloud.hytora.node.impl.setup.NodeRemoteSetup;
-import cloud.hytora.node.service.template.LocalTemplateStorage;
-import cloud.hytora.driver.setup.SetupControlState;
-import cloud.hytora.driver.storage.INetworkDocumentStorage;
-import cloud.hytora.driver.services.utils.version.ServiceVersion;
-import cloud.hytora.node.impl.command.*;
-import cloud.hytora.node.impl.command.impl.*;
-import cloud.hytora.node.impl.database.config.DatabaseType;
-import cloud.hytora.node.impl.message.NodeChannelMessenger;
-import cloud.hytora.node.impl.setup.database.MongoDBSetup;
-import cloud.hytora.node.impl.setup.database.MySqlSetup;
+import cloud.hytora.node.commands.NodeCommandManager;
+import cloud.hytora.node.commands.impl.*;
+import cloud.hytora.node.config.ConfigManager;
+import cloud.hytora.node.config.MainConfiguration;
+import cloud.hytora.node.config.NodeNetworkDocumentStorage;
+import cloud.hytora.node.database.config.DatabaseConfiguration;
+import cloud.hytora.node.database.config.DatabaseType;
+import cloud.hytora.node.database.def.DefaultDatabaseManager;
+import cloud.hytora.node.handler.http.V1PingRouter;
+import cloud.hytora.node.handler.http.V1StatusRouter;
+import cloud.hytora.node.handler.packet.normal.*;
+import cloud.hytora.node.handler.packet.remote.*;
+import cloud.hytora.node.message.NodeChannelMessenger;
+import cloud.hytora.node.module.NodeModuleManager;
+import cloud.hytora.node.node.BaseNode;
+import cloud.hytora.node.node.NodeBasedClusterExecutor;
+import cloud.hytora.node.node.NodeNodeManager;
+import cloud.hytora.node.player.NodePlayerManager;
+import cloud.hytora.node.setup.NodeRemoteSetup;
+import cloud.hytora.node.setup.NodeSetup;
+import cloud.hytora.node.setup.database.MongoDBSetup;
+import cloud.hytora.node.setup.database.MySqlSetup;
 import cloud.hytora.node.service.NodeServiceManager;
-import cloud.hytora.node.impl.setup.NodeSetup;
-import cloud.hytora.node.impl.config.ConfigManager;
-import cloud.hytora.node.impl.config.MainConfiguration;
-import cloud.hytora.driver.console.Console;
-import cloud.hytora.node.impl.config.NodeNetworkDocumentStorage;
-import cloud.hytora.node.impl.database.config.DatabaseConfiguration;
-import cloud.hytora.driver.database.IDatabaseManager;
-import cloud.hytora.node.impl.database.def.DefaultDatabaseManager;
 import cloud.hytora.node.service.NodeServiceTaskManager;
-import cloud.hytora.node.impl.node.NodeBasedClusterExecutor;
-import cloud.hytora.node.impl.player.NodePlayerManager;
 import cloud.hytora.node.service.helper.NodeServiceQueue;
-
-
+import cloud.hytora.node.service.template.LocalTemplateStorage;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
@@ -110,7 +110,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -210,6 +212,8 @@ public class NodeDriver extends CloudDriver<INode> {
         this.providerRegistry.setProvider(ScreenManager.class, new NodeScreenManager());
         this.providerRegistry.setProvider(ICommandManager.class, new NodeCommandManager());
 
+        logger.info("Configured ScreenManager & CommandManager!");
+
         ScreenManager screenManager = this.providerRegistry.getUnchecked(ScreenManager.class);
         Screen screen = screenManager.registerScreen("console", true);
 
@@ -268,6 +272,8 @@ public class NodeDriver extends CloudDriver<INode> {
 
             //avoid log4j errors
             org.apache.log4j.BasicConfigurator.configure(new EmptyAppenderSkeleton());
+
+            logger.info("Configured 'org.apache.log4j.BasicConfigurator'!");
 
             //print header and start node-cluster
             this.console.printHeader();
@@ -392,6 +398,7 @@ public class NodeDriver extends CloudDriver<INode> {
                 this.logger.trace("§8");
 
                 this.providerRegistry.getUnchecked(INetworkDocumentStorage.class).set("cloud::messages", this.configManager.getConfig().getMessages());
+                this.providerRegistry.getUnchecked(INetworkDocumentStorage.class).update();
 
                 //registering packet handlers
                 this.logger.trace("Registering Packets & Handlers...");
@@ -405,6 +412,7 @@ public class NodeDriver extends CloudDriver<INode> {
                 this.networkExecutor.registerPacketHandler(new NodeServiceShutdownHandler());
                 this.networkExecutor.registerPacketHandler(new NodePlayerCommandHandler());
                 this.networkExecutor.registerPacketHandler(new NodeServiceConfigureHandler());
+                this.networkExecutor.registerPacketHandler(new NodeSyncPacketHandler());
 
                 //remote packet handlers
                 this.networkExecutor.registerUniversalHandler(new NodeRemoteShutdownHandler());
@@ -654,6 +662,58 @@ public class NodeDriver extends CloudDriver<INode> {
                         this.node.getLastCycleData()
                 )
         );
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <E extends IBufferObject> ISyncedNetworkPromise<E> getSyncedNetworkObject(SyncedObjectType<E> type, String queryParameters) {
+        NodeSyncedNetworkPromise<E> promise = new NodeSyncedNetworkPromise<>();
+        switch (type.getId()) {
+            case 0x00:
+                ICloudPlayerManager pm = this.providerRegistry.getUnchecked(ICloudPlayerManager.class);
+
+                //check if uuid or name provided
+                if (Validation.UNIQUEID.matches(queryParameters)) {
+                    UUID uniqueId = UUID.fromString(queryParameters);
+                    promise.setObject((E) pm.getCloudPlayerByUniqueIdOrNull(uniqueId));
+                } else {
+                    promise.setObject((E) pm.getCloudPlayerByNameOrNull(queryParameters));
+                }
+                break;
+            case 0x01:
+                ICloudServiceManager sm = this.providerRegistry.getUnchecked(ICloudServiceManager.class);
+
+                //check if uuid or name provided
+                if (Validation.UNIQUEID.matches(queryParameters)) {
+                    UUID uniqueId = UUID.fromString(queryParameters); // TODO: 06.09.2022
+                    promise.setObject((E) sm.getService(queryParameters));
+                } else {
+                    promise.setObject((E) sm.getService(queryParameters));
+                }
+                break;
+
+            case 0x02:
+                ICloudServiceTaskManager tm = this.providerRegistry.getUnchecked(ICloudServiceTaskManager.class);
+                promise.setObject((E) tm.getTaskOrNull(queryParameters));
+                break;
+
+            case 0x03:
+                ICloudServiceTaskManager tm1 = this.providerRegistry.getUnchecked(ICloudServiceTaskManager.class);
+                promise.setObject((E) tm1.getTaskGroupOrNull(queryParameters));
+                break;
+
+            case 0x04:
+                INodeManager nm = this.providerRegistry.getUnchecked(INodeManager.class);
+                promise.setObject((E) nm.getNodeByNameOrNull(queryParameters));
+                break;
+        }
+
+        return promise;
+    }
+
+    @Override
+    public @NotNull <E extends IBufferObject> ITask<ISyncedNetworkPromise<E>> getSyncedNetworkObjectAsync(SyncedObjectType<E> type, String queryParameters) {
+        return ITask.callAsync(() -> getSyncedNetworkObject(type, queryParameters));
     }
 
     @Override

@@ -3,17 +3,14 @@ package cloud.hytora.driver.networking.protocol.codec.buf.defaults;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Setter;
 
 @Data
 @AllArgsConstructor
-public class BufferedEnum implements AbstractBuffered<BufferedEnum, Enum> {
+@Setter
+public class BufferedEnum implements IBuffered<BufferedEnum, Enum> {
 
     private Enum wrapped;
-
-    @Override
-    public void setWrapped(BufferedEnum wrapped) {
-        this.wrapped = wrapped.getWrapped();
-    }
 
     @Override
     public Class<BufferedEnum> getWrapperClass() {
