@@ -14,11 +14,17 @@ import java.util.Date;
 public final class ColoredMessageFormatter {
 
 	@Nonnull
-	public static String format(@Nonnull LogEntry entry) {
+	public static String format(@Nonnull LogEntry entry, String... prefix) {
 		if (entry.getLevel() == LogLevel.NULL) {
 			return ConsoleColor.toColoredString('§', entry.getMessage());
 		}
-		StringBuilder builder = new StringBuilder()
+		StringBuilder builder = new StringBuilder();
+
+		for (String p : prefix) {
+			builder.append(p);
+		}
+
+		builder
 			.append(ConsoleColor.DARK_GRAY)
 			.append("[")
 			.append(ConsoleColor.WHITE)

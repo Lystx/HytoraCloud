@@ -317,7 +317,7 @@ public class CloudServerProcessWorker {
                 }
                 outputStream.close();
                 inputStream.close();
-                pb.close();
+                pb.close("");
                 task.setResult(true);
                 console.setPrompt(prompt);
             } catch (Exception e) {

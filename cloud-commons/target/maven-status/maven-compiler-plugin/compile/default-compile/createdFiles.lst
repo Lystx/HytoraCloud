@@ -7,6 +7,7 @@ cloud\hytora\common\collection\NamedThreadFactory.class
 cloud\hytora\document\Bundle$1BundleClass.class
 cloud\hytora\common\task\exception\ValueHoldsNoObjectException.class
 cloud\hytora\context\annotations\Configuration.class
+cloud\hytora\common\task\def\DefaultCompletableTask$1.class
 cloud\hytora\common\logging\internal\FallbackLogger.class
 cloud\hytora\context\postprocess\ContextProcessorJson.class
 cloud\hytora\common\logging\ConsoleColor.class
@@ -24,10 +25,10 @@ cloud\hytora\common\function\ObjectComparator.class
 cloud\hytora\common\logging\internal\WrappedSlf4jLogger$1.class
 cloud\hytora\document\DocumentFactory$2.class
 cloud\hytora\common\logging\formatter\SpacePadder.class
+cloud\hytora\common\task\ITask.class
 cloud\hytora\IdentifiableClassLoader.class
 cloud\hytora\common\location\ImmutableLocation.class
 cloud\hytora\common\misc\FileUtils.class
-cloud\hytora\common\misc\GsonUtils.class
 cloud\hytora\document\gson\adapter\PairTypeAdapter.class
 cloud\hytora\common\function\ExceptionallyRunnable.class
 cloud\hytora\common\logging\formatter\UncoloredMessageFormatter.class
@@ -107,8 +108,8 @@ cloud\hytora\context\factory\DefaultInjectFactory.class
 cloud\hytora\document\gson\adapter\ExcludeIfNull.class
 cloud\hytora\common\location\impl\DefaultLocation.class
 cloud\hytora\common\scheduler\def\DefaultScheduler$1.class
-cloud\hytora\common\task\def\SimpleTask.class
 cloud\hytora\common\inject\IBinder.class
+cloud\hytora\common\task\def\DefaultCompletableTask.class
 cloud\hytora\common\function\ExceptionallyBiFunction.class
 cloud\hytora\common\task\Null.class
 cloud\hytora\common\function\ExceptionallyConsumer.class
@@ -121,7 +122,6 @@ cloud\hytora\common\logging\handler\HandledSyncLogger.class
 cloud\hytora\common\misc\BukkitReflectionSerializationUtils.class
 cloud\hytora\common\misc\StringCreator.class
 cloud\hytora\context\definition\IDefinition.class
-cloud\hytora\common\task\Task.class
 cloud\hytora\document\gson\GsonDocument.class
 cloud\hytora\common\collection\pair\Quadro.class
 cloud\hytora\common\collection\RunnableTimerTask.class
@@ -148,7 +148,6 @@ cloud\hytora\document\Bundle$1.class
 cloud\hytora\document\bson\BsonHelper.class
 cloud\hytora\document\DocumentFactory$1BundleClass.class
 cloud\hytora\context\definition\reader\IDefinitionReader.class
-cloud\hytora\common\task\def\SimpleTask$2.class
 cloud\hytora\context\exceptions\MultiplyAnnotationTypeException.class
 cloud\hytora\document\Document$1.class
 cloud\hytora\document\empty\EmptyDocument.class
@@ -164,7 +163,6 @@ cloud\hytora\common\collection\pair\Tuple.class
 cloud\hytora\context\definition\registry\DefinitionRegistry.class
 cloud\hytora\document\abstraction\AbstractDocument.class
 cloud\hytora\common\collection\pair\Triple.class
-cloud\hytora\common\task\def\SimpleTask$1.class
 cloud\hytora\document\map\MapDocument.class
 cloud\hytora\document\wrapped\StorableBundle.class
 cloud\hytora\common\logging\handler\LogHandler.class

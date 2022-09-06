@@ -1,6 +1,7 @@
 package cloud.hytora.common.progressbar;
 
 import cloud.hytora.common.logging.ConsoleColor;
+import cloud.hytora.common.misc.StringUtils;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -236,12 +237,11 @@ public class ProgressBar {
     /**
      * Closes the current bar
      */
-    public void close(String... messages) {
+    public void close(String message, Object... args) {
         System.setProperty("progressbar.active", "false"); //used for api-purposes
-        for (String message : messages) {
-            this.printer.print(message);
-            this.printer.print("\n");
-        }
+
+        this.printer.print(StringUtils.formatMessage(message, args));
+        this.printer.print("\n");
         this.printer.flush();
     }
 }

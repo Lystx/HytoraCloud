@@ -30,6 +30,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.JdkLoggerFactory;
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
 
 /**
@@ -209,6 +210,7 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
      *
      * @return network instance
      */
+    @NotNull
     public abstract IHandlerNetworkExecutor getNetworkExecutor();
 
     /**
@@ -218,6 +220,12 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
      *
      * @return cluster participant
      */
+    @NotNull
     public abstract T thisSidesClusterParticipant();
 
+    /**
+     * Updates the current {@link IClusterObject} that is returned by {@link #thisSidesClusterParticipant()}
+     * And syncs its data all over the network inside the cluster
+     */
+    public abstract void updateThisSidesClusterParticipant();
 }

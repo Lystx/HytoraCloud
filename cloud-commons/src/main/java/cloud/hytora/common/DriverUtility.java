@@ -54,7 +54,7 @@ public class DriverUtility {
                 }
                 outputStream.close();
                 inputStream.close();
-                pb.close();
+                pb.close("");
                 task.setResult(location);
             } catch (Exception e) {
                 task.setFailure(e);
@@ -92,7 +92,7 @@ public class DriverUtility {
             pb.setExtraMessage("Cleaning up...");
             outputStream.close();
             inputStream.close();
-            pb.close();
+            pb.close("");
             task.setResult(null);
         } catch (Exception e) {
             task.setFailure(e);
@@ -149,6 +149,7 @@ public class DriverUtility {
 
         return urlConnection.getInputStream();
     }
+
 
     /**
      * Gets the percent of match of two strings

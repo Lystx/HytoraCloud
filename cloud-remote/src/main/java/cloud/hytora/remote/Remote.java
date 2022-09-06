@@ -36,6 +36,7 @@ import cloud.hytora.remote.impl.module.RemoteModuleManager;
 import lombok.Getter;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.lang.instrument.Instrumentation;
@@ -300,7 +301,7 @@ public class Remote extends CloudDriver<ICloudServer> {
     }
 
     @Override
-    public ICloudServer thisSidesClusterParticipant() {
+    public @NotNull ICloudServer thisSidesClusterParticipant() {
         return this.providerRegistry.get(ICloudServiceManager.class).mapOrElse(sm -> sm.getService(this.property.getName()), () -> null);
     }
 

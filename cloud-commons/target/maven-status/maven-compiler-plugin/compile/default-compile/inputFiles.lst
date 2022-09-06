@@ -32,8 +32,6 @@ D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\empty\EmptyBundle.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\inject\IBinder.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\location\ModifiableLocation.java
-D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\task\def\SimpleTask.java
-D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\task\Task.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\factory\DefaultInjectFactory.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\exceptions\MultipleInstanceException.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\progressbar\ProgressBarStyle.java
@@ -43,10 +41,10 @@ D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\collection\NamedThreadFactory.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\scheduler\def\DefaultSchedulerFuture.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\postprocess\ContextProcessorCache.java
+D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\task\ITask.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\gson\GsonBundle.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\function\ExceptionallySupplier.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\IApplicationContext.java
-D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\misc\GsonUtils.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\util\Operator.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\gson\GsonHelper.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\annotations\Constructor.java
@@ -111,6 +109,7 @@ D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\wrapped\StorableDocument.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\ConsoleColor.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\inject\annotation\Inject.java
+D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\task\def\DefaultCompletableTask.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\LogOutputStream.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\definition\registry\DefinitionRegistry.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\OffsetDateTimeTypeAdapter.java

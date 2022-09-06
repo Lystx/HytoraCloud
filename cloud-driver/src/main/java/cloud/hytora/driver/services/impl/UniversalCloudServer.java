@@ -1,5 +1,6 @@
 package cloud.hytora.driver.services.impl;
 
+import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.task.ITask;
 import cloud.hytora.document.Document;
@@ -41,7 +42,7 @@ import java.util.stream.Collectors;
 @Getter
 @NoArgsConstructor
 @Setter
-public class UniversalCloudServer implements IProcessCloudServer, IBufferObject {
+public class UniversalCloudServer extends DriverUtility implements IProcessCloudServer, IBufferObject {
 
     private String task;
     private int serviceID;
@@ -236,7 +237,16 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
 
     @Override
     public String toString() {
-        return getName();
+        return args(
+                "CloudServer[id={}, name={}, state={}, visibility={}, ready={}, slots={}/{}]",
+                getUniqueId(),
+                getName(),
+                getServiceState(),
+                getServiceVisibility(),
+                isReady() ? "Yes" : "No",
+                this.getOnlinePlayers().size(),
+                this.getMaxPlayers()
+        );
     }
 
     @Override

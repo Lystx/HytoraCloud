@@ -104,6 +104,7 @@ import cloud.hytora.node.service.helper.NodeServiceQueue;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -445,7 +446,7 @@ public class NodeDriver extends CloudDriver<INode> {
                 this.serviceQueue = new NodeServiceQueue();
 
                 //add node cycle data
-                scheduledExecutor.scheduleAtFixedRate(() -> networkExecutor.sendPacketToAll(new NodeCycleDataPacket(this.node.getConfig().getNodeName(), this.node.getLastCycleData())), 1_000, NODE_PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
+                scheduledExecutor.scheduleAtFixedRate(this::updateThisSidesClusterParticipant, 1_000, NODE_PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
                 scheduledExecutor.scheduleAtFixedRate(() -> this.networkExecutor.getClient("Application").ifPresent(DriverUpdatePacket::publishUpdate), 1_000, 1, TimeUnit.SECONDS);
 
                 // add a shutdown hook for fast closes
@@ -491,7 +492,7 @@ public class NodeDriver extends CloudDriver<INode> {
     }
 
     @Override
-    public INode thisSidesClusterParticipant() {
+    public @NotNull INode thisSidesClusterParticipant() {
         return this.node;
     }
 
@@ -633,6 +634,27 @@ public class NodeDriver extends CloudDriver<INode> {
         System.exit(0);
     }
 
+    /**
+     * Migrates from the Node with the provided name to this node
+     * and transfers all the data from the old node to this node instance
+     *
+     * @param disconnectedNodeName the name of the old head node that left
+     */
+    public void markAsHeadNode(String disconnectedNodeName) {
+        this.node.getConfig().setRemote(); //making this node head node
+
+        this.updateThisSidesClusterParticipant();
+    }
+
+    @Override
+    public void updateThisSidesClusterParticipant() {
+        this.networkExecutor.sendPacketToAll(
+                new NodeCycleDataPacket(
+                        this.node.getConfig().getNodeName(),
+                        this.node.getLastCycleData()
+                )
+        );
+    }
 
     @Override
     public void shutdown() {

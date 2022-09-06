@@ -1,9 +1,16 @@
 package cloud.hytora.module;
 
 import cloud.hytora.Launcher;
-import cloud.hytora.LauncherUtils;
+import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.VersionInfo;
+import cloud.hytora.common.logging.ConsoleColor;
+import cloud.hytora.common.logging.LogLevel;
+import cloud.hytora.common.logging.Logger;
+import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
+import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.misc.FileUtils;
+import cloud.hytora.common.progressbar.ProgressBar;
+import cloud.hytora.common.progressbar.ProgressBarStyle;
 import cloud.hytora.common.task.ITask;
 import cloud.hytora.context.annotations.CacheContext;
 import cloud.hytora.context.annotations.ApplicationParticipant;
@@ -45,7 +52,6 @@ public class ModuleUpdater {
                 launcher.getLogger().error(doc.asRawJsonString());
                 continue;
             }
-            System.out.println(doc);
             ModuleInfo moduleInfo = new ModuleInfo(
                     doc.get("name").toString(),
                     doc.get("url").toString(),
@@ -57,12 +63,11 @@ public class ModuleUpdater {
         return (cachedModules = modules);
     }
 
-    public ITask<Integer> updateModules() {
-        ITask<Integer> task = ITask.empty();
-        Collection<ModuleInfo> modules = loadProvidedModules();
 
-        AtomicInteger updateCount = new AtomicInteger(0);
-        for (ModuleInfo module : modules) {
+    public ITask<ModuleInfo> updateModule(ModuleInfo module) {
+        ITask<ModuleInfo> task = ITask.empty();
+        ITask.runAsync(() -> {
+
             String url = module.getUrl();
             String name = module.getName();
             VersionInfo currentVersion = module.getVersion();
@@ -74,23 +79,65 @@ public class ModuleUpdater {
 
             ModuleInfo localModule = findCurrentModule(name, url);
             if (localModule == null || module.getVersion().isNewerAs(localModule.getVersion())) {
-                launcher.getLogger().info("Module[val={}] is either not existing or needs to be updated to Version[val={}, url={}]", module.getName(), module.getVersion(), url);
-                String finalUrl = url;
-                LauncherUtils.downloadVersion(url, Launcher.LAUNCHER_MODULES.resolve(module.getName() + "-" + module.getVersion() + ".jar"))
-                        .onTaskSucess(v -> {
-                            launcher.getLogger().info("Downloaded " + module.getName());
-                            updateCount.set((updateCount.get() + 1));
-                        })
-                        .onTaskFailed(e -> {
-                            launcher.getLogger().error("Couldn't download Module[val={}, url={}] Error: {}", module.getName(), finalUrl, e);
-                        });
+                Logger.constantInstance().info("'{}' is either not existing or needs to be updated to Version '{}' [Current-Version: {}]", module.getName(), module.getVersion(), (localModule == null ? "Not existing" : localModule.getVersion()));
+                downloadModule(module, url)
+                        .onTaskSucess(e -> task.setResult(module))
+                        .onTaskFailed(task::setFailure);
             } else {
-
+                Logger.constantInstance().info("Module[name={}, ver={}] is up to date", module.getName(), module.getVersion());
+                task.setResult(module);
             }
+        });
+        return task;
+    }
+
+
+    public ITask<Integer> updateModules() {
+        ITask<Integer> task = ITask.empty();
+        Collection<ModuleInfo> modules = loadProvidedModules();
+
+        AtomicInteger updateCount = new AtomicInteger(0);
+        for (ModuleInfo module : modules) {
+            this.updateModule(module)
+                    .onTaskSucess(m -> {
+                        if (updateCount.incrementAndGet() >= modules.size()) {
+                            task.setResult(updateCount.get());
+                        }
+                    })
+                    .onTaskFailed(task::setFailure);
         }
+        return task;
+    }
+
+
+    public ITask<Path> downloadModule(ModuleInfo module, String url) {
+        ITask<Path> task = ITask.empty();
+        ProgressBar pb = new ProgressBar(ProgressBarStyle.ASCII, 100L);
+
+        pb.setAppendProgress(false);
+        pb.setFakePercentage(30, 100);
+        pb.setPrintAutomatically(true);
+        pb.setExpandingAnimation(true);
+        pb.setTaskName("Downloading " + module.getName());
+
+        DriverUtility.downloadVersion(url, Launcher.LAUNCHER_MODULES.resolve(module.getName() + "-" + module.getVersion() + ".jar"), pb)
+                .onTaskSucess(v -> {
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    pb.close("=> Downloaded '{}-{}.jar'!", module.getName(), module.getVersion());
+                    task.setResult(v);
+                })
+                .onTaskFailed(e -> {
+                    task.setFailure(e);
+                    Logger.constantInstance().error("Couldn't download Module[val={}, url={}] Error: {}", module.getName(), url, e);
+                });
 
         return task;
     }
+
 
     private ModuleInfo findCurrentModule(String name, String url) {
         Path moduleFile = FileUtils.list(Launcher.LAUNCHER_MODULES)
@@ -101,7 +148,7 @@ public class ModuleUpdater {
         if (moduleFile == null) {
             return null;
         }
-        Document document = loadDocument(moduleFile.toFile(), "version.json");
+        Document document = loadDocument(moduleFile.toFile(), "config.json");
 
         return document == null ? null
                 : new ModuleInfo(

@@ -4,6 +4,7 @@ import cloud.hytora.driver.CloudDriver;
 
 
 import cloud.hytora.driver.node.INode;
+import cloud.hytora.driver.node.INodeManager;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.impl.UniversalCloudServer;
@@ -25,6 +26,7 @@ public class NodeServiceQueue {
 
     private final int maxBootableServices;
 
+
     private final Collection<String> pausedGroups;
 
     public NodeServiceQueue() {
@@ -35,8 +37,13 @@ public class NodeServiceQueue {
     }
 
     public void dequeue() {
+        // TODO: 30.08.2022 make all methods for remote-node that sends method execution to head node
         if (!NodeDriver.getInstance().isRunning()) {
             return;
+        }
+
+        if (!CloudDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
+            return; //if not head node not permitted to start servers
         }
 
         this.queue();

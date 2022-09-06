@@ -166,7 +166,7 @@ public class ModuleDownloader {
         if (moduleFile == null) {
             return null;
         }
-        Document document = loadDocument(moduleFile.toFile(), "version.json");
+        Document document = loadDocument(moduleFile.toFile(), "config.json");
 
         return document == null ? null
                 : new ModuleInfo(

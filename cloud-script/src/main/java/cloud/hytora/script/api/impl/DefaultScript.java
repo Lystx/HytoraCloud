@@ -29,7 +29,7 @@ public class DefaultScript implements IScript {
     @Override
     public void putVariable(@NotNull String name, @NotNull String value) {
         this.variables.put(name, value);
-        System.setProperty(name, value);
+        System.setProperty(name.trim(), value.trim());
     }
 
 

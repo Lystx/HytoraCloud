@@ -63,8 +63,7 @@ public class Launcher extends DriverUtility {
         AnsiConsole.systemInstall();
         HandledLogger logger = new HandledAsyncLogger(LogLevel.fromName(System.getProperty("cloud.logging.level", "INFO")));
         Logger.setFactory(logger.addHandler(entry -> {
-            String formatted = ColoredMessageFormatter.format(entry);
-            System.out.println(formatted);
+            System.out.println(ColoredMessageFormatter.format(entry));
         }));
         System.setErr(logger.asPrintStream(LogLevel.ERROR));
         try {
@@ -76,7 +75,6 @@ public class Launcher extends DriverUtility {
 
     private final String[] args;
     private final Logger logger;
-    private final IdentifiableClassLoader classLoader;
 
     private final Collection<Dependency> dependencies;
     private final Map<String, Repository> repositories;
@@ -89,8 +87,6 @@ public class Launcher extends DriverUtility {
         this.logger = logger;
         this.dependencies = newList();
         this.repositories = new HashMap<>();
-
-        classLoader = new IdentifiableClassLoader(new URL[]{new File(Launcher.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toURL()});
 
         VersionInfo version = VersionInfo.getCurrentVersion();
 
@@ -179,7 +175,7 @@ public class Launcher extends DriverUtility {
                 logger.info("==> Downloading latest HytoraCloud version...");
 
                 Path zippedFile = LAUNCHER_DIR.resolve("hytoraCloud.zip");
-                LauncherUtils.downloadVersion(getNewestVersionDownloadUrl(), zippedFile).onTaskSucess(v -> {
+                DriverUtility.downloadVersion(getNewestVersionDownloadUrl(), zippedFile).onTaskSucess(v -> {
                     logger.info("Downloaded latest RELEASE!");
                     logger.info("Unzipping...");
 
@@ -238,6 +234,8 @@ public class Launcher extends DriverUtility {
             }
         });
 
+
+
         if (USE_MODULE_AUTO_UPDATER) {
             logger.info("Checking for Module-Updates!");
             moduleUpdater.updateModules()
@@ -284,7 +282,9 @@ public class Launcher extends DriverUtility {
     }
 
     private void startApplication(String[] args, Collection<URL> dependencyResources) throws Throwable {
-        
+
+        IdentifiableClassLoader classLoader = new IdentifiableClassLoader(new URL[]{new File(Launcher.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toURL()});
+
         String jarName;
 
         try {
@@ -306,14 +306,14 @@ public class Launcher extends DriverUtility {
         }
 
         dependencyResources.add(targetPath.toUri().toURL());
-       // dependencyResources.add(driverTargetPath.toUri().toURL());
+        dependencyResources.add(driverTargetPath.toUri().toURL());
 
-        /*
+
         for (URL dependencyResource : dependencyResources) {
-            if (!this.classLoader.containsUrl(dependencyResource)) {
-                this.classLoader.addURL(dependencyResource);
+            if (!classLoader.containsUrl(dependencyResource)) {
+                classLoader.addURL(dependencyResource);
             }
-        }*/
+        }
 
         //IdentifiableClassLoader classLoader = new IdentifiableClassLoader(dependencyResources.toArray(new URL[0]));
         Method method = classLoader.loadClass(mainClass).getMethod("main", String[].class);
