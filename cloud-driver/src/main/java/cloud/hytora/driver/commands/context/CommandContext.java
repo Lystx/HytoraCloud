@@ -7,7 +7,7 @@ import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.commands.data.DriverCommand;
 import cloud.hytora.driver.commands.events.CommandErrorEvent;
 import cloud.hytora.driver.commands.exceptions.InvalidCommandUsageException;
-import cloud.hytora.driver.commands.help.ArgumentHelper;
+import cloud.hytora.driver.commands.help.CommandHelper;
 import cloud.hytora.driver.commands.parameter.CommandArguments;
 import cloud.hytora.common.util.DisplayFormat;
 import cloud.hytora.common.util.MultiCache;
@@ -157,7 +157,7 @@ public abstract class CommandContext<T extends CommandSender> {
      * Throws an invalid usage exception and therefore triggers the argument helper
      *
      * @see InvalidCommandUsageException
-     * @see ArgumentHelper
+     * @see CommandHelper
      */
     public void invalidUsage(Object... params) {
         CloudDriver
@@ -186,11 +186,11 @@ public abstract class CommandContext<T extends CommandSender> {
     }
 
     public boolean sendHelpCurrent(boolean before, Object... params) {
-        ArgumentHelper<T> helper = new ArgumentHelper<>(this, getParamSet().size() + (before ? -1 : 0), params);
+        CommandHelper<T> helper = new CommandHelper<>(this, getParamSet().size() + (before ? -1 : 0), params);
         command.executeArgumentHelper(helper);
         boolean r = false;
 
-        for (String s : helper.getElement()) {
+        for (String s : helper.getResult()) {
             sendMessage(s);
 
             if (!r) r = true;

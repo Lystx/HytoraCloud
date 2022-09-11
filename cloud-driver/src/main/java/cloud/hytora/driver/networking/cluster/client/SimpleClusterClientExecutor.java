@@ -1,6 +1,6 @@
 package cloud.hytora.driver.networking.cluster.client;
 
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.networking.protocol.SimpleNetworkComponent;
@@ -39,8 +39,8 @@ public class SimpleClusterClientExecutor extends SimpleNetworkComponent implemen
     }
 
     @Override
-    public ITask<Void> sendPacketAsync(IPacket packet) {
-        ITask<Void> task = ITask.empty();
+    public IPromise<Void> sendPacketAsync(IPacket packet) {
+        IPromise<Void> task = IPromise.empty();
         if (channel.isOpen()) {
             channel
                     .writeAndFlush(packet)

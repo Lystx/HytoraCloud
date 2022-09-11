@@ -1,6 +1,6 @@
 package cloud.hytora.driver.database;
 
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import org.jetbrains.annotations.NotNull;
 
 public interface IDatabaseManager {
@@ -11,6 +11,6 @@ public interface IDatabaseManager {
     SectionedDatabase getDatabase();
 
     @NotNull
-    ITask<Boolean> shutdown();
+    IPromise<Boolean> shutdown();
 
 }

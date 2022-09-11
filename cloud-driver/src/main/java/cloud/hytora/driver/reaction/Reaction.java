@@ -55,11 +55,11 @@ public class Reaction {
     }
 
     /**
-     * Reacts to given condition by using given reactors. That makes it easier to react to different states,
-     * otherwise you would have to react to every state seperately.
+     * Reacts to given condition by using given reactors. That makes it easier to setResult to different states,
+     * otherwise you would have to setResult to every state seperately.
      *
      * @param object   The object to be compared with the object from the reactors
-     * @param reactors The reactors to react to different states of the object
+     * @param reactors The reactors to setResult to different states of the object
      * @return If the reaction is cancelled
      * @see Reactor
      */

@@ -6,6 +6,7 @@ import cloud.hytora.driver.exception.CloudException;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
+import cloud.hytora.http.HttpAddress;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -130,6 +131,10 @@ public class ProtocolAddress implements IBufferObject {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public HttpAddress toHttp() {
+        return new HttpAddress(host, port);
     }
 
     public String toString() {

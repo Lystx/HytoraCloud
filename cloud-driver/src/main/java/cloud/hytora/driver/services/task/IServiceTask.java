@@ -1,6 +1,6 @@
 package cloud.hytora.driver.services.task;
 
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.driver.common.IPlaceHolderObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.common.ICopyableObject;
@@ -86,14 +86,14 @@ public interface IServiceTask extends IBufferObject, IPlaceHolderObject, IProper
     INode findAnyNode();
 
     /**
-     * {@link #findAnyNode()} but async and returns an {@link ITask}
+     * {@link #findAnyNode()} but async and returns an {@link IPromise}
      *
      * @return task instance
-     * @see ITask
+     * @see IPromise
      * @see #getPossibleNodes()
      */
     @NotNull
-    ITask<INode> findAnyNodeAsync();
+    IPromise<INode> findAnyNodeAsync();
 
     /**
      * Returns a {@link Collection} of all {@link INode} instances

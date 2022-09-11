@@ -1,6 +1,6 @@
 package cloud.hytora.driver.networking.protocol.wrapped;
 
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -129,8 +129,8 @@ public class SimplePacketChannel implements PacketChannel {
     }
 
     @Override
-    public ITask<Void> sendPacketAsync(IPacket packet) {
-        ITask<Void> task = ITask.empty();
+    public IPromise<Void> sendPacketAsync(IPacket packet) {
+        IPromise<Void> task = IPromise.empty();
 
 
         ChannelOutboundInvoker invoker = this.wrapped.channel() == null ? this.wrapped : this.wrapped.channel();

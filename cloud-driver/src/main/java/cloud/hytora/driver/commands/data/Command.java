@@ -1,7 +1,7 @@
 package cloud.hytora.driver.commands.data;
 
-import cloud.hytora.driver.commands.data.enums.AllowedCommandSender;
 import cloud.hytora.driver.commands.data.enums.CommandScope;
+import cloud.hytora.driver.commands.help.CommandHelper;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -77,13 +77,13 @@ public @interface Command {
     String usage() default "";
 
     /**
-     * If the {@link cloud.hytora.driver.commands.help.ArgumentHelper} should be called
+     * If the {@link CommandHelper} should be called
      * if no input is provided after this command
      */
     boolean invalidUsageIfEmptyInput() default false;
 
     /**
-     * The aliases to automatically trigger the {@link cloud.hytora.driver.commands.help.ArgumentHelper}
+     * The aliases to automatically trigger the {@link CommandHelper}
      * Leave empty if you do not want to use it
      */
     String[] autoHelpAliases() default {};

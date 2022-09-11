@@ -1,7 +1,7 @@
 package cloud.hytora.driver.networking.protocol.packets.defaults;
 
 import cloud.hytora.common.scheduler.Scheduler;
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
@@ -101,8 +101,8 @@ public class GenericQueryPacket<T extends IBufferObject> extends AbstractPacket 
         this(key, new BufferedDocument(request));
     }
 
-    public ITask<GenericQueryPacket<T>> query() {
-        ITask<GenericQueryPacket<T>> task = ITask.empty();
+    public IPromise<GenericQueryPacket<T>> query() {
+        IPromise<GenericQueryPacket<T>> task = IPromise.empty();
 
         //mark this is query side
         this.querySide = true;
@@ -124,24 +124,24 @@ public class GenericQueryPacket<T extends IBufferObject> extends AbstractPacket 
         return task;
     }
 
-    public ITask<Void> respond(String result) {
+    public IPromise<Void> respond(String result) {
         return this.respond(new BufferedString(result));
     }
 
-    public ITask<Void> respond(boolean result) {
+    public IPromise<Void> respond(boolean result) {
         return this.respond(new BufferedBoolean(result));
     }
 
-    public ITask<Void> respond(Document result) {
+    public IPromise<Void> respond(Document result) {
         return this.respond(new BufferedDocument(result));
     }
 
-    public ITask<Void> respond(Enum<?> result) {
+    public IPromise<Void> respond(Enum<?> result) {
         return this.respond(new BufferedEnum(result));
     }
 
 
-    public ITask<Void> respond(Number result) {
+    public IPromise<Void> respond(Number result) {
         if (result instanceof Integer) {
             return this.respond(new BufferedInt((Integer) result));
         }
@@ -154,10 +154,10 @@ public class GenericQueryPacket<T extends IBufferObject> extends AbstractPacket 
         if (result instanceof Double) {
             return this.respond(new BufferedDouble((Double) result));
         }
-        return ITask.empty();
+        return IPromise.empty();
     }
 
-    public ITask<Void> respond(IBufferObject data) {
+    public IPromise<Void> respond(IBufferObject data) {
         this.result = (T) data;
         this.querySide = false;
         this.responseTypeClass = data.getClass();

@@ -1,6 +1,6 @@
 package cloud.hytora.modules.sign.spigot.manager;
 
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.ICloudServiceManager;
@@ -197,7 +197,7 @@ public class BukkitCloudSignUpdater implements Runnable {
             return;
         }
 
-        ITask.runAsync(() -> {
+        IPromise.runAsync(() -> {
             BukkitCloudSignGroup signGroup = new BukkitCloudSignGroup(current.getTask().getName(), CloudSignAPI.getInstance().getSignManager().getAllCachedCloudSigns());
             Map<Integer, ICloudSign> signs = signGroup.getCloudSigns();
             ICloudSign cloudSign = signs.get(current.getServiceID());

@@ -1,7 +1,7 @@
 package cloud.hytora.driver.networking.protocol.wrapped;
 
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.networking.protocol.packets.defaults.RedirectPacket;
@@ -90,8 +90,8 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
     }
 
     @Override
-    public ITask<R> execute(IPacket packet) {
-        ITask<R> task = ITask.empty();
+    public IPromise<R> execute(IPacket packet) {
+        IPromise<R> task = IPromise.empty();
         INetworkExecutor executor = this.wrapper.executor();
 
         if (identifier.equalsIgnoreCase("multiQuery")) {

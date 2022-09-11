@@ -1,6 +1,6 @@
 package cloud.hytora.modules.perms.global.impl;
 
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
@@ -179,9 +179,9 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
     }
 
     @Override
-    public ITask<Permission> getPermission(String permission) {
+    public IPromise<Permission> getPermission(String permission) {
         this.checkForExpiredValues();
-        return ITask.callAsync(() -> this.permissions.containsKey(permission) ? Permission.of(permission, this.permissions.getOrDefault(permission, -1L)) : null);
+        return IPromise.callAsync(() -> this.permissions.containsKey(permission) ? Permission.of(permission, this.permissions.getOrDefault(permission, -1L)) : null);
     }
 
     @Override

@@ -1,11 +1,17 @@
 package cloud.hytora.node.database.impl;
 
+import cloud.hytora.database.DatabaseDriver;
+import cloud.hytora.database.api.elements.Database;
+import cloud.hytora.database.api.elements.DatabaseCollection;
+import cloud.hytora.database.api.elements.DatabaseEntry;
+import cloud.hytora.database.api.elements.DatabaseFilter;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.node.INodeManager;
+import cloud.hytora.http.HttpAddress;
 import cloud.hytora.node.NodeDriver;
 
 
@@ -22,77 +28,61 @@ import java.util.stream.Collectors;
 
 public class DatabaseFile implements IDatabase {
 
-    private final String fileExtension = ".json";
-
-    public DatabaseFile() {
-    }
+    private final DatabaseDriver driver;
+    private final DatabaseConfiguration configuration;
+    private Database database;
 
     public DatabaseFile(DatabaseConfiguration configuration) {
-
+        this.configuration = configuration;
+        this.driver = new DatabaseDriver(CloudDriver.getInstance().getNetworkExecutor().getName());
     }
 
     @Override
-    public void connect() {}
+    public void connect() {
+        this.driver.connect(new HttpAddress(configuration.getHost(), configuration.getPort()), configuration.getPassword());
+        this.database = this.driver.getDatabase(configuration.getDatabase());
+    }
 
     @Override
-    public void disconnect() {}
-    
-    private File checkCollection(String collection) {
-
-        File collectionFolder = new File(NodeDriver.STORAGE_FOLDER, collection + "/");
-        try {
-
-            if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE && !NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
-                return collectionFolder;
-            }
-        } catch (Exception e) {
-            //ignored
-        }
-        collectionFolder.mkdirs();
-        
-        return collectionFolder;
+    public void disconnect() {
+        this.driver.close();
     }
 
     @Override
     public void insert(String collection, String key, Document document) {
-        File entryFile = new File(this.checkCollection(collection), key + fileExtension);
-        try {
-            document.saveToFile(entryFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+        DatabaseCollection db = this.database.getCollection(collection);
+        db.insertEntry(e -> {
+            e.setId(key);
+            e.setDocument(document);
+        });
     }
 
     @Override
     public void update(String collection, String key, Document document) {
-        File entryFile = new File(this.checkCollection(collection), key + fileExtension);
-        try {
-            document.saveToFile(entryFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        DatabaseCollection db = this.database.getCollection(collection);
+        db.updateEntry(key, e -> {
+            e.setId(key);
+            e.setDocument(document);
+        });
     }
 
     @Override
     public boolean contains(String collection, String key) {
-        File entryFile = new File(this.checkCollection(collection), key + fileExtension);
-        return entryFile.exists();
+        DatabaseCollection db = this.database.getCollection(collection);
+        return db.hasEntry(key);
     }
 
     @Override
     public void delete(String collection, String key) {
-        File entryFile = new File(this.checkCollection(collection), key + fileExtension);
-        entryFile.delete();
+        DatabaseCollection db = this.database.getCollection(collection);
+        db.deleteEntryAsync(key);
     }
 
     @Override
     public Document byId(String collection, String key) {
-        File entryFile = new File(this.checkCollection(collection), key + fileExtension);
-        try {
-            return DocumentFactory.newJsonDocument(entryFile);
-        } catch (IOException e) {
-            return DocumentFactory.newJsonDocument();
-        }
+        DatabaseCollection db = this.database.getCollection(collection);
+        return db.findEntry(key);
     }
 
     @Override
@@ -102,14 +92,14 @@ public class DatabaseFile implements IDatabase {
 
     @Override
     public Collection<String> keys(String collection) {
-        File[] files = this.checkCollection(collection).listFiles();
-        return Arrays.stream(files == null ? new File[0] : files).map(f -> f.getName().split(fileExtension)[0]).collect(Collectors.toList());
+        DatabaseCollection db = this.database.getCollection(collection);
+        return db.getIdentifiers();
     }
 
     @Override
     public Collection<Document> documents(String collection) {
-        File[] files = this.checkCollection(collection).listFiles();
-        return Arrays.stream(files == null ? new File[0] : files).map(DocumentFactory::newJsonDocumentUnchecked).collect(Collectors.toList());
+        DatabaseCollection db = this.database.getCollection(collection);
+        return db.findEntries().stream().map(e -> (Document)e).collect(Collectors.toList());
     }
 
     @Override
@@ -119,13 +109,11 @@ public class DatabaseFile implements IDatabase {
 
     @Override
     public Map<String, Document> filter(String collection, BiPredicate<String, Document> predicate) {
-        File[] files = this.checkCollection(collection).listFiles();
+        DatabaseCollection db = this.database.getCollection(collection);
         Map<String, Document> map = new HashMap<>();
-        for (File file : (files == null ? new File[0] : files)) {
-            String key = file.getName().split(fileExtension)[0];
-            Document document = DocumentFactory.newJsonDocumentUnchecked(file);
-            if (predicate.test(key, document)) {
-                map.put(key, document);
+        for (DatabaseEntry entry : db.findEntries()) {
+            if (predicate.test(entry.getId(), entry)) {
+                map.put(entry.getId(), entry);
             }
         }
         return map;
@@ -138,11 +126,5 @@ public class DatabaseFile implements IDatabase {
 
     @Override
     public void clear(String collection) {
-        File file = this.checkCollection(collection);
-        try {
-            FileUtils.deleteDirectory(file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }

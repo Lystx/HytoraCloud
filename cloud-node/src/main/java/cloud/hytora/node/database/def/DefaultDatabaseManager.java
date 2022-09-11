@@ -1,6 +1,6 @@
 package cloud.hytora.node.database.def;
 
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 
 
 import cloud.hytora.driver.database.SectionedDatabase;
@@ -37,9 +37,9 @@ public class DefaultDatabaseManager implements IDatabaseManager {
     }
 
     @Override
-    public @NotNull ITask<Boolean> shutdown() {
+    public @NotNull IPromise<Boolean> shutdown() {
         internalDatabase.disconnect();
-        return ITask.newInstance(true);
+        return IPromise.newInstance(true);
     }
 
 

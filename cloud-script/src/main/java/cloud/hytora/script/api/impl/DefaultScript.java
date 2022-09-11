@@ -1,6 +1,6 @@
 package cloud.hytora.script.api.impl;
 
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.script.ScriptSyntax;
 import cloud.hytora.script.api.*;
 
@@ -54,8 +54,8 @@ public class DefaultScript implements IScript {
 
 
     @Override
-    public ITask<Void> executeAsync() {
-        return ITask.callAsync(() -> {
+    public IPromise<Void> executeAsync() {
+        return IPromise.callAsync(() -> {
 
             for (String line : this.allLines) {
                 //System.out.println("Executing script line " + line);

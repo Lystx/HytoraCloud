@@ -1,6 +1,6 @@
 package cloud.hytora.driver.permission;
 
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -73,7 +73,7 @@ public interface PermissionManager extends PermissionChecker {
 	 * @return a task instance that might be holding the found {@link PermissionGroup}
 	 */
 	@Nonnull
-    ITask<PermissionGroup> getPermissionGroup(@Nonnull String name);
+    IPromise<PermissionGroup> getPermissionGroup(@Nonnull String name);
 
 	/**
 	 * Updates the data of the provided {@link PermissionGroup} and
@@ -119,8 +119,8 @@ public interface PermissionManager extends PermissionChecker {
 
 	PermissionPlayer createPlayer(String name, UUID uniqueId);
 
-	ITask<PermissionPlayer> getPlayerAsyncByUniqueId(UUID uniqueId);
-	ITask<PermissionPlayer> getPlayerAsyncByName(String name);
+	IPromise<PermissionPlayer> getPlayerAsyncByUniqueId(UUID uniqueId);
+	IPromise<PermissionPlayer> getPlayerAsyncByName(String name);
 
 	/**
 	 * Updates a {@link PermissionPlayer} in database

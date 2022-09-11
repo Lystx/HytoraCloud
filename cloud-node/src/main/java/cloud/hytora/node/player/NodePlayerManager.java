@@ -1,7 +1,7 @@
 package cloud.hytora.node.player;
 
 import cloud.hytora.common.logging.Logger;
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.database.IDatabaseManager;
@@ -105,8 +105,8 @@ public class NodePlayerManager extends DefaultPlayerManager {
     }
 
     @Override
-    public @NotNull ITask<Collection<CloudOfflinePlayer>> getAllOfflinePlayersAsync() {
-        return ITask.callAsync(new Callable<Collection<CloudOfflinePlayer>>() {
+    public @NotNull IPromise<Collection<CloudOfflinePlayer>> getAllOfflinePlayersAsync() {
+        return IPromise.callAsync(new Callable<Collection<CloudOfflinePlayer>>() {
             @Override
             public Collection<CloudOfflinePlayer> call() throws Exception {
                 SectionedDatabase database = NodeDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
@@ -132,8 +132,8 @@ public class NodePlayerManager extends DefaultPlayerManager {
     }
 
     @Override
-    public @NotNull ITask<CloudOfflinePlayer> getOfflinePlayerByUniqueIdAsync(@NotNull UUID uniqueId) {
-        return ITask.callAsync(new Callable<CloudOfflinePlayer>() {
+    public @NotNull IPromise<CloudOfflinePlayer> getOfflinePlayerByUniqueIdAsync(@NotNull UUID uniqueId) {
+        return IPromise.callAsync(new Callable<CloudOfflinePlayer>() {
             @Override
             public CloudOfflinePlayer call() throws Exception {
                 SectionedDatabase database = NodeDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
@@ -153,8 +153,8 @@ public class NodePlayerManager extends DefaultPlayerManager {
     }
 
     @Override
-    public @NotNull ITask<CloudOfflinePlayer> getOfflinePlayerByNameAsync(@NotNull String name) {
-        return ITask.callAsync(new Callable<CloudOfflinePlayer>() {
+    public @NotNull IPromise<CloudOfflinePlayer> getOfflinePlayerByNameAsync(@NotNull String name) {
+        return IPromise.callAsync(new Callable<CloudOfflinePlayer>() {
             @Override
             public CloudOfflinePlayer call() throws Exception {
                 SectionedDatabase database = NodeDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
@@ -167,7 +167,7 @@ public class NodePlayerManager extends DefaultPlayerManager {
 
     @Override
     public void saveOfflinePlayerAsync(@NotNull CloudOfflinePlayer player) {
-        ITask.runAsync(() -> {
+        IPromise.runAsync(() -> {
             SectionedDatabase database = NodeDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
             DatabaseSection<CloudOfflinePlayer> db = database.getSection(CloudOfflinePlayer.class);
             db.upsert(player);

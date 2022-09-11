@@ -4,8 +4,8 @@ import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.driver.commands.context.CommandContext;
 import cloud.hytora.driver.commands.data.Command;
 import cloud.hytora.driver.commands.data.enums.CommandScope;
-import cloud.hytora.driver.commands.help.ArgumentHelp;
-import cloud.hytora.driver.commands.help.ArgumentHelper;
+import cloud.hytora.driver.commands.help.CommandHelp;
+import cloud.hytora.driver.commands.help.CommandHelper;
 import cloud.hytora.driver.commands.parameter.CommandArguments;
 import cloud.hytora.driver.commands.tabcomplete.TabCompleter;
 import cloud.hytora.driver.commands.tabcomplete.TabCompletion;
@@ -25,8 +25,8 @@ import cloud.hytora.node.NodeDriver;
 // TODO: 21.08.2022 implement more
 public class ClusterCommand {
 
-    @ArgumentHelp
-    public void onArgumentHelp(ArgumentHelper helper) {
+    @CommandHelp
+    public void onArgumentHelp(CommandHelper helper) {
         helper.performTemplateHelp();
     }
 

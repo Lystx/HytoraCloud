@@ -3,6 +3,7 @@ package cloud.hytora.common.scheduler;
 import cloud.hytora.common.scheduler.def.DefaultScheduler;
 
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 
 public interface Scheduler {
@@ -10,6 +11,8 @@ public interface Scheduler {
     static Scheduler runTimeScheduler() {
         return DefaultScheduler.INSTANCE;
     }
+
+    ScheduledExecutorService getScheduledExecutor();
 
     /**
      * Gets a {@link SchedulerFuture} by its id

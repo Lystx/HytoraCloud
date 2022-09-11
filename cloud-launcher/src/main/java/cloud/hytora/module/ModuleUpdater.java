@@ -3,15 +3,11 @@ package cloud.hytora.module;
 import cloud.hytora.Launcher;
 import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.VersionInfo;
-import cloud.hytora.common.logging.ConsoleColor;
-import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.Logger;
-import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
-import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.progressbar.ProgressBar;
 import cloud.hytora.common.progressbar.ProgressBarStyle;
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.context.annotations.CacheContext;
 import cloud.hytora.context.annotations.ApplicationParticipant;
 import cloud.hytora.document.Document;
@@ -64,9 +60,9 @@ public class ModuleUpdater {
     }
 
 
-    public ITask<ModuleInfo> updateModule(ModuleInfo module) {
-        ITask<ModuleInfo> task = ITask.empty();
-        ITask.runAsync(() -> {
+    public IPromise<ModuleInfo> updateModule(ModuleInfo module) {
+        IPromise<ModuleInfo> task = IPromise.empty();
+        IPromise.runAsync(() -> {
 
             String url = module.getUrl();
             String name = module.getName();
@@ -92,8 +88,8 @@ public class ModuleUpdater {
     }
 
 
-    public ITask<Integer> updateModules() {
-        ITask<Integer> task = ITask.empty();
+    public IPromise<Integer> updateModules() {
+        IPromise<Integer> task = IPromise.empty();
         Collection<ModuleInfo> modules = loadProvidedModules();
 
         AtomicInteger updateCount = new AtomicInteger(0);
@@ -110,8 +106,8 @@ public class ModuleUpdater {
     }
 
 
-    public ITask<Path> downloadModule(ModuleInfo module, String url) {
-        ITask<Path> task = ITask.empty();
+    public IPromise<Path> downloadModule(ModuleInfo module, String url) {
+        IPromise<Path> task = IPromise.empty();
         ProgressBar pb = new ProgressBar(ProgressBarStyle.ASCII, 100L);
 
         pb.setAppendProgress(false);

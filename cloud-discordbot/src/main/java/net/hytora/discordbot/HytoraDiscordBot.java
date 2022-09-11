@@ -4,7 +4,7 @@ package net.hytora.discordbot;
 import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.scheduler.Scheduler;
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import lombok.Getter;
@@ -98,7 +98,7 @@ public class HytoraDiscordBot {
 
     private final Logger logger;
 
-    private final ITask<Void> guildReadyTask;
+    private final IPromise<Void> guildReadyTask;
 
     public HytoraDiscordBot(Logger logger) {
         hytora = this;
@@ -107,7 +107,7 @@ public class HytoraDiscordBot {
         long start = System.currentTimeMillis();
 
         this.logger = logger;
-        this.guildReadyTask = ITask.empty();
+        this.guildReadyTask = IPromise.empty();
         this.conversationManager = new ConversationManager();
         this.discordButtons = new ArrayList<>();
 

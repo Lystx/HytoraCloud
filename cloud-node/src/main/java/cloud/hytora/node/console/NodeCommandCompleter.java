@@ -6,6 +6,7 @@ import cloud.hytora.driver.console.TabCompleter;
 import cloud.hytora.driver.event.IEventManager;
 import com.google.common.base.Preconditions;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -22,7 +23,7 @@ public class NodeCommandCompleter implements TabCompleter {
         TabCompleteEvent event = new TabCompleteEvent(buffer);
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(event);
         if (!event.isCancelled()) {
-            List<String> l = event.getSuggestions();
+            Collection<String> l = event.getSuggestions();
             if (l != null) strings.addAll(l);
         }
 

@@ -1,7 +1,7 @@
 package cloud.hytora.driver.services.impl;
 
 import cloud.hytora.common.function.ExceptionallyBiConsumer;
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
@@ -127,11 +127,11 @@ public class DefaultConfigurableService implements IFutureCloudServer {
 
 
     @Override
-    public ITask<ICloudServer> start() {
-        ITask<ICloudServer> task = ITask.empty();
+    public IPromise<ICloudServer> start() {
+        IPromise<ICloudServer> task = IPromise.empty();
 
 
-        ITask.runAsync(() -> {
+        IPromise.runAsync(() -> {
             if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
                 EndpointNetworkExecutor executor = (EndpointNetworkExecutor) CloudDriver.getInstance().getNetworkExecutor();
 
@@ -169,7 +169,7 @@ public class DefaultConfigurableService implements IFutureCloudServer {
                 }
 
                 INodeManager nodeManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class);
-                ITask<INode> node = nodeManager.getNode(this.node);
+                IPromise<INode> node = nodeManager.getNode(this.node);
 
                 node.ifPresent(n -> n.startServer(service));
                 node.ifEmpty(n -> CloudDriver.getInstance().getLogger().error("Tried to start {} but the Node {} for Servers of Configuration {} is not connected!", service.getName(), this.node, serviceTask.getName()));

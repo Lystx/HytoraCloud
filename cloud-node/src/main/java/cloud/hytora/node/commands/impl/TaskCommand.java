@@ -4,8 +4,8 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.commands.context.CommandContext;
 import cloud.hytora.driver.commands.data.Command;
 import cloud.hytora.driver.commands.data.enums.CommandScope;
-import cloud.hytora.driver.commands.help.ArgumentHelp;
-import cloud.hytora.driver.commands.help.ArgumentHelper;
+import cloud.hytora.driver.commands.help.CommandHelp;
+import cloud.hytora.driver.commands.help.CommandHelper;
 import cloud.hytora.driver.commands.parameter.CommandArguments;
 import cloud.hytora.driver.commands.tabcomplete.TabCompleter;
 import cloud.hytora.driver.commands.tabcomplete.TabCompletion;
@@ -43,8 +43,8 @@ import java.util.stream.Collectors;
 )
 public class TaskCommand {
 
-    @ArgumentHelp
-    public void onArgumentHelp(ArgumentHelper helper) {
+    @CommandHelp
+    public void onArgumentHelp(CommandHelper helper) {
         helper.performTemplateHelp();
     }
 

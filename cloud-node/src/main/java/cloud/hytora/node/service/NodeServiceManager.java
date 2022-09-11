@@ -1,7 +1,7 @@
 package cloud.hytora.node.service;
 
 import cloud.hytora.common.scheduler.Scheduler;
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.console.screen.Screen;
 import cloud.hytora.driver.console.screen.ScreenManager;
@@ -136,13 +136,13 @@ public class NodeServiceManager extends DefaultServiceManager {
     }
 
     @Override
-    public ITask<ICloudServer> startService(@NotNull ICloudServer service) {
+    public IPromise<ICloudServer> startService(@NotNull ICloudServer service) {
         return worker.processService(service);
     }
 
     @Override
-    public ITask<ICloudServer> thisService() {
-        return ITask.empty();
+    public IPromise<ICloudServer> thisService() {
+        return IPromise.empty();
     }
 
     @Override

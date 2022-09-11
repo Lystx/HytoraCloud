@@ -1,6 +1,6 @@
 package cloud.hytora.modules.perms.ingame;
 
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.PacketProvider;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
@@ -51,8 +51,8 @@ public class RemotePermissionManager extends DefaultPermissionManager implements
 
     @NotNull
     @Override
-    public ITask<PermissionGroup> getPermissionGroup(@NotNull String name) {
-        return ITask.callAsync(() -> getPermissionGroupByNameOrNull(name));
+    public IPromise<PermissionGroup> getPermissionGroup(@NotNull String name) {
+        return IPromise.callAsync(() -> getPermissionGroupByNameOrNull(name));
     }
 
     @Override
@@ -103,8 +103,8 @@ public class RemotePermissionManager extends DefaultPermissionManager implements
     }
 
     @Override
-    public ITask<PermissionPlayer> getPlayerAsyncByUniqueId(UUID uniqueId) {
-        ITask<PermissionPlayer> task = ITask.empty();
+    public IPromise<PermissionPlayer> getPlayerAsyncByUniqueId(UUID uniqueId) {
+        IPromise<PermissionPlayer> task = IPromise.empty();
 
         PermissionPlayer player = this.allCachedPermissionPlayers.stream().filter(p -> p.getUniqueId().equals(uniqueId)).findFirst().orElse(null);
         if (player == null) {
@@ -120,8 +120,8 @@ public class RemotePermissionManager extends DefaultPermissionManager implements
     }
 
     @Override
-    public ITask<PermissionPlayer> getPlayerAsyncByName(String name) {
-        ITask<PermissionPlayer> task = ITask.empty();
+    public IPromise<PermissionPlayer> getPlayerAsyncByName(String name) {
+        IPromise<PermissionPlayer> task = IPromise.empty();
 
         PermissionPlayer player = this.allCachedPermissionPlayers.stream().filter(p -> p.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
         if (player == null) {

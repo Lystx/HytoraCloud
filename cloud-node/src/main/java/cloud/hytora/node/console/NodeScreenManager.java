@@ -1,7 +1,7 @@
 package cloud.hytora.node.console;
 
 import cloud.hytora.common.function.ExceptionallyBiConsumer;
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.commands.ICommandManager;
 import cloud.hytora.driver.commands.sender.CommandSender;
@@ -29,8 +29,8 @@ public class NodeScreenManager implements ScreenManager {
     }
 
     @Override
-    public ITask<Screen> getScreenByName(String name) {
-        return ITask.newInstance(allCachedScreens.get(name));
+    public IPromise<Screen> getScreenByName(String name) {
+        return IPromise.newInstance(allCachedScreens.get(name));
     }
 
     @Override

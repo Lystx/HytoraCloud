@@ -1,6 +1,6 @@
 package cloud.hytora.driver.player;
 
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.exception.CloudException;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
@@ -8,9 +8,9 @@ import cloud.hytora.driver.player.executor.PlayerExecutor;
 public class DefaultFullJoinExecutor implements PlayerFullJoinExecutor {
 
     @Override
-    public ITask<Void> execute(ICloudPlayer cloudPlayer, boolean sentToHub, boolean disconnect, boolean kickPlayersOnFallbackIfLowerRank) {
+    public IPromise<Void> execute(ICloudPlayer cloudPlayer, boolean sentToHub, boolean disconnect, boolean kickPlayersOnFallbackIfLowerRank) {
 
-        ITask<Void> task = ITask.empty();
+        IPromise<Void> task = IPromise.empty();
         CloudDriver.getInstance().getProviderRegistry().get(PlayerFullJoinChecker.class).ifPresent(playerFullJoinExecutor -> {
             int kickedPlayers = 0;
             for (ICloudPlayer onlinePlayer : CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getAllCachedCloudPlayers()) {

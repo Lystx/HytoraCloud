@@ -1,6 +1,6 @@
 package cloud.hytora.driver.node;
 
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.driver.common.IClusterObject;
 import cloud.hytora.driver.networking.INetworkExecutor;
 import cloud.hytora.driver.networking.protocol.packets.NetworkResponseState;
@@ -99,7 +99,7 @@ public interface INode extends IClusterObject<INode>, INetworkExecutor {
      * @return task instance containing the response for stopping
      */
     @Nonnull
-    ITask<NetworkResponseState> startServerAsync(@Nonnull ICloudServer server);
+    IPromise<NetworkResponseState> startServerAsync(@Nonnull ICloudServer server);
 
     /**
      * Stops a certain {@link ICloudServer} on this {@link INode} async.
@@ -110,7 +110,7 @@ public interface INode extends IClusterObject<INode>, INetworkExecutor {
      * @return task instance containing the response for stopping
      */
     @Nonnull
-    ITask<NetworkResponseState> stopServerAsync(@Nonnull ICloudServer server);
+    IPromise<NetworkResponseState> stopServerAsync(@Nonnull ICloudServer server);
 
     /**
      * Retrieves a {@link Collection} of all running {@link ICloudServer}s
@@ -121,6 +121,6 @@ public interface INode extends IClusterObject<INode>, INetworkExecutor {
     Collection<ICloudServer> getRunningServers();
 
     @Nonnull
-    ITask<Collection<ICloudServer>> getRunningServersAsync();
+    IPromise<Collection<ICloudServer>> getRunningServersAsync();
 
 }

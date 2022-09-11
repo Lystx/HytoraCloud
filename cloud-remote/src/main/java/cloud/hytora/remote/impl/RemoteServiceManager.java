@@ -1,6 +1,6 @@
 package cloud.hytora.remote.impl;
 
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.IEventManager;
@@ -55,10 +55,10 @@ public class RemoteServiceManager extends DefaultServiceManager {
 
 
     @Override
-    public ITask<ICloudServer> startService(@NotNull ICloudServer service) {
+    public IPromise<ICloudServer> startService(@NotNull ICloudServer service) {
 
         new NodeRequestServerStartPacket(service, false).publishTo(service.getRunningNodeName());
-        return ITask.newInstance(service);
+        return IPromise.newInstance(service);
     }
 
     @Override
@@ -67,8 +67,8 @@ public class RemoteServiceManager extends DefaultServiceManager {
     }
 
     @Override
-    public ITask<ICloudServer> thisService() {
-        return ITask.callAsync(() -> getAllCachedServices().stream().filter(s -> s.getName().equalsIgnoreCase(Remote.getInstance().getProperty().getName())).findFirst().orElse(null));
+    public IPromise<ICloudServer> thisService() {
+        return IPromise.callAsync(() -> getAllCachedServices().stream().filter(s -> s.getName().equalsIgnoreCase(Remote.getInstance().getProperty().getName())).findFirst().orElse(null));
     }
 
     @Override

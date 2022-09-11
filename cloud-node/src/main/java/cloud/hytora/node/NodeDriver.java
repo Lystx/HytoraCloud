@@ -11,7 +11,7 @@ import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.common.util.Validation;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
@@ -29,8 +29,8 @@ import cloud.hytora.driver.database.IDatabaseManager;
 import cloud.hytora.driver.database.SectionedDatabase;
 import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
-import cloud.hytora.driver.http.api.HttpServer;
-import cloud.hytora.driver.http.impl.NettyHttpServer;
+import cloud.hytora.http.api.HttpServer;
+import cloud.hytora.http.impl.NettyHttpServer;
 import cloud.hytora.driver.message.IChannelMessenger;
 import cloud.hytora.driver.module.IModuleManager;
 import cloud.hytora.driver.networking.NetworkComponent;
@@ -222,7 +222,7 @@ public class NodeDriver extends CloudDriver<INode> {
         screen.registerTabCompleter(new NodeCommandCompleter());
         screen.join();
 
-        ITask.runAsync(() -> {
+        IPromise.runAsync(() -> {
             if (running) {
                 return;
             }
@@ -283,7 +283,7 @@ public class NodeDriver extends CloudDriver<INode> {
             this.webServer = new NettyHttpServer();
             this.logger.info("Setting up HttpListeners...");
             for (ProtocolAddress address : configManager.getConfig().getHttpListeners()) {
-                this.webServer.addListener(address);
+                this.webServer.addListener(address.toHttp());
             }
 
             //registering default web api handlers
@@ -712,8 +712,8 @@ public class NodeDriver extends CloudDriver<INode> {
     }
 
     @Override
-    public @NotNull <E extends IBufferObject> ITask<ISyncedNetworkPromise<E>> getSyncedNetworkObjectAsync(SyncedObjectType<E> type, String queryParameters) {
-        return ITask.callAsync(() -> getSyncedNetworkObject(type, queryParameters));
+    public @NotNull <E extends IBufferObject> IPromise<ISyncedNetworkPromise<E>> getSyncedNetworkObjectAsync(SyncedObjectType<E> type, String queryParameters) {
+        return IPromise.callAsync(() -> getSyncedNetworkObject(type, queryParameters));
     }
 
     @Override
@@ -738,8 +738,18 @@ public class NodeDriver extends CloudDriver<INode> {
         this.logger.info("§7Trying to terminate the §cCloudsystem§8...");
         PlayerExecutor.forAll().disconnect("§cThe network was shut down!");
 
-        ITask.runTaskLater(() -> {
+        IPromise.runTaskLater(() -> {
 
+
+            //shutting down servers
+            for (ICloudServer service : new ArrayList<>(this.providerRegistry.getUnchecked(ICloudServiceManager.class).getAllCachedServices())) {
+                IProcessCloudServer cloudServer = ((IProcessCloudServer) service);
+                Process process = cloudServer.getProcess();
+                if (process != null) {
+                    process.destroyForcibly();
+
+                }
+            }
 
             IModuleManager moduleManager = providerRegistry.getUnchecked(IModuleManager.class);
 
@@ -748,22 +758,13 @@ public class NodeDriver extends CloudDriver<INode> {
 
             this.webServer.shutdown();
 
-            //shutting down servers
-            for (ICloudServer service : new ArrayList<>(this.providerRegistry.getUnchecked(ICloudServiceManager.class).getAllCachedServices())) {
-                IProcessCloudServer cloudServer = ((IProcessCloudServer) service);
-                Process process = cloudServer.getProcess();
-                if (process != null) {
-                    process.destroyForcibly();
-                }
-            }
-
             logger.info("Terminating in §8[§c3§8]");
-            ITask.runTaskLater(() -> logger.info("Terminating in §8[§c2§8]"), TimeUnit.SECONDS, 1);
-            ITask.runTaskLater(() -> logger.info("Terminating in §8[§c1§8]"), TimeUnit.SECONDS, 2);
+            IPromise.runTaskLater(() -> logger.info("Terminating in §8[§c2§8]"), TimeUnit.SECONDS, 1);
+            IPromise.runTaskLater(() -> logger.info("Terminating in §8[§c1§8]"), TimeUnit.SECONDS, 2);
 
             //Shutting down networking and database
-            ITask.multiTasking(this.networkExecutor.shutdown(), this.providerRegistry.getUnchecked(IDatabaseManager.class).shutdown()).registerListener(wrapper -> {
-                ITask.runTaskLater(() -> {
+            IPromise.multiTasking(this.networkExecutor.shutdown(), this.providerRegistry.getUnchecked(IDatabaseManager.class).shutdown()).registerListener(wrapper -> {
+                IPromise.runTaskLater(() -> {
                     FileUtils.delete(NodeDriver.SERVICE_DIR_DYNAMIC.toPath());
                     FileUtils.delete(NodeDriver.STORAGE_TEMP_FOLDER.toPath());
 

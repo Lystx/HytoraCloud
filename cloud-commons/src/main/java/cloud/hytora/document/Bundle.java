@@ -14,10 +14,12 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -335,6 +337,16 @@ public interface Bundle extends JsonEntity, Iterable<IEntry> {
 
 	@Nonnull
 	<T> List<T> toInstances(@Nonnull Class<T> classOfT);
+
+	default <T> List<T> map(@Nonnull Function<IEntry, T> mapper) {
+		List<T> collection = new ArrayList<>();
+
+		for (IEntry entry : this.entries()) {
+			collection.add(mapper.apply(entry));
+		}
+
+		return collection;
+	}
 
 	@Nonnull
 	default List<String> toStrings() {

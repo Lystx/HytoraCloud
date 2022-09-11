@@ -2,7 +2,7 @@ package cloud.hytora.driver.storage;
 
 
 
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.document.Bundle;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.IEntry;
@@ -54,5 +54,5 @@ public interface INetworkDocumentStorage {
 	 */
 	void fetch();
 
-	ITask<Document> fetchAsync();
+	IPromise<Document> fetchAsync();
 }

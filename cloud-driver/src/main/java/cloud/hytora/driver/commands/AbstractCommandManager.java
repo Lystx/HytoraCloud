@@ -14,7 +14,7 @@ import cloud.hytora.driver.commands.events.CommandErrorEvent;
 import cloud.hytora.driver.commands.events.CommandHelpEvent;
 import cloud.hytora.driver.commands.events.CommandRegisterEvent;
 import cloud.hytora.driver.commands.events.TabCompleteEvent;
-import cloud.hytora.driver.commands.help.ArgumentHelper;
+import cloud.hytora.driver.commands.help.CommandHelper;
 import cloud.hytora.driver.commands.parameter.CommandArguments;
 import cloud.hytora.driver.commands.parameter.CommandParameterType;
 import cloud.hytora.driver.commands.parameter.DefaultParameterTypeRegistry;
@@ -26,7 +26,7 @@ import cloud.hytora.driver.common.DriverRegistryPool;
 import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.storage.INetworkDocumentStorage;
 import lombok.Getter;
-import cloud.hytora.driver.commands.help.ArgumentHelp;
+import cloud.hytora.driver.commands.help.CommandHelp;
 import lombok.Setter;
 
 import java.lang.reflect.Method;
@@ -381,7 +381,7 @@ public abstract class AbstractCommandManager extends DriverRegistryPool<String, 
          * @return The result
          */
         public static boolean checkArgumentHelperMethod(Method m) {
-            return ReflectionUtils.checkMethod(m, ArgumentHelp.class, new Class<?>[]{ArgumentHelper.class});
+            return ReflectionUtils.checkMethod(m, CommandHelp.class, new Class<?>[]{CommandHelper.class});
         }
 
     }

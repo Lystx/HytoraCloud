@@ -66,6 +66,14 @@ public final class CollectionUtils {
 		return result;
 	}
 
+	public static <T> Collection<T> clearDuplicates(Collection<T> collection) {
+		Set<T> set = new HashSet<>(collection);
+		collection.clear();
+		collection.addAll(set);
+
+		return collection;
+	}
+
 	public static <T> List<List<T>> splitCollection(List<T> list, int n) {
 		List<List<T>> parts = new ArrayList<>();
 		int size = list.size();

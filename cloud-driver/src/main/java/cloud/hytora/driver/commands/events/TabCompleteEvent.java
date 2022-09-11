@@ -6,7 +6,9 @@ import cloud.hytora.driver.event.CloudEvent;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * This event is fired when the user tries to tab complete inside execution of command
@@ -18,7 +20,7 @@ public class TabCompleteEvent implements CloudEvent, Cancelable {
      * The list of possible auto_completions
      */
     @Setter
-    private List<String> suggestions = new ArrayList<>();
+    private Collection<String> suggestions = new ArrayList<>();
 
     /**
      * The full string (e.g. 'arg0 arg1 arg2')
@@ -61,8 +63,8 @@ public class TabCompleteEvent implements CloudEvent, Cancelable {
 
         // list every argument before current cursor index
         List<String> before = new ArrayList<>();
-        if(argumentsSize != 1) {
-            for(int i = 0; i < argumentsSize - 1; i++) {
+        if (argumentsSize != 1) {
+            for (int i = 0; i < argumentsSize - 1; i++) {
                 before.add(parameter.get(i));
             }
             before.add("");

@@ -3,35 +3,38 @@ package cloud.hytora.driver.commands.tabcomplete;
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.driver.commands.data.DriverCommand;
 import cloud.hytora.driver.commands.events.TabCompleteEvent;
-import cloud.hytora.driver.reaction.Reactable;
+import cloud.hytora.driver.reaction.GenericResult;
 import lombok.Getter;
 import cloud.hytora.driver.commands.parameter.AbstractBundledParameters;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 /**
  * A reactor for the {@link TabCompletion} of a command execution
  */
 @Getter
-public class TabCompleter extends Reactable<List<String>> {
+public class TabCompleter extends GenericResult<Collection<String>, TabCompleter> {
 
     /**
      * The parameter of the command execution
      */
-    private AbstractBundledParameters parameterSet;
+    private final AbstractBundledParameters parameterSet;
 
     /**
      * The command itself
      */
-    private DriverCommand command;
+    private final DriverCommand command;
 
     // sets the element
     {
-        super.element = new ArrayList<>();
+        super.result = new ArrayList<>();
     }
 
     public TabCompleter(DriverCommand command, TabCompleteEvent event) {
+
         this.parameterSet = AbstractBundledParameters.newInstance(event.getParameter().subList(1, event.getParameter().size()));
         this.command = command;
 
@@ -39,50 +42,28 @@ public class TabCompleter extends Reactable<List<String>> {
         this.id = parameterSet.size();
     }
 
-    /**
-     * React with the subcommands of the tabCompletor's command
-     *
-     * @param keys The keys
-     */
-    public void reactWithSubCommands(String... keys) {
-        react(1, StringUtils.getStringList(getCommand().getChildrens(),
-                DriverCommand::getLabel
-        ), keys);
+    @Override
+    public TabCompleter getSelf() {
+        return this;
     }
 
-    /**
-     * React to the before argument (shifted 'index' to the left) if it is a flag
-     *
-     * @param flag      The flag without '-'
-     * @param index     The index to be shifted
-     * @param procedure The procedure
-     * @param keys      The keys
-     */
-    public void react(String flag, int index, Runnable procedure, String... keys) {
-        String argumentToCheck = parameterSet.getBefore(index);
-        if(argumentToCheck == null) return;
-
-        // if the key is correct AND the argument is correct like '-flag'
-        if((keys.length == 0 || checkKey(keys))
-                && argumentToCheck.equalsIgnoreCase("-" + flag)) {
-            procedure.run();
-        }
+    public void reactWithSubCommands(String subCommand) {
+        this.setResult(1,
+                getCommand()
+                        .getChildrens()
+                        .stream()
+                        .map(DriverCommand::getLabel)
+                        .collect(Collectors.toList()),
+                subCommand
+        );
     }
 
-    public void react(String flag, int index, List<String> elements, String... keys) {
-        react(flag, index, () -> setSuggestions(elements), keys);
+    public void react(Collection<String> suggestions) {
+        super.result = suggestions;
     }
 
-    public void react(String flag, Runnable procedure, String... keys) {
-        react(flag, 1, procedure, keys);
-    }
-
-    public void react(String flag, List<String> elements, String... keys) {
-        react(flag, 1, elements, keys);
-    }
-
-    public void setSuggestions(List<String> l) {
-        this.element = l;
+    public void react(String... suggestions) {
+        this.react(Arrays.asList(suggestions));
     }
 
 }

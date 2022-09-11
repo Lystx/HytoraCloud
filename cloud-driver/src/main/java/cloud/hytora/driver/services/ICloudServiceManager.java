@@ -1,7 +1,7 @@
 package cloud.hytora.driver.services;
 
 
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.services.fallback.ICloudFallback;
 import cloud.hytora.driver.services.task.IServiceTask;
@@ -130,14 +130,14 @@ public interface ICloudServiceManager {
     }
 
     /**
-     * Returns an {@link ITask} that asynchronously returns the
+     * Returns an {@link IPromise} that asynchronously returns the
      * {@link ICloudServer} that matches the provided name
      *
      * @param name the name of the server
      * @return task instance
      */
     @NotNull
-    ITask<ICloudServer> getServiceAsync(@NotNull String name);
+    IPromise<ICloudServer> getServiceAsync(@NotNull String name);
 
     /**
      * Tries to return the {@link ICloudServer} that matches
@@ -151,15 +151,15 @@ public interface ICloudServiceManager {
     ICloudServer getService(@NotNull String name);
 
     @Nonnull
-    ITask<ICloudServer> startService(@NotNull ICloudServer service);
+    IPromise<ICloudServer> startService(@NotNull ICloudServer service);
 
     /**
-     * Returns an {@link ITask} that might contain the current {@link ICloudServer}
+     * Returns an {@link IPromise} that might contain the current {@link ICloudServer}
      *
      * @see #thisServiceOrNull()
      */
     @Nonnull
-    ITask<ICloudServer> thisService();
+    IPromise<ICloudServer> thisService();
 
     /**
      * Returns the {@link ICloudServer} that belongs to this Driver-Instance.
@@ -171,14 +171,14 @@ public interface ICloudServiceManager {
     ICloudServer thisServiceOrNull();
 
     /**
-     * Returns an {@link ITask} that might contain the current
+     * Returns an {@link IPromise} that might contain the current
      * {@link ICloudFallback} using {@link #getFallbackAsEntry()}
      * and finding the perfect {@link ICloudServer} for it
      *
      * @return task instance
      */
     @Nonnull
-    ITask<ICloudServer> getFallbackAsService();
+    IPromise<ICloudServer> getFallbackAsService();
 
     /**
      * Returns the value from {@link #getFallbackAsService()}
@@ -191,13 +191,13 @@ public interface ICloudServiceManager {
     }
 
     /**
-     * Retrieves an {@link ITask} containing the
+     * Retrieves an {@link IPromise} containing the
      * default {@link ICloudFallback} that you can work with
      *
      * @see #getFallbackAsEntryOrNull()
      */
     @Nonnull
-    ITask<ICloudFallback> getFallbackAsEntry();
+    IPromise<ICloudFallback> getFallbackAsEntry();
 
     /**
      * Retrieves the default {@link ICloudFallback} that is available

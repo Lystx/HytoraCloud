@@ -3,12 +3,12 @@ package cloud.hytora.driver;
 import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.scheduler.def.DefaultScheduler;
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.driver.common.IClusterObject;
 import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.DefaultEventManager;
-import cloud.hytora.driver.http.api.HttpRequest;
-import cloud.hytora.driver.http.api.HttpServer;
+import cloud.hytora.http.api.HttpRequest;
+import cloud.hytora.http.api.HttpServer;
 import cloud.hytora.driver.networking.IHandlerNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
@@ -32,7 +32,6 @@ import cloud.hytora.driver.tps.def.DefaultTickWorker;
 import io.netty.util.ResourceLeakDetector;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.JdkLoggerFactory;
-import javafx.concurrent.Task;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
@@ -257,5 +256,5 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
      * @see ISyncedNetworkPromise
      */
     @NotNull
-    public abstract <E extends IBufferObject> ITask<ISyncedNetworkPromise<E>> getSyncedNetworkObjectAsync(SyncedObjectType<E> type, String queryParameters);
+    public abstract <E extends IBufferObject> IPromise<ISyncedNetworkPromise<E>> getSyncedNetworkObjectAsync(SyncedObjectType<E> type, String queryParameters);
 }

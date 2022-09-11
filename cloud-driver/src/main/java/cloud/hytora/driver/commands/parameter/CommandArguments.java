@@ -53,10 +53,8 @@ public class CommandArguments extends AbstractBundledParameters {
             if(param.startsWith(CommandFlag.SPECIFIER) && hasFlag) {
                 if(lastIndex == -1) lastIndex = i;
 
-                flag = driverCommand.getFlagBase(param.substring(1, param.length()));
-                if(flag != null) {
-                    flags.put(flag.getLabel(), flag);
-                }
+                flag = new CommandFlag(param.substring(1, param.length()));
+                flags.put(flag.getLabel(), flag);
             }
         }
 

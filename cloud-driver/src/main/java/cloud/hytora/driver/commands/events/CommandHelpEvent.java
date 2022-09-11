@@ -16,9 +16,11 @@ public class CommandHelpEvent<T extends CommandSender> implements CloudEvent, Ca
 
     private CommandContext<T> context;
     private boolean cancelled = false;
+    private boolean onlyDescription;
 
-    public CommandHelpEvent(CommandContext<T> context) {
+    public CommandHelpEvent(CommandContext<T> context, boolean onlyDescription) {
         this.context = context;
+        this.onlyDescription = onlyDescription;
     }
 
     @Override

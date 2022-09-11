@@ -35,7 +35,7 @@ public class ConsoleCommandEventAdapter extends CommandEventAdapter {
 
         TabCompleter completor = new TabCompleter(instance, event);
         instance.executeTabCompletion(completor);
-        event.setSuggestions(completor.getElement());
+        event.setSuggestions(completor.getResult());
     }
 
     @Override
@@ -68,15 +68,23 @@ public class ConsoleCommandEventAdapter extends CommandEventAdapter {
         CommandContext context = event.getContext();
         DriverCommand instance = context.getCommand();
 
-        context.sendMessage("Commandhelp for '" + instance.getLabel() + "':");
-        context.sendMessage("- Syntax: " + instance.getLabel() + " " + instance.getUsage().getBase());
-        context.sendMessage("- Aliases: " + instance.getAliases());
-        context.sendMessage("- Description: " + instance.getDescription());
-        if (instance.getMethod() == null) {
-            context.sendMessage("- Source: Parent-With-SubCommands");
-        } else {
-            context.sendMessage("- Source: " + instance.getMethod().getDeclaringClass().getSimpleName() + "#" + instance.getMethod().getName() + "()");
+
+        context.sendMessage("§8");
+        context.sendMessage("§6=> CommandHelp for '{}'§8:", instance.getLabel());
+        context.sendMessage("§8");
+        if (!event.isOnlyDescription()) {
+            context.sendMessage("  §8» §7Syntax§8: §b{} {}", instance.getLabel(), instance.getUsage().getBase());
+            context.sendMessage("  §8» §7Aliases§8: §b{}", instance.getAliases());
+            context.sendMessage("  §8» §7Scope§8: §b{}", instance.getCommandScope());
+            context.sendMessage("  §8» §7Flags§8: §b{}", instance.getFlags());
+            if (instance.getMethod() == null) {
+                context.sendMessage("  §8» §7Source§8: §bParent-With-SubCommands");
+            } else {
+                context.sendMessage("  §8» §7Source§8: §b{}",instance.getMethod().getDeclaringClass().getSimpleName() + "#" + instance.getMethod().getName() + "()");
+            }
         }
+        context.sendMessage("  §8» §7Description§8: §b{}", instance.getDescription());
+        context.sendMessage("§8");
         event.setCancelled(true);
     }
 }

@@ -5,24 +5,21 @@ import cloud.hytora.driver.commands.context.CommandContext;
 import cloud.hytora.driver.commands.data.Command;
 import cloud.hytora.driver.commands.data.DriverCommand;
 import cloud.hytora.driver.commands.data.enums.CommandScope;
-import cloud.hytora.driver.commands.help.ArgumentHelp;
-import cloud.hytora.driver.commands.help.ArgumentHelper;
+import cloud.hytora.driver.commands.help.CommandHelp;
+import cloud.hytora.driver.commands.help.CommandHelper;
 import cloud.hytora.driver.commands.parameter.AbstractBundledParameters;
 import cloud.hytora.driver.commands.parameter.CommandArguments;
-import cloud.hytora.driver.commands.sender.CommandSender;
 import cloud.hytora.driver.commands.tabcomplete.TabCompleter;
 import cloud.hytora.driver.commands.tabcomplete.TabCompletion;
 import cloud.hytora.driver.permission.Permission;
 import cloud.hytora.driver.permission.PermissionGroup;
 import cloud.hytora.driver.permission.PermissionManager;
 import cloud.hytora.driver.permission.PermissionPlayer;
-import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.modules.perms.cloud.setup.GroupSetup;
 import cloud.hytora.modules.perms.global.impl.DefaultPermissionPlayer;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -37,8 +34,8 @@ import java.util.stream.Collectors;
 )
 public class PermsCommand {
 
-    @ArgumentHelp
-    public void onArgumentHelp(ArgumentHelper<?> helper) {
+    @CommandHelp
+    public void onArgumentHelp(CommandHelper<?> helper) {
         helper.performTemplateHelp();
     }
 
@@ -46,14 +43,14 @@ public class PermsCommand {
     public void onTabComplete(TabCompleter completer) {
         AbstractBundledParameters args = completer.getParameterSet();
         if (args.isEmpty()) {
-            completer.react(1, Arrays.asList("user", "group"));
+            completer.setResult(1, Arrays.asList("user", "group"));
             return;
         }
         String type = args.get(0);
         if (type != null && (type.equalsIgnoreCase("user") || type.equalsIgnoreCase("group"))) {
             if (type.equalsIgnoreCase("group")) {
 
-                completer.react(1, completer
+                completer.setResult(1, completer
                         .getCommand()
                         .getChildrens()
                         .stream()
@@ -63,7 +60,7 @@ public class PermsCommand {
                 );
             } else {
 
-                completer.react(1, completer
+                completer.setResult(1, completer
                         .getCommand()
                         .getChildrens()
                         .stream()

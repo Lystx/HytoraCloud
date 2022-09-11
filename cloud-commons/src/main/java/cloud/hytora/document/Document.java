@@ -629,6 +629,13 @@ public interface Document extends JsonEntity {
 	@Nonnull
 	Document remove(@Nonnull String path);
 
+	default IEntry removeAndGet(@Nonnull String path) {
+		IEntry iEntry = get(path);
+		remove(path);
+
+		return iEntry;
+	}
+
 	/**
 	 * Clears all entries of this document
 	 *

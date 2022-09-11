@@ -1,7 +1,7 @@
 
 package cloud.hytora.driver.provider.defaults;
 
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.provider.*;
 
@@ -23,7 +23,7 @@ public class DefaultProviderRegistry implements ProviderRegistry {
     }
 
     @Override
-    public <T> ITask<T> setProvider(Class<T> service, T provider, boolean immutable, boolean needsReplacement) throws ProviderImmutableException {
+    public <T> IPromise<T> setProvider(Class<T> service, T provider, boolean immutable, boolean needsReplacement) throws ProviderImmutableException {
         ProviderEntry<?> current = this.entries.get(service);
         if (current != null && current.isImmutable()) {
             throw new ProviderImmutableException(service);
@@ -33,15 +33,15 @@ public class DefaultProviderRegistry implements ProviderRegistry {
             eventManager.registerListener(provider);
         }
         this.entries.put(service, new DefaultProviderEntry<>(service, provider, immutable, needsReplacement));
-        return ITask.newInstance(provider);
+        return IPromise.newInstance(provider);
     }
 
     
     @Override
     @SuppressWarnings("unchecked")
-    public <T> ITask<T> get(Class<T> service) {
+    public <T> IPromise<T> get(Class<T> service) {
         ProviderEntry<T> entry = (ProviderEntry<T>) this.entries.get(service);
-        return entry == null ? ITask.empty() : ITask.newInstance(entry.getProvider());
+        return entry == null ? IPromise.empty() : IPromise.newInstance(entry.getProvider());
     }
 
     @Override
@@ -57,14 +57,14 @@ public class DefaultProviderRegistry implements ProviderRegistry {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> ITask<ProviderEntry<T>> getEntry(Class<T> service) {
+    public <T> IPromise<ProviderEntry<T>> getEntry(Class<T> service) {
         ProviderEntry<T> entry = (ProviderEntry<T>) this.entries.get(service);
-        return ITask.newInstance(entry);
+        return IPromise.newInstance(entry);
     }
 
     @Override
     public <T> ProviderEntry<T> getEntryUnchecked(Class<T> service) throws ProviderNotRegisteredException {
-        ITask<ProviderEntry<T>> registeredEntry = this.getEntry(service);
+        IPromise<ProviderEntry<T>> registeredEntry = this.getEntry(service);
         if (!registeredEntry.isPresent()) {
             throw new ProviderNotRegisteredException(service);
         }

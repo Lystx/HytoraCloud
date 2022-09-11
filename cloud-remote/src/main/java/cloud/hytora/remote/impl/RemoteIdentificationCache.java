@@ -1,7 +1,7 @@
 package cloud.hytora.remote.impl;
 
 import cloud.hytora.common.function.ExceptionallyFunction;
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferedResponse;
@@ -48,8 +48,8 @@ public class RemoteIdentificationCache implements IdentificationCache {
     }
 
     @Override
-    public ITask<Collection<UUID>> loadAsync() {
-        if (!isEnabled()) ITask.newInstance(new LinkedList<>());
+    public IPromise<Collection<UUID>> loadAsync() {
+        if (!isEnabled()) IPromise.newInstance(new LinkedList<>());
         IPacket packet = new CachedUUIDPacket(CachedUUIDPacket.PayLoad.LOAD_CACHE, buffer -> {});
 
         return packet

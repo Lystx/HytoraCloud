@@ -1,6 +1,6 @@
 package cloud.hytora.driver.storage;
 
-import cloud.hytora.common.task.ITask;
+import cloud.hytora.common.task.IPromise;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.cluster.client.ClusterParticipant;
@@ -54,8 +54,8 @@ public class RemoteNetworkDocumentStorage implements INetworkDocumentStorage {
     }
 
     @Override
-    public ITask<Document> fetchAsync() {
-        ITask<Document> task = ITask.empty();
+    public IPromise<Document> fetchAsync() {
+        IPromise<Document> task = IPromise.empty();
 
         client.getPacketChannel().prepareSingleQuery().execute(new StorageUpdatePacket(StorageUpdatePacket.StoragePayLoad.FETCH, rawData)).onTaskSucess(bufferedResponse -> {
             task.setResult(bufferedResponse.data());

@@ -5,14 +5,13 @@ import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.commands.context.CommandContext;
-import cloud.hytora.driver.commands.data.enums.AllowedCommandSender;
 import cloud.hytora.driver.commands.data.enums.CommandScope;
 import cloud.hytora.driver.commands.data.enums.CommandType;
 import cloud.hytora.driver.commands.events.CommandErrorEvent;
 import cloud.hytora.driver.commands.events.CommandHelpEvent;
 import cloud.hytora.driver.commands.events.PreCommandEvent;
-import cloud.hytora.driver.commands.help.ArgumentHelp;
-import cloud.hytora.driver.commands.help.ArgumentHelper;
+import cloud.hytora.driver.commands.help.CommandHelp;
+import cloud.hytora.driver.commands.help.CommandHelper;
 import cloud.hytora.driver.commands.parameter.CommandArguments;
 import cloud.hytora.driver.commands.sender.CommandSender;
 import cloud.hytora.driver.commands.tabcomplete.TabCompletion;
@@ -36,22 +35,19 @@ public class DriverCommand {
      * The help flag
      */
     public static final String HELP_FLAG = "?";
+
     /**
-     * The choice flag
+     * The help flag
      */
-    public static final String CHOICE_FLAG = "!";
-    /**
-     * Skips the choice flag (y = yes or yeah)
-     */
-    public static final String CHOICE_SKIP_FLAG = "y";
+    public static final String DESC_FLAG = "desc";
 
     /**
      * All predefined flags
      */
-    public static final String[] PREDEFINED_FLAGS = {HELP_FLAG, CHOICE_FLAG, CHOICE_SKIP_FLAG};
+    public static final String[] PREDEFINED_FLAGS = {HELP_FLAG, DESC_FLAG};
 
     /**
-     * The path indicator/seperator
+     * The path indicator/separator
      */
     public static final String PATH = ".";
 
@@ -116,7 +112,7 @@ public class DriverCommand {
     /**
      * Argument helper methods. These methods can be executed to send information about one argument and its usage
      *
-     * @see ArgumentHelp
+     * @see CommandHelp
      */
     private Map<Method, Object> argumentHelperMap = new HashMap<>();
 
@@ -187,7 +183,7 @@ public class DriverCommand {
      *
      * @param helper The argument helper
      */
-    public void executeArgumentHelper(ArgumentHelper helper) {
+    public void executeArgumentHelper(CommandHelper helper) {
         DriverCommand root = getRoot();
         Map<Method, Object> map = root == null ? argumentHelperMap : root.getArgumentHelperMap();
 
@@ -232,26 +228,6 @@ public class DriverCommand {
     public List<String> getBeforePath() {
         List<String> whole = getWholePath();
         return whole.size() == 1 ? new ArrayList<>() : whole.subList(0, whole.size() - 1);
-    }
-
-    /**
-     * Gets the flag base of given label flag
-     *
-     * @param label The label of the flag
-     * @return The flag base
-     */
-    public CommandFlag getFlagBase(String label) {
-        if(label.equals(HELP_FLAG)) return new CommandFlag(label);
-        for(String s : flags) {
-            if(s.startsWith(label)) {
-                String[] split = s.split("\\[", 2);
-
-                String desc = split.length > 1 ? split[1].replace("]", "") : "";
-                label = split[0];
-                return new CommandFlag(label);
-            }
-        }
-        return null;
     }
 
     /**
@@ -357,10 +333,24 @@ public class DriverCommand {
         if(args.hasFlag(HELP_FLAG)) {
             if(!getFlags().contains(HELP_FLAG)) {
                 // the user wants to auto handle the help flag
-                CommandHelpEvent helpEvent = new CommandHelpEvent(context);
+                CommandHelpEvent helpEvent = new CommandHelpEvent(context, false);
                 CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventOnlyLocally(helpEvent);
 
                 if(helpEvent.isCancelled()) {
+                    return true;
+                }
+            }
+            // the user wants to custom handle the help flag
+        }
+
+        // check for command help
+        if(args.hasFlag(DESC_FLAG)) {
+            if(!getFlags().contains(DESC_FLAG)) {
+                // the user wants to auto handle the desc flag
+                CommandHelpEvent helpEvent = new CommandHelpEvent(context, true);
+                CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventOnlyLocally(helpEvent);
+
+                if (helpEvent.isCancelled()) {
                     return true;
                 }
             }

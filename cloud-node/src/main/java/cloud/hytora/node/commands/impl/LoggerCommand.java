@@ -5,8 +5,8 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.commands.data.Command;
 import cloud.hytora.driver.commands.context.CommandContext;
 import cloud.hytora.driver.commands.data.enums.CommandScope;
-import cloud.hytora.driver.commands.help.ArgumentHelp;
-import cloud.hytora.driver.commands.help.ArgumentHelper;
+import cloud.hytora.driver.commands.help.CommandHelp;
+import cloud.hytora.driver.commands.help.CommandHelper;
 import cloud.hytora.driver.commands.parameter.CommandArguments;
 import cloud.hytora.driver.commands.tabcomplete.TabCompletion;
 import cloud.hytora.driver.commands.tabcomplete.TabCompleter;
@@ -19,31 +19,28 @@ import java.util.stream.Collectors;
 
 public class LoggerCommand {
 
-    @ArgumentHelp
-    public void argumentHelp(ArgumentHelper helper) {
-        helper.react(0, () -> {
-            helper.setHelpMessages(
-                    "§cUse §elogger <LogLevel>!",
-                    "§cAvailable types: " + Arrays.stream(LogLevel.values()).map(LogLevel::name).collect(Collectors.toList()).toString().replace("[", "").replace("]", "")
-            );
-        });
+    @CommandHelp
+    public void help(CommandHelper<?> helper) {
+        helper.setResult(
+                "§cUse §elogger <LogLevel>!",
+                "§cAvailable types: " + Arrays.stream(LogLevel.values()).map(LogLevel::name).collect(Collectors.toList()).toString().replace("[", "").replace("]", "")
+        );
     }
 
     @TabCompletion
     public void tabComplete(TabCompleter completer) {
-        completer.react(1, Arrays.stream(LogLevel.values()).map(LogLevel::name).collect(Collectors.toList()));
+        completer.setResult(1, Arrays.stream(LogLevel.values()).map(LogLevel::name).collect(Collectors.toList()));
     }
-
 
     @Command(
             label = "logger",
             usage = "[level]",
             flags = "?[]",
             permission = "cloud.command.logger",
-            scope = CommandScope.CONSOLE
+            scope = CommandScope.CONSOLE,
+            desc = "Changes the LogLevel at Runtime!"
     )
     public void execute(CommandContext<?> context, CommandArguments args) {
-
 
         if (args.size() != 1) {
             context.sendHelp();
