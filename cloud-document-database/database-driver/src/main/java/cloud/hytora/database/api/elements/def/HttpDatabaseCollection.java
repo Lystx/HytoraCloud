@@ -2,7 +2,7 @@ package cloud.hytora.database.api.elements.def;
 
 import cloud.hytora.common.misc.CollectionUtils;
 import cloud.hytora.common.misc.RandomString;
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.database.api.IPayLoad;
 import cloud.hytora.database.api.elements.DatabaseCollection;
 import cloud.hytora.database.api.elements.DatabaseEntry;
@@ -40,7 +40,7 @@ public class HttpDatabaseCollection implements DatabaseCollection {
     }
 
     @Override
-    public IPromise<Collection<String>> getIdentifiersAsync() {
+    public Task<Collection<String>> getIdentifiersAsync() {
         return HttpDriver.getInstance()
                 .sendRequestAsync("query/get", HttpMethod.GET, param -> {
                     param.put("operation", "identifiers");
@@ -55,8 +55,8 @@ public class HttpDatabaseCollection implements DatabaseCollection {
     }
 
     @Override
-    public IPromise<Collection<DatabaseEntry>> findEntriesAsync() {
-        IPromise<Collection<DatabaseEntry>> promise = IPromise.empty();
+    public Task<Collection<DatabaseEntry>> findEntriesAsync() {
+        Task<Collection<DatabaseEntry>> promise = Task.empty();
         promise.setAcceptSingleValue();
         AtomicBoolean set = new AtomicBoolean(false);
         getIdentifiersAsync()
@@ -79,7 +79,7 @@ public class HttpDatabaseCollection implements DatabaseCollection {
     }
 
     @Override
-    public IPromise<Boolean> hasEntryAsync(String identifier) {
+    public Task<Boolean> hasEntryAsync(String identifier) {
         return HttpDriver.getInstance()
                 .sendRequestAsync("query/get", HttpMethod.GET, param -> {
                     param.put("operation", "has");
@@ -103,7 +103,7 @@ public class HttpDatabaseCollection implements DatabaseCollection {
     }
 
     @Override
-    public IPromise<DatabaseEntry> findEntryAsync(String identification) {
+    public Task<DatabaseEntry> findEntryAsync(String identification) {
         return HttpDriver.getInstance()
                 .sendRequestAsync("query/get", HttpMethod.GET, param -> {
                     param.put("operation", "findSimple");
@@ -135,8 +135,8 @@ public class HttpDatabaseCollection implements DatabaseCollection {
     }
 
     @Override
-    public IPromise<Collection<DatabaseEntry>> filterEntriesAsync(DatabaseFilter filter, Object... input) {
-        IPromise<Collection<DatabaseEntry>> promise = IPromise.empty();
+    public Task<Collection<DatabaseEntry>> filterEntriesAsync(DatabaseFilter filter, Object... input) {
+        Task<Collection<DatabaseEntry>> promise = Task.empty();
         promise.setAcceptSingleValue();
 
         findEntriesAsync().onTaskSucess(databaseEntries -> {
@@ -161,7 +161,7 @@ public class HttpDatabaseCollection implements DatabaseCollection {
     }
 
     @Override
-    public IPromise<IPayLoad> deleteEntryAsync(String identifier) {
+    public Task<IPayLoad> deleteEntryAsync(String identifier) {
         return HttpDriver.getInstance()
                 .sendRequestAsync("query/post", HttpMethod.POST, param -> {
                     param.put("operation", "delete");
@@ -183,8 +183,8 @@ public class HttpDatabaseCollection implements DatabaseCollection {
     }
 
     @Override
-    public IPromise<IPayLoad> insertEntryAsync(DatabaseEntry entry) {
-        IPromise<IPayLoad> promise = IPromise.empty();
+    public Task<IPayLoad> insertEntryAsync(DatabaseEntry entry) {
+        Task<IPayLoad> promise = Task.empty();
         promise.setAcceptSingleValue();
         HttpDriver.getInstance()
                 .sendRequestAsync("query/post", HttpMethod.POST, param -> {
@@ -207,7 +207,7 @@ public class HttpDatabaseCollection implements DatabaseCollection {
     }
 
     @Override
-    public IPromise<IPayLoad> insertEntryAsync(Consumer<DatabaseEntry> entry) {
+    public Task<IPayLoad> insertEntryAsync(Consumer<DatabaseEntry> entry) {
         DatabaseEntry dbEntry = new DefaultDatabaseEntry(new RandomString(10).nextString());
         entry.accept(dbEntry);
 
@@ -235,8 +235,8 @@ public class HttpDatabaseCollection implements DatabaseCollection {
     }
 
     @Override
-    public IPromise<IPayLoad> updateEntryAsync(String identification, DatabaseEntry entry) {
-        IPromise<IPayLoad> promise = IPromise.empty();
+    public Task<IPayLoad> updateEntryAsync(String identification, DatabaseEntry entry) {
+        Task<IPayLoad> promise = Task.empty();
         promise.setAcceptSingleValue();
         HttpDriver.getInstance()
                 .sendRequestAsync("query/post", HttpMethod.POST, param -> {
@@ -251,7 +251,7 @@ public class HttpDatabaseCollection implements DatabaseCollection {
     }
 
     @Override
-    public IPromise<IPayLoad> updateEntryAsync(String identification, Consumer<DatabaseEntry> entry) {
+    public Task<IPayLoad> updateEntryAsync(String identification, Consumer<DatabaseEntry> entry) {
         DatabaseEntry dbEntry = new DefaultDatabaseEntry(new RandomString(10).nextString());
         entry.accept(dbEntry);
         return this.updateEntryAsync(identification, dbEntry);
@@ -276,8 +276,8 @@ public class HttpDatabaseCollection implements DatabaseCollection {
     }
 
     @Override
-    public IPromise<IPayLoad> upsertEntryAsync(DatabaseEntry entry) {
-        IPromise<IPayLoad> promise = IPromise.empty();
+    public Task<IPayLoad> upsertEntryAsync(DatabaseEntry entry) {
+        Task<IPayLoad> promise = Task.empty();
         promise.setAcceptSingleValue();
         hasEntryAsync(entry.getId()).onTaskSucess(b -> {
             if (b) {
@@ -295,7 +295,7 @@ public class HttpDatabaseCollection implements DatabaseCollection {
     }
 
     @Override
-    public IPromise<IPayLoad> upsertEntryAsync(Consumer<DatabaseEntry> entry) {
+    public Task<IPayLoad> upsertEntryAsync(Consumer<DatabaseEntry> entry) {
 
         DatabaseEntry dbEntry = new DefaultDatabaseEntry(new RandomString(10).nextString());
         entry.accept(dbEntry);

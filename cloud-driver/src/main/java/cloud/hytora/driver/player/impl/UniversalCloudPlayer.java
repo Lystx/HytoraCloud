@@ -1,6 +1,6 @@
 package cloud.hytora.driver.player.impl;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.gson.adapter.ExcludeJsonField;
@@ -80,12 +80,12 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
     }
 
     @Override
-    public IPromise<ICloudServer> getServerAsync() {
+    public Task<ICloudServer> getServerAsync() {
         return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceAsync(this.serverName);
     }
 
     @Override
-    public IPromise<ICloudServer> getProxyServerAsync() {
+    public Task<ICloudServer> getProxyServerAsync() {
         return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getServiceAsync(this.proxyName);
     }
 
@@ -101,7 +101,7 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
 
     @Override
     public @NotNull PermissionPlayer asPermissionPlayer() throws ModuleNeededException {
-        IPromise<PermissionManager> task = CloudDriver.getInstance().getProviderRegistry().get(PermissionManager.class);
+        Task<PermissionManager> task = CloudDriver.getInstance().getProviderRegistry().get(PermissionManager.class);
         if (task.isNull()) {
             throw new ModuleNeededException("Permission Module");
         }

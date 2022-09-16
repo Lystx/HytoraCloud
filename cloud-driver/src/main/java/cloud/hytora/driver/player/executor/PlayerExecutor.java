@@ -1,6 +1,6 @@
 package cloud.hytora.driver.player.executor;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.component.Component;
 import cloud.hytora.driver.player.ICloudPlayer;
@@ -36,7 +36,7 @@ public interface PlayerExecutor {
 
     default void sendToFallback() {
 
-        IPromise<ICloudServer> fallback = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getFallbackAsService();
+        Task<ICloudServer> fallback = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getFallbackAsService();
         fallback.ifPresent(this::connect);
         fallback.ifEmpty(task -> sendMessage("§cCould not find any available fallback..."));
     }

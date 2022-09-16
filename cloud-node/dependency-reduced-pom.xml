@@ -7,9 +7,9 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>cloud-node</artifactId>
-  <version>SNAPHSOT-1.0</version>
+  <version>SNAPSHOT-1.5</version>
   <build>
-    <finalName>cloud</finalName>
+    <finalName>HytoraCloud-${pom.version}</finalName>
     <pluginManagement>
       <plugins>
         <plugin>

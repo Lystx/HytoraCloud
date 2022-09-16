@@ -1,7 +1,7 @@
 
 package cloud.hytora.driver.provider;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 
 import java.util.Collection;
 
@@ -19,7 +19,7 @@ public interface ProviderRegistry {
      * @param <T> the generic of the provider (of any type)
      * @throws ProviderImmutableException if a provider already exists and is immutable (not modifiable)
      */
-    <T> IPromise<T> setProvider(Class<T> service, T provider, boolean immutable, boolean needsReplacement) throws ProviderImmutableException;
+    <T> Task<T> setProvider(Class<T> service, T provider, boolean immutable, boolean needsReplacement) throws ProviderImmutableException;
 
     /**
      * Helper-Method for {@link ProviderRegistry#setProvider(Class, Object, boolean, boolean)} but it sets immutable to false
@@ -29,7 +29,7 @@ public interface ProviderRegistry {
      * @param <T> the generic of the provider (of any type)
      * @throws ProviderImmutableException if a provider already exists and is immutable (not modifiable)
      */
-    default <T> IPromise<T> setProvider(Class<T> service, T provider) throws ProviderImmutableException {
+    default <T> Task<T> setProvider(Class<T> service, T provider) throws ProviderImmutableException {
         return this.setProvider(service, provider, false);
     }
 
@@ -42,12 +42,12 @@ public interface ProviderRegistry {
      * @param <T> the generic of the provider (of any type)
      * @throws ProviderImmutableException if a provider already exists and is immutable (not modifiable)
      */
-    default <T> IPromise<T> setProvider(Class<T> service, T provider, boolean immutable) throws ProviderImmutableException {
+    default <T> Task<T> setProvider(Class<T> service, T provider, boolean immutable) throws ProviderImmutableException {
         return this.setProvider(service, provider, immutable, false);
     }
 
     /**
-     * Gets an {@link IPromise} instance of a provider
+     * Gets an {@link Task} instance of a provider
      * This might contain nothing but at least it does not throw exceptions
      * if there is no specified provider for the provided class
      *
@@ -55,7 +55,7 @@ public interface ProviderRegistry {
      * @param <T> the generic of the provider (of any type)
      * @return optional instance containing provider or not
      */
-    <T> IPromise<T> get(Class<T> service);
+    <T> Task<T> get(Class<T> service);
 
     /**
      * Gets a provider instance without any checks
@@ -77,7 +77,7 @@ public interface ProviderRegistry {
     Collection<ProviderEntry<?>> getEntries();
 
     /**
-     * Gets an {@link IPromise} instance of an entry
+     * Gets an {@link Task} instance of an entry
      * This might contain nothing but at least it does not throw exceptions
      * if there is no specified provider for the provided class
      *
@@ -87,7 +87,7 @@ public interface ProviderRegistry {
      *
      * @see ProviderEntry
      */
-    <T> IPromise<ProviderEntry<T>> getEntry(Class<T> service);
+    <T> Task<ProviderEntry<T>> getEntry(Class<T> service);
 
     /**
      * Gets an entry instance without any checks

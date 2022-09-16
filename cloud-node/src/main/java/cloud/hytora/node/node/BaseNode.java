@@ -1,6 +1,6 @@
 package cloud.hytora.node.node;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.ICloudServiceManager;
 import cloud.hytora.driver.services.IProcessCloudServer;
@@ -33,8 +33,8 @@ public class BaseNode extends AbstractNode {
 
 
     @Override
-    public IPromise<Void> sendPacketAsync(IPacket packet) {
-        return IPromise.callAsync(() -> {
+    public Task<Void> sendPacketAsync(IPacket packet) {
+        return Task.callAsync(() -> {
             sendPacket(packet);
             return null;
         });
@@ -60,8 +60,8 @@ public class BaseNode extends AbstractNode {
     }
 
     @Override
-    public IPromise<Collection<ICloudServer>> getRunningServersAsync() {
-        return IPromise.callAsync(() -> CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllCachedServices().stream().filter(s -> {
+    public @NotNull Task<Collection<ICloudServer>> getRunningServersAsync() {
+        return Task.callAsync(() -> CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getAllCachedServices().stream().filter(s -> {
             s.getTask();
             return s.getRunningNodeName().equalsIgnoreCase(this.config.getNodeName());
         }).collect(Collectors.toList()));
@@ -79,7 +79,7 @@ public class BaseNode extends AbstractNode {
     @Override
     public void stopServer(ICloudServer server) {
         server.sendPacket(new ServiceForceShutdownPacket(server.getName()));
-        IPromise.runTaskLater(() -> {
+        Task.runTaskLater(() -> {
             Process process = ((IProcessCloudServer)server).getProcess();
             if (process == null) {
                 return;
@@ -89,8 +89,8 @@ public class BaseNode extends AbstractNode {
     }
 
     @Override
-    public @NotNull IPromise<NetworkResponseState> stopServerAsync(@NotNull ICloudServer server) {
-        return IPromise.callAsync(() -> {
+    public @NotNull Task<NetworkResponseState> stopServerAsync(@NotNull ICloudServer server) {
+        return Task.callAsync(() -> {
             stopServer(server);
             return NetworkResponseState.OK;
         });
@@ -103,8 +103,8 @@ public class BaseNode extends AbstractNode {
     }
 
     @Override
-    public @NotNull IPromise<NetworkResponseState> startServerAsync(@NotNull ICloudServer server) {
-        return IPromise.callAsync(() -> {
+    public @NotNull Task<NetworkResponseState> startServerAsync(@NotNull ICloudServer server) {
+        return Task.callAsync(() -> {
             startServer(server);
             return NetworkResponseState.OK;
         });

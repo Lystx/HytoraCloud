@@ -1,6 +1,6 @@
 package cloud.hytora.database;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.database.api.IPayLoad;
 import cloud.hytora.database.api.elements.Database;
 import cloud.hytora.database.api.elements.def.HttpDatabase;
@@ -26,8 +26,8 @@ public class DatabaseDriver {
         this.username = username;
     }
 
-    public IPromise<IPayLoad> connect(HttpAddress address, String token) {
-        IPromise<IPayLoad> promise = IPromise.empty();
+    public Task<IPayLoad> connect(HttpAddress address, String token) {
+        Task<IPayLoad> promise = Task.empty();
         HttpDriver driver = new HttpDriver(token, address);
 
         driver.sendRequestAsync(
@@ -43,8 +43,8 @@ public class DatabaseDriver {
         return promise;
     }
 
-    public IPromise<IPayLoad> close() {
-        IPromise<IPayLoad> promise = IPromise.empty();
+    public Task<IPayLoad> close() {
+        Task<IPayLoad> promise = Task.empty();
 
         HttpDriver.getInstance().sendRequestAsync(
                         "connection/close",

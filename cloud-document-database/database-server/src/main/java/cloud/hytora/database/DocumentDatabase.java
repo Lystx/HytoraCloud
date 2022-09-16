@@ -31,7 +31,7 @@ public class DocumentDatabase {
 
     public static final String EXTENSION = ".json";
 
-    public DocumentDatabase(Logger logger, HttpServer webServer, File directory, boolean standalone) {
+    public DocumentDatabase(Logger logger, HttpServer webServer, File directory, boolean standalone, String... predefinedPassword) {
         instance = this;
 
         if (standalone) {
@@ -56,7 +56,7 @@ public class DocumentDatabase {
         this.directory.mkdirs();
 
         this.webServer = webServer;
-        this.config = loadConfig();
+        this.config = loadConfig(standalone, predefinedPassword.length == 0 ? null : predefinedPassword[0]);
 
         logger.info("Loaded Document-Database-Config!");
         this.webServer.getAuthRegistry().registerAuthMethodHandler(new AuthHandler());
@@ -71,11 +71,14 @@ public class DocumentDatabase {
     }
 
     @Nonnull
-    private DatabaseConfig loadConfig() {
+    private DatabaseConfig loadConfig(boolean standalone, String password) {
+        if (!standalone) {
+            return new DatabaseConfig(password);
+        }
         File configFile = new File("config" + EXTENSION);
         if (!configFile.exists()) {
             try {
-                Document.newJsonDocument(new DatabaseConfig()).saveToFile(configFile);
+                Document.newJsonDocument(new DatabaseConfig(password)).saveToFile(configFile);
             } catch (IOException e) {
                 e.printStackTrace();
             }

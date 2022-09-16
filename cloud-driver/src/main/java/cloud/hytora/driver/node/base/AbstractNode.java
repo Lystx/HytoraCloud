@@ -1,6 +1,6 @@
 package cloud.hytora.driver.node.base;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
@@ -70,8 +70,8 @@ public abstract class AbstractNode implements INode {
     }
 
     @Override
-    public IPromise<Collection<ICloudServer>> getRunningServersAsync() {
-        return IPromise.callAsync(this::getRunningServers);
+    public Task<Collection<ICloudServer>> getRunningServersAsync() {
+        return Task.callAsync(this::getRunningServers);
     }
 
     @Override

@@ -1,13 +1,13 @@
 package cloud.hytora.driver.console.screen;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
 
 public interface ScreenManager {
 
-    IPromise<Screen> getScreenByName(String name);
+    Task<Screen> getScreenByName(String name);
 
     Screen getScreenByNameOrNull(String name);
 

@@ -11,7 +11,7 @@ import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.common.util.Validation;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
@@ -199,10 +199,6 @@ public class NodeDriver extends CloudDriver<INode> {
         this.scheduledExecutor = Executors.newScheduledThreadPool(4, new NamedThreadFactory("Scheduler"));
         this.running = false;
 
-        if (!(Thread.currentThread().getContextClassLoader() instanceof IdentifiableClassLoader)) {
-            Thread.currentThread().setContextClassLoader(new IdentifiableClassLoader(new URL[]{CloudDriver.class.getProtectionDomain().getCodeSource().getLocation().toURI().toURL()}));
-        }
-
         ((HandledAsyncLogger) logger).addHandler(entry -> this.getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(new DriverLogEvent(entry)));
 
         this.console = console;
@@ -222,7 +218,13 @@ public class NodeDriver extends CloudDriver<INode> {
         screen.registerTabCompleter(new NodeCommandCompleter());
         screen.join();
 
-        IPromise.runAsync(() -> {
+        if (!(Thread.currentThread().getContextClassLoader() instanceof IdentifiableClassLoader)) {
+            System.out.println("Changed ClassLoader");
+            Thread.currentThread().setContextClassLoader(new IdentifiableClassLoader(new URL[]{CloudDriver.class.getProtectionDomain().getCodeSource().getLocation().toURI().toURL()}));
+        }
+        System.out.println(Thread.currentThread().getContextClassLoader().getClass());
+
+        Task.runAsync(() -> {
             if (running) {
                 return;
             }
@@ -299,12 +301,15 @@ public class NodeDriver extends CloudDriver<INode> {
                             MainConfiguration.getInstance().getDatabaseConfiguration().getType(),
                             MainConfiguration.getInstance().getDatabaseConfiguration()
                     )
-            ).ifPresent((ExceptionallyConsumer<IDatabaseManager>) databaseManager -> {
+            );
+
+            IDatabaseManager databaseManager = this.providerRegistry.getUnchecked(IDatabaseManager.class);
+
+            {
                 SectionedDatabase db = databaseManager.getDatabase();
                 db.registerSection("players", DefaultCloudOfflinePlayer.class);
                 db.registerSection("tasks", UniversalServiceTask.class);
                 db.registerSection("groups", DefaultTaskGroup.class);
-
 
                 this.providerRegistry.setProvider(ICloudServiceTaskManager.class, new NodeServiceTaskManager());
                 this.providerRegistry.setProvider(ICloudServiceManager.class, new NodeServiceManager());
@@ -365,8 +370,12 @@ public class NodeDriver extends CloudDriver<INode> {
 
                 //copying files
                 this.logger.trace("§7Copying files§8...");
-                FileUtils.copyResource("/impl/plugin.jar", STORAGE_VERSIONS_FOLDER + "/plugin.jar", getClass());
-                FileUtils.copyResource("/impl/remote.jar", STORAGE_VERSIONS_FOLDER + "/remote.jar", getClass());
+                try {
+                    FileUtils.copyResource("/impl/remote.jar", STORAGE_VERSIONS_FOLDER + "/remote.jar", getClass());
+                    FileUtils.copyResource("/impl/plugin.jar", STORAGE_VERSIONS_FOLDER + "/plugin.jar", getClass());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 this.logger.trace("Registering Commands & ArgumentParsers...");
 
@@ -459,7 +468,7 @@ public class NodeDriver extends CloudDriver<INode> {
 
                 // add a shutdown hook for fast closes
                 Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
-            });
+            }
         });
     }
 
@@ -537,10 +546,10 @@ public class NodeDriver extends CloudDriver<INode> {
         config.setNodeConfig(nodeConfig);
 
         DatabaseType databaseType = setup.getDatabaseType();
-        String databaseHost = null;
-        int databasePort = -1;
+        String databaseHost = "127.0.0.1";
+        int databasePort = 3306;
         String databaseUser = null;
-        String databasePassword = null;
+        String databasePassword = "local";
         String databaseName = null;
         String authDatabase = null;
         switch (databaseType) {
@@ -712,8 +721,8 @@ public class NodeDriver extends CloudDriver<INode> {
     }
 
     @Override
-    public @NotNull <E extends IBufferObject> IPromise<ISyncedNetworkPromise<E>> getSyncedNetworkObjectAsync(SyncedObjectType<E> type, String queryParameters) {
-        return IPromise.callAsync(() -> getSyncedNetworkObject(type, queryParameters));
+    public @NotNull <E extends IBufferObject> Task<ISyncedNetworkPromise<E>> getSyncedNetworkObjectAsync(SyncedObjectType<E> type, String queryParameters) {
+        return Task.callAsync(() -> getSyncedNetworkObject(type, queryParameters));
     }
 
     @Override
@@ -738,7 +747,7 @@ public class NodeDriver extends CloudDriver<INode> {
         this.logger.info("§7Trying to terminate the §cCloudsystem§8...");
         PlayerExecutor.forAll().disconnect("§cThe network was shut down!");
 
-        IPromise.runTaskLater(() -> {
+        Task.runTaskLater(() -> {
 
 
             //shutting down servers
@@ -759,12 +768,12 @@ public class NodeDriver extends CloudDriver<INode> {
             this.webServer.shutdown();
 
             logger.info("Terminating in §8[§c3§8]");
-            IPromise.runTaskLater(() -> logger.info("Terminating in §8[§c2§8]"), TimeUnit.SECONDS, 1);
-            IPromise.runTaskLater(() -> logger.info("Terminating in §8[§c1§8]"), TimeUnit.SECONDS, 2);
+            Task.runTaskLater(() -> logger.info("Terminating in §8[§c2§8]"), TimeUnit.SECONDS, 1);
+            Task.runTaskLater(() -> logger.info("Terminating in §8[§c1§8]"), TimeUnit.SECONDS, 2);
 
             //Shutting down networking and database
-            IPromise.multiTasking(this.networkExecutor.shutdown(), this.providerRegistry.getUnchecked(IDatabaseManager.class).shutdown()).registerListener(wrapper -> {
-                IPromise.runTaskLater(() -> {
+            Task.multiTasking(this.networkExecutor.shutdown(), this.providerRegistry.getUnchecked(IDatabaseManager.class).shutdown()).registerListener(wrapper -> {
+                Task.runTaskLater(() -> {
                     FileUtils.delete(NodeDriver.SERVICE_DIR_DYNAMIC.toPath());
                     FileUtils.delete(NodeDriver.STORAGE_TEMP_FOLDER.toPath());
 

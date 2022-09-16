@@ -1,5 +1,6 @@
 package cloud.hytora.node.service;
 
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.database.IDatabaseManager;
 import cloud.hytora.driver.event.EventListener;
@@ -30,10 +31,12 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
     public NodeServiceTaskManager() {
         this.database = NodeDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
 
-        // loading all database groups and configurations
-        this.getAllCachedTaskGroups().addAll(this.database.getSection(ITaskGroup.class).getAll());
-        this.getAllCachedTasks().addAll(this.database.getSection(IServiceTask.class).getAll());
+        Task.runAsync(() -> {
+            // loading all database groups and configurations
+            this.getAllCachedTaskGroups().addAll(this.database.getSection(ITaskGroup.class).getAll());
+            this.getAllCachedTasks().addAll(this.database.getSection(IServiceTask.class).getAll());
 
+        });
         if (CloudDriver.getInstance().getNetworkExecutor() != null) {
 
             //registering packet handler

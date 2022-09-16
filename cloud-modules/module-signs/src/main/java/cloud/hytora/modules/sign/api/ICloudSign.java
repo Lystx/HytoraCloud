@@ -2,7 +2,7 @@ package cloud.hytora.modules.sign.api;
 
 import cloud.hytora.common.identification.ImmutableUUIDHolder;
 import cloud.hytora.common.location.ModifiableLocation;
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.services.task.IServiceTask;
 
@@ -14,7 +14,7 @@ public interface ICloudSign extends ImmutableUUIDHolder, IBufferObject {
 
     String getTaskName();
 
-    IPromise<IServiceTask> findTaskAsync();
+    Task<IServiceTask> findTaskAsync();
 
     IServiceTask findTask();
 

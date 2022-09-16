@@ -1,7 +1,7 @@
 package cloud.hytora.database.http;
 
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.database.api.IPayLoad;
 import cloud.hytora.database.http.impl.HttpPayLoad;
 import cloud.hytora.document.Document;
@@ -81,17 +81,17 @@ public class HttpDriver {
     }
 
 
-    public IPromise<IPayLoad> sendRequestAsync(String suffix, HttpMethod methodType, Document body) {
+    public Task<IPayLoad> sendRequestAsync(String suffix, HttpMethod methodType, Document body) {
         return this.sendRequestAsync(suffix, methodType, p -> {}, body);
     }
 
-    public IPromise<IPayLoad> sendRequestAsync(String suffix, HttpMethod methodType, Consumer<Map<String, String>> queryParameters) {
+    public Task<IPayLoad> sendRequestAsync(String suffix, HttpMethod methodType, Consumer<Map<String, String>> queryParameters) {
         return this.sendRequestAsync(suffix, methodType, queryParameters, Document.emptyDocument());
     }
 
-    public IPromise<IPayLoad> sendRequestAsync(String suffix, HttpMethod methodType, Consumer<Map<String, String>> queryParameters, Document body) {
-        IPromise<IPayLoad> promise = IPromise.empty();
-        IPromise.runAsync(() -> {
+    public Task<IPayLoad> sendRequestAsync(String suffix, HttpMethod methodType, Consumer<Map<String, String>> queryParameters, Document body) {
+        Task<IPayLoad> promise = Task.empty();
+        Task.runAsync(() -> {
 
             String url = buildBaseUrl() + suffix;
 

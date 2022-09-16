@@ -1,6 +1,6 @@
 package cloud.hytora.driver.services.task;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.task.TaskMaintenanceChangeEvent;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
@@ -64,10 +64,10 @@ public class UniversalServiceTask extends ProtocolPropertyObject implements ISer
     }
 
     @Override
-    public @NotNull IPromise<INode> findAnyNodeAsync() {
-        IPromise<INode> task = IPromise.empty();
+    public @NotNull Task<INode> findAnyNodeAsync() {
+        Task<INode> task = Task.empty();
 
-        IPromise.runAsync(() -> {
+        Task.runAsync(() -> {
             INode anyNode = findAnyNode();
             if (anyNode == null) {
                 task.setFailure(new NullPointerException("No connected Node found!"));

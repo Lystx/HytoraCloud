@@ -1,6 +1,6 @@
 package cloud.hytora.database.api.elements;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.database.api.IPayLoad;
 
 import java.util.Collection;
@@ -11,39 +11,39 @@ public interface DatabaseCollection {
     String getName();
 
     Collection<String> getIdentifiers();
-    IPromise<Collection<String>> getIdentifiersAsync();
+    Task<Collection<String>> getIdentifiersAsync();
 
     Collection<DatabaseEntry> findEntries();
 
-    IPromise<Collection<DatabaseEntry>> findEntriesAsync();
+    Task<Collection<DatabaseEntry>> findEntriesAsync();
 
-    IPromise<Boolean> hasEntryAsync(String identifier);
+    Task<Boolean> hasEntryAsync(String identifier);
 
     Boolean hasEntry(String identifier);
 
-    IPromise<DatabaseEntry> findEntryAsync(String identification);
+    Task<DatabaseEntry> findEntryAsync(String identification);
     DatabaseEntry findEntry(String identification);
 
 
-    IPromise<Collection<DatabaseEntry>> filterEntriesAsync(DatabaseFilter filter, Object... input);
+    Task<Collection<DatabaseEntry>> filterEntriesAsync(DatabaseFilter filter, Object... input);
 
     IPayLoad deleteEntry(String identifier);
-    IPromise<IPayLoad> deleteEntryAsync(String identifier);
+    Task<IPayLoad> deleteEntryAsync(String identifier);
 
 
     IPayLoad insertEntry(Consumer<DatabaseEntry> entry);
     IPayLoad insertEntry(DatabaseEntry entry);
-    IPromise<IPayLoad> insertEntryAsync(Consumer<DatabaseEntry> entry);
-    IPromise<IPayLoad> insertEntryAsync(DatabaseEntry entry);
+    Task<IPayLoad> insertEntryAsync(Consumer<DatabaseEntry> entry);
+    Task<IPayLoad> insertEntryAsync(DatabaseEntry entry);
 
     IPayLoad updateEntry(String identification, Consumer<DatabaseEntry> entry);
     IPayLoad updateEntry(String identification, DatabaseEntry entry);
-    IPromise<IPayLoad> updateEntryAsync(String identification, Consumer<DatabaseEntry> entry);
-    IPromise<IPayLoad> updateEntryAsync(String identification, DatabaseEntry entry);
+    Task<IPayLoad> updateEntryAsync(String identification, Consumer<DatabaseEntry> entry);
+    Task<IPayLoad> updateEntryAsync(String identification, DatabaseEntry entry);
 
     IPayLoad upsertEntry(Consumer<DatabaseEntry> entry);
     IPayLoad upsertEntry(DatabaseEntry entry);
-    IPromise<IPayLoad> upsertEntryAsync(Consumer<DatabaseEntry> entry);
-    IPromise<IPayLoad> upsertEntryAsync(DatabaseEntry entry);
+    Task<IPayLoad> upsertEntryAsync(Consumer<DatabaseEntry> entry);
+    Task<IPayLoad> upsertEntryAsync(DatabaseEntry entry);
 
 }

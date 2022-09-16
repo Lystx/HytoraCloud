@@ -1,7 +1,7 @@
 package cloud.hytora.driver.networking.cluster;
 
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.driver.DriverConnectEvent;
@@ -86,8 +86,8 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
         this.packetChannel.setWrapped(null);
     }
 
-    public IPromise<ClusterExecutor> openConnection(String hostname, int port) {
-        IPromise<ClusterExecutor> connectPromise = IPromise.empty();
+    public Task<ClusterExecutor> openConnection(String hostname, int port) {
+        Task<ClusterExecutor> connectPromise = Task.empty();
 
         this.bossGroup = new NioEventLoopGroup();
         this.workerGroup = new NioEventLoopGroup();
@@ -201,13 +201,13 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
         return connectPromise;
     }
 
-    public IPromise<Boolean> shutdown() {
-        IPromise<Boolean> shutdownBossPromise = IPromise.empty();
-        IPromise<Boolean> shutdownWorkerPromise = IPromise.empty();
-        IPromise<Boolean> executePromise = IPromise.empty();
+    public Task<Boolean> shutdown() {
+        Task<Boolean> shutdownBossPromise = Task.empty();
+        Task<Boolean> shutdownWorkerPromise = Task.empty();
+        Task<Boolean> executePromise = Task.empty();
 
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(new DriverDisconnectEvent());
-        IPromise<Boolean> promise = IPromise.multiTasking(shutdownBossPromise, shutdownBossPromise, executePromise);
+        Task<Boolean> promise = Task.multiTasking(shutdownBossPromise, shutdownBossPromise, executePromise);
 
         this.bossGroup.shutdownGracefully(0, 1, TimeUnit.MINUTES).addListener(it -> shutdownBossPromise.setResult(true));
         this.workerGroup.shutdownGracefully(0, 1, TimeUnit.MINUTES).addListener(it -> shutdownWorkerPromise.setResult(true));
@@ -223,8 +223,8 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
     }
 
     @Override
-    public IPromise<Void> sendPacketAsync(IPacket packet) {
-        return IPromise.callAsync(() -> {
+    public Task<Void> sendPacketAsync(IPacket packet) {
+        return Task.callAsync(() -> {
             sendPacket(packet);
             return null;
         });

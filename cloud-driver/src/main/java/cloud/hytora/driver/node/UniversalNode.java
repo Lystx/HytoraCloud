@@ -2,7 +2,7 @@ package cloud.hytora.driver.node;
 
 import cloud.hytora.common.function.ExceptionallyConsumer;
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.networking.protocol.packets.defaults.DriverLoggingPacket;
 import cloud.hytora.driver.node.packet.NodeRequestServerStartPacket;
 import cloud.hytora.driver.node.packet.NodeRequestServerStopPacket;
@@ -32,7 +32,7 @@ public class UniversalNode extends AbstractNode {
     }
 
     @Override
-    public IPromise<Void> sendPacketAsync(IPacket packet) {
+    public Task<Void> sendPacketAsync(IPacket packet) {
         return packet.publishToAsync(this.getName());
     }
 
@@ -52,10 +52,10 @@ public class UniversalNode extends AbstractNode {
     }
 
     @Override
-    public @NotNull IPromise<NetworkResponseState> stopServerAsync(@NotNull ICloudServer server) {
+    public @NotNull Task<NetworkResponseState> stopServerAsync(@NotNull ICloudServer server) {
         return new NodeRequestServerStartPacket(server, true)
                 .awaitResponse(this.getName())
-                .registerListener((ExceptionallyConsumer<IPromise<BufferedResponse>>) task -> {
+                .registerListener((ExceptionallyConsumer<Task<BufferedResponse>>) task -> {
                     if (!task.isPresent()) {
                         task.setFailure(task.error());
                     }
@@ -68,10 +68,10 @@ public class UniversalNode extends AbstractNode {
     }
 
     @Override
-    public @NotNull IPromise<NetworkResponseState> startServerAsync(ICloudServer server) {
+    public @NotNull Task<NetworkResponseState> startServerAsync(ICloudServer server) {
         return new NodeRequestServerStopPacket(server.getName(), true)
                 .awaitResponse(this.getName())
-                .registerListener((ExceptionallyConsumer<IPromise<BufferedResponse>>) task -> {
+                .registerListener((ExceptionallyConsumer<Task<BufferedResponse>>) task -> {
                     if (!task.isPresent()) {
                         task.setFailure(task.error());
                     }

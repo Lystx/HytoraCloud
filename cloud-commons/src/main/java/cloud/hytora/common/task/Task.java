@@ -25,18 +25,18 @@ import java.util.function.Supplier;
  *
  * <br>
  * <br> There are multiple checks to get if there is a value being held
- * like {@link IPromise#isNull()} or {@link IPromise#isPresent()}
+ * like {@link Task#isNull()} or {@link Task#isPresent()}
  *
  * <br>
  * <br>Values may be immutable, so they can't be modified after they
  * have received a value or have been updated once
- * The immutable changed can be retrieved or change using {@link IPromise#isImmutable()}
- * and {@link IPromise#setImmutable(boolean)} at any time
+ * The immutable changed can be retrieved or change using {@link Task#isImmutable()}
+ * and {@link Task#setImmutable(boolean)} at any time
  *
  * @author Lystx
  * @since SNAPSHOT-1.2
  */
-public interface IPromise<T> extends Serializable {
+public interface Task<T> extends Serializable {
 
     /**
      * The static executor for async calls
@@ -44,43 +44,43 @@ public interface IPromise<T> extends Serializable {
     ExecutorService SERVICE = Executors.newCachedThreadPool(new NamedThreadFactory("WrapperTaskPool"));
 
     /**
-     * Constructs a new empty {@link IPromise} with no object being held
+     * Constructs a new empty {@link Task} with no object being held
      * The created value is not immutable, so it may be modified
      *
      * @param <T> the type of the object the new value should hold
      * @return the created value instance
      */
-    static <T> IPromise<T> empty() {
+    static <T> Task<T> empty() {
         return newInstance((T) null);
     }
 
     /**
-     * Constructs a new empty {@link IPromise} with no object being held
+     * Constructs a new empty {@link Task} with no object being held
      * The created value is not immutable, so it may be modified
      *
      * @param <T> the type of the object the new value should hold
      * @return the created value instance
      */
-    static <T> IPromise<T> empty(Class<T> typeClass) {
+    static <T> Task<T> empty(Class<T> typeClass) {
         return newInstance((T) null);
     }
 
     /**
-     * Returns a new {@link IPromise} that completes when every single
-     * provided {@link IPromise} is done
+     * Returns a new {@link Task} that completes when every single
+     * provided {@link Task} is done
      *
      * @param tasks the tasks to run
      * @return task instance
      */
-    static IPromise<Boolean> multiTasking(IPromise<?>... tasks) {
+    static Task<Boolean> multiTasking(Task<?>... tasks) {
 
-        IPromise<Boolean> task = empty();
+        Task<Boolean> task = empty();
         if (tasks.length == 0) {
             return task;
         }
-        for (IPromise<?> promise : tasks) {
+        for (Task<?> promise : tasks) {
             promise.onTaskSucess(o -> {
-                if (Arrays.stream(tasks).allMatch(IPromise::isPresent) && !task.isPresent()) {
+                if (Arrays.stream(tasks).allMatch(Task::isPresent) && !task.isPresent()) {
                     task.setResult(true);
                 }
             });
@@ -89,32 +89,32 @@ public interface IPromise<T> extends Serializable {
     }
 
     /**
-     * Constructs a new pre-filled {@link IPromise} with an object being held
+     * Constructs a new pre-filled {@link Task} with an object being held
      * The created value is not immutable, so it may be modified
      *
      * @param value the value that should be held
      * @param <T>   the type of the object the new value should hold
      * @return the created value instance
      */
-    static <T> IPromise<T> newInstance(T value) {
+    static <T> Task<T> newInstance(T value) {
         return newInstance(value, false);
     }
 
     /**
-     * Constructs a new pre-filled {@link IPromise} with an object being held
+     * Constructs a new pre-filled {@link Task} with an object being held
      * The created value is not immutable, so it may be modified
      *
      * @param value the value that should be held
      * @param <T>   the type of the object the new value should hold
      * @return the created value instance
      */
-    static <T> IPromise<T> newInstance(Supplier<T> value) {
+    static <T> Task<T> newInstance(Supplier<T> value) {
         return newInstance(value.get());
     }
 
 
     /**
-     * Constructs a new pre-filled {@link IPromise} with an object being held
+     * Constructs a new pre-filled {@link Task} with an object being held
      * The created value will be immutable depending on the value you provide
      * as a parameter
      *
@@ -123,18 +123,18 @@ public interface IPromise<T> extends Serializable {
      * @param <T>       the type of the object the new value should hold
      * @return the created value instance
      */
-    static <T> IPromise<T> newInstance(T value, boolean immutable) {
+    static <T> Task<T> newInstance(T value, boolean immutable) {
         return new DefaultCompletableTask<T>(value).setImmutable(immutable);
     }
 
     /**
-     * Runs a {@link IPromise} with return-type {@link Void} delayed
+     * Runs a {@link Task} with return-type {@link Void} delayed
      * for the given {@link TimeUnit} and value to use for this unit
      *
      * @param runnable the runnable to execute
      */
     static void runTaskLater(@NotNull Runnable runnable, TimeUnit unit, long delay) {
-        IPromise<Void> task = IPromise.empty();
+        Task<Void> task = Task.empty();
         Scheduler.runTimeScheduler().scheduleDelayedTask(() -> {
             runnable.run();
             task.setResult(null);
@@ -142,12 +142,12 @@ public interface IPromise<T> extends Serializable {
     }
 
     /**
-     * Runs a {@link IPromise} with return-type {@link Void} async
+     * Runs a {@link Task} with return-type {@link Void} async
      *
      * @param runnable the runnable to execute
      * @return the task instance
      */
-    static IPromise<Void> runAsync(@Nonnull Runnable runnable) {
+    static Task<Void> runAsync(@Nonnull Runnable runnable) {
         return callAsync(() -> {
             runnable.run();
             return null;
@@ -157,13 +157,13 @@ public interface IPromise<T> extends Serializable {
     void setAcceptSingleValue();
 
     /**
-     * Runs a {@link IPromise} with return-type {@link Void} async
+     * Runs a {@link Task} with return-type {@link Void} async
      *
      * @param callable the runnable to execute
      * @return the task instance
      */
-    static <V> IPromise<V> callAsync(@Nonnull Callable<V> callable) {
-        IPromise<V> task = empty();
+    static <V> Task<V> callAsync(@Nonnull Callable<V> callable) {
+        Task<V> task = empty();
         SERVICE.execute(() -> {
             try {
                 task.setResult(callable.call());
@@ -182,7 +182,7 @@ public interface IPromise<T> extends Serializable {
     /**
      * Retrieves the current held object if it is set
      * This is unsafe to use because of Exception-Throwing
-     * You should rather use {@link IPromise#orElse(Object)} to avoid exceptions
+     * You should rather use {@link Task#orElse(Object)} to avoid exceptions
      * and provide your own custom value to return if nothing set
      * See why it throws {@link ValueHoldsNoObjectException} down below.
      * If there is no object being held right now and the value is immutable
@@ -211,11 +211,11 @@ public interface IPromise<T> extends Serializable {
      *
      * @param ex the exception to set
      */
-    IPromise<T> setFailure(Throwable ex);
+    Task<T> setFailure(Throwable ex);
 
     /**
      * Retrieves the {@link Throwable} that has been set
-     * via {@link IPromise#setFailure(Throwable)}
+     * via {@link Task#setFailure(Throwable)}
      *
      * @return error (if set) or null
      */
@@ -226,17 +226,17 @@ public interface IPromise<T> extends Serializable {
      *
      * @return current value
      */
-    IPromise<T> syncUninterruptedly();
+    Task<T> syncUninterruptedly();
 
     /**
-     * Sets the time-out for {@link IPromise#syncUninterruptedly()}
+     * Sets the time-out for {@link Task#syncUninterruptedly()}
      *
      * @param unit          the unit of the timeOut
      * @param timeOut       the value for the given unit
      * @param fallbackValue the value to fall back to if timed out
      * @return current value instance
      */
-    IPromise<T> timeOut(TimeUnit unit, int timeOut, T fallbackValue);
+    Task<T> timeOut(TimeUnit unit, int timeOut, T fallbackValue);
 
     /**
      * Sets the timeOut for when executing {@link #syncUninterruptedly()}
@@ -244,7 +244,7 @@ public interface IPromise<T> extends Serializable {
      * @param timeOut the timeOut in milliseconds
      * @return current task instance
      */
-    default IPromise<T> timeOut(int timeOut) {
+    default Task<T> timeOut(int timeOut) {
         return timeOut(TimeUnit.MILLISECONDS, timeOut, null);
     }
 
@@ -254,7 +254,7 @@ public interface IPromise<T> extends Serializable {
      * @param timeOut the timeOut value
      * @return current task instance
      */
-    default IPromise<T> timeOut(TimeUnit unit, int timeOut) {
+    default Task<T> timeOut(TimeUnit unit, int timeOut) {
         return timeOut(unit, timeOut, null);
     }
 
@@ -262,7 +262,7 @@ public interface IPromise<T> extends Serializable {
      * Tries to retrieve the current held object if it is set
      * If there is no current object held, the provided value
      * will be returned.
-     * Unlike {@link IPromise#get()} this method does not throw exceptions
+     * Unlike {@link Task#get()} this method does not throw exceptions
      *
      * @param value the optional value if no value is held
      * @return held value or provided parameter
@@ -320,18 +320,18 @@ public interface IPromise<T> extends Serializable {
 
     /**
      * If a value is present, apply the provided mapping function to it,
-     * and if the result is non-null, return a {@link IPromise} describing the
-     * result. Otherwise, return an empty {@link IPromise}
+     * and if the result is non-null, return a {@link Task} describing the
+     * result. Otherwise, return an empty {@link Task}
      *
      * @param <V>    The type of the result of the mapping function
      * @param mapper a mapping function to apply to the value, if present
      * @return a new value describing the result of applying a mapping
      */
-    <V> IPromise<V> map(Function<T, V> mapper);
+    <V> Task<V> map(Function<T, V> mapper);
 
     /**
      * If a value is present, apply the provided mapping function to it,
-     * and if the result is non-null, return a {@link IPromise} describing the
+     * and if the result is non-null, return a {@link Task} describing the
      * result. Otherwise, supplies the ifNull parameter
      *
      * @param ifNull the supplier if value is null
@@ -343,12 +343,12 @@ public interface IPromise<T> extends Serializable {
 
     /**
      * If a value is present, and the value matches the given predicate,
-     * return a {@link IPromise} containing the value, otherwise returns an empty one
+     * return a {@link Task} containing the value, otherwise returns an empty one
      *
      * @param predicate a predicate to apply to the value, if present
-     * @return a new value containing the value of this current {@link IPromise}
+     * @return a new value containing the value of this current {@link Task}
      */
-    IPromise<T> filter(Predicate<? super T> predicate);
+    Task<T> filter(Predicate<? super T> predicate);
 
     /**
      * Updates the current object of this value reference
@@ -356,14 +356,14 @@ public interface IPromise<T> extends Serializable {
      * @param value the value to set
      * @return current value
      */
-    IPromise<T> setResult(T value) throws ValueImmutableException;
+    Task<T> setResult(T value) throws ValueImmutableException;
 
     /**
      * Sets the immutable state of this value
      *
      * @param immutable the state if it may be modified
      */
-    IPromise<T> setImmutable(boolean immutable);
+    Task<T> setImmutable(boolean immutable);
 
     /**
      * Checks if this value is immutable
@@ -412,7 +412,7 @@ public interface IPromise<T> extends Serializable {
      * @param listener the listener as consumer to add
      * @return current value instance
      */
-    IPromise<T> registerListener(Consumer<IPromise<T>> listener);
+    Task<T> registerListener(Consumer<Task<T>> listener);
 
     /**
      * Calls the handler when an exception is caught in this task
@@ -420,7 +420,7 @@ public interface IPromise<T> extends Serializable {
      * @param e the handler to handle the error
      * @return current task instance
      */
-    IPromise<T> onTaskFailed(Consumer<Throwable> e);
+    Task<T> onTaskFailed(Consumer<Throwable> e);
 
     /**
      * Adds a simple updating listener as {@link Consumer} to this value
@@ -428,7 +428,7 @@ public interface IPromise<T> extends Serializable {
      * @param listener the listener as consumer to add
      * @return current value instance
      */
-    IPromise<T> onTaskSucess(Consumer<T> listener);
+    Task<T> onTaskSucess(Consumer<T> listener);
 
     /**
      * Waits until a value is provided in this value
@@ -443,6 +443,6 @@ public interface IPromise<T> extends Serializable {
      *
      * @param consumer the action to perform
      */
-    void ifEmpty(Consumer<IPromise<T>> consumer);
+    void ifEmpty(Consumer<Task<T>> consumer);
 
 }

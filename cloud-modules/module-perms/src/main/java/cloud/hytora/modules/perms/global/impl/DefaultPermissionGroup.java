@@ -1,6 +1,6 @@
 package cloud.hytora.modules.perms.global.impl;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
@@ -203,8 +203,8 @@ public class DefaultPermissionGroup implements PermissionGroup {
     }
 
     @Override
-    public IPromise<Permission> getPermission(String permission) {
-        return IPromise.callAsync(() -> {
+    public Task<Permission> getPermission(String permission) {
+        return Task.callAsync(() -> {
             Long timeOut = permissions.get(permission);
             return permissions.containsKey(permission) ? Permission.of(permission, timeOut) : null;
         });

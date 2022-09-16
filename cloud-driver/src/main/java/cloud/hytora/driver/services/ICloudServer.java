@@ -1,7 +1,7 @@
 package cloud.hytora.driver.services;
 
 import cloud.hytora.common.identification.ModifiableUUIDHolder;
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.common.IClusterObject;
 import cloud.hytora.driver.networking.NetworkComponent;
@@ -179,12 +179,12 @@ public interface ICloudServer extends IClusterObject<ICloudServer>, NetworkCompo
     IServiceTask getTask();
 
     /**
-     * Returns an {@link IPromise} that might contain an {@link IServiceTask}
+     * Returns an {@link Task} that might contain an {@link IServiceTask}
      *
      * @see IServiceTask
      */
     @NotNull
-    IPromise<IServiceTask> getTaskAsync();
+    Task<IServiceTask> getTaskAsync();
 
     /**
      * The current {@link ServiceState} of this server

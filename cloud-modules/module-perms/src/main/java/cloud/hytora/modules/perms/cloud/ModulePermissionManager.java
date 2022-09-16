@@ -1,7 +1,7 @@
 package cloud.hytora.modules.perms.cloud;
 
 import cloud.hytora.common.function.ExceptionallySupplier;
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.database.DatabaseSection;
 import cloud.hytora.driver.database.IDatabaseManager;
@@ -90,8 +90,8 @@ public class ModulePermissionManager extends DefaultPermissionManager {
 
     @NotNull
     @Override
-    public IPromise<PermissionGroup> getPermissionGroup(@NotNull String name) {
-        return IPromise.callAsync(() -> this.cachedPermissionGroups.stream().filter(g -> g.getName().equalsIgnoreCase(name)).findFirst().orElse(null));
+    public Task<PermissionGroup> getPermissionGroup(@NotNull String name) {
+        return Task.callAsync(() -> this.cachedPermissionGroups.stream().filter(g -> g.getName().equalsIgnoreCase(name)).findFirst().orElse(null));
     }
 
     @Override
@@ -161,13 +161,13 @@ public class ModulePermissionManager extends DefaultPermissionManager {
     }
 
     @Override
-    public IPromise<PermissionPlayer> getPlayerAsyncByUniqueId(UUID uniqueId) {
-        return IPromise.callAsync(() -> getPlayerByUniqueIdOrNull(uniqueId));
+    public Task<PermissionPlayer> getPlayerAsyncByUniqueId(UUID uniqueId) {
+        return Task.callAsync(() -> getPlayerByUniqueIdOrNull(uniqueId));
     }
 
     @Override
-    public IPromise<PermissionPlayer> getPlayerAsyncByName(String name) {
-        return IPromise.callAsync(() -> getPlayerByNameOrNull(name));
+    public Task<PermissionPlayer> getPlayerAsyncByName(String name) {
+        return Task.callAsync(() -> getPlayerByNameOrNull(name));
     }
 
     @javax.annotation.Nullable

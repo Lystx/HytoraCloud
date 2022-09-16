@@ -1,6 +1,9 @@
 package cloud.hytora.node.database.impl;
 
+import cloud.hytora.common.logging.Logger;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.database.DatabaseDriver;
+import cloud.hytora.database.DocumentDatabase;
 import cloud.hytora.database.api.elements.Database;
 import cloud.hytora.database.api.elements.DatabaseCollection;
 import cloud.hytora.database.api.elements.DatabaseEntry;
@@ -35,12 +38,26 @@ public class DatabaseFile implements IDatabase {
     public DatabaseFile(DatabaseConfiguration configuration) {
         this.configuration = configuration;
         this.driver = new DatabaseDriver(CloudDriver.getInstance().getNetworkExecutor().getName());
+        if (configuration.getPassword().equalsIgnoreCase("local") || configuration.getHost().equalsIgnoreCase("127.0.0.1")) {
+            Task.runAsync(() -> {
+                DocumentDatabase db = new DocumentDatabase(
+                        Logger.constantInstance(),
+                        NodeDriver.getInstance().getWebServer(),
+                        new File(NodeDriver.STORAGE_FOLDER, "database/"),
+                        false,
+                        configuration.getPassword()
+                );
+
+            });
+        }
     }
 
     @Override
     public void connect() {
-        this.driver.connect(new HttpAddress(configuration.getHost(), configuration.getPort()), configuration.getPassword());
-        this.database = this.driver.getDatabase(configuration.getDatabase());
+        Task.runAsync(() -> {
+            this.driver.connect(new HttpAddress(configuration.getHost(), configuration.getPort()), configuration.getPassword());
+            this.database = this.driver.getDatabase(configuration.getDatabase());
+        });
     }
 
     @Override
@@ -51,8 +68,8 @@ public class DatabaseFile implements IDatabase {
     @Override
     public void insert(String collection, String key, Document document) {
 
-        DatabaseCollection db = this.database.getCollection(collection);
-        db.insertEntry(e -> {
+        DatabaseCollection db = this.database.getCollectionOrCreate(collection);
+        db.insertEntryAsync(e -> {
             e.setId(key);
             e.setDocument(document);
         });
@@ -60,8 +77,8 @@ public class DatabaseFile implements IDatabase {
 
     @Override
     public void update(String collection, String key, Document document) {
-        DatabaseCollection db = this.database.getCollection(collection);
-        db.updateEntry(key, e -> {
+        DatabaseCollection db = this.database.getCollectionOrCreate(collection);
+        db.updateEntryAsync(key, e -> {
             e.setId(key);
             e.setDocument(document);
         });
@@ -69,19 +86,19 @@ public class DatabaseFile implements IDatabase {
 
     @Override
     public boolean contains(String collection, String key) {
-        DatabaseCollection db = this.database.getCollection(collection);
+        DatabaseCollection db = this.database.getCollectionOrCreate(collection);
         return db.hasEntry(key);
     }
 
     @Override
     public void delete(String collection, String key) {
-        DatabaseCollection db = this.database.getCollection(collection);
+        DatabaseCollection db = this.database.getCollectionOrCreate(collection);
         db.deleteEntryAsync(key);
     }
 
     @Override
     public Document byId(String collection, String key) {
-        DatabaseCollection db = this.database.getCollection(collection);
+        DatabaseCollection db = this.database.getCollectionOrCreate(collection);
         return db.findEntry(key);
     }
 
@@ -92,13 +109,13 @@ public class DatabaseFile implements IDatabase {
 
     @Override
     public Collection<String> keys(String collection) {
-        DatabaseCollection db = this.database.getCollection(collection);
+        DatabaseCollection db = this.database.getCollectionOrCreate(collection);
         return db.getIdentifiers();
     }
 
     @Override
     public Collection<Document> documents(String collection) {
-        DatabaseCollection db = this.database.getCollection(collection);
+        DatabaseCollection db = this.database.getCollectionOrCreate(collection);
         return db.findEntries().stream().map(e -> (Document)e).collect(Collectors.toList());
     }
 
@@ -109,7 +126,7 @@ public class DatabaseFile implements IDatabase {
 
     @Override
     public Map<String, Document> filter(String collection, BiPredicate<String, Document> predicate) {
-        DatabaseCollection db = this.database.getCollection(collection);
+        DatabaseCollection db = this.database.getCollectionOrCreate(collection);
         Map<String, Document> map = new HashMap<>();
         for (DatabaseEntry entry : db.findEntries()) {
             if (predicate.test(entry.getId(), entry)) {

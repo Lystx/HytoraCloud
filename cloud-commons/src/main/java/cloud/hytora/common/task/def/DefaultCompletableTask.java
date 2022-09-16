@@ -1,7 +1,7 @@
 
 package cloud.hytora.common.task.def;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.common.task.WrapperListener;
 import cloud.hytora.common.task.exception.ValueHoldsNoObjectException;
 import cloud.hytora.common.task.exception.ValueImmutableException;
@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 
 @Getter
 @Setter
-public class DefaultCompletableTask<T> implements IPromise<T> {
+public class DefaultCompletableTask<T> implements Task<T> {
 
     /**
      * The current value being held
@@ -59,7 +59,7 @@ public class DefaultCompletableTask<T> implements IPromise<T> {
     /**
      * All update listeners
      */
-    private final Collection<Consumer<IPromise<T>>> updateListeners;
+    private final Collection<Consumer<Task<T>>> updateListeners;
 
     public DefaultCompletableTask(T value) {
         this();
@@ -106,7 +106,7 @@ public class DefaultCompletableTask<T> implements IPromise<T> {
     }
 
     @Override
-    public IPromise<T> setFailure(Throwable ex) {
+    public Task<T> setFailure(Throwable ex) {
         this.throwable = ex;
         this.done = true;
         this.releaseLocks();
@@ -114,13 +114,13 @@ public class DefaultCompletableTask<T> implements IPromise<T> {
     }
 
     @Override
-    public IPromise<T> setImmutable(boolean immutable) {
+    public Task<T> setImmutable(boolean immutable) {
         this.immutable = immutable;
         return this;
     }
 
     @Override
-    public IPromise<T> setResult(T newValue) throws ValueImmutableException {
+    public Task<T> setResult(T newValue) throws ValueImmutableException {
         if (acceptSingleValue && heldValue != null) {
             return this;
         }
@@ -196,7 +196,7 @@ public class DefaultCompletableTask<T> implements IPromise<T> {
     }
 
     @Override
-    public IPromise<T> registerListener(Consumer<IPromise<T>> listener) {
+    public Task<T> registerListener(Consumer<Task<T>> listener) {
         if (this.isDone()) {
             listener.accept(this);
             return this;
@@ -206,7 +206,7 @@ public class DefaultCompletableTask<T> implements IPromise<T> {
     }
 
     @Override
-    public void ifEmpty(Consumer<IPromise<T>> consumer) {
+    public void ifEmpty(Consumer<Task<T>> consumer) {
         if (isPresent()) {
             return;
         }
@@ -226,7 +226,7 @@ public class DefaultCompletableTask<T> implements IPromise<T> {
 
 
     @Override
-    public IPromise<T> timeOut(TimeUnit unit, int timeOut, T fallbackValue) {
+    public Task<T> timeOut(TimeUnit unit, int timeOut, T fallbackValue) {
         this.timeOutUnit = unit;
         this.timeOutValue = timeOut;
         this.fallbackValue = fallbackValue;
@@ -235,7 +235,7 @@ public class DefaultCompletableTask<T> implements IPromise<T> {
 
 
     @Override
-    public IPromise<T> syncUninterruptedly() {
+    public Task<T> syncUninterruptedly() {
         if (isPresent() || isDone()) {
             return this;
         }
@@ -266,7 +266,7 @@ public class DefaultCompletableTask<T> implements IPromise<T> {
     }
 
     @Override
-    public IPromise<T> onTaskSucess(Consumer<T> listener) {
+    public Task<T> onTaskSucess(Consumer<T> listener) {
         return this.registerListener(v -> {
             try {
                 listener.accept(this.get());
@@ -278,7 +278,7 @@ public class DefaultCompletableTask<T> implements IPromise<T> {
 
 
     @Override
-    public IPromise<T> onTaskFailed(Consumer<Throwable> e) {
+    public Task<T> onTaskFailed(Consumer<Throwable> e) {
         return this.registerListener(v -> {
             if (v.error() != null) {
                 e.accept(v.error());
@@ -292,8 +292,8 @@ public class DefaultCompletableTask<T> implements IPromise<T> {
     }
 
     @Override
-    public IPromise<T> filter(Predicate<? super T> predicate) {
-        return isNull() ? this : predicate.test(heldValue) ? this : IPromise.empty();
+    public Task<T> filter(Predicate<? super T> predicate) {
+        return isNull() ? this : predicate.test(heldValue) ? this : Task.empty();
     }
 
     @Override
@@ -353,8 +353,8 @@ public class DefaultCompletableTask<T> implements IPromise<T> {
     }
 
     @Override
-    public <V> IPromise<V> map(Function<T, V> mapper) {
-        IPromise<V> task = IPromise.newInstance(this.heldValue == null ? null : mapper.apply(this.heldValue));
+    public <V> Task<V> map(Function<T, V> mapper) {
+        Task<V> task = Task.newInstance(this.heldValue == null ? null : mapper.apply(this.heldValue));
         if (isDone()) return task;
 
         this.registerListener(tTask -> {

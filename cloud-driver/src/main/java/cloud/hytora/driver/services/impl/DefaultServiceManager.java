@@ -1,6 +1,6 @@
 package cloud.hytora.driver.services.impl;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.services.ICloudServiceManager;
@@ -63,8 +63,8 @@ public abstract class DefaultServiceManager implements ICloudServiceManager {
     }
 
     @Override
-    public @NotNull IPromise<ICloudServer> getServiceAsync(@NotNull String name) {
-        return IPromise.callAsync(() -> {
+    public @NotNull Task<ICloudServer> getServiceAsync(@NotNull String name) {
+        return Task.callAsync(() -> {
            return this.allCachedServices.stream().filter(s -> s.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
         });
     }
@@ -89,16 +89,16 @@ public abstract class DefaultServiceManager implements ICloudServiceManager {
     }
 
     @Override
-    public @NotNull IPromise<ICloudServer> getFallbackAsService() {
-        return IPromise.newInstance(
+    public @NotNull Task<ICloudServer> getFallbackAsService() {
+        return Task.newInstance(
                 getAvailableFallbacksAsServices()
                         .stream()
                         .min(Comparator.comparing(s -> s.getOnlinePlayers().size())).orElse(null));
     }
 
     @Override
-    public @NotNull IPromise<ICloudFallback> getFallbackAsEntry() {
-        return IPromise.newInstance(
+    public @NotNull Task<ICloudFallback> getFallbackAsEntry() {
+        return Task.newInstance(
                 getAvailableFallbacks()
                         .stream()
                         .min(Comparator.comparing(ICloudFallback::getPriority)).orElse(null));

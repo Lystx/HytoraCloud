@@ -7,7 +7,7 @@ import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.progressbar.ProgressBar;
 import cloud.hytora.common.progressbar.ProgressBarStyle;
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.IEntry;
@@ -73,9 +73,9 @@ public class ModuleDownloader {
         return url;
     }
 
-    public IPromise<ModuleInfo> updateModule(ModuleInfo module) {
-        IPromise<ModuleInfo> task = IPromise.empty();
-        return IPromise.callAsync(() -> {
+    public Task<ModuleInfo> updateModule(ModuleInfo module) {
+        Task<ModuleInfo> task = Task.empty();
+        return Task.callAsync(() -> {
 
             String url = module.getUrl();
             String name = module.getName();
@@ -100,15 +100,15 @@ public class ModuleDownloader {
     }
 
 
-    public IPromise<ModuleInfo> updateModule(String name) {
+    public Task<ModuleInfo> updateModule(String name) {
 
         Collection<ModuleInfo> modules = loadProvidedModules();
         ModuleInfo moduleInfo = modules.stream().filter(m -> m.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
-        return moduleInfo == null ? IPromise.empty() : updateModule(moduleInfo);
+        return moduleInfo == null ? Task.empty() : updateModule(moduleInfo);
     }
 
-    public IPromise<Integer> updateModules() {
-        IPromise<Integer> task = IPromise.empty();
+    public Task<Integer> updateModules() {
+        Task<Integer> task = Task.empty();
         Collection<ModuleInfo> modules = loadProvidedModules();
 
         AtomicInteger updateCount = new AtomicInteger(0);
@@ -125,8 +125,8 @@ public class ModuleDownloader {
         return task;
     }
 
-    public IPromise<Path> downloadModule(ModuleInfo module, String url) {
-        IPromise<Path> task = IPromise.empty();
+    public Task<Path> downloadModule(ModuleInfo module, String url) {
+        Task<Path> task = Task.empty();
         ProgressBar pb = new ProgressBar(ProgressBarStyle.COLORED_UNICODE_BLOCK, 100L);
 
         //manage console

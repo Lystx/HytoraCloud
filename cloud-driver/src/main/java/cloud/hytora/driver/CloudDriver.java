@@ -3,7 +3,7 @@ package cloud.hytora.driver;
 import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.scheduler.def.DefaultScheduler;
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.common.IClusterObject;
 import cloud.hytora.driver.event.IEventManager;
 import cloud.hytora.driver.event.defaults.DefaultEventManager;
@@ -256,5 +256,5 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
      * @see ISyncedNetworkPromise
      */
     @NotNull
-    public abstract <E extends IBufferObject> IPromise<ISyncedNetworkPromise<E>> getSyncedNetworkObjectAsync(SyncedObjectType<E> type, String queryParameters);
+    public abstract <E extends IBufferObject> Task<ISyncedNetworkPromise<E>> getSyncedNetworkObjectAsync(SyncedObjectType<E> type, String queryParameters);
 }

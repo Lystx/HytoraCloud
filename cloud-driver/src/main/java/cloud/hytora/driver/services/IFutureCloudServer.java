@@ -1,6 +1,6 @@
 package cloud.hytora.driver.services;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.template.ITemplate;
@@ -102,10 +102,10 @@ public interface IFutureCloudServer {
     IFutureCloudServer ignoreIfLimitOfServicesReached();
 
     /**
-     * Returns an {@link IPromise} that will complete when the
+     * Returns an {@link Task} that will complete when the
      * server is registered as "ready"
      *
      * @return task with started {@link ICloudServer}
      */
-    IPromise<ICloudServer> start();
+    Task<ICloudServer> start();
 }

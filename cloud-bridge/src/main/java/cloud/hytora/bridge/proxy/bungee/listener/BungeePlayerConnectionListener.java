@@ -1,7 +1,7 @@
 package cloud.hytora.bridge.proxy.bungee.listener;
 
 import cloud.hytora.bridge.proxy.bungee.CloudBridgeBungeePlugin;
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.PlayerFullJoinExecutor;
@@ -84,7 +84,7 @@ public class BungeePlayerConnectionListener implements Listener {
             return;
         }
 
-        IPromise<ICloudServer> fallback = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getFallbackAsService();
+        Task<ICloudServer> fallback = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceManager.class).getFallbackAsService();
 
         if (fallback.isNull()) {
             event.setCancelReason(new TextComponent("§cCould not find any fallback to connect you to..."));

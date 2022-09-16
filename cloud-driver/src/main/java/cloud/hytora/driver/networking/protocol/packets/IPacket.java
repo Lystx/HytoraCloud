@@ -1,6 +1,6 @@
 package cloud.hytora.driver.networking.protocol.packets;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 
@@ -12,7 +12,7 @@ public interface IPacket extends IBufferObject {
     PacketBuffer buffer();
 
 
-    IPromise<Void> publishAsync();
+    Task<Void> publishAsync();
 
     void setDestinationChannel(String destinationChannel);
 
@@ -22,9 +22,9 @@ public interface IPacket extends IBufferObject {
 
     void publishTo(String... receivers);
 
-    IPromise<Void> publishToAsync(String... receivers);
+    Task<Void> publishToAsync(String... receivers);
 
-    IPromise<BufferedResponse> awaitResponse();
+    Task<BufferedResponse> awaitResponse();
 
-    IPromise<BufferedResponse> awaitResponse(String receiver);
+    Task<BufferedResponse> awaitResponse(String receiver);
 }

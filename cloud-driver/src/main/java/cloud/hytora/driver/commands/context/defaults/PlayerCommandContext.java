@@ -1,6 +1,6 @@
 package cloud.hytora.driver.commands.context.defaults;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.common.util.DisplayFormat;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.commands.context.CommandContext;
@@ -26,8 +26,8 @@ public class PlayerCommandContext extends CommandContext<PlayerCommandSender> {
         return getCommandSender().getPlayer();
     }
 
-    public IPromise<ICloudPlayer> getPlayerAsync() {
-        return IPromise.callAsync(() ->
+    public Task<ICloudPlayer> getPlayerAsync() {
+        return Task.callAsync(() ->
                 CloudDriver
                         .getInstance()
                         .getProviderRegistry()

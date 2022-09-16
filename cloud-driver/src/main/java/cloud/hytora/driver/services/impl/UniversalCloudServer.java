@@ -2,7 +2,7 @@ package cloud.hytora.driver.services.impl;
 
 import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.gson.adapter.ExcludeJsonField;
@@ -127,7 +127,7 @@ public class UniversalCloudServer extends DriverUtility implements IProcessCloud
     }
 
     @Override @NotNull
-    public IPromise<IServiceTask> getTaskAsync() {
+    public Task<IServiceTask> getTaskAsync() {
         return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudServiceTaskManager.class).getTask(this.task);
     }
 
@@ -194,8 +194,8 @@ public class UniversalCloudServer extends DriverUtility implements IProcessCloud
     }
 
     @Override
-    public IPromise<Void> sendPacketAsync(IPacket packet) {
-        return IPromise.callAsync(() -> {
+    public Task<Void> sendPacketAsync(IPacket packet) {
+        return Task.callAsync(() -> {
             sendPacket(packet);
             return null;
         });

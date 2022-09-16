@@ -1,6 +1,6 @@
 package cloud.hytora.driver.networking.protocol.wrapped;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
@@ -25,6 +25,6 @@ public interface ChanneledPacketAction<R> {
 
     ChanneledPacketAction<R> receivers(ConnectionType... types);
 
-    IPromise<R> execute(IPacket packet);
+    Task<R> execute(IPacket packet);
 
 }

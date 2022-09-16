@@ -1,6 +1,6 @@
 package cloud.hytora.driver.player;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.commands.sender.PlayerCommandSender;
 import cloud.hytora.driver.common.ICopyableObject;
 import cloud.hytora.driver.exception.ModuleNeededException;
@@ -24,7 +24,7 @@ public interface ICloudPlayer extends CloudOfflinePlayer, PlayerCommandSender, I
     @Nonnull
     ICloudServer getProxyServer();
 
-    IPromise<ICloudServer> getProxyServerAsync();
+    Task<ICloudServer> getProxyServerAsync();
 
     /**
      * The current Sub-Server this player is currently on
@@ -36,7 +36,7 @@ public interface ICloudPlayer extends CloudOfflinePlayer, PlayerCommandSender, I
     @Nullable
     ICloudServer getServer();
 
-    IPromise<ICloudServer> getServerAsync();
+    Task<ICloudServer> getServerAsync();
 
 
     /**

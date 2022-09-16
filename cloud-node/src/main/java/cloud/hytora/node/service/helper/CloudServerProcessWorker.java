@@ -6,7 +6,7 @@ import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.progressbar.ProgressBar;
 import cloud.hytora.common.progressbar.ProgressBarStyle;
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.console.Console;
 import cloud.hytora.driver.console.screen.Screen;
@@ -50,9 +50,9 @@ import java.util.jar.JarInputStream;
 public class CloudServerProcessWorker {
 
     @SneakyThrows
-    public IPromise<ICloudServer> processService(ICloudServer service) {
-        IPromise<ICloudServer> task = IPromise.empty();
-        IPromise.runAsync(() -> {
+    public Task<ICloudServer> processService(ICloudServer service) {
+        Task<ICloudServer> task = Task.empty();
+        Task.runAsync(() -> {
 
             service.setServiceState(ServiceState.STARTING);
 
@@ -267,8 +267,8 @@ public class CloudServerProcessWorker {
     }
 
 
-    private IPromise<Boolean> downloadVersion(ServiceVersion version) {
-        IPromise<Boolean> task = IPromise.empty();
+    private Task<Boolean> downloadVersion(ServiceVersion version) {
+        Task<Boolean> task = Task.empty();
 
         //checking file for version
         File file = new File(NodeDriver.STORAGE_VERSIONS_FOLDER, version.getJar());

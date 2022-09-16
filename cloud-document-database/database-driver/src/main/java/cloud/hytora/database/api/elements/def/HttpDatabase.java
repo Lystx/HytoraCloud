@@ -1,6 +1,6 @@
 package cloud.hytora.database.api.elements.def;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.database.api.IPayLoad;
 import cloud.hytora.database.api.elements.Database;
 import cloud.hytora.database.api.elements.DatabaseCollection;
@@ -21,8 +21,8 @@ public class HttpDatabase implements Database {
     private String name;
 
     @Override
-    public IPromise<Collection<DatabaseCollection>> getCollectionsAsync() {
-        IPromise<Collection<DatabaseCollection>> promise = IPromise.empty();
+    public Task<Collection<DatabaseCollection>> getCollectionsAsync() {
+        Task<Collection<DatabaseCollection>> promise = Task.empty();
         HttpDriver.getInstance()
                 .sendRequestAsync("query/get", HttpMethod.GET, param -> {
                     param.put("operation", "listCollections");
@@ -76,7 +76,7 @@ public class HttpDatabase implements Database {
     }
 
     @Override
-    public IPromise<DatabaseCollection> createCollectionAsync(String name) {
+    public Task<DatabaseCollection> createCollectionAsync(String name) {
         return HttpDriver.getInstance()
                 .sendRequestAsync("query/post", HttpMethod.POST, param -> {
                     param.put("operation", "createCollection");
@@ -86,7 +86,7 @@ public class HttpDatabase implements Database {
     }
 
     @Override
-    public IPromise<Boolean> hasCollectionAsync(String name) {
+    public Task<Boolean> hasCollectionAsync(String name) {
         return HttpDriver.getInstance()
                 .sendRequestAsync("query/get", HttpMethod.GET, param -> {
                     param.put("operation", "existsCollection");
@@ -96,7 +96,7 @@ public class HttpDatabase implements Database {
     }
 
     @Override
-    public IPromise<IPayLoad> dropAsync() {
+    public Task<IPayLoad> dropAsync() {
         return HttpDriver.getInstance()
                 .sendRequestAsync("query/post", HttpMethod.POST, param -> {
                     param.put("operation", "drop");
@@ -124,8 +124,8 @@ public class HttpDatabase implements Database {
     }
 
     @Override
-    public IPromise<DatabaseCollection> getCollectionAsync(String name) {
-        IPromise<DatabaseCollection> promise = IPromise.empty();
+    public Task<DatabaseCollection> getCollectionAsync(String name) {
+        Task<DatabaseCollection> promise = Task.empty();
         hasCollectionAsync(name).onTaskSucess(b -> {
             if (b) {
                 promise.setResult(new HttpDatabaseCollection(name, this.name));

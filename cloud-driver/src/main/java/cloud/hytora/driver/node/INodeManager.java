@@ -1,6 +1,6 @@
 package cloud.hytora.driver.node;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,7 +16,7 @@ public interface INodeManager {
 
     void setAllCachedNodes(List<INode> nodes);
 
-    @NotNull IPromise<INode> getNode(@NotNull String username);
+    @NotNull Task<INode> getNode(@NotNull String username);
 
     @Nullable INode getNodeByNameOrNull(@NotNull String username);
 

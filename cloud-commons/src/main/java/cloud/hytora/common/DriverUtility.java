@@ -4,7 +4,7 @@ import cloud.hytora.common.collection.WrappedException;
 import cloud.hytora.common.function.ExceptionallyRunnable;
 import cloud.hytora.common.progressbar.ProgressBar;
 import cloud.hytora.common.progressbar.ProgressBarStyle;
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -29,10 +29,10 @@ public class DriverUtility {
         return (T) object;
     }
 
-    public static IPromise<Path> downloadVersion(String urlStr, Path location, ProgressBar pb) {
-        IPromise<Path> task = IPromise.empty();
+    public static Task<Path> downloadVersion(String urlStr, Path location, ProgressBar pb) {
+        Task<Path> task = Task.empty();
 
-        IPromise.runAsync(() -> {
+        Task.runAsync(() -> {
             try {
                 URL url = new URL(urlStr);
                 String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36";
@@ -63,8 +63,8 @@ public class DriverUtility {
         return task;
     }
 
-    public static IPromise<Void> downloadVersion(String urlStr, Path location) {
-        IPromise<Void> task = IPromise.empty();
+    public static Task<Void> downloadVersion(String urlStr, Path location) {
+        Task<Void> task = Task.empty();
         try {
             ProgressBar pb = new ProgressBar(ProgressBarStyle.UNICODE_BLOCK, 300);
 
@@ -241,8 +241,8 @@ public class DriverUtility {
         return iterator.stream().filter(predicate).findFirst().orElse(null);
     }
 
-    public static <T> IPromise<T> find(Collection<T> iterator, Predicate<? super T> predicate) {
-        return IPromise.newInstance(findOrNull(iterator, predicate));
+    public static <T> Task<T> find(Collection<T> iterator, Predicate<? super T> predicate) {
+        return Task.newInstance(findOrNull(iterator, predicate));
     }
 
     public static <T> List<T> newList() {

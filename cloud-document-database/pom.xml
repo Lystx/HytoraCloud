@@ -15,8 +15,8 @@
     <modules>
         <module>database-server</module>
         <module>database-driver</module>
-        <module>database-api</module>
     </modules>
+
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>

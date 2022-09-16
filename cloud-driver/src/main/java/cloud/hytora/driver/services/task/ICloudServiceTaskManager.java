@@ -1,6 +1,6 @@
 package cloud.hytora.driver.services.task;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.services.task.bundle.ITaskGroup;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -53,15 +53,15 @@ public interface ICloudServiceTaskManager {
     void unregisterTaskGroup(@NotNull ITaskGroup taskGroup);
 
     /**
-     * Retrieves an {@link IPromise} that might contain an {@link ITaskGroup}
+     * Retrieves an {@link Task} that might contain an {@link ITaskGroup}
      * that matches the provided name
      *
      * @param name the name to match
      * @return task instance
      */
     @NotNull
-    default IPromise<ITaskGroup> getTaskGroup(@NotNull String name) {
-        return IPromise.newInstance(getTaskGroupOrNull(name));
+    default Task<ITaskGroup> getTaskGroup(@NotNull String name) {
+        return Task.newInstance(getTaskGroupOrNull(name));
     }
 
     /**
@@ -124,15 +124,15 @@ public interface ICloudServiceTaskManager {
     void updateTask(@NotNull IServiceTask task);
 
     /**
-     * Retrieves an {@link IPromise} that might contain an {@link IServiceTask}
+     * Retrieves an {@link Task} that might contain an {@link IServiceTask}
      * that matches the provided name
      *
      * @param name the name to match
      * @return task instance
      */
     @NotNull
-    default IPromise<IServiceTask> getTask(@NotNull String name) {
-        return IPromise.callAsync(() -> this.getAllCachedTasks().stream().filter(it -> it.getName().equalsIgnoreCase(name)).findFirst().orElse(null));
+    default Task<IServiceTask> getTask(@NotNull String name) {
+        return Task.callAsync(() -> this.getAllCachedTasks().stream().filter(it -> it.getName().equalsIgnoreCase(name)).findFirst().orElse(null));
     }
 
     /**

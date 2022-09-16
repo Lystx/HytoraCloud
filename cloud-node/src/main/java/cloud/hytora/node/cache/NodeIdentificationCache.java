@@ -1,6 +1,6 @@
 package cloud.hytora.node.cache;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
@@ -61,8 +61,8 @@ public class NodeIdentificationCache implements IdentificationCache {
     }
 
     @Override
-    public IPromise<Collection<UUID>> loadAsync() {
-        return IPromise.callAsync(() -> {
+    public Task<Collection<UUID>> loadAsync() {
+        return Task.callAsync(() -> {
             Document document = DocumentFactory.newJsonDocument(this.cacheFile);
 
             for (String key : document.keys()) {

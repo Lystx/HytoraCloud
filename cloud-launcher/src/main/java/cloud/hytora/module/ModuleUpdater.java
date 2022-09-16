@@ -7,7 +7,7 @@ import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.progressbar.ProgressBar;
 import cloud.hytora.common.progressbar.ProgressBarStyle;
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.context.annotations.CacheContext;
 import cloud.hytora.context.annotations.ApplicationParticipant;
 import cloud.hytora.document.Document;
@@ -60,9 +60,9 @@ public class ModuleUpdater {
     }
 
 
-    public IPromise<ModuleInfo> updateModule(ModuleInfo module) {
-        IPromise<ModuleInfo> task = IPromise.empty();
-        IPromise.runAsync(() -> {
+    public Task<ModuleInfo> updateModule(ModuleInfo module) {
+        Task<ModuleInfo> task = Task.empty();
+        Task.runAsync(() -> {
 
             String url = module.getUrl();
             String name = module.getName();
@@ -88,8 +88,8 @@ public class ModuleUpdater {
     }
 
 
-    public IPromise<Integer> updateModules() {
-        IPromise<Integer> task = IPromise.empty();
+    public Task<Integer> updateModules() {
+        Task<Integer> task = Task.empty();
         Collection<ModuleInfo> modules = loadProvidedModules();
 
         AtomicInteger updateCount = new AtomicInteger(0);
@@ -106,8 +106,8 @@ public class ModuleUpdater {
     }
 
 
-    public IPromise<Path> downloadModule(ModuleInfo module, String url) {
-        IPromise<Path> task = IPromise.empty();
+    public Task<Path> downloadModule(ModuleInfo module, String url) {
+        Task<Path> task = Task.empty();
         ProgressBar pb = new ProgressBar(ProgressBarStyle.ASCII, 100L);
 
         pb.setAppendProgress(false);

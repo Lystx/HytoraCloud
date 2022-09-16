@@ -1,6 +1,6 @@
 package cloud.hytora.driver.networking.protocol.packets;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
@@ -78,24 +78,24 @@ public abstract class AbstractPacket implements IPacket {
         }
     }
 
-    public IPromise<Void> publishAsync() {
+    public Task<Void> publishAsync() {
         return CloudDriver.getInstance().getNetworkExecutor().sendPacketAsync(AbstractPacket.this);
     }
 
     @Override
-    public IPromise<Void> publishToAsync(String... receivers) {
-        return IPromise.callAsync(() -> {
+    public Task<Void> publishToAsync(String... receivers) {
+        return Task.callAsync(() -> {
             publishTo(receivers);
             return null;
         });
     }
 
-    public IPromise<BufferedResponse> awaitResponse() {
+    public Task<BufferedResponse> awaitResponse() {
         return CloudDriver.getInstance().getNetworkExecutor().getPacketChannel().prepareSingleQuery().execute(this);
     }
 
     @Override
-    public IPromise<BufferedResponse> awaitResponse(String receiver) {
+    public Task<BufferedResponse> awaitResponse(String receiver) {
         return CloudDriver.getInstance().getNetworkExecutor().getPacketChannel().prepareSingleQuery().receivers(receiver).execute(this);
     }
 }

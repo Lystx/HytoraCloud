@@ -2,7 +2,7 @@ package cloud.hytora.node.node;
 
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.scheduler.Scheduler;
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
@@ -118,7 +118,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
                     }
                 });
             } else {
-                IPromise<INode> node = NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).getNode(executor.getName());
+                Task<INode> node = NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).getNode(executor.getName());
                 node.ifPresent(NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class)::unRegisterNode);
             }
         } else {
@@ -180,8 +180,8 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
     private ClusterParticipant nodeAsClient;
 
 
-    public IPromise<Void> connectToAllOtherNodes(String name, ProtocolAddress... nodeAddresses) {
-        return IPromise.callAsync(() -> {
+    public Task<Void> connectToAllOtherNodes(String name, ProtocolAddress... nodeAddresses) {
+        return Task.callAsync(() -> {
 
             Logger.constantInstance().info("This Node is a SubNode and will now connect to all provided Nodes in Cluster...");
 
@@ -196,8 +196,8 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
         });
     }
 
-    public IPromise<Boolean> connectToOtherNode(String authKey, String name, String hostname, int port, Document customData) {
-        IPromise<Boolean> task = IPromise.empty();
+    public Task<Boolean> connectToOtherNode(String authKey, String name, String hostname, int port, Document customData) {
+        Task<Boolean> task = Task.empty();
         ClusterParticipant client = new ClusterParticipant(authKey, name, ConnectionType.NODE, customData) {
 
             @Override

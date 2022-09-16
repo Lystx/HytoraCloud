@@ -1,6 +1,6 @@
 package cloud.hytora.database.api.elements;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.database.api.IPayLoad;
 import cloud.hytora.database.api.exceptions.NoSuchCollectionException;
 
@@ -10,7 +10,7 @@ public interface Database {
 
     String getName();
 
-    IPromise<Collection<DatabaseCollection>> getCollectionsAsync();
+    Task<Collection<DatabaseCollection>> getCollectionsAsync();
 
     Collection<DatabaseCollection> getCollections();
 
@@ -23,8 +23,8 @@ public interface Database {
         }
     }
 
-    default IPromise<DatabaseCollection> getCollectionOrCreateAsync(String name) {
-        IPromise<DatabaseCollection> promise = IPromise.empty();
+    default Task<DatabaseCollection> getCollectionOrCreateAsync(String name) {
+        Task<DatabaseCollection> promise = Task.empty();
         hasCollectionAsync(name)
                 .onTaskFailed(promise::setFailure)
                 .onTaskSucess(b -> {
@@ -39,20 +39,20 @@ public interface Database {
 
     DatabaseCollection createCollection(String name);
 
-    IPromise<DatabaseCollection> createCollectionAsync(String name);
+    Task<DatabaseCollection> createCollectionAsync(String name);
 
     DatabaseCollection getCollection(String name) throws NoSuchCollectionException;
 
     @Deprecated
     DatabaseCollection rawCollection(String name);
 
-    IPromise<DatabaseCollection> getCollectionAsync(String name);
+    Task<DatabaseCollection> getCollectionAsync(String name);
 
     boolean hasCollection(String name);
 
-    IPromise<Boolean> hasCollectionAsync(String name);
+    Task<Boolean> hasCollectionAsync(String name);
 
-    IPromise<IPayLoad> dropAsync();
+    Task<IPayLoad> dropAsync();
 
     IPayLoad drop();
 

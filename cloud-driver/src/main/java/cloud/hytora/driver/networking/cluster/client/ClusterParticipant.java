@@ -2,7 +2,7 @@ package cloud.hytora.driver.networking.cluster.client;
 
 import cloud.hytora.common.collection.ThreadRunnable;
 import cloud.hytora.common.scheduler.Scheduler;
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.IEventManager;
@@ -56,8 +56,8 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
     }
 
 
-    public IPromise<Channel> openConnection(String hostname, int port) {
-        IPromise<Channel> result = IPromise.empty();
+    public Task<Channel> openConnection(String hostname, int port) {
+        Task<Channel> result = Task.empty();
 
         if (active) {
             result.setFailure(new AlreadyConnectedException());
@@ -142,8 +142,8 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
     }
 
 
-    public IPromise<Boolean> shutdown() {
-        IPromise<Boolean> task = IPromise.empty();
+    public Task<Boolean> shutdown() {
+        Task<Boolean> task = Task.empty();
         this.workerGroup.shutdownGracefully().addListener(future -> {
             if (future.isSuccess()) {
                 task.setResult(true);
@@ -155,8 +155,8 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
     }
 
     @Override
-    public IPromise<Void> sendPacketAsync(IPacket packet) {
-        IPromise<Void> task = IPromise.empty();
+    public Task<Void> sendPacketAsync(IPacket packet) {
+        Task<Void> task = Task.empty();
 
         if (this.channel == null) {
             System.out.println("CHANNEL NULL");

@@ -16,6 +16,7 @@ import cloud.hytora.node.NodeDriver;
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -155,11 +156,14 @@ public class NodeModuleManager implements IModuleManager {
     public ModuleController resolveSingleModule(Path file, List<DefaultModuleController> toAddTo) {
         try {
             CloudDriver.getInstance().getLogger().info("§6=> §fResolving module §b{}§8..", file.getFileName());
-            Path selfBasePath = new File(CloudDriver.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath();
+            Path selfBasePath = new File(NodeDriver.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath();
+
+            IdentifiableClassLoader fallbackClassLoader = new IdentifiableClassLoader(new URL[]{file.toUri().toURL(), selfBasePath.toUri().toURL()});
 
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             if (!(classLoader instanceof IdentifiableClassLoader)) {
-                throw new CloudException("Wrong SystemClassLoader : " + classLoader.getClass().getName());
+                classLoader = fallbackClassLoader;
+                //throw new CloudException("Wrong SystemClassLoader : " + classLoader.getClass().getName());
             }
 
             DefaultModuleController module = new DefaultModuleController(classLoader, this, file, moduleClassLoader -> CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).unregisterListeners(moduleClassLoader));
@@ -168,7 +172,7 @@ public class NodeModuleManager implements IModuleManager {
             toAddTo.add(module);
             return module;
         } catch (Throwable ex) {
-            CloudDriver.getInstance().getLogger().error("Could not resolve module {}", FileUtils.getRealFileName(file), ex);
+            CloudDriver.getInstance().getLogger().error("Could not resolve module {} : {}", FileUtils.getRealFileName(file), ex);
         }
         return null;
     }

@@ -4,7 +4,7 @@ import cloud.hytora.common.collection.WrappedException;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.common.misc.StringUtils;
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
@@ -281,8 +281,8 @@ public class Remote extends CloudDriver<ICloudServer> {
      * Returns a task that awaits the next {@link DriverUpdatePacket}
      * to check when the whole cache of this instance has been updated
      */
-    public IPromise<DriverUpdatePacket> nexCacheUpdate() {
-        IPromise<DriverUpdatePacket> task = IPromise.empty();
+    public Task<DriverUpdatePacket> nexCacheUpdate() {
+        Task<DriverUpdatePacket> task = Task.empty();
         CloudDriver
                 .getInstance()
                 .getNetworkExecutor()
@@ -346,8 +346,8 @@ public class Remote extends CloudDriver<ICloudServer> {
     }
 
     @Override
-    public @NotNull <E extends IBufferObject> IPromise<ISyncedNetworkPromise<E>> getSyncedNetworkObjectAsync(SyncedObjectType<E> type, String queryParameters) {
-        IPromise<ISyncedNetworkPromise<E>> task = IPromise.empty();
+    public @NotNull <E extends IBufferObject> Task<ISyncedNetworkPromise<E>> getSyncedNetworkObjectAsync(SyncedObjectType<E> type, String queryParameters) {
+        Task<ISyncedNetworkPromise<E>> task = Task.empty();
         new GenericQueryPacket<E>
                 (
                         "cloud_internal_sync",

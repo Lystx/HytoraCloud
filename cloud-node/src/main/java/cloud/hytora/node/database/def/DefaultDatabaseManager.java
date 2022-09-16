@@ -1,6 +1,6 @@
 package cloud.hytora.node.database.def;
 
-import cloud.hytora.common.task.IPromise;
+import cloud.hytora.common.task.Task;
 
 
 import cloud.hytora.driver.database.SectionedDatabase;
@@ -18,28 +18,25 @@ import org.jetbrains.annotations.NotNull;
 public class DefaultDatabaseManager implements IDatabaseManager {
 
     private final IDatabase internalDatabase;
-    private final SectionedDatabase database;
+    private SectionedDatabase database;
 
     public DefaultDatabaseManager(DatabaseType type, DatabaseConfiguration configuration) {
         if (type == DatabaseType.MYSQL) {
             this.internalDatabase = new DatabaseMySQL(configuration);
         } else if (type == DatabaseType.MONGODB) {
             this.internalDatabase = new DatabaseMongoDB(configuration);
-        } else if (type == DatabaseType.FILE) {
-            this.internalDatabase = new DatabaseFile(configuration);
         } else {
-            this.internalDatabase = null;
+            this.internalDatabase = new DatabaseFile(configuration);
         }
         //database cannot be null
         this.internalDatabase.connect();
-
         this.database = new SectionedDatabase(this.internalDatabase);
     }
 
     @Override
-    public @NotNull IPromise<Boolean> shutdown() {
+    public @NotNull Task<Boolean> shutdown() {
         internalDatabase.disconnect();
-        return IPromise.newInstance(true);
+        return Task.newInstance(true);
     }
 
 
