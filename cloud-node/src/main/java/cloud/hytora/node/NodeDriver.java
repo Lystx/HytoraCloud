@@ -70,11 +70,10 @@ import cloud.hytora.driver.sync.SyncedObjectType;
 import cloud.hytora.driver.uuid.IdentificationCache;
 import cloud.hytora.node.cache.NodeIdentificationCache;
 import cloud.hytora.node.cache.NodeSyncedNetworkPromise;
+import cloud.hytora.node.console.ConsoleCommandEventAdapter;
 import cloud.hytora.node.console.NodeCommandCompleter;
 import cloud.hytora.node.console.NodeCommandInputHandler;
 import cloud.hytora.node.console.NodeScreenManager;
-import cloud.hytora.node.console.jline2.JLine2Console;
-import cloud.hytora.node.console.jline2.helper.CommandTerminal;
 import cloud.hytora.node.console.log4j.EmptyAppenderSkeleton;
 import cloud.hytora.node.commands.NodeCommandManager;
 import cloud.hytora.node.commands.impl.*;
@@ -83,7 +82,7 @@ import cloud.hytora.node.config.MainConfiguration;
 import cloud.hytora.node.config.NodeNetworkDocumentStorage;
 import cloud.hytora.node.database.config.DatabaseConfiguration;
 import cloud.hytora.node.database.config.DatabaseType;
-import cloud.hytora.node.database.def.DefaultDatabaseManager;
+import cloud.hytora.node.database.DefaultDatabaseManager;
 import cloud.hytora.node.handler.http.V1PingRouter;
 import cloud.hytora.node.handler.http.V1StatusRouter;
 import cloud.hytora.node.handler.packet.normal.*;
@@ -210,6 +209,10 @@ public class NodeDriver extends CloudDriver<INode> {
 
         logger.info("Configured ScreenManager & CommandManager!");
 
+        ICommandManager commandManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICommandManager.class);
+        commandManager.registerCommands(console);
+        commandManager.registerEventAdapter(new ConsoleCommandEventAdapter());
+
         ScreenManager screenManager = this.providerRegistry.getUnchecked(ScreenManager.class);
         Screen screen = screenManager.registerScreen("console", true);
 
@@ -250,10 +253,6 @@ public class NodeDriver extends CloudDriver<INode> {
             //storage managing
             this.providerRegistry.setProvider(INetworkDocumentStorage.class, new NodeNetworkDocumentStorage());
             this.providerRegistry.getUnchecked(INetworkDocumentStorage.class).fetch();
-
-            // commands
-            CommandTerminal terminal = new CommandTerminal();
-            terminal.start(((JLine2Console) console).getReader());
 
             //checking if setup required
             if (!this.configManager.isDidExist()) {

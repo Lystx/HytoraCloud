@@ -74,8 +74,7 @@ public class NodeScreenManager implements ScreenManager {
 
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICommandManager.class).setActive(true, null);
         if (this.lastScreenName != null) {
-            System.out.println("Joining back to " + lastScreenName);
-            this.joinScreen(this.getScreenByNameOrNull(lastScreenName));
+            this.joinScreen(this.getScreenByNameOrNull("console"));
             this.lastScreenName = null;
         }
     }

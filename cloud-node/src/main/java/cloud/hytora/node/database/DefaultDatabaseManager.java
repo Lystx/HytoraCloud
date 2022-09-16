@@ -1,4 +1,4 @@
-package cloud.hytora.node.database.def;
+package cloud.hytora.node.database;
 
 import cloud.hytora.common.task.Task;
 

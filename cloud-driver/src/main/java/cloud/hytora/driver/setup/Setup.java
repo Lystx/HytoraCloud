@@ -96,8 +96,6 @@ public abstract class Setup<T extends Setup<?>> {
      */
     private final String uniqueSetupName;
 
-    private final Collection<String> cachedCommandHistory;
-
     /**
      * If this setup is allowed to be cancelled
      */
@@ -118,8 +116,10 @@ public abstract class Setup<T extends Setup<?>> {
         this.loadSetupParts();
         this.uniqueSetupName = "setup#" + UUID.randomUUID();
 
-        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class).registerScreen(uniqueSetupName, false);
-        this.cachedCommandHistory = getSetupScreen().getHistory();
+        CloudDriver.getInstance()
+                .getProviderRegistry()
+                .getUnchecked(ScreenManager.class)
+                .registerScreen(uniqueSetupName, false);
     }
 
     public Screen getSetupScreen() {
@@ -134,43 +134,36 @@ public abstract class Setup<T extends Setup<?>> {
                 .getProviderRegistry()
                 .getUnchecked(ScreenManager.class)
                 .getScreenByNameOrNull(this.uniqueSetupName)
-                .registerTabCompleter(new TabCompleter() {
-                    @Override
-                    public int onTabComplete(String buffer, int cursor, List<CharSequence> result) {
-                        SetupEntry value = getSetup().getValue();
-                        if (value.getCompleter() != null) {
-                            Class<? extends SetupSuggester> value1 = value.getCompleter().value();
-                            SetupSuggester completer = ReflectionUtils.createEmpty(value1);
-                            if (completer != null) {
-                                result.addAll(completer.suggest(Setup.this, getSetup().getValue()));
-                            }
+                .registerTabCompleter(buffer -> {
+                    SetupEntry value = getSetup().getValue();
+                    if (value.getCompleter() != null) {
+                        Class<? extends SetupSuggester> value1 = value.getCompleter().value();
+                        SetupSuggester completer = ReflectionUtils.createEmpty(value1);
+                        if (completer != null) {
+                            return completer.suggest(Setup.this, getSetup().getValue());
                         }
-                        return result.isEmpty() ? -1 : 0;
+                    }
+                    return new ArrayList<>();
+                })
+                .registerInputHandler(input -> {
+
+                    //While current id is in range of map-cache
+                    if (this.current < this.map.size() + 1) {
+                        //Reading input and executing Setup#next(String)
+                        executeInput(input);
+                    } else {
+                        this.exit(true);
                     }
                 }).join();  //joining setup screen
 
         //Setting current setup
         this.setup = this.getEntry(1);
         this.printQuestion(this.setup.getValue());
-
-        //While current id is in range of map-cache
-        while (this.current < this.map.size() + 1) {
-            //Reading input and executing Setup#next(String)
-            String line = this.getSetupScreen().readLineOrNull();
-            if (line != null) {
-                executeInput(line);
-            }
-        }
-
-        this.exit(true);
     }
 
     @SuppressWarnings("unchecked")
     private void exit(boolean success) {
         ScreenManager unchecked = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
-        if (getSetupScreen() != null) {
-            getSetupScreen().setHistory(this.cachedCommandHistory);
-        }
 
 
         unchecked.leaveCurrentScreen();

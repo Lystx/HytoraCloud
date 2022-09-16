@@ -1,4 +1,4 @@
-package cloud.hytora.node.console.jline2.helper;
+package cloud.hytora.node.console;
 
 import cloud.hytora.common.collection.pair.Tuple;
 import cloud.hytora.driver.CloudDriver;

@@ -57,8 +57,9 @@ public class NodeScreen implements Screen {
     }
 
     @Override
-    public void registerInputHandler(@NotNull Consumer<? super String> handler) {
+    public Screen registerInputHandler(@NotNull Consumer<? super String> handler) {
         this.inputHandlers.add(handler);
+        return this;
     }
 
     @Override

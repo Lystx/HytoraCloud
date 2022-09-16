@@ -30,7 +30,7 @@ public interface Screen {
 
     TabCompleter getCurrentTabCompleter();
 
-    void registerInputHandler(@Nonnull Consumer<? super String> handler);
+    Screen registerInputHandler(@Nonnull Consumer<? super String> handler);
 
     String getName();
 

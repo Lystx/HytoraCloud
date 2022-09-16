@@ -11,7 +11,7 @@ import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.node.console.handler.ConsoleLogHandler;
 import cloud.hytora.node.console.handler.FileLogHandler;
-import cloud.hytora.node.console.jline2.JLine2Console;
+import cloud.hytora.node.console.jline3.JLine3Console;
 
 import java.util.Arrays;
 
@@ -20,7 +20,7 @@ public class CloudBootstrap {
     public static void main(String[] args) {
 
         try {
-            Console console = new JLine2Console("§c%node%@§f%screen% §8» §r");
+            Console console = new JLine3Console("§c%node%@§f%screen% §8» §r");
             HandledLogger logger = new HandledAsyncLogger(LogLevel.fromName(System.getProperty("cloud.logging.level", "INFO")));
 
             Logger.setFactory(logger.addHandler(new ConsoleLogHandler(console), new FileLogHandler()));

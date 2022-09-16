@@ -6,18 +6,15 @@ import cloud.hytora.driver.console.TabCompleter;
 import cloud.hytora.driver.event.IEventManager;
 import com.google.common.base.Preconditions;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 public class NodeCommandCompleter implements TabCompleter {
 
     @Override
-    public int onTabComplete(String buffer, int cursor, List<CharSequence> result) {
+    public Collection<String> onTabComplete(String buffer) {
 
-        // buffer could be null
-        Preconditions.checkNotNull(result);
+        Collection<String> result = new ArrayList<>();
+
         SortedSet<String> strings = new TreeSet<>();
 
         TabCompleteEvent event = new TabCompleteEvent(buffer);
@@ -43,6 +40,6 @@ public class NodeCommandCompleter implements TabCompleter {
             }
         }
 
-        return result.isEmpty() ? -1 : 0;
+        return result;
     }
 }
