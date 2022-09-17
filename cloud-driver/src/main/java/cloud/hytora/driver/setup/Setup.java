@@ -13,6 +13,7 @@ import lombok.Getter;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
  *
  * @param <T> the generic setup type
  */
-public abstract class Setup<T extends Setup<?>> {
+public abstract class Setup<T extends Setup<T>> {
 
     private static final Map<Class<?>, SetupInputParser<?>> inputTransformers = new HashMap<>();
 
@@ -194,6 +195,8 @@ public abstract class Setup<T extends Setup<?>> {
      * @param input the input
      */
     public void executeInput(String input) {
+
+        AtomicInteger removed = new AtomicInteger(0);
         if (this.setup != null) {
 
             //No input provided
@@ -261,8 +264,8 @@ public abstract class Setup<T extends Setup<?>> {
 
             //Accessing the setup field
             this.setup.getKey().setAccessible(true);
+            Object value;
             try {
-                Object value;
                 Field field = this.setup.getKey();
                 Class<?> type = Primitives.wrap(field.getType());
 
@@ -274,13 +277,34 @@ public abstract class Setup<T extends Setup<?>> {
                 value = transformer.parse(setupEntry, input);
 
                 if (value == null) {
-                    this.getSetupScreen().writeLine("§cPlease try again");
+                    this.getSetupScreen().writeLine("§cCouldn't parse any result that matches your input!");
                     return;
                 }
+
+
 
                 //Setting setup value
                 this.setup.getKey().set(this, value);
 
+
+                for (SkipQuestion skipQuestion : getClass().getAnnotationsByType(SkipQuestion.class)) {
+
+                    if (current != skipQuestion.checkId()) {
+                        continue;
+                    }
+                    Map.Entry<Field, SetupEntry> entry = getEntry(skipQuestion.id());
+                    if (Arrays.stream(skipQuestion.values()).anyMatch(s -> s.equalsIgnoreCase(value.toString()))) {
+                        this.map.remove(entry.getKey(), entry.getValue());
+
+                        for (Map.Entry<Field, SetupEntry> e : this.map.entrySet()) {
+                            if (e.getValue().getId() > skipQuestion.id()) {
+                                e.getValue().setId((e.getValue().getId() - 1));
+                            }
+                        }
+
+                        removed.incrementAndGet();
+                    }
+                }
             } catch (Exception ex) {
                 this.getSetupScreen().writeLine("§cThe §einput §cdidn't match any of the available §eAnswerTypes§c!");
                 return;
@@ -296,6 +320,7 @@ public abstract class Setup<T extends Setup<?>> {
 
         //Going to next question going +1
         this.current++;
+
         this.setup = this.getEntry(this.current);
 
         //Could be last question and setup is not found
@@ -316,7 +341,7 @@ public abstract class Setup<T extends Setup<?>> {
     private Map.Entry<Field, SetupEntry> getEntry(int id) {
         Map.Entry<Field, SetupEntry> entry = null;
         for (Map.Entry<Field, SetupEntry> currentEntry : this.map.entrySet()) {
-            if (currentEntry.getValue().getQuestion().id() == id) {
+            if (currentEntry.getValue().getId() == id) {
                 entry = currentEntry;
             }
         }
@@ -335,6 +360,7 @@ public abstract class Setup<T extends Setup<?>> {
                 SetupEntry setupEntry = new SetupEntry(
                         field,
                         field.getAnnotation(Question.class),
+                        field.getAnnotation(Question.class).id(),
                         field.getAnnotation(RequiresEnum.class),
                         field.getAnnotation(Answers.class),
                         field.getAnnotation(ExitAfterInput.class),
@@ -380,7 +406,6 @@ public abstract class Setup<T extends Setup<?>> {
         if (entry.getRequiresEnum() != null) {
             this.getSetupScreen().writeLine("§7Possible Answers§8: §b" + Arrays.toString(entry.getRequiresEnum().value().getEnumConstants()).replace("]", "§8)").replace("[", "§8(§b").replace(",", "§8, §b"));
         }
-
 
     }
 

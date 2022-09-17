@@ -32,7 +32,6 @@ public class HttpAddress {
      */
     private int port;
 
-
     /**
      * Constructs a new {@link HttpAddress} without an authKey
      *

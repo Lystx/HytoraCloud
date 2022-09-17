@@ -20,6 +20,7 @@ public class TickCommand {
     )
     public void execute(CommandContext<?> ctx, CommandArguments args) {
 
+        String s = args.get(0, String.class);
         ctx.sendMessage("§8");
         ctx.sendMessage("§7Tps§8:");
         for (TickType type : TickType.values()) {

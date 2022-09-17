@@ -4,7 +4,7 @@ import cloud.hytora.common.function.BiSupplier;
 import cloud.hytora.common.location.ModifiableLocation;
 import cloud.hytora.common.location.impl.DefaultLocation;
 import cloud.hytora.document.Document;
-import cloud.hytora.driver.networking.protocol.ProtocolAddress;
+import cloud.hytora.http.ProtocolAddress;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.INetworkExecutor;

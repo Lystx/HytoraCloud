@@ -3,9 +3,11 @@ package cloud.hytora.driver.setup;
 import cloud.hytora.driver.setup.annotations.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Collection;
 
 @AllArgsConstructor @Getter
 public class SetupEntry {
@@ -19,6 +21,12 @@ public class SetupEntry {
      * The question of this entry
      */
     private final Question question;
+
+    /**
+     * The id of this entry
+     */
+    @Setter
+    private int id;
 
     /**
      * The required enum (optional)

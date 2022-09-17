@@ -1,16 +1,14 @@
 package cloud.hytora.driver.services.utils;
 
 import cloud.hytora.common.logging.LogLevel;
-import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.networking.protocol.ProtocolAddress;
+import cloud.hytora.http.ProtocolAddress;
 import cloud.hytora.driver.services.utils.version.VersionType;
 import cloud.hytora.driver.uuid.PlayerLoginProcessing;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.io.File;
 import java.io.IOException;

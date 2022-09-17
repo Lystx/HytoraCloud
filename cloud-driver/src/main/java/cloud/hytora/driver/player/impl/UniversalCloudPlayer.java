@@ -8,7 +8,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.common.CloudMessages;
 import cloud.hytora.driver.exception.ModuleNeededException;
 import cloud.hytora.driver.exception.PlayerNotOnlineException;
-import cloud.hytora.driver.networking.protocol.ProtocolAddress;
+import cloud.hytora.http.ProtocolAddress;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.permission.PermissionChecker;
 import cloud.hytora.driver.permission.PermissionManager;

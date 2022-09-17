@@ -5,7 +5,7 @@ import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.misc.RandomString;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.common.CloudMessages;
-import cloud.hytora.driver.networking.protocol.ProtocolAddress;
+import cloud.hytora.http.ProtocolAddress;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
 import cloud.hytora.driver.node.config.ServiceCrashPrevention;
 import cloud.hytora.driver.services.utils.ServiceProcessType;

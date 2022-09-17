@@ -1,10 +1,8 @@
 package cloud.hytora.driver.node.config;
 
-import cloud.hytora.driver.networking.protocol.ProtocolAddress;
+import cloud.hytora.http.ProtocolAddress;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.node.INode;
-import cloud.hytora.driver.node.data.INodeCycleData;
-import cloud.hytora.driver.services.ICloudServer;
 
 import javax.annotation.Nonnull;
 import java.util.UUID;

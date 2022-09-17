@@ -4,6 +4,7 @@ import cloud.hytora.IdentifiableClassLoader;
 import cloud.hytora.common.VersionInfo;
 import cloud.hytora.common.collection.NamedThreadFactory;
 import cloud.hytora.common.function.ExceptionallyConsumer;
+import cloud.hytora.common.function.ExceptionallyRunnable;
 import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
@@ -35,7 +36,7 @@ import cloud.hytora.driver.message.IChannelMessenger;
 import cloud.hytora.driver.module.IModuleManager;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.PacketProvider;
-import cloud.hytora.driver.networking.protocol.ProtocolAddress;
+import cloud.hytora.http.ProtocolAddress;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.packets.defaults.DriverLoggingPacket;
 import cloud.hytora.driver.networking.protocol.packets.defaults.DriverUpdatePacket;
@@ -523,6 +524,121 @@ public class NodeDriver extends CloudDriver<INode> {
         int port = setup.getPort();
         boolean remote = setup.isRemote();
 
+        ExceptionallyRunnable finish = () -> {
+
+            nodeConfig.setNodeName(nodeName);
+            nodeConfig.setAddress(new ProtocolAddress(host, port));
+            nodeConfig.setMemory(setup.getMemory());
+            nodeConfig.setRemote(false);
+
+            config.setNodeConfig(nodeConfig);
+
+            DatabaseType databaseType = setup.getDatabaseType();
+            String databaseHost = "127.0.0.1";
+            int databasePort = 3306;
+            String databaseUser = null;
+            String databasePassword = "local";
+            String databaseName = null;
+            String authDatabase = null;
+            switch (databaseType) {
+                case MYSQL:
+                    databaseHost = mySqlSetup.getDatabaseHost();
+                    databasePort = mySqlSetup.getDatabasePort();
+                    databaseUser = mySqlSetup.getDatabaseUser();
+                    databasePassword = mySqlSetup.getDatabasePassword();
+                    databaseName = mySqlSetup.getDatabaseName();
+                    authDatabase = "";
+                    break;
+                case MONGODB:
+                    databaseHost = mongoDBSetup.getDatabaseHost();
+                    databasePort = mongoDBSetup.getDatabasePort();
+                    databaseUser = mongoDBSetup.getDatabaseUser();
+                    databasePassword = mongoDBSetup.getDatabasePassword();
+                    databaseName = mongoDBSetup.getDatabaseName();
+                    authDatabase = mongoDBSetup.getAuthDatabase();
+                    break;
+            }
+
+            databaseConfiguration.setHost(databaseHost);
+            databaseConfiguration.setPort(databasePort);
+            databaseConfiguration.setUser(databaseUser);
+            databaseConfiguration.setPassword(databasePassword);
+            databaseConfiguration.setDatabase(databaseName);
+            databaseConfiguration.setAuthDatabase(authDatabase);
+            databaseConfiguration.setType(databaseType);
+            config.setDatabaseConfiguration(databaseConfiguration);
+
+            configManager.setConfig(config);
+            configManager.save();
+
+            if (setup.isDefaultTasks()) {
+
+                String[] args = new String[]{
+                        "-XX:+UseG1GC",
+                        "-XX:+ParallelRefProcEnabled",
+                        "-XX:MaxGCPauseMillis=200",
+                        "-XX:+UnlockExperimentalVMOptions",
+                        "-XX:+DisableExplicitGC",
+                        "-XX:+AlwaysPreTouch",
+                        "-XX:G1NewSizePercent=30",
+                        "-XX:G1MaxNewSizePercent=40",
+                        "-XX:G1HeapRegionSize=8M",
+                        "-XX:G1ReservePercent=20",
+                        "-XX:G1HeapWastePercent=5",
+                        "-XX:G1MixedGCCountTarget=4",
+                        "-XX:InitiatingHeapOccupancyPercent=15",
+                        "-XX:G1MixedGCLiveThresholdPercent=90",
+                        "-XX:G1RSetUpdatingPauseTimePercent=5",
+                        "-XX:SurvivorRatio=32",
+                        "-XX:+PerfDisableSharedMem",
+                        "-XX:MaxTenuringThreshold=1",
+                        "-Dusing.aikars.flags=https://mcflags.emc.gs",
+                        "-Daikars.new.flags=true",
+                        "-XX:-UseAdaptiveSizePolicy",
+                        "-XX:CompileThreshold=100",
+                        "-Dio.netty.recycler.maxCapacity=0",
+                        "-Dio.netty.recycler.maxCapacity.default=0",
+                        "-Djline.terminal=jline.UnsupportedTerminal"
+                };
+
+                this.providerRegistry.setProvider(IDatabaseManager.class, new DefaultDatabaseManager(databaseType, new DatabaseConfiguration(databaseType, databaseHost, databasePort, databaseName, authDatabase, databaseUser, databasePassword))).onTaskSucess(databaseManager -> {
+
+                    SectionedDatabase database = databaseManager.getDatabase();
+                    database.registerSection("tasks", UniversalServiceTask.class);
+                    database.registerSection("groups", DefaultTaskGroup.class);
+
+
+                    NodeServiceTaskManager taskManager = new NodeServiceTaskManager();
+
+                    DefaultTaskGroup proxyGroup = new DefaultTaskGroup("Proxy", SpecificDriverEnvironment.PROXY, ServiceShutdownBehaviour.DELETE, args, new ArrayList<>(), Collections.singleton(new CloudTemplate("Proxy", "default", "local", true)));
+                    DefaultTaskGroup lobbyGroup = new DefaultTaskGroup("Lobby", SpecificDriverEnvironment.MINECRAFT, ServiceShutdownBehaviour.DELETE, args, new ArrayList<>(), Collections.singleton(new CloudTemplate("Lobby", "default", "local", true)));
+
+                    IServiceTask proxyTask = new UniversalServiceTask("Proxy", proxyGroup.getName(), Collections.singletonList(config.getNodeConfig().getNodeName()), "Default HytoraCloud Service", "", 1024, 250, 1, -1, 0, true, -1, new SimpleFallback(false, "", 0), ServiceVersion.BUNGEECORD, new ArrayList<>());
+                    IServiceTask lobbyTask = new UniversalServiceTask("Lobby", lobbyGroup.getName(), Collections.singletonList(config.getNodeConfig().getNodeName()), "Default HytoraCloud Service", "", 512, 50, 1, -1, 1, true, -1, new SimpleFallback(true, "", 1), ServiceVersion.SPIGOT_1_8_8, new ArrayList<>());
+                    lobbyTask.setProperty("gameServer", true);
+
+                    proxyTask.setProperty("onlineMode", true);
+                    proxyTask.setProperty("proxyProtocol", false);
+
+                    taskManager.registerTaskGroup(proxyGroup);
+                    taskManager.registerTaskGroup(lobbyGroup);
+
+                    taskManager.registerTask(lobbyTask);
+                    taskManager.registerTask(proxyTask);
+
+                    this.logger.info("Created default Proxy & Lobby ServiceTasks!");
+                    this.logger.info("§7You §acompleted §7the NodeSetup§8!");
+                    this.logger.info("Please reboot the Node now to apply all changes!");
+                    System.exit(0);
+                });
+                return;
+            }
+
+            this.logger.info("§7You §acompleted §7the NodeSetup§8!");
+            this.logger.info("Please reboot the Node now to apply all changes!");
+            System.exit(0);
+        };
+
         if (remote) {
             config.setHttpListeners(new ProtocolAddress[0]);
             new NodeRemoteSetup(NodeDriver.getInstance().getConsole()).start((setup1, state) -> {
@@ -533,121 +649,14 @@ public class NodeDriver extends CloudDriver<INode> {
 
                     nodeConfig.setAuthKey(authKey);
                     nodeConfig.setClusterAddresses(new ProtocolAddress[]{new ProtocolAddress(host1, port1, authKey)});
+                    finish.run();
                 }
             });
+        } else {
+            finish.run();
         }
 
-        nodeConfig.setNodeName(nodeName);
-        nodeConfig.setAddress(new ProtocolAddress(host, port));
-        nodeConfig.setMemory(setup.getMemory());
-        nodeConfig.setRemote(false);
 
-        config.setNodeConfig(nodeConfig);
-
-        DatabaseType databaseType = setup.getDatabaseType();
-        String databaseHost = "127.0.0.1";
-        int databasePort = 3306;
-        String databaseUser = null;
-        String databasePassword = "local";
-        String databaseName = null;
-        String authDatabase = null;
-        switch (databaseType) {
-            case MYSQL:
-                databaseHost = mySqlSetup.getDatabaseHost();
-                databasePort = mySqlSetup.getDatabasePort();
-                databaseUser = mySqlSetup.getDatabaseUser();
-                databasePassword = mySqlSetup.getDatabasePassword();
-                databaseName = mySqlSetup.getDatabaseName();
-                authDatabase = "";
-                break;
-            case MONGODB:
-                databaseHost = mongoDBSetup.getDatabaseHost();
-                databasePort = mongoDBSetup.getDatabasePort();
-                databaseUser = mongoDBSetup.getDatabaseUser();
-                databasePassword = mongoDBSetup.getDatabasePassword();
-                databaseName = mongoDBSetup.getDatabaseName();
-                authDatabase = mongoDBSetup.getAuthDatabase();
-                break;
-        }
-
-        databaseConfiguration.setHost(databaseHost);
-        databaseConfiguration.setPort(databasePort);
-        databaseConfiguration.setUser(databaseUser);
-        databaseConfiguration.setPassword(databasePassword);
-        databaseConfiguration.setDatabase(databaseName);
-        databaseConfiguration.setAuthDatabase(authDatabase);
-        databaseConfiguration.setType(databaseType);
-        config.setDatabaseConfiguration(databaseConfiguration);
-
-        configManager.setConfig(config);
-        configManager.save();
-
-        if (setup.isDefaultTasks()) {
-
-            String[] args = new String[]{
-                    "-XX:+UseG1GC",
-                    "-XX:+ParallelRefProcEnabled",
-                    "-XX:MaxGCPauseMillis=200",
-                    "-XX:+UnlockExperimentalVMOptions",
-                    "-XX:+DisableExplicitGC",
-                    "-XX:+AlwaysPreTouch",
-                    "-XX:G1NewSizePercent=30",
-                    "-XX:G1MaxNewSizePercent=40",
-                    "-XX:G1HeapRegionSize=8M",
-                    "-XX:G1ReservePercent=20",
-                    "-XX:G1HeapWastePercent=5",
-                    "-XX:G1MixedGCCountTarget=4",
-                    "-XX:InitiatingHeapOccupancyPercent=15",
-                    "-XX:G1MixedGCLiveThresholdPercent=90",
-                    "-XX:G1RSetUpdatingPauseTimePercent=5",
-                    "-XX:SurvivorRatio=32",
-                    "-XX:+PerfDisableSharedMem",
-                    "-XX:MaxTenuringThreshold=1",
-                    "-Dusing.aikars.flags=https://mcflags.emc.gs",
-                    "-Daikars.new.flags=true",
-                    "-XX:-UseAdaptiveSizePolicy",
-                    "-XX:CompileThreshold=100",
-                    "-Dio.netty.recycler.maxCapacity=0",
-                    "-Dio.netty.recycler.maxCapacity.default=0",
-                    "-Djline.terminal=jline.UnsupportedTerminal"
-            };
-
-            this.providerRegistry.setProvider(IDatabaseManager.class, new DefaultDatabaseManager(databaseType, new DatabaseConfiguration(databaseType, databaseHost, databasePort, databaseName, authDatabase, databaseUser, databasePassword))).onTaskSucess(databaseManager -> {
-
-                SectionedDatabase database = databaseManager.getDatabase();
-                database.registerSection("tasks", UniversalServiceTask.class);
-                database.registerSection("groups", DefaultTaskGroup.class);
-
-
-                NodeServiceTaskManager taskManager = new NodeServiceTaskManager();
-
-                DefaultTaskGroup proxyGroup = new DefaultTaskGroup("Proxy", SpecificDriverEnvironment.PROXY, ServiceShutdownBehaviour.DELETE, args, new ArrayList<>(), Collections.singleton(new CloudTemplate("Proxy", "default", "local", true)));
-                DefaultTaskGroup lobbyGroup = new DefaultTaskGroup("Lobby", SpecificDriverEnvironment.MINECRAFT, ServiceShutdownBehaviour.DELETE, args, new ArrayList<>(), Collections.singleton(new CloudTemplate("Lobby", "default", "local", true)));
-
-                IServiceTask proxyTask = new UniversalServiceTask("Proxy", proxyGroup.getName(), Collections.singletonList(config.getNodeConfig().getNodeName()), "Default HytoraCloud Service", "", 1024, 250, 1, -1, 0, true, -1, new SimpleFallback(false, "", 0), ServiceVersion.BUNGEECORD, new ArrayList<>());
-                IServiceTask lobbyTask = new UniversalServiceTask("Lobby", lobbyGroup.getName(), Collections.singletonList(config.getNodeConfig().getNodeName()), "Default HytoraCloud Service", "", 512, 50, 1, -1, 1, true, -1, new SimpleFallback(true, "", 1), ServiceVersion.SPIGOT_1_8_8, new ArrayList<>());
-                lobbyTask.setProperty("gameServer", true);
-
-                proxyTask.setProperty("onlineMode", true);
-                proxyTask.setProperty("proxyProtocol", false);
-
-                taskManager.registerTaskGroup(proxyGroup);
-                taskManager.registerTaskGroup(lobbyGroup);
-
-                taskManager.registerTask(lobbyTask);
-                taskManager.registerTask(proxyTask);
-
-                this.logger.info("Created default Proxy & Lobby ServiceTasks!");
-                this.logger.info("§7You §acompleted §7the NodeSetup§8!");
-                this.logger.info("Please reboot the Node now to apply all changes!");
-                System.exit(0);
-            });
-            return;
-        }
-
-        this.logger.info("§7You §acompleted §7the NodeSetup§8!");
-        this.logger.info("Please reboot the Node now to apply all changes!");
-        System.exit(0);
     }
 
     /**

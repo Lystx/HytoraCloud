@@ -6,6 +6,7 @@ import cloud.hytora.node.database.config.DatabaseType;
 import lombok.Getter;
 
 @Getter
+@SkipQuestion(id = 6, checkId = 4, values = "true")
 public class NodeSetup extends Setup<NodeSetup> {
 
     @Question(id = 1, question = "What should this Node be called?")

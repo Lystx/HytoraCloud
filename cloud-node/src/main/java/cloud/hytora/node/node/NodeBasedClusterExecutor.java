@@ -13,7 +13,7 @@ import cloud.hytora.driver.networking.cluster.client.ClusterParticipant;
 import cloud.hytora.driver.networking.cluster.client.SimpleClusterClientExecutor;
 import cloud.hytora.driver.networking.protocol.packets.defaults.DriverUpdatePacket;
 import cloud.hytora.driver.networking.protocol.packets.defaults.StorageUpdatePacket;
-import cloud.hytora.driver.networking.protocol.ProtocolAddress;
+import cloud.hytora.http.ProtocolAddress;
 import cloud.hytora.driver.node.INodeManager;
 import cloud.hytora.driver.node.packet.NodeConnectionDataRequestPacket;
 import cloud.hytora.driver.node.packet.NodeConnectionDataResponsePacket;

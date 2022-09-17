@@ -2,7 +2,7 @@ package cloud.hytora.node.config;
 
 import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.driver.common.CloudMessages;
-import cloud.hytora.driver.networking.protocol.ProtocolAddress;
+import cloud.hytora.http.ProtocolAddress;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
 import cloud.hytora.driver.node.config.JavaVersion;
 import cloud.hytora.driver.node.config.ServiceCrashPrevention;

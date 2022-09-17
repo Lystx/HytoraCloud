@@ -6,7 +6,7 @@ import cloud.hytora.common.misc.CollectionUtils;
 import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.common.misc.ZipUtils;
 import cloud.hytora.document.Document;
-import cloud.hytora.driver.networking.protocol.ProtocolAddress;
+import cloud.hytora.http.ProtocolAddress;
 import cloud.hytora.driver.networking.protocol.packets.*;
 import cloud.hytora.driver.networking.INetworkExecutor;
 import cloud.hytora.driver.networking.PacketProvider;
@@ -96,12 +96,20 @@ public class DefaultPacketBuffer implements PacketBuffer {
 
 	@Override
 	public ProtocolAddress readAddress() {
-		return this.readObject(ProtocolAddress.class);
+		return new ProtocolAddress(
+				readString(),
+				readInt(),
+				readOptionalString()
+		);
 	}
 
 	@Override
 	public PacketBuffer writeAddress(@NotNull ProtocolAddress address) {
-		return this.writeObject(address);
+		this.writeString(address.getHost());
+		this.writeInt(address.getPort());
+		this.writeOptionalString(address.getAuthKey());
+
+		return this;
 	}
 
 	@Nonnull
