@@ -20,6 +20,9 @@ public class NodeNodeManager extends DefaultNodeManager {
             return;
         }
         this.allCachedNodes.add(node);
+        if (node.getName().equalsIgnoreCase(CloudDriver.getInstance().thisSidesClusterParticipant().getName())) {
+            return;
+        }
         CloudDriver.getInstance().getLogger().info("The Node '§b" + node.getName() + "§7' has joined the cluster§8!");
     }
 
@@ -30,6 +33,9 @@ public class NodeNodeManager extends DefaultNodeManager {
             return;
         }
         this.allCachedNodes.remove(node);
+        if (node.getName().equalsIgnoreCase(CloudDriver.getInstance().thisSidesClusterParticipant().getName())) {
+            return;
+        }
         NodeDriver.getInstance().getLogger().info("The Node '§b" + node.getName() + "§7' has left the cluster§8!");
     }
 

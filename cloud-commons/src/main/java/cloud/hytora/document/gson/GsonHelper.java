@@ -2,6 +2,7 @@ package cloud.hytora.document.gson;
 
 import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.document.gson.adapter.*;
+import cloud.hytora.http.ProtocolAddress;
 import com.google.gson.*;
 import com.google.gson.internal.bind.TypeAdapters;
 import com.google.gson.stream.JsonReader;
@@ -44,6 +45,7 @@ public final class GsonHelper {
                 })
                 .registerTypeAdapterFactory(GsonTypeAdapter.newPredictableFactory(BukkitReflectionSerializationUtils::isSerializable, new BukkitReflectionSerializableTypeAdapter()))
                 .registerTypeAdapterFactory(GsonTypeAdapter.newTypeHierarchyFactory(Document.class, new DocumentTypeAdapter()))
+                .registerTypeAdapterFactory(GsonTypeAdapter.newTypeHierarchyFactory(ProtocolAddress.class, new AddressTypeAdapter()))
                 .registerTypeAdapterFactory(GsonTypeAdapter.newTypeHierarchyFactory(Bundle.class, new BundleTypeAdapter()))
                 .registerTypeAdapterFactory(GsonTypeAdapter.newTypeHierarchyFactory(Pair.class, new PairTypeAdapter()))
                 .registerTypeAdapterFactory(GsonTypeAdapter.newTypeHierarchyFactory(Class.class, new ClassTypeAdapter()))
