@@ -541,6 +541,11 @@ public class NodeDriver extends CloudDriver<INode> {
             String databaseName = null;
             String authDatabase = null;
             switch (databaseType) {
+                case FILE:
+                    databaseHost = "127.0.0.1";
+                    databasePort = 4518;
+                    databaseName = "cloud";
+                    break;
                 case MYSQL:
                     databaseHost = mySqlSetup.getDatabaseHost();
                     databasePort = mySqlSetup.getDatabasePort();
@@ -601,7 +606,7 @@ public class NodeDriver extends CloudDriver<INode> {
                         "-Djline.terminal=jline.UnsupportedTerminal"
                 };
 
-                this.providerRegistry.setProvider(IDatabaseManager.class, new DefaultDatabaseManager(databaseType, new DatabaseConfiguration(databaseType, databaseHost, databasePort, databaseName, authDatabase, databaseUser, databasePassword))).onTaskSucess(databaseManager -> {
+                this.providerRegistry.setProvider(IDatabaseManager.class, new DefaultDatabaseManager(databaseType, new DatabaseConfiguration(databaseType, databaseHost, databasePort, databaseName, authDatabase, databaseUser, databasePassword))).ifPresent(databaseManager -> {
 
                     SectionedDatabase database = databaseManager.getDatabase();
                     database.registerSection("tasks", UniversalServiceTask.class);

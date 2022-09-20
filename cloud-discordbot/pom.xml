@@ -12,11 +12,13 @@
     <artifactId>cloud-discordbot</artifactId>
 
     <dependencies>
+        <!--
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>4.3.0_304</version>
+            <version>5.0.0-alpha.19</version>
         </dependency>
+         -->
         <dependency>
             <groupId>cloud.hytora</groupId>
             <artifactId>cloud-commons</artifactId>

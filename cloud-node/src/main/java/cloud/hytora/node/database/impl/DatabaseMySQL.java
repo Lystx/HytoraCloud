@@ -88,11 +88,6 @@ public class DatabaseMySQL implements IDatabase {
     }
 
     @Override
-    public Collection<String> keys(String collection) {
-        return entries(collection).keySet();
-    }
-
-    @Override
     public Collection<Document> documents(String collection) {
         return entries(collection).values();
     }
@@ -117,16 +112,6 @@ public class DatabaseMySQL implements IDatabase {
             }
             return documents;
         }, new HashMap<>());
-    }
-
-    @Override
-    public void iterate(String collection, BiConsumer<String, Document> consumer) {
-        this.entries(collection).forEach(consumer);
-    }
-
-    @Override
-    public void clear(String collection) {
-
     }
 
     private <T> T executeQuery(String query, DatabaseFunction<ResultSet, T> function, T defaultValue) {

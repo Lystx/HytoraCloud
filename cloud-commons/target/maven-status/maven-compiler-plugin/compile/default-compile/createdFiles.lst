@@ -122,6 +122,7 @@ cloud\hytora\common\location\ImmutableLocation.class
 cloud\hytora\common\misc\FileUtils.class
 cloud\hytora\document\gson\adapter\PairTypeAdapter.class
 cloud\hytora\common\function\ExceptionallyRunnable.class
+cloud\hytora\document\gson\adapter\AddressTypeAdapter.class
 cloud\hytora\common\util\DisplayFormat.class
 cloud\hytora\common\collection\IRandom.class
 cloud\hytora\context\utils\PackageScanner.class
@@ -180,6 +181,7 @@ cloud\hytora\common\collection\pair\Quadro.class
 cloud\hytora\document\bson\BsonEntry.class
 cloud\hytora\document\empty\EmptyBundle.class
 cloud\hytora\document\gson\adapter\GsonTypeAdapter$1.class
+cloud\hytora\http\ProtocolAddress.class
 cloud\hytora\context\annotations\DocumentConfiguration.class
 cloud\hytora\document\gson\GsonEntry.class
 cloud\hytora\common\util\Operator.class

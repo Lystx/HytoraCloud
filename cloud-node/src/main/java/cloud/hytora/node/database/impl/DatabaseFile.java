@@ -4,10 +4,12 @@ import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.database.DatabaseDriver;
 import cloud.hytora.database.DocumentDatabase;
+import cloud.hytora.database.api.IPayLoad;
 import cloud.hytora.database.api.elements.Database;
 import cloud.hytora.database.api.elements.DatabaseCollection;
 import cloud.hytora.database.api.elements.DatabaseEntry;
 import cloud.hytora.database.api.elements.DatabaseFilter;
+import cloud.hytora.database.api.elements.def.DefaultDatabaseEntry;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 
@@ -15,6 +17,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.node.INodeManager;
 import cloud.hytora.http.HttpAddress;
+import cloud.hytora.http.impl.NettyHttpServer;
 import cloud.hytora.node.NodeDriver;
 
 
@@ -37,12 +40,12 @@ public class DatabaseFile implements IDatabase {
 
     public DatabaseFile(DatabaseConfiguration configuration) {
         this.configuration = configuration;
-        this.driver = new DatabaseDriver(CloudDriver.getInstance().getNetworkExecutor().getName());
+        this.driver = new DatabaseDriver(CloudDriver.getInstance().getNetworkExecutor() == null ? "UNKNOWN" : CloudDriver.getInstance().getNetworkExecutor().getName());
         if (configuration.getPassword().equalsIgnoreCase("local") || configuration.getHost().equalsIgnoreCase("127.0.0.1")) {
             Task.runAsync(() -> {
                 DocumentDatabase db = new DocumentDatabase(
                         Logger.constantInstance(),
-                        NodeDriver.getInstance().getWebServer(),
+                        NodeDriver.getInstance().getWebServer() == null ? new NettyHttpServer().addListener(new HttpAddress(configuration.getHost(), configuration.getPort())) : NodeDriver.getInstance().getWebServer(),
                         new File(NodeDriver.STORAGE_FOLDER, "database/"),
                         false,
                         configuration.getPassword()
@@ -67,21 +70,14 @@ public class DatabaseFile implements IDatabase {
 
     @Override
     public void insert(String collection, String key, Document document) {
-
         DatabaseCollection db = this.database.getCollectionOrCreate(collection);
-        db.insertEntryAsync(e -> {
-            e.setId(key);
-            e.setDocument(document);
-        });
+        db.insertEntry(new DefaultDatabaseEntry(document, key));
     }
 
     @Override
     public void update(String collection, String key, Document document) {
         DatabaseCollection db = this.database.getCollectionOrCreate(collection);
-        db.updateEntryAsync(key, e -> {
-            e.setId(key);
-            e.setDocument(document);
-        });
+        db.updateEntry(key, new DefaultDatabaseEntry(document, key));
     }
 
     @Override
@@ -93,7 +89,7 @@ public class DatabaseFile implements IDatabase {
     @Override
     public void delete(String collection, String key) {
         DatabaseCollection db = this.database.getCollectionOrCreate(collection);
-        db.deleteEntryAsync(key);
+        db.deleteEntry(key);
     }
 
     @Override
@@ -108,15 +104,9 @@ public class DatabaseFile implements IDatabase {
     }
 
     @Override
-    public Collection<String> keys(String collection) {
-        DatabaseCollection db = this.database.getCollectionOrCreate(collection);
-        return db.getIdentifiers();
-    }
-
-    @Override
     public Collection<Document> documents(String collection) {
         DatabaseCollection db = this.database.getCollectionOrCreate(collection);
-        return db.findEntries().stream().map(e -> (Document)e).collect(Collectors.toList());
+        return db.filterEntriesAsync(DatabaseFilter.ALL).syncUninterruptedly().get().stream().map(e -> (Document)e).collect(Collectors.toList());
     }
 
     @Override
@@ -136,12 +126,4 @@ public class DatabaseFile implements IDatabase {
         return map;
     }
 
-    @Override
-    public void iterate(String collection, BiConsumer<String, Document> consumer) {
-        entries(collection).forEach(consumer);
-    }
-
-    @Override
-    public void clear(String collection) {
-    }
 }

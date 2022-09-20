@@ -31,12 +31,10 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
     public NodeServiceTaskManager() {
         this.database = NodeDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
 
-        Task.runAsync(() -> {
-            // loading all database groups and configurations
-            this.getAllCachedTaskGroups().addAll(this.database.getSection(ITaskGroup.class).getAll());
-            this.getAllCachedTasks().addAll(this.database.getSection(IServiceTask.class).getAll());
+        // loading all database groups and configurations
+        this.getAllCachedTaskGroups().addAll(this.database.getSection(ITaskGroup.class).getAll());
+        this.getAllCachedTasks().addAll(this.database.getSection(IServiceTask.class).getAll());
 
-        });
         if (CloudDriver.getInstance().getNetworkExecutor() != null) {
 
             //registering packet handler
@@ -48,6 +46,7 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
         }
 
         if (CloudDriver.getInstance().getNetworkExecutor() == null) {
+            //setup state
             return;
         }
         if (this.getAllCachedTasks().isEmpty()) {
@@ -76,6 +75,9 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
 
         NodeDriver.getInstance().getServiceQueue().dequeue();
 
+        if (NodeDriver.getInstance().getProviderRegistry().get(INodeManager.class).isNull()) {
+            return;
+        }
         if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());
         }
@@ -89,6 +91,9 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
         }
         super.registerTask(task);
 
+        if (NodeDriver.getInstance().getProviderRegistry().get(INodeManager.class).isNull()) {
+            return;
+        }
         if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());
         }
@@ -99,6 +104,9 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
         this.database.getSection(ITaskGroup.class).insert(task.getName(), task);
         super.registerTaskGroup(task);
 
+        if (NodeDriver.getInstance().getProviderRegistry().get(INodeManager.class).isNull()) {
+            return;
+        }
         if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());
         }
@@ -109,6 +117,9 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
         this.database.getSection(ITaskGroup.class).delete(task.getName());
         super.unregisterTaskGroup(task);
 
+        if (NodeDriver.getInstance().getProviderRegistry().get(INodeManager.class).isNull()) {
+            return;
+        }
         if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());
         }
@@ -122,6 +133,9 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
         }
         super.unregisterTask(task);
 
+        if (NodeDriver.getInstance().getProviderRegistry().get(INodeManager.class).isNull()) {
+            return;
+        }
         if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());
         }
@@ -131,6 +145,11 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
     public void updateTask(@NotNull IServiceTask task) {
         this.database.getSection(IServiceTask.class).update(task.getName(), task);
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventGlobally(new TaskUpdateEvent(task));
+
+
+        if (NodeDriver.getInstance().getProviderRegistry().get(INodeManager.class).isNull()) {
+            return;
+        }
         if (NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class) != null && NodeDriver.getInstance().getProviderRegistry().getUnchecked(INodeManager.class).isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getNetworkExecutor());
         }

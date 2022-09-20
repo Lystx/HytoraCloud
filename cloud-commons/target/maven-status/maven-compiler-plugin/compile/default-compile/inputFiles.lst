@@ -61,6 +61,7 @@ D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\util\Operator.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\gson\GsonHelper.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\context\annotations\Constructor.java
+D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\document\gson\adapter\AddressTypeAdapter.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\http\HttpAddress.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\http\api\DefaultRegisteredHandler.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\scheduler\def\DefaultScheduler.java
@@ -80,6 +81,7 @@ D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\scheduler\SchedulerFuture.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\http\api\HttpVersion.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\task\exception\ValueHoldsNoObjectException.java
+D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\http\ProtocolAddress.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\logging\formatter\UncoloredMessageFormatter.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\collection\pair\Triple.java
 D:\Games\IntelliJ\workspace\HytoraCloud\cloud-commons\src\main\java\cloud\hytora\common\location\impl\DefaultLocation.java

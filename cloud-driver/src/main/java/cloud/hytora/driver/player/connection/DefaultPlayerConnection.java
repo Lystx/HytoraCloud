@@ -32,14 +32,14 @@ public class DefaultPlayerConnection implements PlayerConnection, IBufferObject 
         switch (state) {
             case READ:
                 proxyName = buffer.readString();
-                address = buffer.readObject(ProtocolAddress.class);
+                address = buffer.readAddress();
                 rawVersion = buffer.readInt();
                 onlineMode = buffer.readBoolean();
                 legacy = buffer.readBoolean();
                 break;
             case WRITE:
                 buffer.writeString(proxyName);
-                buffer.writeObject(address);
+                buffer.writeAddress(address);
                 buffer.writeInt(rawVersion);
                 buffer.writeBoolean(onlineMode);
                 buffer.writeBoolean(legacy);

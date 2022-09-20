@@ -10,7 +10,7 @@ import java.util.Collection;
 
 public interface HttpServer {
 
-	void addListener(@Nonnull HttpAddress address);
+	HttpServer addListener(@Nonnull HttpAddress address);
 
 	void shutdown();
 

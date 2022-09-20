@@ -25,17 +25,11 @@ public interface IDatabase {
 
     Collection<Document> filter(String collection, String fieldName, Object fieldValue);
 
-    Collection<String> keys(String collection);
-
     Collection<Document> documents(String collection);
 
     Map<String, Document> entries(String collection);
 
     Map<String, Document> filter(String collection, BiPredicate<String, Document> predicate);
-
-    void iterate(String collection, BiConsumer<String, Document> consumer);
-
-    void clear(String collection);
 
 
 }

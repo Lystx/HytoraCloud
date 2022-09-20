@@ -26,7 +26,7 @@ public class NettyHttpServer implements HttpServer {
     protected final Collection<WebSocketChannel> websocketChannels = new CopyOnWriteArrayList<>();
 
     @Override
-    public void addListener(@Nonnull HttpAddress address) {
+    public HttpServer addListener(@Nonnull HttpAddress address) {
 
         try {
             new ServerBootstrap()
@@ -47,6 +47,7 @@ public class NettyHttpServer implements HttpServer {
         } catch (InterruptedException ex) {
             ex.printStackTrace();
         }
+        return this;
     }
 
     @Override

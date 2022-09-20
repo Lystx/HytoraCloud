@@ -29,6 +29,10 @@ public class ActionPostHandler {
         String operation = params.get("operation") == null ? null : params.get("operation").stream().findAny().orElse(null);
         String identifier = params.get("identifier") == null ? null : params.get("identifier").stream().findAny().orElse(null);
 
+        if (identifier == null || identifier.trim().isEmpty() && document.has("_id")) {
+            identifier = document.removeAndGet("_id").toString();
+        }
+
         Document body = Document.newJsonDocument("message", "Unknown operation provided!");
         int code = HttpCodes.OK;
         if (database == null || collection == null || operation == null) {

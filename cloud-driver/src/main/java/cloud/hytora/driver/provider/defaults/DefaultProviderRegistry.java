@@ -24,6 +24,7 @@ public class DefaultProviderRegistry implements ProviderRegistry {
 
     @Override
     public <T> Task<T> setProvider(Class<T> service, T provider, boolean immutable, boolean needsReplacement) throws ProviderImmutableException {
+        Task<T> task = Task.empty();
         ProviderEntry<?> current = this.entries.get(service);
         if (current != null && current.isImmutable()) {
             throw new ProviderImmutableException(service);
@@ -33,7 +34,8 @@ public class DefaultProviderRegistry implements ProviderRegistry {
             eventManager.registerListener(provider);
         }
         this.entries.put(service, new DefaultProviderEntry<>(service, provider, immutable, needsReplacement));
-        return Task.newInstance(provider);
+        task.setResult(provider);
+        return task;
     }
 
     

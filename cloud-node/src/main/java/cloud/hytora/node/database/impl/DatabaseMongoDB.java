@@ -100,11 +100,6 @@ public class DatabaseMongoDB implements IDatabase {
     }
 
     @Override
-    public Collection<String> keys(String collection) {
-        return entries(collection).keySet();
-    }
-
-    @Override
     public Collection<Document> documents(String collection) {
         return entries(collection).values();
     }
@@ -127,13 +122,4 @@ public class DatabaseMongoDB implements IDatabase {
         return map;
     }
 
-    @Override
-    public void iterate(String collection, BiConsumer<String, Document> consumer) {
-        entries(collection).forEach(consumer);
-    }
-
-    @Override
-    public void clear(String collection) {
-
-    }
 }

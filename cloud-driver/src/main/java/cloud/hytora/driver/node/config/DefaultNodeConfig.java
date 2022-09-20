@@ -50,7 +50,11 @@ public class DefaultNodeConfig implements INodeConfig {
                 remote = buf.readBoolean();
                 maxBootableServicesAtSameTime = buf.readInt();
                 memory = buf.readLong();
-                clusterAddresses = buf.readObjectArray(ProtocolAddress.class);
+                int size = buf.readInt();
+                clusterAddresses = new ProtocolAddress[size];
+                for (int i = 0; i < size; i++) {
+                    clusterAddresses[i] = buf.readAddress();
+                }
                 break;
 
             case WRITE:
@@ -61,7 +65,11 @@ public class DefaultNodeConfig implements INodeConfig {
                 buf.writeBoolean(remote);
                 buf.writeInt(maxBootableServicesAtSameTime);
                 buf.writeLong(memory);
-                buf.writeObjectArray(clusterAddresses);
+
+                buf.writeInt(clusterAddresses.length);
+                for (ProtocolAddress clusterAddress : clusterAddresses) {
+                    buf.writeAddress(clusterAddress);
+                }
                 break;
         }
     }
