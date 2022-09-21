@@ -1,6 +1,6 @@
 package cloud.hytora.http.api;
 
-import cloud.hytora.common.collection.pair.Tuple;
+import cloud.hytora.common.collection.pair.Pair;
 import cloud.hytora.http.HttpAddress;
 
 import javax.annotation.Nonnull;
@@ -27,6 +27,6 @@ public interface HttpServer {
 	@Nonnull
     HttpHandlerRegistry getHandlerRegistry();
 
-	void applyUserAuth(@Nonnull HttpContext context, @Nonnull Tuple<HttpAuthHandler, HttpAuthUser> values, @Nullable String header);
+	void applyUserAuth(@Nonnull HttpContext context, @Nonnull Pair<HttpAuthHandler, HttpAuthUser> values, @Nullable String header);
 
 }

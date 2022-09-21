@@ -1,6 +1,6 @@
 package cloud.hytora.driver.commands.data;
 
-import cloud.hytora.common.collection.pair.Tuple;
+import cloud.hytora.common.collection.pair.Pair;
 import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.driver.CloudDriver;
@@ -283,7 +283,7 @@ public class DriverCommand {
         return children;
     }
 
-    public Tuple<DriverCommand, String[]> getInstance(String[] args, Function<DriverCommand, Boolean> preCommand) {
+    public Pair<DriverCommand, String[]> getInstance(String[] args, Function<DriverCommand, Boolean> preCommand) {
         if(preCommand != null && !preCommand.apply(this)) {
             return null;
         }
@@ -294,7 +294,7 @@ public class DriverCommand {
 
             return children.getInstance(Arrays.copyOfRange(args, 1, args.length), preCommand);
         }
-        return new Tuple<>(this, args);
+        return new Pair<>(this, args);
     }
 
     /**
@@ -308,7 +308,7 @@ public class DriverCommand {
     public <T extends CommandSender> boolean execute(CommandContext<T> context, String[] strings) {
         // list command instance atg last argument (subcommands)
         PreCommandEvent[] event = new PreCommandEvent[1];
-        Tuple<DriverCommand, String[]> command = getInstance(strings, commandInstance -> {
+        Pair<DriverCommand, String[]> command = getInstance(strings, commandInstance -> {
             event[0] = new PreCommandEvent<>(context, commandInstance);
             CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventOnlyLocally(event[0]);
             return !event[0].isCancelled();

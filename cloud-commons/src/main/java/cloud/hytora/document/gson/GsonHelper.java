@@ -8,7 +8,7 @@ import com.google.gson.internal.bind.TypeAdapters;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
-import cloud.hytora.common.collection.pair.Pair;
+import cloud.hytora.common.collection.pair.ValueHolder;
 import cloud.hytora.common.misc.BukkitReflectionSerializationUtils;
 import cloud.hytora.document.Bundle;
 import cloud.hytora.document.Document;
@@ -47,7 +47,7 @@ public final class GsonHelper {
                 .registerTypeAdapterFactory(GsonTypeAdapter.newTypeHierarchyFactory(Document.class, new DocumentTypeAdapter()))
                 .registerTypeAdapterFactory(GsonTypeAdapter.newTypeHierarchyFactory(ProtocolAddress.class, new AddressTypeAdapter()))
                 .registerTypeAdapterFactory(GsonTypeAdapter.newTypeHierarchyFactory(Bundle.class, new BundleTypeAdapter()))
-                .registerTypeAdapterFactory(GsonTypeAdapter.newTypeHierarchyFactory(Pair.class, new PairTypeAdapter()))
+                .registerTypeAdapterFactory(GsonTypeAdapter.newTypeHierarchyFactory(ValueHolder.class, new PairTypeAdapter()))
                 .registerTypeAdapterFactory(GsonTypeAdapter.newTypeHierarchyFactory(Class.class, new ClassTypeAdapter()))
                 .registerTypeAdapterFactory(GsonTypeAdapter.newTypeHierarchyFactory(OffsetDateTime.class, new OffsetDateTimeTypeAdapter()));
 

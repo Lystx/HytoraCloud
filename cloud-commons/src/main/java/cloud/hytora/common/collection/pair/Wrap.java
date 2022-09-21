@@ -1,5 +1,10 @@
 package cloud.hytora.common.collection.pair;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -7,24 +12,41 @@ import java.util.Objects;
 import java.util.function.Function;
 
 
-public class Wrap<F> implements Pair {
+/**
+ * Implementation of the {@link ValueHolder} for holding <b>one</b> values
+ *
+ * @param <F> The type of the value
+ *
+ * @author Lystx
+ * @since SNAPSHOT-1.1
+ */
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class Wrap<F> implements ValueHolder {
 
+	@Nonnull
+	public <T> Wrap<T> map(@Nonnull Function<? super F, ? extends T> mapper) {
+		return new Wrap<>(mapper.apply(first));
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static <F> Wrap<F> of(@Nullable F first) {
+		return new Wrap<>(first);
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static <F> Wrap<F> empty() {
+		return new Wrap<>();
+	}
+
+	/**
+	 * The wrapped value
+	 */
 	protected F first;
-
-	public Wrap() {
-	}
-
-	public Wrap(F first) {
-		this.first = first;
-	}
-
-	public F getFirst() {
-		return first;
-	}
-
-	public void setFirst(F first) {
-		this.first = first;
-	}
 
 	@Override
 	public final int amount() {
@@ -47,11 +69,6 @@ public class Wrap<F> implements Pair {
 		return first != null;
 	}
 
-	@Nonnull
-	public <T> Wrap<T> map(@Nonnull Function<? super F, ? extends T> mapper) {
-		return new Wrap<>(mapper.apply(first));
-	}
-
 	@Override
 	public String toString() {
 		return "Wrap[" + first + "]";
@@ -70,15 +87,9 @@ public class Wrap<F> implements Pair {
 		return Objects.hash(first);
 	}
 
-	@Nonnull
-	@CheckReturnValue
-	public static <F> Wrap<F> of(@Nullable F first) {
-		return new Wrap<>(first);
-	}
-
-	@Nonnull
-	@CheckReturnValue
-	public static <F> Wrap<F> empty() {
-		return new Wrap<>();
+	@org.jetbrains.annotations.Nullable
+	@Override
+	public <T> T get(int index) {
+		return index == 1 ? (T) first : null;
 	}
 }

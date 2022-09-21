@@ -1,6 +1,6 @@
 package cloud.hytora.node.console;
 
-import cloud.hytora.common.collection.pair.Tuple;
+import cloud.hytora.common.collection.pair.Pair;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.commands.CommandEventAdapter;
 import cloud.hytora.driver.commands.data.DriverCommand;
@@ -25,7 +25,7 @@ public class ConsoleCommandEventAdapter extends CommandEventAdapter {
 
         String firstArg = event.getParameter().get(0);
         DriverCommand instance = commandManager.getCommand(firstArg);
-        Tuple<DriverCommand, String[]> context
+        Pair<DriverCommand, String[]> context
                 = instance.getInstance(event.getParameter().subList(1, event.getParameter().size())
                 .toArray(new String[]{}), null);
         if(instance == null || context == null) {

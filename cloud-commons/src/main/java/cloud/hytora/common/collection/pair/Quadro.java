@@ -1,5 +1,10 @@
 package cloud.hytora.common.collection.pair;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -7,106 +12,29 @@ import java.util.Objects;
 import java.util.function.Function;
 
 /**
-
+ * Implementation of the {@link ValueHolder} for holding <b>four</b> values
  *
  * @param <F> The type of the first value
  * @param <S> The type of the second value
  * @param <T> The type of the third value
  * @param <FF> The type of the fourth value
+ *
+ * @author Lystx
+ * @since SNAPSHOT-1.1
  */
-public class Quadro<F, S, T, FF> implements Pair {
-
-	protected F first;
-	protected S second;
-	protected T third;
-	protected FF fourth;
-
-	public Quadro() {
-	}
-
-	public Quadro(@Nullable F first, @Nullable S second, @Nullable T third, @Nullable FF fourth) {
-		this.first = first;
-		this.second = second;
-		this.third = third;
-		this.fourth = fourth;
-	}
-
-	@Override
-	public final int amount() {
-		return 4;
-	}
-
-	@Nonnull
-	@Override
-	public final Object[] values() {
-		return new Object[] { first, second, third, first };
-	}
-
-	public F getFirst() {
-		return first;
-	}
-
-	public S getSecond() {
-		return second;
-	}
-
-	public T getThird() {
-		return third;
-	}
-
-	public FF getFourth() {
-		return fourth;
-	}
-
-	public void setFirst(@Nullable F first) {
-		this.first = first;
-	}
-
-	public void setSecond(@Nullable S second) {
-		this.second = second;
-	}
-
-	public void setThird(@Nullable T third) {
-		this.third = third;
-	}
-
-	public void setFourth(@Nullable FF fourth) {
-		this.fourth = fourth;
-	}
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class Quadro<F, S, T, FF> implements ValueHolder {
 
 	@Nonnull
 	@CheckReturnValue
 	public <ToF, ToS, ToT, ToFF> Quadro<ToF, ToS, ToT, ToFF> map(@Nonnull Function<? super F, ? extends ToF> firstMapper,
-	                                                             @Nonnull Function<? super S, ? extends ToS> secondMapper,
-	                                                             @Nonnull Function<? super T, ? extends ToT> thirdMapper,
-	                                                             @Nonnull Function<? super FF, ? extends ToFF> fourthMapper) {
+																 @Nonnull Function<? super S, ? extends ToS> secondMapper,
+																 @Nonnull Function<? super T, ? extends ToT> thirdMapper,
+																 @Nonnull Function<? super FF, ? extends ToFF> fourthMapper) {
 		return of(firstMapper.apply(first), secondMapper.apply(second), thirdMapper.apply(third), fourthMapper.apply(fourth));
-	}
-
-	public boolean noneNull() {
-		return first != null && second != null && third != null && fourth != null;
-	}
-
-	public boolean allNull() {
-		return first == null && second == null && third == null && fourth != null;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-		Quadro<?, ?, ?, ?> quadro = (Quadro<?, ?, ?, ?>) o;
-		return Objects.equals(first, quadro.first) && Objects.equals(second, quadro.second) && Objects.equals(third, quadro.third) && Objects.equals(fourth, quadro.fourth);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(first, second, third, fourth);
-	}
-
-	@Override
-	public String toString() {
-		return "Quadro[" + first + ", " + second + ", " + third + ", " + fourth + "]";
 	}
 
 	@Nonnull
@@ -137,5 +65,70 @@ public class Quadro<F, S, T, FF> implements Pair {
 	@Nonnull
 	public static <F, S, T, FF> Quadro<F, S, T, FF> empty() {
 		return new Quadro<>();
+	}
+
+	/**
+	 * The first value stored
+	 */
+	protected F first;
+
+	/**
+	 * The second value stored
+	 */
+	protected S second;
+
+	/**
+	 * The third value stored
+	 */
+	protected T third;
+
+	/**
+	 * The fourth value stored
+	 */
+	protected FF fourth;
+
+	@Override
+	public final int amount() {
+		return 4;
+	}
+
+	@Nonnull
+	@Override
+	public final Object[] values() {
+		return new Object[] { first, second, third, first };
+	}
+
+	@Override
+	public boolean noneNull() {
+		return first != null && second != null && third != null && fourth != null;
+	}
+
+	@Override
+	public boolean allNull() {
+		return first == null && second == null && third == null && fourth != null;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Quadro<?, ?, ?, ?> quadro = (Quadro<?, ?, ?, ?>) o;
+		return Objects.equals(first, quadro.first) && Objects.equals(second, quadro.second) && Objects.equals(third, quadro.third) && Objects.equals(fourth, quadro.fourth);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(first, second, third, fourth);
+	}
+
+	@Override
+	public String toString() {
+		return "Quadro[" + first + ", " + second + ", " + third + ", " + fourth + "]";
+	}
+
+	@org.jetbrains.annotations.Nullable
+	@Override
+	public <E> E get(int index) {
+		return index == 1 ? (E) first : (index == 2 ? (E) second : (index == 3 ? (E) third : (E) fourth));
 	}
 }

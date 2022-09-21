@@ -1,6 +1,6 @@
 package cloud.hytora.http.impl;
 
-import cloud.hytora.common.collection.pair.Tuple;
+import cloud.hytora.common.collection.pair.Pair;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.document.Document;
 import cloud.hytora.http.HttpAddress;
@@ -57,7 +57,7 @@ public class NettyHttpChannelHandler extends SimpleChannelInboundHandler<HttpReq
 		HttpMethod method = httpContext.getRequest().getMethod();
 		String[] pathEntries = fullPath.split("/");
 		String[] handlerPathEntries;
-		Tuple<HttpAuthHandler, HttpAuthUser> auth = null;
+		Pair<HttpAuthHandler, HttpAuthUser> auth = null;
 		Collection<RegisteredHandler> pathHandlers = new ArrayList<>();
 		for (RegisteredHandler handler : server.getHandlerRegistry().getHandlers()) {
 
@@ -68,7 +68,7 @@ public class NettyHttpChannelHandler extends SimpleChannelInboundHandler<HttpReq
 
 			if (!handler.getPermission().isEmpty()) {
 				if (auth == null) {
-					auth = Tuple.empty();
+					auth = Pair.empty();
 					String header = httpContext.getRequest().getHeader("Authorization");
 					server.applyUserAuth(httpContext, auth, header);
 				}

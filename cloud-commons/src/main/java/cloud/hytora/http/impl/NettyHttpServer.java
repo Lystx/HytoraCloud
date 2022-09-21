@@ -1,6 +1,6 @@
 package cloud.hytora.http.impl;
 
-import cloud.hytora.common.collection.pair.Tuple;
+import cloud.hytora.common.collection.pair.Pair;
 import cloud.hytora.http.HttpAddress;
 import cloud.hytora.http.api.*;
 import io.netty.bootstrap.ServerBootstrap;
@@ -93,7 +93,7 @@ public class NettyHttpServer implements HttpServer {
     }
 
     @Override
-    public void applyUserAuth(@Nonnull HttpContext context, @Nonnull Tuple<HttpAuthHandler, HttpAuthUser> values, @Nullable String header) {
+    public void applyUserAuth(@Nonnull HttpContext context, @Nonnull Pair<HttpAuthHandler, HttpAuthUser> values, @Nullable String header) {
         if (header != null) {
             String[] authorization = header.split(" ");
 
