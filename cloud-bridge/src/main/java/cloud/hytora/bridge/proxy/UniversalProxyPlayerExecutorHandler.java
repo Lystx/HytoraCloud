@@ -1,6 +1,7 @@
 package cloud.hytora.bridge.proxy;
 
 import cloud.hytora.bridge.CloudBridge;
+import cloud.hytora.common.logging.Logger;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.common.CloudMessages;
 import cloud.hytora.driver.event.EventListener;
@@ -22,6 +23,9 @@ import java.util.List;
 
 public class UniversalProxyPlayerExecutorHandler {
 
+    /**
+     * Initializes this helper class
+     */
     public static void init() {
         UniversalProxyPlayerExecutorHandler handler = new UniversalProxyPlayerExecutorHandler();
 
@@ -35,6 +39,9 @@ public class UniversalProxyPlayerExecutorHandler {
                 });
     }
 
+    /**
+     * Private constructor because utility class
+     */
     private UniversalProxyPlayerExecutorHandler() {
     }
 
@@ -65,15 +72,18 @@ public class UniversalProxyPlayerExecutorHandler {
     @EventListener
     public void handle(ServiceRegisterEvent event) {
         ICloudServer cloudServer = event.getCloudServer();
-        if (cloudServer.getTask() == null) {
-            return;
-        }
-        if (!cloudServer.getTask().getVersion().isProxy()) {
-            IBridgeProxyExtension adapter = CloudBridge.getRemoteExtension().asProxyExtension();
-            if (adapter != null) {
-                adapter.registerService(cloudServer);
-            }
-        }
+        cloudServer.getTaskAsync()
+                .ifPresentOrElse(task -> {
+                    if (!task.getVersion().isProxy()) {
+                        IBridgeProxyExtension adapter = CloudBridge.getRemoteExtension().asProxyExtension();
+                        if (adapter != null) {
+                            adapter.registerService(cloudServer);
+                        }
+                    }
+                }, () -> {
+                    Logger.constantInstance().error("Task for Server '{}' is null!", cloudServer.getName());
+                });
+
     }
 
     @EventListener

@@ -21,7 +21,7 @@ import java.util.function.Consumer;
  * and checks if the input matches any registered Cloud-Sided-Command
  *
  * @author Lystx
- * @since SNAPSHOT-1.5
+ * @since SNAPSHOT-1.3
  */
 @Data
 public class BukkitPlayerCommandListener implements Listener {
@@ -54,7 +54,7 @@ public class BukkitPlayerCommandListener implements Listener {
             event.setCancelled(true);
         }
 
-
+        //message is no command!
         if (!event.getMessage().startsWith("/")) {
             return;
         }

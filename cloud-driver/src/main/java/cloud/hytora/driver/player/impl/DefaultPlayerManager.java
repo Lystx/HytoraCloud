@@ -1,5 +1,6 @@
 package cloud.hytora.driver.player.impl;
 
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.event.EventListener;
@@ -104,13 +105,13 @@ public abstract class DefaultPlayerManager implements ICloudPlayerManager {
     }
 
     @Override
-    public @NotNull Optional<ICloudPlayer> getCloudPlayer(final @NotNull UUID uniqueId) {
-        return Optional.ofNullable(this.cachedCloudPlayers.get(uniqueId));
+    public @NotNull Task<ICloudPlayer> getCloudPlayer(final @NotNull UUID uniqueId) {
+        return Task.newInstance(this.cachedCloudPlayers.get(uniqueId));
     }
 
     @Override
-    public @NotNull Optional<ICloudPlayer> getCloudPlayer(final @NotNull String username) {
-        return this.cachedCloudPlayers.values().stream().filter(it -> it.getName().equalsIgnoreCase(username)).findAny();
+    public @NotNull Task<ICloudPlayer> getCloudPlayer(final @NotNull String username) {
+        return Task.newInstance(this.cachedCloudPlayers.values().stream().filter(it -> it.getName().equalsIgnoreCase(username)).findAny().orElse(null));
     }
 
     @Override

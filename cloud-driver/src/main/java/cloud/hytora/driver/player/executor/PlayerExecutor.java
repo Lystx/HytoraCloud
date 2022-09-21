@@ -19,6 +19,10 @@ public interface PlayerExecutor {
         return new CloudPlayerExecutor(player);
     }
 
+    public static PlayerExecutor forUniqueId(UUID uniqueId) {
+        return new UnknownExecutor(uniqueId);
+    }
+
     /**
      * The uuid this executor is for
      */

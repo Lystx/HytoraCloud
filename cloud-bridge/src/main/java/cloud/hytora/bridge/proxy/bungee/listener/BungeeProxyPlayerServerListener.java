@@ -20,6 +20,9 @@ import net.md_5.bungee.event.EventHandler;
 
 public class BungeeProxyPlayerServerListener implements Listener {
 
+    /**
+     * The player manager instance for quicker access
+     */
     private final ICloudPlayerManager playerManager;
 
     public BungeeProxyPlayerServerListener() {

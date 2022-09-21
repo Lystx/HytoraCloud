@@ -30,7 +30,15 @@ import java.util.UUID;
 public class BungeePlayerConnectionListener implements Listener {
 
 
+    /**
+     * The player manager instance for quicker access
+     */
     private final ICloudPlayerManager playerManager;
+
+
+    /**
+     * The plugin instance for quicker access
+     */
     private final CloudBridgeBungeePlugin cloudBridgeBungeePlugin;
 
     public BungeePlayerConnectionListener(CloudBridgeBungeePlugin cloudBridgeBungeePlugin) {

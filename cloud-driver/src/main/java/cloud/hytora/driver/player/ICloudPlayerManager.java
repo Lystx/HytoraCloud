@@ -21,10 +21,10 @@ public interface ICloudPlayerManager {
     void setAllCachedCloudPlayers(List<ICloudPlayer> allCachedCloudPlayers);
 
     @NotNull
-    Optional<ICloudPlayer> getCloudPlayer(@NotNull UUID uniqueId);
+    Task<ICloudPlayer> getCloudPlayer(@NotNull UUID uniqueId);
 
     @NotNull
-    Optional<ICloudPlayer> getCloudPlayer(@NotNull String username);
+    Task<ICloudPlayer> getCloudPlayer(@NotNull String username);
 
     @Nullable
     ICloudPlayer getCloudPlayerByUniqueIdOrNull(@NotNull UUID uniqueId);

@@ -22,6 +22,12 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+/**
+ * This Implemented BridgePlugin on Spigot-Side
+ *
+ * @author Lystx
+ * @since SNAPSHOT-1.3
+ */
 public class CloudBridgeBukkitPlugin extends JavaPlugin implements IBridgePlugin, IBridgeExtension {
 
     @Override
@@ -59,7 +65,7 @@ public class CloudBridgeBukkitPlugin extends JavaPlugin implements IBridgePlugin
 
     @Override
     public IBridgeProxyExtension asProxyExtension() throws ClassCastException {
-        throw new ClassCastException("BukkitBridge != ProxyBridge!");
+        throw new ClassCastException("BukkitBridge != ProxyBridge");
     }
 
     @Override

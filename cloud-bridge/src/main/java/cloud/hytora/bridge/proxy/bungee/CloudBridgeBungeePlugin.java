@@ -22,6 +22,12 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+/**
+ * This Implemented BridgePlugin on BungeeCord-Side
+ *
+ * @author Lystx
+ * @since SNAPSHOT-1.2
+ */
 public class CloudBridgeBungeePlugin extends Plugin implements IBridgePlugin, IBridgeProxyExtension {
 
     @Override

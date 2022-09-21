@@ -23,13 +23,13 @@ public class BungeeProxyPingListener implements Listener {
     public void handle(ProxyPingEvent event) {
         ServerPing response = event.getResponse();
 
-        ICloudServer ICloudServer = Remote.getInstance().thisSidesClusterParticipant();
-        IPingProperties pingProperties = ICloudServer.getPingProperties();
+        ICloudServer cloudServer = Remote.getInstance().thisSidesClusterParticipant();
+        IPingProperties pingProperties = cloudServer.getPingProperties();
 
         int maxPlayers, onlinePlayers;
         if (pingProperties.isUsePlayerPropertiesOfService()) {
-            maxPlayers = ICloudServer.getMaxPlayers();
-            onlinePlayers = pingProperties.isCombineAllProxiesIfProxyService() ? CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getCloudPlayerOnlineAmount() : ICloudServer.getOnlinePlayers().size();
+            maxPlayers = cloudServer.getMaxPlayers();
+            onlinePlayers = pingProperties.isCombineAllProxiesIfProxyService() ? CloudDriver.getInstance().getProviderRegistry().getUnchecked(ICloudPlayerManager.class).getCloudPlayerOnlineAmount() : cloudServer.getOnlinePlayers().size();
         } else {
             maxPlayers = pingProperties.getCustomMaxPlayers();
             onlinePlayers = pingProperties.getCustomOnlinePlayers();
