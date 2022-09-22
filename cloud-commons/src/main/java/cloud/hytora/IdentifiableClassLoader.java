@@ -3,6 +3,7 @@ package cloud.hytora;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 /**
@@ -26,12 +27,22 @@ public class IdentifiableClassLoader extends URLClassLoader {
     private final Collection<URL> addedUrls = new ArrayList<>();
 
     /**
+     * Constructs this class loader with pre-defined url this loader should load into runtime
+     *
+     * @param singleUrl the url
+     */
+    public IdentifiableClassLoader(URL singleUrl) {
+        this(new URL[]{singleUrl});
+    }
+
+    /**
      * Constructs this class loader with pre-defined urls this loader should load into runtime
      *
      * @param urls the url array
      */
     public IdentifiableClassLoader(URL[] urls) {
         super(urls, ClassLoader.getSystemClassLoader());
+        this.addedUrls.addAll(Arrays.asList(urls));
     }
 
     /**

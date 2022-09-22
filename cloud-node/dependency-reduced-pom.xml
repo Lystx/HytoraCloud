@@ -56,8 +56,8 @@
         <configuration>
           <archive>
             <manifestEntries>
-              <Premain-Class>cloud.hytora.node.CloudBootstrap</Premain-Class>
-              <Main-Class>cloud.hytora.node.CloudBootstrap</Main-Class>
+              <Premain-Class>cloud.hytora.node.bootstrap.CloudBootstrap</Premain-Class>
+              <Main-Class>cloud.hytora.node.bootstrap.CloudBootstrap</Main-Class>
               <Version>${project.version}</Version>
               <Implementation-Version>${project.version}</Implementation-Version>
             </manifestEntries>
