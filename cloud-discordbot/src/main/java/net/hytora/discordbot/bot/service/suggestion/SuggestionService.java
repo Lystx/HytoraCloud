@@ -2,19 +2,10 @@ package net.hytora.discordbot.bot.service.suggestion;
 
 import cloud.hytora.document.Document;
 import lombok.Getter;
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.channel.concrete.Category;
-import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.entities.channel.forums.ForumTagData;
-import net.dv8tion.jda.api.entities.emoji.Emoji;
-import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import net.hytora.discordbot.api.internal.IBotService;
 import net.hytora.discordbot.api.wrapped.DiscordListener;
 import net.hytora.discordbot.api.wrapped.DiscordServer;
-import net.hytora.discordbot.bot.HytoraDiscordBot;
 
-import java.awt.*;
 import java.util.Collection;
 
 @Getter
@@ -35,6 +26,7 @@ public class SuggestionService implements IBotService {
     @Override
     public Document handleSetup(DiscordServer server) {
 
+        /*
         Category category = server.createCategoryAsync("suggestion-c")
                 .syncUninterruptedly()
                 .get();
@@ -68,7 +60,8 @@ public class SuggestionService implements IBotService {
                 "categoryId", category.getId(),
                 "channelId", channel.getId(),
                 "resultChannelId", resultChannel.getId()
-        );
+        );*/
+        return Document.newJsonDocument();
     }
 
     @Override

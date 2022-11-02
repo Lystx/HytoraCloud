@@ -7,6 +7,8 @@ import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.IEntry;
 import cloud.hytora.document.wrapped.StorableDocument;
+import cloud.hytora.driver.commands.ICommandManager;
+import cloud.hytora.remote.impl.RemoteCommandManager;
 import lombok.Getter;
 import net.dv8tion.jda.api.*;
 import net.dv8tion.jda.api.entities.*;
@@ -21,6 +23,7 @@ import net.hytora.discordbot.api.wrapped.DiscordServer;
 import net.hytora.discordbot.api.wrapped.DiscordBuilder;
 import net.hytora.discordbot.api.internal.IBotService;
 import net.hytora.discordbot.bot.service.GeneralService;
+import net.hytora.discordbot.bot.service.command.CommandService;
 import net.hytora.discordbot.bot.service.rules.RuleService;
 import net.hytora.discordbot.bot.service.suggestion.SuggestionService;
 import net.hytora.discordbot.bot.service.welcome.WelcomeService;
@@ -43,6 +46,7 @@ public class HytoraDiscordBot {
     private static HytoraDiscordBot instance;
 
     private final Discord discord;
+    private final ICommandManager commandManager;
     private final Logger logger;
     private final Task<Void> guildReadyTask;
     private final Map<String, IBotService> services;
@@ -57,9 +61,12 @@ public class HytoraDiscordBot {
         this.logger = logger;
         this.guildReadyTask = Task.empty();
         this.services = new HashMap<>();
+        this.commandManager = new RemoteCommandManager();
+
 
         //setting services
         this.setService(new GeneralService());
+        this.setService(new CommandService());
         this.setService(new RuleService());
         this.setService(new WelcomeService());
         this.setService(new SuggestionService());
@@ -123,8 +130,10 @@ public class HytoraDiscordBot {
             for (IBotService service : this.services.values()) {
                 try {
                     Document setupDocument = service.handleSetup(server);
-                    service.handleConfigLoad(setupDocument);
-                    document.set(service.getIdentifier(), setupDocument);
+                    if (setupDocument != null) {
+                        service.handleConfigLoad(setupDocument);
+                        document.set(service.getIdentifier(), setupDocument);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -137,8 +146,10 @@ public class HytoraDiscordBot {
                 IBotService service = getService(serviceName);
                 if (!document.has(serviceName)) {
                     Document doc = service.handleSetup(server);
-                    service.handleConfigLoad(doc);
-                    document.set(service.getIdentifier(), doc);
+                    if (doc != null) {
+                        service.handleConfigLoad(doc);
+                        document.set(service.getIdentifier(), doc);
+                    }
 
                     continue;
                 }

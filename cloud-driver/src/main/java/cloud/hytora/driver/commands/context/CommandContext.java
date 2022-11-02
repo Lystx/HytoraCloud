@@ -17,9 +17,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.jodah.expiringmap.ExpiringMap;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -65,8 +63,22 @@ public abstract class CommandContext<T extends CommandSender> {
     @Setter
     private CommandArguments paramSet;
 
+    /**
+     * The custom properties
+     */
+    private final Map<String, Object> properties;
+
     public CommandContext(T commandSender) {
         this.commandSender = commandSender;
+        this.properties = new HashMap<>();
+    }
+
+    public void setProperty(String key, Object value) {
+        this.properties.put(key, value);
+    }
+
+    public <V> V getProperty(String key) {
+        return (V) properties.get(key);
     }
 
     /**

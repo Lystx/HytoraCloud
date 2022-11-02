@@ -214,7 +214,10 @@ public abstract class AbstractCommandManager extends DriverRegistryPool<String, 
     @Override
     public boolean register(String key, DriverCommand object) {
         handleCommandChange();
-        CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventOnlyLocally(new CommandRegisterEvent(object));
+        if (CloudDriver.getInstance() != null) {
+            CloudDriver.getInstance().getProviderRegistry().getUnchecked(IEventManager.class).callEventOnlyLocally(new CommandRegisterEvent(object));
+
+        }
         return super.register(key, object);
     }
 

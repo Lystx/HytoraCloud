@@ -85,7 +85,7 @@ public class DefaultEventManager implements IEventManager {
 	@Nonnull
 	@Override
 	public IEventManager unregisterListener(@Nonnull Object holder) {
-		listeners.forEach((eventClass, listeners) -> listeners.removeIf(listener -> listener.getHolder() == listener));
+		listeners.forEach((eventClass, listeners) -> listeners.removeIf(listener -> listener.getHolder() == holder));
 		return this;
 	}
 

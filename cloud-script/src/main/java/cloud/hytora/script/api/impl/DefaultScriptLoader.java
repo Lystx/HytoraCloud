@@ -45,7 +45,8 @@ public class DefaultScriptLoader implements IScriptLoader {
         try {
             List<String> allLines = new CopyOnWriteArrayList<>(Files.readAllLines(script));
             return this.loadScript(script, allLines);
-        } catch (final IOException ex) {
+        } catch (IOException ex) {
+            ex.printStackTrace();
             Logger.constantInstance().error("Unable to read  script located at {} : {}", script.toString(), ex);
         }
 
