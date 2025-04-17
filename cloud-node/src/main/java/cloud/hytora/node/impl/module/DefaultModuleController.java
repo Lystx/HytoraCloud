@@ -27,7 +27,6 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 
@@ -116,16 +115,15 @@ public class DefaultModuleController implements ModuleController {
 
         Object instance = constructor.newInstance(this);
 
-        AbstractModule abstractModule = new AbstractModule();
-        abstractModule.setController(this);
+        AbstractModule abstractModule = new AbstractModule(this);
         abstractModule.setHttpServer(NodeDriver.getInstance().getWebServer());
         this.registerModuleTasks(instance);
 
         classLoader.setModule((module = abstractModule));
 
 
-        /*
-        if (!(instance instanceof AbstractModule)) {
+
+        /*if (!(instance instanceof AbstractModule)) {
             throw new IllegalArgumentException(
                     "Main class (" + moduleConfig.getMainClass() + ") does not extend "
                             + AbstractModule.class.getName()
@@ -149,7 +147,7 @@ public class DefaultModuleController implements ModuleController {
             if (state != ModuleState.DISABLED) return; // must be disabled first
 
             this.reloadConfig();
-            Logger.constantInstance().info("Module " + module + " is being loaded...");
+            Logger.constantInstance().info("Loading the Module §8'§e" + moduleConfig.getName() + "§8'§f...");
             try {
 
                 state = ModuleState.LOADED;
@@ -166,22 +164,27 @@ public class DefaultModuleController implements ModuleController {
 
     @Override
     public void enableModule() {
-        synchronized (this) {
-            if (module == null) return; // was never initialized
-            if (state != ModuleState.LOADED) return; // must be loaded first
+        if (module == null) {
+            System.out.println("E1");
+            return; // was never initialized
+        }
+        if (state != ModuleState.LOADED) {
 
-            Logger.constantInstance().info("Module " + module + " is being enabled...");
+            return; // must be loaded first
+        }
 
-            try {
-                state = ModuleState.ENABLED;
-                if (this.moduleConfig.getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
-                    this.callTasks(this.state);
-                }
-            } catch (Throwable ex) {
-                Logger.constantInstance().error("An error occurred while enabling module " + module);
-                ex.printStackTrace();
-                disableModule();
+        Logger.constantInstance().info("Enabling the Module §8'§6" + moduleConfig.getName() + "§8'§f...");
+
+        try {
+            state = ModuleState.ENABLED;
+            if (this.moduleConfig.getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
+                this.callTasks(this.state);
+                Logger.constantInstance().info("The Module §8'§a" + moduleConfig.getName() + "§8'§fhas been fully enabled§8!");
             }
+        } catch (Throwable ex) {
+            Logger.constantInstance().error("An error occurred while enabling module " + module);
+            ex.printStackTrace();
+            disableModule();
         }
     }
 
@@ -191,7 +194,7 @@ public class DefaultModuleController implements ModuleController {
             if (module == null) return; // Was never initialized
             if (state == ModuleState.DISABLED) return; // Is already disabled
 
-            Logger.constantInstance().info("Module " + module + " is being disabled..");
+            Logger.constantInstance().info("Disabling the Module §8'§c" + module + "§8'§f...");
 
             try {
                 state = ModuleState.DISABLED;
@@ -205,6 +208,25 @@ public class DefaultModuleController implements ModuleController {
 
             state = ModuleState.DISABLED;
             this.unregisterClassLoader.accept(classLoader);
+        }
+    }
+
+    @Override
+    public void reloadModule() {
+
+        Logger.constantInstance().info("Calling §6Reload §fon the Module §8'§6" + moduleConfig.getName() + "§8'§f...");
+
+        try {
+            state = ModuleState.RELOADING;
+            if (this.moduleConfig.getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
+                this.callTasks(this.state);
+                Logger.constantInstance().info("The Module §8'§a" + moduleConfig.getName() + "§8'§fhas been fully reloaded§8!");
+                state = ModuleState.RELOADING;
+            }
+        } catch (Throwable ex) {
+            Logger.constantInstance().error("An error occurred while enabling module " + module);
+            ex.printStackTrace();
+            disableModule();
         }
     }
 
@@ -256,6 +278,10 @@ public class DefaultModuleController implements ModuleController {
                     boolean sync = scheduledModuleTask.sync();
                     long repeat = scheduledModuleTask.repeat();
 
+                    if (repeat == -1 && delay == -1) {
+                        scheduler.runTaskAsync(() -> this.subExecute(em, state));
+                        continue;
+                    }
                     if (repeat != -1) {
                         if (sync) {
                             scheduler.scheduleRepeatingTask(() -> this.subExecute(em, state), delay, repeat);
@@ -282,7 +308,7 @@ public class DefaultModuleController implements ModuleController {
             try {
                 em.getMethod().invoke(em.getListener());
             } catch (IllegalAccessException | InvocationTargetException e) {
-                //ignoring on shutdown
+                e.printStackTrace();
             }
         }
     }

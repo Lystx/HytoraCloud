@@ -34,6 +34,7 @@ public interface PermissionManager extends PermissionChecker {
 	@Nonnull
 	Permission createPermission(@Nonnull String permission, @Nonnull long expirationDate);
 
+
 	/**
 	 * Creates a new instance of a {@link PermissionGroup}<br>
 	 * To modify the values of a group even more you can do so by accessing<br>
@@ -53,6 +54,8 @@ public interface PermissionManager extends PermissionChecker {
 	 */
 	@Nonnull
 	Collection<PermissionGroup> getAllCachedPermissionGroups();
+
+	Collection<PermissionPlayer> getAllCachedPermissionPlayers();
 
 	/**
 	 * Retrieves a {@link PermissionGroup} by its name by iterating<br>
@@ -108,6 +111,9 @@ public interface PermissionManager extends PermissionChecker {
 	 */
 	@Nullable
 	PermissionPlayer getPlayerByUniqueIdOrNull(@Nonnull UUID uniqueId);
+
+	boolean hasEntry(UUID uniqueId);
+
 
 	/**
 	 * Creates a new {@link PermissionPlayer} by searching for provided uuid

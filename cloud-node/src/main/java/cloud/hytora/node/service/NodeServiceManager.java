@@ -1,10 +1,6 @@
 package cloud.hytora.node.service;
 
 import cloud.hytora.common.task.Task;
-import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
-import cloud.hytora.document.gson.GsonDocument;
-import cloud.hytora.document.gson.GsonHelper;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.console.Screen;
 import cloud.hytora.driver.console.ScreenManager;
@@ -16,10 +12,12 @@ import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.config.ServiceCrashPrevention;
-import cloud.hytora.driver.services.ICloudServer;
-import cloud.hytora.driver.services.impl.UniversalCloudServer;
+import cloud.hytora.driver.player.ICloudPlayer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.impl.DefaultServiceManager;
+import cloud.hytora.driver.services.utils.ServiceState;
+import cloud.hytora.driver.services.utils.ServiceVisibility;
 import cloud.hytora.node.NodeDriver;
 
 import cloud.hytora.node.impl.config.MainConfiguration;
@@ -46,7 +44,7 @@ public class NodeServiceManager extends DefaultServiceManager {
     }
 
     @Override
-    public void registerService(ICloudServer service) {
+    public void registerService(ICloudService service) {
         super.registerService(service);
 
         ScreenManager screenManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
@@ -61,7 +59,8 @@ public class NodeServiceManager extends DefaultServiceManager {
 
 
     @Override
-    public void unregisterService(ICloudServer service) {
+    public void unregisterService(ICloudService service) {
+        service = this.getServiceByNameOrNull(service.getName());
         CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceUnregisterEvent(service.getName()));
         super.unregisterService(service);
 
@@ -136,34 +135,46 @@ public class NodeServiceManager extends DefaultServiceManager {
     }
 
     @Override
-    public Task<ICloudServer> startService(@NotNull ICloudServer service) {
+    public Task<ICloudService> startService(@NotNull ICloudService service) {
         return worker.processService(service);
     }
 
     @Override
-    public Task<ICloudServer> thisService() {
+    public Task<ICloudService> thisService() {
         return Task.empty();
     }
 
     @Override
-    public ICloudServer thisServiceOrNull() {
+    public ICloudService thisServiceOrNull() {
         return null;
     }
 
     @Override
-    public void sendPacketToService(ICloudServer service, IPacket packet) {
+    public void sendPacketToService(ICloudService service, IPacket packet) {
         NodeDriver.getInstance().getExecutor().getAllCachedConnectedClients().stream().filter(it -> it.getName().equals(service.getName())).findAny().ifPresent(it -> it.sendPacket(packet));
     }
 
 
     @Override
-    public void shutdownService(ICloudServer service) {
+    public void shutdownService(ICloudService service) {
         INode node = service.getTask().findAnyNode();
         node.stopServer(service);
     }
 
     @Override
-    public void updateService(@NotNull ICloudServer service) {
+    public ICloudService findFallback(ICloudPlayer player) {
+        return CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream()
+                .filter(service -> service.getServiceState() == ServiceState.ONLINE)
+                .filter(service -> service.getServiceVisibility() == ServiceVisibility.VISIBLE)
+                .filter(service -> !service.getTask().getVersion().isProxy())
+                .filter(service -> service.getTask().getFallback().isEnabled())
+                .filter(service -> (player.getServer() == null || !player.getServer().getName().equals(service.getName())))
+                .min(Comparator.comparing(s -> s.getOnlinePlayers().size()))
+                .orElse(null);
+    }
+
+    @Override
+    public void updateService(@NotNull ICloudService service) {
         CloudDriver.getInstance().getLogger().debug("Updated Server {}", service.getName());
         this.updateServerInternally(service);
 
@@ -185,7 +196,7 @@ public class NodeServiceManager extends DefaultServiceManager {
 
     @EventListener
     public void handleUpdate(ServiceUpdateEvent event) {
-        ICloudServer server = event.getService();
+        ICloudService server = event.getService();
         this.updateService(server);
     }
 

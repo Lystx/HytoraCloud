@@ -2,7 +2,7 @@ package cloud.hytora.modules.sign.spigot.manager;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
@@ -73,7 +73,7 @@ public class BukkitCloudSignUpdater implements Runnable {
 
                 freeSigns.clear();
                 serviceMap.clear();
-                List<ICloudServer> servers = CloudDriver.getInstance()
+                List<ICloudService> servers = CloudDriver.getInstance()
                         .getServiceManager()
                         .getAllServicesByEnvironment(SpecificDriverEnvironment.MINECRAFT)
                         .stream()
@@ -87,7 +87,7 @@ public class BukkitCloudSignUpdater implements Runnable {
                         ).collect(Collectors.toList());
 
                 if (!servers.isEmpty()) {
-                    for (ICloudServer service : servers) {
+                    for (ICloudService service : servers) {
                         if (!service.getServiceVisibility().equals(ServiceVisibility.INVISIBLE) && !service.getServiceState().equals(ServiceState.STOPPING)) {
                             update(service);
                         }
@@ -187,7 +187,7 @@ public class BukkitCloudSignUpdater implements Runnable {
 
     }
 
-    public void update(ICloudServer current) {
+    public void update(ICloudService current) {
         if (current.getTask().getTaskGroup().getEnvironment().equals(SpecificDriverEnvironment.PROXY)) {
             return;
         }
@@ -258,7 +258,7 @@ public class BukkitCloudSignUpdater implements Runnable {
             Collection<ICloudSign> offlineSigns = new ArrayList<>();
             for (Integer count : allSigns) {
                 ICloudSign sign = new BukkitCloudSignGroup(name, CloudSignAPI.getInstance().getSignManager().getAllCachedCloudSigns()).getCloudSigns().get(count);
-                ICloudServer s = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(sign.getTaskName() + "-" + count);
+                ICloudService s = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(sign.getTaskName() + "-" + count);
                 if (s == null || s.getServiceVisibility().equals(ServiceVisibility.INVISIBLE) || s.getServiceState().equals(ServiceState.STOPPING) || s.getName().equalsIgnoreCase(CloudDriver.getInstance().getServiceManager().thisServiceOrNull().getName())) {
                     offlineSigns.add(sign);
                 }
@@ -270,12 +270,12 @@ public class BukkitCloudSignUpdater implements Runnable {
 
     /**
      * Updates a Bukkit sign and the block behind it to
-     * a given {@link SignLayout} depending on the {@link ServiceState} of the {@link ICloudServer}
+     * a given {@link SignLayout} depending on the {@link ServiceState} of the {@link ICloudService}
      *
      * @param sign    the sign
      * @param service the service
      */
-    public void updateBukkitSign(Sign sign, ICloudServer service, IServiceTask task) {
+    public void updateBukkitSign(Sign sign, ICloudService service, IServiceTask task) {
 
         SignAnimation signAnimation;
         SignState signState;

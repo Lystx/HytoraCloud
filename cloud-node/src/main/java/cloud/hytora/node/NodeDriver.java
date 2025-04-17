@@ -14,26 +14,26 @@ import cloud.hytora.context.IApplicationContext;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.command.CommandManager;
-import cloud.hytora.driver.command.DefaultCommandSender;
+import cloud.hytora.driver.command.DefaultConsoleCommandSender;
 import cloud.hytora.driver.command.sender.CommandSender;
 
 
+import cloud.hytora.driver.config.INetworkConfig;
 import cloud.hytora.driver.console.Screen;
 import cloud.hytora.driver.console.ScreenManager;
 import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.http.impl.NettyHttpServer;
 import cloud.hytora.driver.message.ChannelMessenger;
+import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
-import cloud.hytora.driver.permission.PermissionChecker;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
 import cloud.hytora.driver.services.fallback.SimpleFallback;
 import cloud.hytora.driver.services.template.def.CloudTemplate;
 import cloud.hytora.driver.services.utils.ServiceShutdownBehaviour;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
-import cloud.hytora.driver.uuid.DriverUUIDCache;
+
 import cloud.hytora.node.console.NodeScreenManager;
-import cloud.hytora.node.impl.NodeUUIDCache;
 import cloud.hytora.node.impl.handler.packet.normal.*;
 import cloud.hytora.node.impl.handler.packet.remote.*;
 import cloud.hytora.node.impl.handler.packet.normal.NodeDataCycleHandler;
@@ -52,8 +52,7 @@ import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;
-import cloud.hytora.driver.player.impl.DefaultCloudOfflinePlayer;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.IProcessCloudServer;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.task.ServiceTaskManager;
@@ -63,7 +62,7 @@ import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.task.bundle.DefaultTaskGroup;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
-import cloud.hytora.driver.database.SectionedDatabase;
+import cloud.hytora.driver.database.LocalStorage;
 import cloud.hytora.node.impl.handler.http.V1PingRouter;
 import cloud.hytora.node.impl.handler.http.V1StatusRouter;
 import cloud.hytora.node.impl.node.BaseNode;
@@ -74,7 +73,7 @@ import cloud.hytora.driver.storage.DriverStorage;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
 import cloud.hytora.node.impl.command.*;
 import cloud.hytora.node.impl.command.impl.*;
-import cloud.hytora.node.impl.database.config.DatabaseType;
+import cloud.hytora.node.impl.database.cloud.DatabaseType;
 import cloud.hytora.node.impl.message.NodeChannelMessenger;
 import cloud.hytora.node.impl.node.NodeNodeManager;
 import cloud.hytora.node.impl.setup.database.MongoDBSetup;
@@ -85,9 +84,9 @@ import cloud.hytora.node.impl.config.ConfigManager;
 import cloud.hytora.node.impl.config.MainConfiguration;
 import cloud.hytora.driver.command.Console;
 import cloud.hytora.node.impl.config.NodeDriverStorage;
-import cloud.hytora.node.impl.database.config.DatabaseConfiguration;
+import cloud.hytora.node.impl.database.cloud.DatabaseConfiguration;
 import cloud.hytora.driver.database.IDatabaseManager;
-import cloud.hytora.node.impl.database.def.DefaultDatabaseManager;
+import cloud.hytora.node.impl.database.cloud.DefaultDatabaseManager;
 import cloud.hytora.node.service.NodeServiceTaskManager;
 import cloud.hytora.node.impl.node.NodeBasedClusterExecutor;
 import cloud.hytora.node.impl.player.NodePlayerManager;
@@ -108,7 +107,7 @@ import java.util.concurrent.TimeUnit;
 
 @Getter
 @Setter
-public class NodeDriver extends CloudDriver<INode> {
+public class NodeDriver extends CloudDriver {
 
     @Getter
     private static NodeDriver instance;
@@ -120,7 +119,6 @@ public class NodeDriver extends CloudDriver<INode> {
 
     private IApplicationContext context;
 
-    private DriverUUIDCache uuidCache;
     private DriverStorage storage;
 
     private INode node;
@@ -143,6 +141,7 @@ public class NodeDriver extends CloudDriver<INode> {
     public static File MODULE_FOLDER;
 
     public static final File STORAGE_FOLDER = new File(NODE_FOLDER, "storage/");
+    public static final File DATABASE_FOLDER = new File(STORAGE_FOLDER, "database/");
     public static final File STORAGE_VERSIONS_FOLDER = new File(STORAGE_FOLDER, "versions/");
     public static final File STORAGE_TEMP_FOLDER = new File(STORAGE_FOLDER, "tmp-" + UUID.randomUUID().toString().substring(0, 5) + "/");
     public static final File TEMPLATES_DIR = new File(STORAGE_FOLDER, "templates/");
@@ -171,15 +170,14 @@ public class NodeDriver extends CloudDriver<INode> {
         screenManager.joinScreen(consoleScreen);
 
 
-
-        Task.callAsync(() -> {
-            logger.warn("Loading ApplicationContext...");
+        Task.callSync(() -> {
+            logger.warn("Loading ApplicationContext... [CL: " + Thread.currentThread().getContextClassLoader() + "]");
             NodeDriver.this.context = new ApplicationContext(this);
             context.setInstance("driver", CloudDriver.getInstance());
             return context;
         }).onTaskSucess((ExceptionallyConsumer<IApplicationContext>) c -> {
             logger.warn("Successfully loaded ApplicationContext!");
-            Thread.sleep(1000);
+            Thread.sleep(500);
             consoleScreen.clear();
 
             //loading config
@@ -192,7 +190,7 @@ public class NodeDriver extends CloudDriver<INode> {
             //loading console
             this.console.addInputHandler(s -> CloudDriver.getInstance().getCommandManager().executeCommand(CloudDriver.getInstance().getCommandSender(), s));
 
-            this.commandSender = new DefaultCommandSender(this.configManager.getConfig().getNodeConfig().getNodeName(), this.console).forceFunction((ExceptionallyConsumer<String>) s -> console.forceWrite(ColoredMessageFormatter.format(new LogEntry(Instant.now(), "node", s, LogLevel.INFO, null))));
+            this.commandSender = new DefaultConsoleCommandSender(this.configManager.getConfig().getNodeConfig().getNodeName(), this.console).forceFunction((ExceptionallyConsumer<String>) s -> console.forceWrite(ColoredMessageFormatter.format(new LogEntry(Instant.now(), "node", s, LogLevel.INFO, null))));
             this.commandManager = new NodeCommandManager();
 
             //checking if setup required
@@ -227,20 +225,20 @@ public class NodeDriver extends CloudDriver<INode> {
 
             this.commandManager.setActive(true);
 
-            if (devMode) {
-                this.logger.debug("DevMode is activated!");
-                //in dev mode player "Lystx" has every permission
-                this.providerRegistry.setProvider(PermissionChecker.class, (playerUniqueId, permission) -> playerUniqueId.toString().equalsIgnoreCase("82e8f5a2-4077-407b-af8b-e8325cad7191"));
-            }
-
             //avoid log4j errors
             org.apache.log4j.BasicConfigurator.configure(new AppenderSkeleton() {
                 @Override
-                protected void append(LoggingEvent loggingEvent) {}
+                protected void append(LoggingEvent loggingEvent) {
+                }
+
                 @Override
-                public void close(){}
+                public void close() {
+                }
+
                 @Override
-                public boolean requiresLayout() {return false;}
+                public boolean requiresLayout() {
+                    return false;
+                }
             });
 
             this.logger.info("§8");
@@ -257,6 +255,7 @@ public class NodeDriver extends CloudDriver<INode> {
             this.logger.info("§8");
             this.logger.info("§bVersion §7: {}", VersionInfo.getCurrentVersion());
             this.logger.info("§bDeveloper(s) §7: {}", "Lystx");
+            this.logger.info("§bClassLoader(s) §7: {}", Thread.currentThread().getContextClassLoader());
             this.logger.info("§8==================================================");
             this.logger.info("§8");
             this.logger.info("§8");
@@ -271,15 +270,18 @@ public class NodeDriver extends CloudDriver<INode> {
             }
 
             //registering default web api handlers
-            this.webServer.getHandlerRegistry().registerHandlers("v1", new V1PingRouter(), new V1StatusRouter());
+            this.webServer.getHandlerRegistry().registerHandlers("v1",
+                    new V1PingRouter(),
+                    new V1StatusRouter()/*,
+                    new V1HomeRouter()*/
+            );
 
             this.executor = new NodeBasedClusterExecutor(this.configManager.getConfig());
 
             this.databaseManager = new DefaultDatabaseManager(MainConfiguration.getInstance().getDatabaseConfiguration().getType(), MainConfiguration.getInstance().getDatabaseConfiguration());
             this.providerRegistry.setProvider(IDatabaseManager.class, this.databaseManager);
 
-            SectionedDatabase database = this.databaseManager.getDatabase();
-            database.registerSection("players", DefaultCloudOfflinePlayer.class);
+            LocalStorage database = this.databaseManager.getLocalStorage();
             database.registerSection("tasks", UniversalServiceTask.class);
             database.registerSection("groups", DefaultTaskGroup.class);
 
@@ -288,6 +290,7 @@ public class NodeDriver extends CloudDriver<INode> {
             this.playerManager = new NodePlayerManager(this.eventManager);
             this.channelMessenger = new NodeChannelMessenger(executor);
             this.nodeManager = new NodeNodeManager();
+            this.nodeManager.registerNode(this.node);
             this.moduleManager = new NodeModuleManager();
             this.logger.info("§8");
 
@@ -301,17 +304,12 @@ public class NodeDriver extends CloudDriver<INode> {
                 this.logger.info("§7This Node is a HeadNode §7and boots up the Cluster...");
             }
 
-            this.uuidCache = new NodeUUIDCache();
-            this.uuidCache.setEnabled(MainConfiguration.getInstance().isUniqueIdCaching());
-            this.uuidCache.loadAsync()
-                    .onTaskSucess(uuids -> logger.info("Loaded {} UUIDs from cache!", uuids.size()));
-
-
             //creating needed files
             this.logger.trace("Creating needed folders...");
             NodeDriver.NODE_FOLDER.mkdirs();
 
             NodeDriver.STORAGE_FOLDER.mkdirs();
+            NodeDriver.DATABASE_FOLDER.mkdirs();
             NodeDriver.STORAGE_VERSIONS_FOLDER.mkdirs();
 
             NodeDriver.SERVICE_DIR.mkdirs();
@@ -339,8 +337,6 @@ public class NodeDriver extends CloudDriver<INode> {
 
             //copying files
             this.logger.trace("§7Copying files§8...");
-            FileUtils.copyResource("/impl/plugin.jar", STORAGE_VERSIONS_FOLDER + "/plugin.jar", getClass());
-            FileUtils.copyResource("/impl/remote.jar", STORAGE_VERSIONS_FOLDER + "/remote.jar", getClass());
 
             //storage managing
             this.storage = new NodeDriverStorage();
@@ -353,6 +349,8 @@ public class NodeDriver extends CloudDriver<INode> {
             this.commandManager.registerCommand(new TaskCommand());
             this.commandManager.registerCommand(new ClearCommand());
             this.commandManager.registerCommand(new ServiceCommand());
+            this.commandManager.registerCommand(new ModuleCommand());
+            this.commandManager.registerCommand(new DebugCommand());
             this.commandManager.registerCommand(new PlayerCommand());
             this.commandManager.registerCommand(new TickCommand());
             this.commandManager.registerCommand(new ClusterCommand());
@@ -361,16 +359,17 @@ public class NodeDriver extends CloudDriver<INode> {
             //registering command argument parsers
             this.commandManager.registerParser(ServiceVersion.class, ServiceVersion::valueOf);
             this.commandManager.registerParser(LogLevel.class, LogLevel::valueOf);
-            this.commandManager.registerParser(ICloudServer.class, this.serviceManager::getServiceByNameOrNull);
+            this.commandManager.registerParser(ICloudService.class, this.serviceManager::getServiceByNameOrNull);
+            this.commandManager.registerParser(ModuleController.class, this.moduleManager::getModule);
             this.commandManager.registerParser(IServiceTask.class, this.serviceTaskManager::getTaskByNameOrNull);
-            this.commandManager.registerParser(ICloudPlayer.class, this.playerManager::getCloudPlayerByNameOrNull);
-            this.commandManager.registerParser(CloudOfflinePlayer.class, this.playerManager::getOfflinePlayerByNameBlockingOrNull);
+            this.commandManager.registerParser(ICloudPlayer.class, this.playerManager::getCachedCloudPlayer);
+            this.commandManager.registerParser(CloudOfflinePlayer.class, s -> this.playerManager.getOfflinePlayer(s).timeOut(TimeUnit.SECONDS, 5).syncUninterruptedly().get());
             this.commandManager.registerParser(INode.class, this.nodeManager::getNodeByNameOrNull);
 
             this.logger.trace("Registered " + this.commandManager.getCommands().size() + " Commands & " + this.commandManager.getParsers().size() + " Parsers!");
             this.logger.trace("§8");
 
-            this.storage.set("cloud::messages", this.configManager.getConfig().getMessages());
+            this.storage.set("cloud::messages", this.configManager.getConfig().getMessages()); // TODO: 10.04.2025 implement in driver update or create own packet
 
             //registering packet handlers
             this.logger.trace("Registering Packets & Handlers...");
@@ -387,12 +386,13 @@ public class NodeDriver extends CloudDriver<INode> {
 
             //remote packet handlers
             this.executor.registerUniversalHandler(new NodeRemoteShutdownHandler());
+            this.executor.registerUniversalHandler(new NodeRemoteServerNametagsUpdateHandler());
             this.executor.registerUniversalHandler(new NodeRemoteServerStartHandler());
             this.executor.registerUniversalHandler(new NodeRemoteServerStopHandler());
             this.executor.registerUniversalHandler(new NodeRemoteLoggingHandler());
             this.executor.registerRemoteHandler(new NodeRemoteCacheHandler());
 
-            this.logger.trace("Registered " + PacketProvider.getRegisteredPackets().size() + " Packets & " + this.executor.getRegisteredPacketHandlers().size() + " PacketHandlers.");
+            this.logger.info("Registered §c" + PacketProvider.getRegisteredPackets().size() + " Packets §f& §c" + this.executor.getRegisteredPacketHandlers().size() + " §fPacketHandlers.");
             this.logger.trace("§8");
 
             //heart-beat execution for time out checking
@@ -411,8 +411,8 @@ public class NodeDriver extends CloudDriver<INode> {
             // print finish successfully message
             this.logger.info("§8");
             this.logger.info("§8");
-            this.logger.info("This Node has successfully booted up and is now ready for personal use!");
-            this.logger.info("=> Thanks for using HytoraCloud");
+            this.logger.info("This §aNode §fhas successfully §abooted up §fand is now ready for personal use!");
+            this.logger.info("=> Thanks for using §bHytoraCloud§8!");
             this.logger.info("§8");
             this.logger.info("§8");
 
@@ -426,7 +426,6 @@ public class NodeDriver extends CloudDriver<INode> {
             // add a shutdown hook for fast closes
             Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
         });
-
 
 
     }
@@ -443,13 +442,8 @@ public class NodeDriver extends CloudDriver<INode> {
     }
 
     @Override
-    public DriverUUIDCache getUUIDCache() {
-        return uuidCache;
-    }
-
-    @Override
-    public INode thisSidesClusterParticipant() {
-        return this.node;
+    public INetworkConfig getNetworkConfig() {
+        return this.configManager.getConfig();
     }
 
 
@@ -457,6 +451,11 @@ public class NodeDriver extends CloudDriver<INode> {
         MainConfiguration config = configManager.getConfig();
         DatabaseConfiguration databaseConfiguration = config.getDatabaseConfiguration();
         DefaultNodeConfig nodeConfig = config.getNodeConfig();
+
+
+        FileUtils.copyResource("/impl/plugin.jar", STORAGE_VERSIONS_FOLDER + "/plugin.jar", getClass());
+        FileUtils.copyResource("/impl/remote.jar", STORAGE_VERSIONS_FOLDER + "/remote.jar", getClass());
+        this.logger.info("Copying §aplugin.jar §fand §aremote.jar §fto §a" + STORAGE_VERSIONS_FOLDER + "§f...");
 
         String nodeName = setup.getName();
         String host = setup.getHost();
@@ -554,7 +553,7 @@ public class NodeDriver extends CloudDriver<INode> {
 
             this.databaseManager = new DefaultDatabaseManager(databaseType, new DatabaseConfiguration(databaseType, databaseHost, databasePort, databaseName, authDatabase, databaseUser, databasePassword));
 
-            SectionedDatabase database = this.databaseManager.getDatabase();
+            LocalStorage database = this.databaseManager.getLocalStorage();
             database.registerSection("tasks", UniversalServiceTask.class);
             database.registerSection("groups", DefaultTaskGroup.class);
 
@@ -576,15 +575,15 @@ public class NodeDriver extends CloudDriver<INode> {
             taskManager.addTask(lobbyTask);
             taskManager.addTask(proxyTask);
 
-            this.logger.info("Created default Proxy & Lobby ServiceTasks!");
+            this.logger.info("Created default §5Proxy §f& §aLobby §fServiceTasks!");
             this.logger.info("§7You §acompleted §7the NodeSetup§8!");
-            this.logger.info("Please reboot the Node now to apply all changes!");
+            this.logger.info("§cPlease reboot the Node now to apply all changes!");
             System.exit(0);
             return;
         }
 
         this.logger.info("§7You §acompleted §7the NodeSetup§8!");
-        this.logger.info("Please reboot the Node now to apply all changes!");
+        this.logger.info("§cPlease reboot the Node now to apply all changes!");
         System.exit(0);
     }
 
@@ -621,7 +620,7 @@ public class NodeDriver extends CloudDriver<INode> {
             this.webServer.shutdown();
 
             //shutting down servers
-            for (ICloudServer service : new ArrayList<>(this.serviceManager.getAllCachedServices())) {
+            for (ICloudService service : new ArrayList<>(this.serviceManager.getAllCachedServices())) {
                 IProcessCloudServer cloudServer = ((IProcessCloudServer) service);
                 Process process = cloudServer.getProcess();
                 if (process != null) {

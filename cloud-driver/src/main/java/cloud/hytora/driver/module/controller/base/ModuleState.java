@@ -16,6 +16,11 @@ public enum ModuleState {
 	ENABLED,
 
 	/**
+	 * @see ModuleController#reloadModule() ()
+	 */
+	RELOADING,
+
+	/**
 	 * @see ModuleController#disableModule()
 	 */
 	DISABLED,
@@ -23,6 +28,7 @@ public enum ModuleState {
 	/**
 	 * @see ModuleController#unregisterModule()
 	 */
-	UNREGISTERED
+	UNREGISTERED;
+
 
 }

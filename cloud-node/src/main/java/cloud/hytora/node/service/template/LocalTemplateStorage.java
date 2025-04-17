@@ -1,7 +1,7 @@
 package cloud.hytora.node.service.template;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.IProcessCloudServer;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
@@ -81,7 +81,7 @@ public class LocalTemplateStorage implements TemplateStorage {
     }
 
     @Override
-    public void copyTemplate(@NotNull ICloudServer server, @NotNull ServiceTemplate template, @NotNull File directory) throws Exception {
+    public void copyTemplate(@NotNull ICloudService server, @NotNull ServiceTemplate template, @NotNull File directory) throws Exception {
         IServiceTask serviceTask = server.getTask();
 
         //do not perform if wrong node
@@ -104,7 +104,7 @@ public class LocalTemplateStorage implements TemplateStorage {
     }
 
     @Override
-    public void deployService(@NotNull ICloudServer server, @NotNull ServiceDeployment deployment) {
+    public void deployService(@NotNull ICloudService server, @NotNull ServiceDeployment deployment) {
 
         //do not perform if wrong node
         if (!server.getRunningNodeName().equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName())) {
@@ -125,6 +125,9 @@ public class LocalTemplateStorage implements TemplateStorage {
             if (files != null) {
                 for (File file : files) {
                     String fileName = file.getName();
+                    if (fileName.contains(":")) {
+                        fileName = fileName.replace(":", "/");
+                    }
                     if (!deployment.getOnlyIncludedFiles().isEmpty() && !deployment.getOnlyIncludedFiles().contains(fileName)) {
                         continue;
                     }

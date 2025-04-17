@@ -3,7 +3,7 @@ package cloud.hytora.node;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.data.INodeData;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.utils.ServiceState;
 
@@ -19,7 +19,7 @@ public class TimeOutChecker implements Runnable {
 	}
 
 	private void checkServiceTimeout() {
-		for (ICloudServer service : NodeDriver.getInstance().getServiceManager().getAllServicesByState(ServiceState.ONLINE)) {
+		for (ICloudService service : NodeDriver.getInstance().getServiceManager().getAllServicesByState(ServiceState.ONLINE)) {
 			if (!service.isTimedOut()) {
 				continue; //if not timed out ignoring
 			}

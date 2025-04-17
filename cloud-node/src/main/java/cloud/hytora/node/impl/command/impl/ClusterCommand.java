@@ -8,20 +8,21 @@ import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.node.NodeDriver;
 
-@Command({"cluster", "cl"})
-@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
-@CommandPermission("cloud.command.use")
-@CommandDescription("Manages the Cluster")
-@CommandAutoHelp
+@Command(
+        value = {"cluster", "cl"},
+        permission = "cloud.command.use",
+        executionScope = CommandScope.CONSOLE_AND_INGAME,
+        description = "Manages the Cluster"
+)
+@Command.AutoHelp
 @ApplicationParticipant
 public class ClusterCommand {
 
-    @Command("shutdown")
-    @CommandDescription("Shuts down the whole cluster")
+    @Command(value = "shutdown", description = "Shuts down the whole cluster")
     public void executeShutdown(CommandSender sender) {
         sender.sendMessage("Sending Shutdown-Request to every ClusterParticipant and then shutting down HeadNode after 1 second...");
         INode headNode = CloudDriver.getInstance().getNodeManager().getHeadNode();
-        for (INode node: CloudDriver.getInstance().getNodeManager().getAllCachedNodes()) {
+        for (INode node : CloudDriver.getInstance().getNodeManager().getAllCachedNodes()) {
             if (node.getName().equalsIgnoreCase(headNode.getName())) {
                 continue; //headNode can't be shut down before all other nodes are shut down
             }
@@ -35,14 +36,12 @@ public class ClusterCommand {
     }
 
 
-    @Command("publish all")
-    @CommandDescription("Publishes every data to the whole cluster")
+    @Command(value = "publish all", description = "Publishes every data to the whole cluster")
     public void executePublishAll(CommandSender sender) {
 
     }
 
-    @Command("publish modules")
-    @CommandDescription("Publishes all modules to the whole cluster")
+    @Command(value = "publish modules", description = "Publishes all modules to the whole cluster")
     public void executePublishModules(CommandSender sender) {
 
     }

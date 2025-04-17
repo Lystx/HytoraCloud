@@ -13,7 +13,7 @@ import cloud.hytora.driver.networking.protocol.packets.NetworkResponseState;
 import cloud.hytora.driver.node.base.AbstractNode;
 import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.node.data.INodeData;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import lombok.*;
 
 @Getter
@@ -41,12 +41,12 @@ public class UniversalNode extends AbstractNode {
     }
 
     @Override
-    public void stopServer(ICloudServer server) {
+    public void stopServer(ICloudService server) {
         this.sendPacket(new NodeRequestServerStopPacket(server.getName(), false));
     }
 
     @Override
-    public Task<NetworkResponseState> stopServerAsync(ICloudServer server) {
+    public Task<NetworkResponseState> stopServerAsync(ICloudService server) {
         return new NodeRequestServerStartPacket(server, true)
                 .awaitResponse(this.getName())
                 .registerListener((ExceptionallyConsumer<Task<BufferedResponse>>) task -> {
@@ -57,12 +57,12 @@ public class UniversalNode extends AbstractNode {
     }
 
     @Override
-    public void startServer(ICloudServer server) {
+    public void startServer(ICloudService server) {
         this.sendPacket(new NodeRequestServerStartPacket(server, false));
     }
 
     @Override
-    public Task<NetworkResponseState> startServerAsync(ICloudServer server) {
+    public Task<NetworkResponseState> startServerAsync(ICloudService server) {
         return new NodeRequestServerStopPacket(server.getName(), true)
                 .awaitResponse(this.getName())
                 .registerListener((ExceptionallyConsumer<Task<BufferedResponse>>) task -> {

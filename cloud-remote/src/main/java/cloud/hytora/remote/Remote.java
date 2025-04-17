@@ -12,20 +12,25 @@ import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.command.CommandManager;
-import cloud.hytora.driver.command.DefaultCommandSender;
+import cloud.hytora.driver.command.DefaultConsoleCommandSender;
 import cloud.hytora.driver.command.sender.CommandSender;
+import cloud.hytora.driver.config.INetworkConfig;
+import cloud.hytora.driver.event.CloudEventListener;
 import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
+import cloud.hytora.driver.event.defaults.remote.RemoteConnectEvent;
+import cloud.hytora.driver.exception.IncompatibleDriverEnvironmentException;
 import cloud.hytora.driver.message.ChannelMessenger;
 import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.task.ServiceTaskManager;
@@ -34,7 +39,7 @@ import cloud.hytora.driver.services.utils.version.ServiceVersion;
 import cloud.hytora.driver.storage.DriverStorage;
 import cloud.hytora.driver.storage.RemoteDriverStorage;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
-import cloud.hytora.driver.uuid.DriverUUIDCache;
+
 import cloud.hytora.remote.adapter.RemoteAdapter;
 import cloud.hytora.remote.adapter.proxy.RemoteProxyAdapter;
 import cloud.hytora.remote.impl.*;
@@ -44,7 +49,6 @@ import cloud.hytora.remote.impl.module.RemoteModuleManager;
 import lombok.Getter;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import lombok.Setter;
-import lombok.val;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -56,11 +60,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.jar.*;
 
 @Getter
-public class Remote extends CloudDriver<ICloudServer> {
+public class Remote extends CloudDriver {
 
     private static Remote instance;
     private final ServiceTaskManager serviceTaskManager;
@@ -68,7 +73,6 @@ public class Remote extends CloudDriver<ICloudServer> {
 
     private final IApplicationContext applicationContext;
     private final PlayerManager playerManager;
-    private final DriverUUIDCache cache;
     private final CommandManager commandManager;
     private final CommandSender commandSender;
     private final DriverStorage storage;
@@ -92,7 +96,7 @@ public class Remote extends CloudDriver<ICloudServer> {
 
 
     public Remote(RemoteIdentity identity) {
-        this(identity, new HandledAsyncLogger(LogLevel.TRACE).addHandler(new DefaultLogHandler()).addHandler(entry -> CloudDriver.getInstance().getEventManager().callEventGlobally(new DriverLogEvent(entry))), null, null);
+        this(identity, new HandledAsyncLogger(identity.getLogLevel()).addHandler(new DefaultLogHandler()).addHandler(entry -> CloudDriver.getInstance().getEventManager().callEventGlobally(new DriverLogEvent(entry))), null, null);
 
 
     }
@@ -107,7 +111,7 @@ public class Remote extends CloudDriver<ICloudServer> {
         this.applicationContext.setInstance("driver", CloudDriver.getInstance());
 
 
-        this.commandSender = new DefaultCommandSender("Remote", null).function(System.out::println);
+        this.commandSender = new DefaultConsoleCommandSender("Remote", null).function(System.out::println);
         this.property = identity;
 
         this.client = new RemoteNetworkClient(property.getAuthKey(), property.getName(), property.getHostname(), property.getPort(), DocumentFactory.emptyDocument());
@@ -127,15 +131,14 @@ public class Remote extends CloudDriver<ICloudServer> {
         this.moduleManager = new RemoteModuleManager();
 
         this.storage = new RemoteDriverStorage(this.client);
-        this.cache = new RemoteUUIDCache();
 
         //registering command argument parsers
         this.commandManager.registerParser(ServiceVersion.class, ServiceVersion::valueOf);
         this.commandManager.registerParser(LogLevel.class, LogLevel::valueOf);
-        this.commandManager.registerParser(ICloudServer.class, this.serviceManager::getServiceByNameOrNull);
+        this.commandManager.registerParser(ICloudService.class, this.serviceManager::getServiceByNameOrNull);
         this.commandManager.registerParser(IServiceTask.class, this.serviceTaskManager::getTaskByNameOrNull);
-        this.commandManager.registerParser(ICloudPlayer.class, this.playerManager::getCloudPlayerByNameOrNull);
-        this.commandManager.registerParser(CloudOfflinePlayer.class, this.playerManager::getOfflinePlayerByNameBlockingOrNull);
+        this.commandManager.registerParser(ICloudPlayer.class, this.playerManager::getCachedCloudPlayer);
+        this.commandManager.registerParser(CloudOfflinePlayer.class, s -> this.playerManager.getOfflinePlayer(s).timeOut(TimeUnit.SECONDS, 5).syncUninterruptedly().get());
         this.commandManager.registerParser(INode.class, this.nodeManager::getNodeByNameOrNull);
 
 
@@ -143,7 +146,7 @@ public class Remote extends CloudDriver<ICloudServer> {
         this.scheduler.scheduleRepeatingTaskAsync(() -> {
 
             RemoteAdapter remoteAdapter = getAdapter();
-            ICloudServer server = this.thisService();
+            ICloudService server = this.thisService();
 
             if (remoteAdapter == null || server == null) {
                 return;
@@ -192,7 +195,6 @@ public class Remote extends CloudDriver<ICloudServer> {
         // append application file to system class loader
         // could be problematic if the application (java9+) uses the platform or higher (-> bootstrap) classloader
         // dont append to bootstrap loader => classloader of application main class will magically be null
-        // previous solution: https://github.com/anweisen/DyCloud/blob/a328842/wrapper/src/main/java/net/anweisen/cloud/wrapper/CloudWrapper.java#L190
         JarFile applicationJarFile = new JarFile(applicationFile.toFile());
         instrumentation.appendToSystemClassLoaderSearch(applicationJarFile);
         logger.info("Appended ApplicationJarFile to system classLoader search!");
@@ -284,11 +286,6 @@ public class Remote extends CloudDriver<ICloudServer> {
         return instance;
     }
 
-    @Override
-    public DriverUUIDCache getUUIDCache() {
-        return cache;
-    }
-
     public RemoteProxyAdapter getProxyAdapter() {
         return perform(adapter instanceof RemoteProxyAdapter, () -> cast(adapter), new IllegalStateException("Not a " + RemoteProxyAdapter.class.getSimpleName()));
     }
@@ -297,14 +294,16 @@ public class Remote extends CloudDriver<ICloudServer> {
         return perform(adapter instanceof RemoteProxyAdapter, () -> cast(adapter), (Supplier<RemoteProxyAdapter>) () -> null);
     }
 
-    public ICloudServer thisService() {
+    public ICloudService thisService() {
         return this.serviceManager == null ? null : this.serviceManager.getAllCachedServices().stream().filter(it -> it.getName().equalsIgnoreCase(this.property.getName())).findAny().orElse(null);
     }
+
 
     @Override
     public void shutdown() {
         if (adapter != null) {
             adapter.shutdown();
+            return;
         }
 
         if (applicationThread != null) {
@@ -320,15 +319,25 @@ public class Remote extends CloudDriver<ICloudServer> {
         this.client.sendPacket(packet);
     }
 
+    @Override
+    public INetworkConfig getNetworkConfig() { // TODO: 10.04.2025 implement on remote side
+        throw new IncompatibleDriverEnvironmentException(DriverEnvironment.NODE);
+    }
+
     @NotNull
     @Override
     public AdvancedNetworkExecutor getExecutor() {
         return client;
     }
 
-    @Override
-    public ICloudServer thisSidesClusterParticipant() {
-        return thisService();
+
+    public static void initFromOtherInstance(RemoteIdentity identity, Consumer<AbstractPacket> handler, Runnable end) {
+
+        Remote remote = new Remote(identity);
+
+        remote.getEventManager().registerListener(new CloudEventListener<>(RemoteConnectEvent.class, e -> {
+            handler.accept(null);
+        }));
     }
 
 

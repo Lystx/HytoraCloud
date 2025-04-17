@@ -3,7 +3,7 @@ package cloud.hytora.driver.node.packet;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.impl.UniversalCloudServer;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,7 +17,7 @@ import java.io.IOException;
 @Getter
 public class NodeRequestServerStartPacket extends AbstractPacket {
 
-    private ICloudServer server;
+    private ICloudService server;
 
     private boolean demandsResponse;
 

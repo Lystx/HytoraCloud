@@ -6,7 +6,7 @@ import cloud.hytora.driver.networking.INetworkExecutor;
 import cloud.hytora.driver.networking.protocol.packets.NetworkResponseState;
 import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.node.data.INodeData;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 
 import java.util.Collection;
 
@@ -24,22 +24,22 @@ public interface INode extends IClusterObject<INode>, INetworkExecutor {
 
     void setLastCycleData(INodeData lastCycleData);
 
-    boolean hasEnoughMemoryToStart(ICloudServer cloudServer);
+    boolean hasEnoughMemoryToStart(ICloudService cloudServer);
 
     long getUsedMemoryByServices();
 
     void shutdown();
 
-    void stopServer(ICloudServer server);
+    void stopServer(ICloudService server);
 
-    Task<NetworkResponseState> stopServerAsync(ICloudServer server);
+    Task<NetworkResponseState> stopServerAsync(ICloudService server);
 
-    void startServer(ICloudServer server);
+    void startServer(ICloudService server);
 
-    Task<NetworkResponseState> startServerAsync(ICloudServer server);
+    Task<NetworkResponseState> startServerAsync(ICloudService server);
 
-    Collection<ICloudServer> getRunningServers();
+    Collection<ICloudService> getRunningServers();
 
-    Task<Collection<ICloudServer>> getRunningServersAsync();
+    Task<Collection<ICloudService>> getRunningServersAsync();
 
 }

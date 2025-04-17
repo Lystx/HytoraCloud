@@ -45,6 +45,8 @@ public interface ChannelMessage extends IBufferObject {
      */
     void setId(UUID id);
 
+    void receiver(NetworkComponent component);
+
     /**
      * The data of this message
      *

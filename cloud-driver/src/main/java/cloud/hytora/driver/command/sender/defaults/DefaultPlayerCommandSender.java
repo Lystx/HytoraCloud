@@ -13,6 +13,9 @@ import java.util.UUID;
 @AllArgsConstructor @Getter
 public class DefaultPlayerCommandSender implements PlayerCommandSender {
 
+	/**
+	 * the provided player for this sender
+	 */
 	private final ICloudPlayer player;
 
 	@Override

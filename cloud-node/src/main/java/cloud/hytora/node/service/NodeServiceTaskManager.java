@@ -13,7 +13,7 @@ import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
 import cloud.hytora.node.NodeDriver;
-import cloud.hytora.driver.database.SectionedDatabase;
+import cloud.hytora.driver.database.LocalStorage;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,10 +22,10 @@ import java.util.stream.Collectors;
 
 public class NodeServiceTaskManager extends DefaultServiceTaskManager implements PacketHandler<ServiceTaskExecutePacket> {
 
-    private final SectionedDatabase database;
+    private final LocalStorage database;
 
     public NodeServiceTaskManager() {
-        this.database = NodeDriver.getInstance().getDatabaseManager().getDatabase();
+        this.database = NodeDriver.getInstance().getDatabaseManager().getLocalStorage();
 
         // loading all database groups and configurations
         this.getAllTaskGroups().addAll(this.database.getSection(TaskGroup.class).getAll());

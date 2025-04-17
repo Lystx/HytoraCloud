@@ -7,7 +7,7 @@ import cloud.hytora.driver.common.ICloneableObject;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.property.IPropertyObject;
 import cloud.hytora.driver.services.ConfigurableService;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
 import cloud.hytora.driver.services.template.ServiceTemplate;
@@ -125,7 +125,7 @@ public interface IServiceTask extends IBufferObject, IPlaceHolderObject, IProper
 
     void setMotd(String motd);
 
-    java.util.List<ICloudServer> getOnlineServices();
+    java.util.List<ICloudService> getOnlineServices();
 
     /**
      * updates the properties of the group

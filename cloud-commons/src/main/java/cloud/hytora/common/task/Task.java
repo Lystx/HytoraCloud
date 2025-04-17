@@ -39,7 +39,7 @@ public interface Task<T> extends Serializable {
     /**
      * The static executor for async calls
      */
-    ExecutorService SERVICE = Executors.newCachedThreadPool(new NamedThreadFactory("WrapperTaskPool"));
+    ExecutorService SERVICE = Executors.newCachedThreadPool(new NamedThreadFactory("WrapperTaskPool", Thread.currentThread().getContextClassLoader()));
 
     /**
      * Constructs a new empty {@link Task} with no object being held
@@ -115,7 +115,7 @@ public interface Task<T> extends Serializable {
      * @return the created value instance
      */
     static <T> Task<T> build(T value, boolean immutable) {
-        return new SimpleTask<T>(value).setImmutable(immutable);
+        return new SimpleTask<T>(value).allowNull().setImmutable(immutable);
     }
 
     static Task<Void> runSync(@Nonnull Runnable runnable) {
@@ -153,10 +153,9 @@ public interface Task<T> extends Serializable {
 
     static <V> Task<V> callAsync(@Nonnull Callable<V> callable) {
         Task<V> task = empty();
-        task.denyNull();
+        task.allowNull();
         SERVICE.execute(() -> {
             try {
-                task.allowNull();
                 task.setResult(callable.call());
             } catch (Throwable ex) {
                 task.setFailure(ex);

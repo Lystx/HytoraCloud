@@ -1,6 +1,6 @@
 package cloud.hytora.driver.services.utils.version.impl;
 
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.utils.version.VersionFile;
 import org.apache.commons.io.FileUtils;
 
@@ -14,7 +14,7 @@ import java.util.Properties;
 public class MinecraftProperties extends VersionFile {
 
     @Override
-    public void applyFile(ICloudServer ICloudServer, File file) throws IOException {
+    public void applyFile(ICloudService ICloudServer, File file) throws IOException {
 
         if (!file.exists()) {
             URL resource = getClass().getResource("/impl/files/server.properties");

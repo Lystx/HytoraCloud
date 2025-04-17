@@ -1,0 +1,11 @@
+{
+  "name": "module-smartProxy",
+  "description": "Manages the SmartProxy-Module",
+  "version": "SNAPSHOT-1.0",
+  "main": "cloud.hytora.modules.smartproxy.SmartProxyModule",
+  "author": "Lystx",
+  "website": "",
+  "copy": "PROXY",
+  "environment": "NODE",
+  "depends": []
+}

@@ -45,7 +45,7 @@ public class NettyHttpServer implements HttpServer {
                     .sync()
                     .channel();
 
-            CloudDriver.getInstance().getLogger().info("Added HttpListener for ProtocolAddress of value {}!", address);
+            CloudDriver.getInstance().getLogger().info("§7Added §bHttpListener §7for ProtocolAddress of value §b{}!", address);
         } catch (InterruptedException ex) {
             ex.printStackTrace();
         }

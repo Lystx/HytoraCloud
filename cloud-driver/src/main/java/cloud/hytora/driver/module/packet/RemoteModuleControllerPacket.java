@@ -30,6 +30,8 @@ public class RemoteModuleControllerPacket extends AbstractPacket {
 
         DISABLE_MODULE,
 
+        RELOAD_MODULE,
+
         UNREGISTER_MODULE,
 
         RELOAD_CONFIG,

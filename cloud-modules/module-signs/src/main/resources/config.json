@@ -1,0 +1,11 @@
+{
+
+  "name" : "module-signs",
+  "main" : "cloud.hytora.modules.sign.cloud.ModuleBootstrap",
+  "author" : "Lystx",
+  "description" : "Manages the sign selectors",
+  "version" : "SNAPSHOT-1.0",
+  "website" : "https://github.com/Lystx/HytoraCloud/tree/master/cloud-modules/module-signs",
+  "copy" : "SERVER_FALLBACK",
+  "environment" : "ALL"
+}

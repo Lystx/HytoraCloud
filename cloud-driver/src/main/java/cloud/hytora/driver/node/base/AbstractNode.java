@@ -10,7 +10,7 @@ import cloud.hytora.driver.node.config.DefaultNodeConfig;
 import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.node.data.DefaultNodeData;
 import cloud.hytora.driver.node.data.INodeData;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.utils.ServiceState;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,8 +21,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.ToIntFunction;
-import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 
 @Getter
@@ -37,7 +35,7 @@ public abstract class AbstractNode implements INode {
 
 
     @Override
-    public List<ICloudServer> getRunningServers() {
+    public List<ICloudService> getRunningServers() {
         return CloudDriver.getInstance()
                 .getServiceManager()
                 .getAllCachedServices()
@@ -49,8 +47,8 @@ public abstract class AbstractNode implements INode {
     }
 
     @Override
-    public boolean hasEnoughMemoryToStart(ICloudServer cloudServer) {
-        return getConfig().getMemory() >= (config.getMemory() + cloudServer.getTask().getMemory());
+    public boolean hasEnoughMemoryToStart(ICloudService cloudServer) {
+        return getConfig().getMemory() >= (getUsedMemoryByServices() + cloudServer.getTask().getMemory());
     }
 
 
@@ -58,7 +56,7 @@ public abstract class AbstractNode implements INode {
     public long getUsedMemoryByServices() {
         long memory = 0L;
 
-        for (ICloudServer cloudServer : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
+        for (ICloudService cloudServer : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
             if (!cloudServer.getRunningNodeName().equalsIgnoreCase(this.getName())) {
                 continue;
             }
@@ -69,7 +67,7 @@ public abstract class AbstractNode implements INode {
     }
 
     @Override
-    public Task<Collection<ICloudServer>> getRunningServersAsync() {
+    public Task<Collection<ICloudService>> getRunningServersAsync() {
         return Task.callAsync(this::getRunningServers);
     }
 

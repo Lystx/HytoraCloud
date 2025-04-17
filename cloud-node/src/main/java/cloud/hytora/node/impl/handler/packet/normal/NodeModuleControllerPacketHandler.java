@@ -27,6 +27,9 @@ public class NodeModuleControllerPacketHandler implements PacketHandler<RemoteMo
             case LOAD_MODULE:
                 controller.loadModule();
                 break;
+            case RELOAD_MODULE:
+                controller.reloadModule();
+                break;
             case ENABLE_MODULE:
                 controller.enableModule();
                 break;

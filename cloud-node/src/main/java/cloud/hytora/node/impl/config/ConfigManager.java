@@ -9,10 +9,9 @@ import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
 import cloud.hytora.driver.node.config.ServiceCrashPrevention;
 import cloud.hytora.driver.services.utils.ServiceProcessType;
-import cloud.hytora.driver.uuid.PlayerLoginProcessing;
 import cloud.hytora.node.NodeDriver;
-import cloud.hytora.node.impl.database.config.DatabaseConfiguration;
-import cloud.hytora.node.impl.database.config.DatabaseType;
+import cloud.hytora.node.impl.database.cloud.DatabaseConfiguration;
+import cloud.hytora.node.impl.database.cloud.DatabaseType;
 import lombok.*;
 
 import java.io.IOException;
@@ -40,10 +39,8 @@ public class ConfigManager {
             this.config = new MainConfiguration(
                     LogLevel.INFO,
                     ServiceProcessType.BRIDGE_PLUGIN,
-                    PlayerLoginProcessing.UUID_CACHE,
                     25565,
                     40000,
-                    true,
                     Collections.singletonList("Notch"),
                     new ProtocolAddress[]{new ProtocolAddress("127.0.0.1", 4518)},
                     new ServiceCrashPrevention(
@@ -68,7 +65,7 @@ public class ConfigManager {
                             new RandomString(10).nextString(),
                             false,
                             2,
-                            10000L,
+                            1000000L,
                             new ProtocolAddress[0]
                     ), new CloudMessages());
             Logger.constantInstance().trace("Config-File does not exist ==> Creating and saving default config..");

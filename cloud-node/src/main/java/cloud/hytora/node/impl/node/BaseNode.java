@@ -10,7 +10,7 @@ import cloud.hytora.driver.node.base.AbstractNode;
 import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.node.data.DefaultNodeData;
 import cloud.hytora.driver.node.data.INodeData;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.config.ConfigManager;
 
@@ -44,7 +44,7 @@ public class BaseNode extends AbstractNode {
 
 
     @Override
-    public List<ICloudServer> getRunningServers() {
+    public List<ICloudService> getRunningServers() {
         return CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream().filter(s -> {
             s.getTask();
             return s.getTask().getPossibleNodes().contains(this.config.getNodeName());
@@ -52,7 +52,7 @@ public class BaseNode extends AbstractNode {
     }
 
     @Override
-    public Task<Collection<ICloudServer>> getRunningServersAsync() {
+    public Task<Collection<ICloudService>> getRunningServersAsync() {
         return Task.callAsync(() -> CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream().filter(s -> {
             s.getTask();
             return s.getRunningNodeName().equalsIgnoreCase(this.config.getNodeName());
@@ -69,19 +69,20 @@ public class BaseNode extends AbstractNode {
     }
 
     @Override
-    public void stopServer(ICloudServer server) {
+    public void stopServer(ICloudService server) {
         server.sendPacket(new ServiceForceShutdownPacket(server.getName()));
         Task.runTaskLater(() -> {
             Process process = ((IProcessCloudServer)server).getProcess();
             if (process == null) {
                 return;
             }
+            CloudDriver.getInstance().getLogger().info("§cHad to force stop the Process of §e" + server.getName() +"§c!");
             process.destroyForcibly();
-        }, TimeUnit.MILLISECONDS, 200);
+        }, TimeUnit.SECONDS, 5);
     }
 
     @Override
-    public Task<NetworkResponseState> stopServerAsync(ICloudServer server) {
+    public Task<NetworkResponseState> stopServerAsync(ICloudService server) {
         return Task.callAsync(() -> {
             stopServer(server);
             return NetworkResponseState.OK;
@@ -90,12 +91,12 @@ public class BaseNode extends AbstractNode {
 
 
     @Override
-    public void startServer(ICloudServer server) {
+    public void startServer(ICloudService server) {
         CloudDriver.getInstance().getServiceManager().startService(server);
     }
 
     @Override
-    public Task<NetworkResponseState> startServerAsync(ICloudServer server) {
+    public Task<NetworkResponseState> startServerAsync(ICloudService server) {
         return Task.callAsync(() -> {
             startServer(server);
             return NetworkResponseState.OK;

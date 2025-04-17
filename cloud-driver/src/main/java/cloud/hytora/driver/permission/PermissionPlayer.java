@@ -21,6 +21,16 @@ import java.util.concurrent.TimeUnit;
 public interface PermissionPlayer extends PermissionEntity {
 
 
+	default boolean isOnline() {
+		return toOnlinePlayer() != null;
+	}
+
+	/**
+	 * Updates this entity and syncs its data all over the network
+	 */
+	@Override
+	void update();
+
 	static PermissionPlayer byName(String name) {
 		return CloudDriver
 				.getInstance()
@@ -51,15 +61,6 @@ public interface PermissionPlayer extends PermissionEntity {
     ICloudPlayer toOnlinePlayer();
 
 	/**
-	 * Tries to get the {@link CloudOfflinePlayer} player of this permission
-	 * database entry<br>
-	 *
-	 * @return the player if found in database
-	 */
-	@Nonnull
-	CloudOfflinePlayer toOfflinePlayer();
-
-	/**
 	 * Returns every {@link PermissionGroup} instance that this player owns
 	 * and that have not expired yet
 	 */
@@ -79,7 +80,6 @@ public interface PermissionPlayer extends PermissionEntity {
 	 *
 	 * @return group instance or null
 	 */
-	@Nullable
 	PermissionGroup getHighestGroup();
 
 	/**

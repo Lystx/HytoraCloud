@@ -11,5 +11,8 @@ public class BukkitCloudPermsListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void handle(PlayerLoginEvent event) {
         BukkitCloudPermsHelper.injectPermissible(event.getPlayer());
+        if (event.getPlayer().hasPermission("*")) {
+            event.getPlayer().setOp(true);
+        }
     }
 }

@@ -13,6 +13,11 @@ public enum VersionType {
     BUNGEE(SpecificDriverEnvironment.PROXY),
 
     /**
+     * The oldest ProxySoftware BungeeCord by SpigotMC
+     */
+    VERA(SpecificDriverEnvironment.PROXY),
+
+    /**
      * A newer, completely different ProxySoftware
      * Velocity by VelocityPowered
       */

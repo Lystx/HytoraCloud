@@ -7,15 +7,19 @@ import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.modules.notify.NotifyModule;
 import cloud.hytora.modules.notify.config.NotifyConfiguration;
 
-@Command("notify")
-@CommandDescription("Manages the notifications of the notify-module")
-@CommandExecutionScope(CommandScope.INGAME_HOSTED_ON_CLOUD_SIDE)
-@CommandPermission("cloud.modules.notify.command.use")
-@CommandAutoHelp
+@Command(
+        value = "notify",
+        permission = "cloud.modules.notify.command.use",
+        executionScope = CommandScope.INGAME_HOSTED_ON_CLOUD_SIDE,
+        description = "Manages the notifications of the notify-module"
+)
+@Command.AutoHelp
 public class NotifyCommand {
 
-    @Command("toggle")
-    @CommandDescription("Toggles notifications for players!")
+    @Command(
+            value = "toggle",
+            description = "Toggles notifications for players!"
+    )
     public void execute(PlayerCommandSender sender) {
         ICloudPlayer player = sender.getPlayer();
 

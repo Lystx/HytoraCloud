@@ -1,0 +1,8 @@
+author: Lystx
+name: BungeeCord-SmartProxy
+main: cloud.hytora.plugins.smartproxy.bungee.BungeeBootstrap
+version: STABLE-1.8
+description: no description
+depends:
+  - HytoraCloud-Bridge
+

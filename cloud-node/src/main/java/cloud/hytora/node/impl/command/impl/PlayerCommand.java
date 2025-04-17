@@ -5,34 +5,29 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.component.Component;
-import cloud.hytora.driver.component.event.ComponentEvent;
-import cloud.hytora.driver.component.event.click.ClickAction;
-import cloud.hytora.driver.component.event.hover.HoverAction;
-import cloud.hytora.driver.component.style.ComponentStyle;
-import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;
-import cloud.hytora.driver.player.executor.PlayerExecutor;
 
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 
-@Command({"players", "player"})
-@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
-@CommandPermission("cloud.command.use")
-@CommandAutoHelp
-@CommandDescription("Manages all players")
+@Command(
+        value = {"players", "player"},
+        permission = "cloud.command.use",
+        executionScope = CommandScope.CONSOLE_AND_INGAME,
+        description = "Manages all players"
+
+)
+@Command.AutoHelp
 @ApplicationParticipant
 public class PlayerCommand {
 
 
-    @Command("list")
-    @CommandDescription("Lists all players")
+    @Command(value = "list", description = "Lists all players")
     public void executeList(CommandSender sender) {
 
-        List<ICloudPlayer> players = CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers();
+        Collection<ICloudPlayer> players = CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers();
 
         if (players.isEmpty()) {
             sender.sendMessage("§cThere are currently no players online!");
@@ -48,34 +43,40 @@ public class PlayerCommand {
         sender.sendMessage("§8");
     }
 
-    @Command("info")
-    @Syntax("<name>")
-    @CommandDescription("debug command")
-    public void executeInfo(CommandSender sender, @Argument("name") String name) {
+    @Command(value = "info", description = "Shows information about a player")
+    @Command.Syntax("<name>")
+    public void executeInfo(CommandSender sender, @Command.Argument("name") String name) {
 
         PlayerManager playerManager = CloudDriver.getInstance().getPlayerManager();
-        CloudOfflinePlayer player = playerManager.getOfflinePlayerByNameBlockingOrNull(name);
+        playerManager.getOfflinePlayer(name)
+                .onTaskSucess(player -> {
+                    if (player == null) {
+                        sender.sendMessage("§cNo such player with the name §e" + name + " §chas ever joined the network!");
+                        return;
+                    }
 
-        if (player == null) {
-            sender.sendMessage("§cNo such player with the name §e" + name + " §chas ever joined the network!");
-            return;
-        }
+                    SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy - HH:mm:ss");
 
-        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy - HH:mm:ss");
+                    sender.sendMessage("§8");
+                    sender.sendMessage("Service information:");
+                    sender.sendMessage("§bName: §7" + player.getName() + " §8[§3" + player.getUniqueId() + "§8]");
+                    sender.sendMessage("§bFirst Login: §7" +  sdf.format(new Date(player.getFirstLogin())));
+                    sender.sendMessage("§bLast Login: §7" +  sdf.format(new Date(player.getLastLogin())));
+                    sender.sendMessage("§bProperties: §7" +  player.getProperties().asRawJsonString());
+                    sender.sendMessage("§bStatus: §7" + (player.isOnline() ? "§aOnline" : "§cOffline"));
+                    if (player.isOnline()) {
+                        ICloudPlayer onlinePlayer = player.asOnlinePlayer();
+                        sender.sendMessage("§bProxy: §7" + onlinePlayer.getProxyServer());
+                        sender.sendMessage("§bServer: §7" + onlinePlayer.getServer());
 
-        sender.sendMessage("§8");
-        sender.sendMessage("Service information:");
-        sender.sendMessage("§bName: §7" + player.getName() + " §8[§3" + player.getUniqueId() + "§8]");
-        sender.sendMessage("§bFirst Login: §7" +  sdf.format(new Date(player.getFirstLogin())));
-        sender.sendMessage("§bLast Login: §7" +  sdf.format(new Date(player.getLastLogin())));
-        sender.sendMessage("§bProperties: §7" +  player.getProperties().asRawJsonString());
-        sender.sendMessage("§bStatus: §7" + (player.isOnline() ? "§aOnline" : "§cOffline"));
-        if (player.isOnline()) {
-            ICloudPlayer onlinePlayer = player.asOnlinePlayer();
-            sender.sendMessage("§bProxy: §7" + onlinePlayer.getProxyServer());
-            sender.sendMessage("§bServer: §7" + onlinePlayer.getServer());
+                    }
+                    if (!player.getProperties().has("debugged")) {
+                        player.editProperties(properties -> {
+                            properties.set("debugged", true);
+                        });
+                    }
+                    sender.sendMessage("§8");
+                }).onTaskFailed(e -> {});
 
-        }
-        sender.sendMessage("§8");
     }
 }

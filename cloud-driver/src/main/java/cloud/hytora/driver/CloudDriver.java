@@ -3,13 +3,11 @@ package cloud.hytora.driver;
 import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.collection.NamedThreadFactory;
 import cloud.hytora.common.logging.Logger;
-import cloud.hytora.common.task.Task;
 import cloud.hytora.context.IApplicationContext;
 import cloud.hytora.driver.command.CommandManager;
-import cloud.hytora.driver.common.IClusterObject;
+import cloud.hytora.driver.config.INetworkConfig;
 import cloud.hytora.driver.event.EventManager;
 import cloud.hytora.driver.event.defaults.DefaultEventManager;
-import cloud.hytora.driver.exception.CloudException;
 import cloud.hytora.driver.http.api.HttpRequest;
 import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.message.ChannelMessage;
@@ -23,10 +21,10 @@ import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.player.*;
 import cloud.hytora.common.scheduler.Scheduler;
-import cloud.hytora.driver.player.executor.PlayerExecutor;
+import cloud.hytora.driver.player.impl.DefaultFullJoinExecutor;
 import cloud.hytora.driver.provider.ProviderRegistry;
 import cloud.hytora.driver.provider.defaults.DefaultProviderRegistry;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.task.ServiceTaskManager;
@@ -39,7 +37,7 @@ import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.networking.PacketProvider;
 import cloud.hytora.driver.tps.TickWorker;
 import cloud.hytora.driver.tps.def.DefaultTickWorker;
-import cloud.hytora.driver.uuid.DriverUUIDCache;
+
 import io.netty.util.ResourceLeakDetector;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.JdkLoggerFactory;
@@ -49,14 +47,12 @@ import lombok.Setter;
 import javax.annotation.Nonnull;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 
 /**
  * The <b>CloudDriver</b> is the core of the API of HytoraCloud.
  * It allows the System internally and developers to make use of every Manager across the Network
- * For example you can get information about a specific {@link ICloudPlayer}, a specific {@link ICloudServer},
+ * For example you can get information about a specific {@link ICloudPlayer}, a specific {@link ICloudService},
  * a specific {@link IServiceTask}, a specific {@link TaskGroup}. <br>
  * Or you could manage the {@link HttpServer} and create {@link HttpRequest} as you'd like to. <br>
  * Or you could manage all the different connected {@link INode}s and tell them to start or stop a certain Server
@@ -69,13 +65,13 @@ import java.util.function.Supplier;
  * @since SNAPSHOT-1.0
  */
 @Getter
-public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUtility {
+public abstract class CloudDriver extends DriverUtility {
 
     /**
      * The static instance of this Driver
      */
     @Getter
-    private static CloudDriver<?> instance;
+    private static CloudDriver instance;
 
     /**
      * The current driver environment
@@ -122,6 +118,7 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
      */
     @Setter
     protected boolean running;
+
 
     /**
      * The interval that services take to publish their data to the cluster
@@ -235,53 +232,18 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
     }
 
     /**
-     * Public Method that tries to execute a given {@link Runnable} if a provided {@link Supplier} returns {@code true} <br>
-     * or until the provided timeout in milliseconds has expired from the start of the operation
-     * <br> <br>
-     *
-     * @param runnable the runnable to execute
-     * @param request  the condition that has to be true
-     * @param timeOut  the timeOut for this request in milliseconds
-     */
-    public void executeIf(Runnable runnable, Supplier<Boolean> request, long timeOut) {
-        this.scheduledExecutor.execute(() -> {
-            long deadline = System.currentTimeMillis() + timeOut;
-            boolean done;
-
-            do {
-                done = request.get();
-                if (!done) {
-                    long msRemaining = deadline - System.currentTimeMillis();
-                    if (msRemaining < 0) {
-                        done = true;
-                    }
-                } else {
-                    runnable.run();
-                }
-            } while (!done);
-        });
-    }
-
-    /**
-     * Executes a given {@link Runnable} if a provided {@link Supplier} returns {@code true} <br>
-     * with a default timeout of <b>1 DAY</b>
-     * <br> <br>
-     *
-     * @param runnable the runnable to execute
-     * @param request  the condition that has to be true
-     * @see CloudDriver#executeIf(Runnable, Supplier, long)
-     */
-    public void executeIf(Runnable runnable, Supplier<Boolean> request) {
-        this.executeIf(runnable, request, TimeUnit.DAYS.toMillis(1));
-    }
-
-    /**
      * The current {@link DriverStorage} instance where
      * you can store every type of data you want
      * @see DriverStorage
      */
     @Nonnull
     public abstract DriverStorage getStorage();
+
+
+    /**
+     * Returns the config of the whole network
+     */
+    public abstract INetworkConfig getNetworkConfig();
 
     /**
      * The current {@link CommandSender} instance where
@@ -324,7 +286,7 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
 
     /**
      * The current {@link ServiceManager} instance where
-     * you can manage every {@link ICloudServer}
+     * you can manage every {@link ICloudService}
      * @see ServiceManager
      */
     @Nonnull
@@ -339,12 +301,6 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
     public abstract ModuleManager getModuleManager();
 
     /**
-     * The current {@link DriverUUIDCache} instance where
-     * you can manage cached {@link java.util.UUID}s by their name
-     */
-    public abstract DriverUUIDCache getUUIDCache();
-
-    /**
      * The current {@link ServiceTaskManager} instance where
      * you can manage every {@link IServiceTask} and {@link TaskGroup}
      * @see ServiceTaskManager
@@ -352,6 +308,10 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
     @Nonnull
     public abstract ServiceTaskManager getServiceTaskManager();
 
+    /**
+     * Returns the current {@link IApplicationContext} if this
+     * programm is running on a Remot-Side
+     */
     public abstract IApplicationContext getApplicationContext();
 
     /**
@@ -360,46 +320,6 @@ public abstract class CloudDriver<T extends IClusterObject<T>> extends DriverUti
      */
     public abstract AdvancedNetworkExecutor getExecutor();
 
-    public abstract T thisSidesClusterParticipant();
 
-    public <V> V thisSidesClusterParticipant(Class<V> typeClass) {
-        return (V) thisSidesClusterParticipant();
-    }
-
-
-
-    private static class DefaultFullJoinExecutor implements PlayerFullJoinExecutor {
-
-        @Override
-        public Task<Void> execute(ICloudPlayer cloudPlayer, boolean sentToHub, boolean disconnect) {
-
-            Task<Void> task = Task.empty();
-            boolean kickPlayersThatAreNotOnFallback = !cloudPlayer.isOnline(); // TODO: 02.08.2022 custom config
-            CloudDriver.getInstance().getProviderRegistry().get(PlayerFullJoinChecker.class).ifPresent(playerFullJoinExecutor -> {
-                int kickedPlayers = 0;
-                for (ICloudPlayer onlinePlayer : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
-                    if ((kickPlayersThatAreNotOnFallback && (onlinePlayer.getServer() == null || onlinePlayer.getServer().getTask().getFallback().isEnabled())) || playerFullJoinExecutor.compare(cloudPlayer, onlinePlayer).equals(cloudPlayer)) {
-                        PlayerExecutor playerExecutor = PlayerExecutor.forPlayer(onlinePlayer);
-                        if (sentToHub) {
-                            playerExecutor.sendToFallback();
-                        }
-                        if (disconnect) {
-                            playerExecutor.disconnect("§cA player with a higher priority joined");
-                        }
-                        kickedPlayers += 1;
-                    }
-                }
-
-
-                if (kickedPlayers > 0) {
-                    task.setResult(null);
-                } else {
-                    task.setFailure(new CloudException("No player with lower priority than self"));
-                }
-            });
-
-            return task;
-        }
-    }
 }
 

@@ -1,5 +1,6 @@
 package cloud.hytora.driver.player.impl;
 
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.event.EventListener;
@@ -12,6 +13,7 @@ import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
+import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,11 +23,12 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class DefaultPlayerManager implements PlayerManager {
 
+    @Setter
     protected Map<UUID, ICloudPlayer> cachedCloudPlayers = new ConcurrentHashMap<>();
 
 
     @Override
-    public void setAllCachedCloudPlayers(List<ICloudPlayer> allCachedCloudPlayers) {
+    public void setCachedCloudPlayers(Collection<ICloudPlayer> allCachedCloudPlayers) {
         Map<UUID, ICloudPlayer> cloudPlayerMap = new ConcurrentHashMap<>();
         for (ICloudPlayer cloudPlayer : allCachedCloudPlayers) {
             cloudPlayerMap.put(cloudPlayer.getUniqueId(), cloudPlayer);
@@ -44,14 +47,15 @@ public abstract class DefaultPlayerManager implements PlayerManager {
         executor.registerPacketHandler((PacketHandler<CloudPlayerUpdatePacket>) (wrapper, packet) -> {
 
             ICloudPlayer player = packet.getPlayer();
-
-            this.getCloudPlayer(player.getUniqueId()).ifPresent(cp -> {
-                cp.clone(player);
+            ICloudPlayer cachedCloudPlayer = this.getCachedCloudPlayer(player.getUniqueId());
+            if (cachedCloudPlayer != null) {
+                cachedCloudPlayer.clone(player);
                 if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
-                    cp.update();
+                    cachedCloudPlayer.update();
                 }
-                eventManager.callEventGlobally(new CloudPlayerUpdateEvent(cp));
-            });
+                cachedCloudPlayers.put(player.getUniqueId(), cachedCloudPlayer);
+                eventManager.callEventGlobally(new CloudPlayerUpdateEvent(cachedCloudPlayer));
+            }
         });
 
 
@@ -74,52 +78,27 @@ public abstract class DefaultPlayerManager implements PlayerManager {
         this.cachedCloudPlayers = cachedCloudPlayers;
     }
 
-    @Override
-    public @Nullable CloudOfflinePlayer getOfflinePlayerByUniqueIdBlockingOrNull(@NotNull UUID uniqueId) {
-        return getOfflinePlayerByUniqueIdAsync(uniqueId).timeOut(TimeUnit.SECONDS, 12).syncUninterruptedly().orElse(null);
-    }
-
-    @Override
-    public @Nullable CloudOfflinePlayer getOfflinePlayerByNameBlockingOrNull(@NotNull String name) {
-        return getOfflinePlayerByNameAsync(name).syncUninterruptedly().orElse(null);
-    }
-
-    @Override
-    public @NotNull Collection<CloudOfflinePlayer> getAllOfflinePlayersBlockingOrEmpty() {
-        return getAllOfflinePlayersAsync().syncUninterruptedly().orElse(new ArrayList<>());
-    }
-
     public abstract void registerCloudPlayer(@NotNull UUID uniqueID, @NotNull String username);
 
     public abstract void unregisterCloudPlayer(@NotNull UUID uuid, @NotNull String name);
 
     public abstract void updateCloudPlayer(@NotNull ICloudPlayer cloudPlayer);
 
-    public abstract ICloudPlayer constructPlayer(@NotNull UUID uniqueId, @NotNull String name);
+    public abstract Task<ICloudPlayer> constructPlayer(@NotNull UUID uniqueId, @NotNull String name);
 
     @Override
-    public @NotNull List<ICloudPlayer> getAllCachedCloudPlayers() {
-        return Arrays.asList(this.cachedCloudPlayers.values().toArray(new ICloudPlayer[0]));
+    public @NotNull Collection<ICloudPlayer> getAllCachedCloudPlayers() {
+        return this.cachedCloudPlayers.values();
     }
 
     @Override
-    public @NotNull Optional<ICloudPlayer> getCloudPlayer(final @NotNull UUID uniqueId) {
-        return Optional.ofNullable(this.cachedCloudPlayers.get(uniqueId));
+    public ICloudPlayer getCachedCloudPlayer(@NotNull String username) {
+        return this.cachedCloudPlayers.values().stream().filter(it -> it.getName().equalsIgnoreCase(username)).findAny().orElse(null);
     }
 
     @Override
-    public @NotNull Optional<ICloudPlayer> getCloudPlayer(final @NotNull String username) {
-        return this.cachedCloudPlayers.values().stream().filter(it -> it.getName().equalsIgnoreCase(username)).findAny();
-    }
-
-    @Override
-    public ICloudPlayer getCloudPlayerByNameOrNull(@NotNull String username) {
-        return this.getCloudPlayer(username).orElse(null);
-    }
-
-    @Override
-    public ICloudPlayer getCloudPlayerByUniqueIdOrNull(@NotNull UUID uniqueId) {
-        return this.getCloudPlayer(uniqueId).orElse(null);
+    public ICloudPlayer getCachedCloudPlayer(@NotNull UUID uniqueId) {
+        return this.cachedCloudPlayers.values().stream().filter(it -> it.getUniqueId().equals(uniqueId)).findAny().orElse(null);
     }
 
 }

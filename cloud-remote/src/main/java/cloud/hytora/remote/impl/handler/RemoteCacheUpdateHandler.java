@@ -3,7 +3,7 @@ package cloud.hytora.remote.impl.handler;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.remote.Remote;
 import cloud.hytora.remote.adapter.proxy.RemoteProxyAdapter;
 
@@ -18,7 +18,7 @@ public class RemoteCacheUpdateHandler implements PacketHandler<DriverUpdatePacke
         }
 
         proxy.clearServices();
-        for (ICloudServer allCachedService : packet.getAllCachedServices()) {
+        for (ICloudService allCachedService : packet.getAllCachedServices()) {
             proxy.registerService(allCachedService);
         }
 

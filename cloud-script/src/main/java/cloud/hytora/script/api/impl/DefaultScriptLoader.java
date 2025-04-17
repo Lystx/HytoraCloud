@@ -1,11 +1,9 @@
 package cloud.hytora.script.api.impl;
 
 import cloud.hytora.common.logging.Logger;
-import cloud.hytora.script.api.IScript;
-import cloud.hytora.script.api.IScriptCommand;
-import cloud.hytora.script.api.IScriptLoader;
+import cloud.hytora.script.ScriptSyntax;
+import cloud.hytora.script.api.*;
 
-import cloud.hytora.script.api.IScriptTask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,14 +46,10 @@ public class DefaultScriptLoader implements IScriptLoader {
     public IScript loadScript(@NotNull Path script) {
         try {
             List<String> allLines = new CopyOnWriteArrayList<>(Files.readAllLines(script));
-            Collection<String> comments = allLines
-                    .stream()
-                    .filter(e -> e.startsWith(COMMENT_LINE_START))
-                    .collect(Collectors.toList());
-
-            return this.loadScript(script, allLines, comments);
-        } catch (final IOException ex) {
-            Logger.constantInstance().error("Unable to read reform script located at {} : {}", script.toString(), ex);
+            return this.loadScript(script, allLines);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            Logger.constantInstance().error("Unable to read  script located at {} : {}", script.toString(), ex);
         }
 
         return null;
@@ -63,19 +57,107 @@ public class DefaultScriptLoader implements IScriptLoader {
 
     boolean loadsTask = false;
 
+    boolean multiComment = false;
+    boolean loadDecision, loadsFalseDecision = false;
+    DefaultScriptDecision currentDecision = null;
+
     @Nullable
-    private IScript loadScript(@NotNull Path path, @NotNull List<String> allLines, @NotNull Collection<String> comments) {
+    private IScript loadScript(@NotNull Path path, @NotNull List<String> allLines) {
         Map<String, Map.Entry<Integer, IScriptCommand>> commandsPerLine = new LinkedHashMap<>();
+        Map<String, Map.Entry<Integer, IScriptDecision>> decisionsPerLine = new LinkedHashMap<>();
+        Map<Integer, IScriptDecision> decisions = new HashMap<>();
         int cursorPosition = 0;
         List<String> taskLines = new ArrayList<>();
 
         for (String line : allLines) {
-            if (comments.contains(line) || line.trim().isEmpty()) {
+            if (line.trim().startsWith(ScriptSyntax.COMMENT_LINE_START) || line.trim().isEmpty()) {
                 cursorPosition++;
                 continue;
             }
 
-            if (line.startsWith(TASK_LINE_START)) {
+
+            //start ignoring lines
+            if (line.trim().startsWith(ScriptSyntax.MULTI_COMMENT_LINE_START)) {
+                multiComment = true;
+                cursorPosition++;
+                continue;
+            }
+
+            //end ignoring lines
+            if (line.trim().startsWith(ScriptSyntax.MULTI_COMMENT_LINE_END) || line.trim().endsWith(ScriptSyntax.MULTI_COMMENT_LINE_END)) {
+                multiComment = false;
+                cursorPosition++;
+                continue;
+            }
+
+            //check if ignoring lines
+            if (multiComment) {
+                cursorPosition++;
+                continue;
+            }
+
+            if (line.trim().startsWith("if")) {
+                if (line.endsWith("-> {")) {
+                    loadDecision = true;
+                    String checker = line
+                            .replace("if", "")
+                            .replace("(", "")
+                            .replace(")", "")
+                            .replace("->", "")
+                            .replace("{", "")
+                            .trim();
+                    currentDecision = new DefaultScriptDecision();
+                    currentDecision.setChecker(script -> {
+                        return Boolean.parseBoolean(script.replaceVariables(checker).trim());
+                    });
+                    cursorPosition++;
+                    continue;
+                } else {
+                    throw new IllegalArgumentException("If-Action must be closed with ' -> {' !");
+                }
+            }
+
+            //decision request over and closed
+            if (line.trim().equalsIgnoreCase("}") && (loadDecision || loadsFalseDecision)) {
+                loadDecision = false;
+                loadsFalseDecision = false;
+                decisionsPerLine.put(line.trim(), new AbstractMap.SimpleEntry<>(cursorPosition, currentDecision));
+                currentDecision = null;
+
+                cursorPosition++;
+                continue;
+            }
+
+            //decision request over and closed
+            if (line.trim().equalsIgnoreCase("} else -> {")) {
+                loadDecision = false;
+                loadsFalseDecision = true;
+                cursorPosition++;
+                continue;
+            }
+
+            if (loadDecision) {
+                IScriptCommand command = this.getCommandOfLine(line.trim());
+                if (command != null) {
+                    currentDecision.getTrueCommands().put(line.trim(), command);
+                }
+
+                cursorPosition++;
+                continue;
+            }
+
+            if (loadsFalseDecision) {
+                IScriptCommand command = this.getCommandOfLine(line.trim());
+                if (command != null) {
+                    currentDecision.getFalseCommands().put(line.trim(), command);
+                }
+
+                cursorPosition++;
+                continue;
+            }
+
+            //start loading task
+            if (line.startsWith(ScriptSyntax.TASK_LINE_START)) {
                 taskLines.add(line);
                 loadsTask = true;
                 cursorPosition++;
@@ -94,12 +176,6 @@ public class DefaultScriptLoader implements IScriptLoader {
                     continue;
                 }
 
-                int index = allLines.indexOf(line);
-                if (index != -1) {
-                    allLines.remove(index);
-                    allLines.add(index, line = this.replaceLineVariables(line, allLines));
-                }
-
                 commandsPerLine.put(line, new AbstractMap.SimpleEntry<>(cursorPosition, command));
             } catch (final IllegalArgumentException ex) {
                 System.out.println("Unable to handle script line " + cursorPosition + ": " + line);
@@ -114,7 +190,7 @@ public class DefaultScriptLoader implements IScriptLoader {
             return null;
         }
 
-        return new DefaultScript(path, this, allLines, tasks, commandsPerLine);
+        return new DefaultScript(path, this, allLines, tasks, commandsPerLine, decisionsPerLine);
     }
 
     @Nullable

@@ -4,7 +4,7 @@ import cloud.hytora.context.annotations.ApplicationParticipant;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
-import cloud.hytora.driver.command.completer.TaskCompleter;
+import cloud.hytora.driver.command.completer.impl.TaskCompleter;
 import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
 import cloud.hytora.driver.services.task.IServiceTask;
@@ -27,19 +27,20 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
-@CommandDescription("Manages all service tasks")
-@Command({"task", "tasks"})
-@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
-@CommandPermission("cloud.command.use")
-@CommandAutoHelp
+@Command(
+        value = {"task", "tasks"},
+        permission = "cloud.command.use",
+        executionScope = CommandScope.CONSOLE_AND_INGAME,
+        description = "Manages all service tasks"
+)
+@Command.AutoHelp
 @ApplicationParticipant
 public class TaskCommand {
 
     
-    @Command("info")
-    @Syntax("<name>")
-    @CommandDescription("Shows info about a task")
-    public void execute(CommandSender sender, @Argument(value = "name", completer = TaskCompleter.class) String name) {
+    @Command(value = "info", description = "Shows info about a task")
+    @Command.Syntax("<name>")
+    public void execute(CommandSender sender, @Command.Argument(value = "name", completer = TaskCompleter.class) String name) {
 
         IServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
 
@@ -65,9 +66,7 @@ public class TaskCommand {
         sender.sendMessage("§bVersion: §f" + task.getVersion().getTitle());
         sender.sendMessage("§8");
     }
-    @Command("create")
-    @CommandDescription("Creates a new task")
-    @CommandExecutionScope(CommandScope.CONSOLE)
+    @Command(value = "create", description = "Creates a new task")
     public void executeCreate(CommandSender sender) {
 
         new TaskSetup(NodeDriver.getInstance().getConsole()).start((setup, state) -> {
@@ -173,10 +172,9 @@ public class TaskCommand {
         });
     }
 
-    @Command("delete")
-    @Syntax("<name>")
-    @CommandDescription("Deletes a task")
-    public void executeDelete(CommandSender sender, @Argument(value = "name", completer = TaskCompleter.class) String name) {
+    @Command(value = "delete", description = "Deletes a task")
+    @Command.Syntax("<name>")
+    public void executeDelete(CommandSender sender, @Command.Argument(value = "name", completer = TaskCompleter.class) String name) {
         IServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
         if (task == null) {
             sender.sendMessage("§cThere is no existing ServiceTask with the name §e" + name + "§c!");
@@ -188,10 +186,9 @@ public class TaskCommand {
         sender.sendMessage("§7The ServiceTask §b" + task.getName() + " §7was deleted§8!");
     }
 
-    @Command("toggleMaintenance")
-    @Syntax("<name>")
-    @CommandDescription("Toggles maintenance mode for a task")
-    public void executeToggleMaintenance(CommandSender sender, @Argument(value = "name", completer = TaskCompleter.class) String name) {
+    @Command(value = "toggleMaintenance", description = "Toggles maintenance mode for a task")
+    @Command.Syntax("<name>")
+    public void executeToggleMaintenance(CommandSender sender, @Command.Argument(value = "name", completer = TaskCompleter.class) String name) {
         IServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
         if (task == null) {
             sender.sendMessage("§cThere is no existing ServiceTask with the name §e" + name + "§c!");
@@ -204,8 +201,7 @@ public class TaskCommand {
         sender.sendMessage("§7The maintenance state of ServiceTask §b" + task.getName() + " §7is now " + (maintenance ? "§aEnabled": "§cDisabled") + "§8!");
     }
 
-    @Command("list")
-    @CommandDescription("Lists all configurations")
+    @Command(value = "list", description = "Lists all configurations")
     public void executeList(CommandSender sender) {
         Collection<IServiceTask> cachedTasks = CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks();
         if (cachedTasks.isEmpty()) {

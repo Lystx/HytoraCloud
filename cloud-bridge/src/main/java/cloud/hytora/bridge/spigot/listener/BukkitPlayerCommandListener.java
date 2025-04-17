@@ -2,7 +2,7 @@ package cloud.hytora.bridge.spigot.listener;
 
 import cloud.hytora.document.Bundle;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.command.CommandObject;
+import cloud.hytora.driver.command.DriverCommandInfo;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.data.RegisteredCommand;
 import cloud.hytora.driver.common.CloudMessages;
@@ -12,7 +12,6 @@ import cloud.hytora.driver.storage.DriverStorage;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 import java.util.Arrays;
@@ -28,7 +27,7 @@ public class BukkitPlayerCommandListener implements Listener {
         }
 
         Player player = event.getPlayer();
-        ICloudPlayer cloudPlayer = CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(player.getUniqueId());
+        ICloudPlayer cloudPlayer = CloudDriver.getInstance().getPlayerManager().getCachedCloudPlayer(player.getUniqueId());
 
         if (cloudPlayer == null) {
             player.kickPlayer(CloudMessages.getInstance().getPrefix() + " §cCouldn't find your CloudPlayer. Please rejoin!");
@@ -38,12 +37,15 @@ public class BukkitPlayerCommandListener implements Listener {
 
         DriverStorage storage = CloudDriver.getInstance().getStorage();
         Bundle bundle = storage.getBundle("ingameCommands");
-        List<CommandObject> commands = bundle.toList(CommandObject.class);
+        List<DriverCommandInfo> commands = bundle.toList(DriverCommandInfo.class);
 
 
         String commandLine = event.getMessage().replace("/", "");
+        if (commandLine.equalsIgnoreCase("cloud")) {
+            commandLine = "cloud help";
+        }
         String finalCommandLine = commandLine;
-        CommandObject commandObject = commands.stream().filter(c -> finalCommandLine.startsWith(c.getPath())).findFirst().orElse(null);
+        DriverCommandInfo commandObject = commands.stream().filter(c -> finalCommandLine.startsWith(c.getPath())).findFirst().orElse(null);
         if (commandObject != null) {
             if (commandLine.startsWith("cloud ")) {
                 commandLine = commandLine.replace("cloud ", "");
@@ -53,7 +55,6 @@ public class BukkitPlayerCommandListener implements Listener {
             if (commandObject.getScope() == CommandScope.INGAME) {
                 CloudDriver.getInstance().getCommandManager().executeCommand(cloudPlayer, commandLine);
             } else if (commandObject.getScope() == CommandScope.CONSOLE_AND_INGAME | commandObject.getScope() == CommandScope.INGAME_HOSTED_ON_CLOUD_SIDE) {
-
                 CloudPlayerExecuteCommandPacket packet = new CloudPlayerExecuteCommandPacket(cloudPlayer.getUniqueId(), commandLine);
                 packet.publishAsync(); //executing packet to send to cloud
             }

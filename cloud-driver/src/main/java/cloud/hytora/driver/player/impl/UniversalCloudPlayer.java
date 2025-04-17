@@ -14,11 +14,10 @@ import cloud.hytora.driver.permission.PermissionChecker;
 import cloud.hytora.driver.permission.PermissionManager;
 import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.driver.player.ICloudPlayer;
-import cloud.hytora.driver.player.TemporaryProperties;
 import cloud.hytora.driver.player.connection.DefaultPlayerConnection;
 import cloud.hytora.driver.player.connection.PlayerConnection;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import lombok.*;
@@ -42,12 +41,12 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
         this(uuid, name, null, null);
     }
 
-    public UniversalCloudPlayer(UUID uniqueId, String name, ICloudServer server, ICloudServer proxyServer) {
-        this(uniqueId, name, System.currentTimeMillis(), System.currentTimeMillis(), server, proxyServer, DocumentFactory.newJsonDocument(), new DefaultTemporaryProperties());
+    public UniversalCloudPlayer(UUID uniqueId, String name, ICloudService server, ICloudService proxyServer) {
+        this(uniqueId, name, System.currentTimeMillis(), System.currentTimeMillis(), server, proxyServer, DocumentFactory.newJsonDocument());
     }
 
-    public UniversalCloudPlayer(UUID uniqueId, String name, long firstLogin, long lastLogin, ICloudServer server, ICloudServer proxyServer, Document properties, TemporaryProperties temporaryProperties) {
-        super(uniqueId, name,  firstLogin, lastLogin, properties, (DefaultTemporaryProperties) temporaryProperties);
+    public UniversalCloudPlayer(UUID uniqueId, String name, long firstLogin, long lastLogin, ICloudService server, ICloudService proxyServer, Document properties) {
+        super(uniqueId, name,  firstLogin, lastLogin, properties );
         this.serverName = server == null ? "" : server.getName();
         this.proxyName = proxyServer == null ? "" :proxyServer.getName();
 
@@ -67,34 +66,35 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
 
     @Nullable
     @Override
-    public ICloudServer getServer() {
+    public ICloudService getServer() {
         return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(this.serverName);
     }
 
     @NotNull
     @Override
-    public ICloudServer getProxyServer() {
+    public ICloudService getProxyServer() {
         return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(this.proxyName);
     }
 
     @Override
-    public Task<ICloudServer> getServerAsync() {
+    public Task<ICloudService> getServerAsync() {
         return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNullAsync(this.serverName);
     }
 
     @Override
-    public Task<ICloudServer> getProxyServerAsync() {
+    public Task<ICloudService> getProxyServerAsync() {
         return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNullAsync(this.proxyName);
     }
 
     @Override
-    public void setProxyServer(@NotNull ICloudServer service) {
+    public void setProxyServer(@NotNull ICloudService service) {
         this.proxyName = service.getName();
     }
 
     @Override
-    public void setServer(@NotNull ICloudServer service) {
-        this.serverName = service.getName();
+    public void setServer(ICloudService service) {
+
+        this.serverName = service == null ? "NULL" : service.getName();
     }
 
     @Override
@@ -117,8 +117,6 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
         switch (state) {
 
             case READ:
-                this.uniqueId = buf.readUniqueId();
-                this.name = buf.readString();
                 this.connection = buf.readOptionalObject(DefaultPlayerConnection.class);
 
                 this.proxyName = buf.readOptionalString();
@@ -127,8 +125,6 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
                 break;
 
             case WRITE:
-                buf.writeUniqueId(this.uniqueId);
-                buf.writeString(this.name);
 
                 buf.writeOptionalObject(this.connection);
 
@@ -141,11 +137,19 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
 
     @Override
     public void clone(ICloudPlayer from) {
-        this.setProxyServer(from.getProxyServer());
-        this.setServer(from.getServer());
 
+        //offlinePlayer values
         this.setUniqueId(from.getUniqueId());
         this.setName(from.getName());
+        this.setFirstLogin(from.getFirstLogin());
+        this.setLastLogin(from.getLastLogin());
+        this.setProperties(from.getProperties());
+
+        //online values
+        this.setProxyServer(from.getProxyServer());
+        this.setServer(from.getServer());
+        this.setConnection(from.getConnection());
+
     }
 
     @Override

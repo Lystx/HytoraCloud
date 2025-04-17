@@ -4,7 +4,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.permission.PermissionGroup;
 import cloud.hytora.driver.permission.PermissionManager;
 import cloud.hytora.driver.permission.PermissionPlayer;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -84,13 +84,16 @@ public class BukkitCloudPermissible extends PermissibleBase {
         try {
 
 
-            if (getPermissionPlayer() == null) return;
+            if (getPermissionPlayer() == null) {
+                System.out.println("ERRORRWASJKDFASKARTZWR");
+                return;
+            }
 
             for (cloud.hytora.driver.permission.Permission permission : permissionPlayer.getPermissions()) {
                 perms.put(permission.getPermission(), new PermissionAttachmentInfo(this, permission.getPermission(), null, true));
             }
 
-            for (String taskPermission : permissionPlayer.getTaskPermissions(CloudDriver.getInstance().thisSidesClusterParticipant(ICloudServer.class).getTask().getName())) {
+            for (String taskPermission : permissionPlayer.getTaskPermissions(CloudDriver.getInstance().getServiceManager().thisServiceOrNull().getTask().getName())) {
                 perms.put(taskPermission, new PermissionAttachmentInfo(this, taskPermission, null, true));
             }
 
@@ -109,7 +112,7 @@ public class BukkitCloudPermissible extends PermissibleBase {
                     perms.put(permission, new PermissionAttachmentInfo(this, permission, null, false));
                 }
 
-                for (String taskPermission : group.getTaskPermissions(CloudDriver.getInstance().thisSidesClusterParticipant(ICloudServer.class).getTask().getName())) {
+                for (String taskPermission : group.getTaskPermissions(CloudDriver.getInstance().getServiceManager().thisServiceOrNull().getTask().getName())) {
                     perms.put(taskPermission, new PermissionAttachmentInfo(this, taskPermission, null, true));
                 }
 

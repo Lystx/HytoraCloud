@@ -44,7 +44,7 @@ public class LauncherUtils {
             pb.setExtraMessage("Cleaning up...");
             outputStream.close();
             inputStream.close();
-            pb.close();
+            pb.close("");
             task.setResult(null);
         } catch (Exception e) {
             task.setFailure(e);

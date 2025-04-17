@@ -40,7 +40,7 @@ public class VersionInfo {
 
 
     public boolean isUpToDate() {
-        VersionInfo newestVersion = getNewestVersion();
+        VersionInfo newestVersion = getNewestVersion("UNKNOWN");
         if (newestVersion.isUnknown()) {
             return true;
         }
@@ -52,7 +52,7 @@ public class VersionInfo {
     }
 
     public String formatCloudJarName() {
-        return "HytoraCloud" + "-" + this + ".jar";
+        return "HytoraCloud" + "-" + toString() + ".jar";
     }
 
     public boolean isNewerAs(VersionInfo version) {
@@ -90,10 +90,10 @@ public class VersionInfo {
 
     private static VersionInfo NEWEST_VERSION;
 
-    public static VersionInfo getNewestVersion() {
+    public static VersionInfo getNewestVersion(String offlineVersion) {
         if (NEWEST_VERSION == null) {
             if (!DriverUtility.hasInternetConnection()) {
-                return new VersionInfo(Type.UNKNOWN, 0.1);
+                return new VersionInfo(Type.UNKNOWN, Integer.valueOf(offlineVersion));
             }
             try {
                 Document document = DocumentFactory.newJsonDocumentByURL("https://raw.githubusercontent.com/Lystx/HytoraCloud/master/application.json");

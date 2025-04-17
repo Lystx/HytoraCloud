@@ -16,17 +16,18 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-@CommandExecutionScope(CommandScope.CONSOLE)
-@Command("logger")
-@CommandPermission("cloud.command.use")
-@CommandDescription("Changes the level of Logger")
-@CommandAutoHelp
+@Command(
+        value = "logger",
+        permission = "cloud.command.use",
+        description = "Changes the level of Logger"
+)
+@Command.AutoHelp
 @ApplicationParticipant
 public class LoggerCommand {
 
     @Command("setLevel")
-    @Syntax("<level>")
-    public void executeClear(CommandSender sender, @Argument(value = "level", completer = Completer.class) LogLevel level) {
+    @Command.Syntax("<level>")
+    public void executeClear(CommandSender sender, @Command.Argument(value = "level", completer = Completer.class) LogLevel level) {
 
         try {
             MainConfiguration instance = MainConfiguration.getInstance();
@@ -49,7 +50,7 @@ public class LoggerCommand {
 
         @NotNull
         @Override
-        public Collection<String> complete(@NotNull CommandSender sender, @NotNull String message, @NotNull String argument) {
+        public Collection<String> complete(@NotNull CommandSender sender, @NotNull String argument) {
             return Arrays.stream(LogLevel.values()).map(LogLevel::getName).collect(Collectors.toList());
         }
     }

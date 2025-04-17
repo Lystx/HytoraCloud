@@ -1,6 +1,6 @@
 package cloud.hytora.driver.services.template;
 
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import org.jetbrains.annotations.NotNull;
 
@@ -11,13 +11,13 @@ public interface TemplateStorage {
 
     String getName();
 
-    void copyTemplate(@NotNull ICloudServer server, @NotNull ServiceTemplate template, @NotNull File directory) throws Exception;
+    void copyTemplate(@NotNull ICloudService server, @NotNull ServiceTemplate template, @NotNull File directory) throws Exception;
 
     void deleteTemplate(@NotNull ServiceTemplate template);
 
     void createTemplate(@NotNull ServiceTemplate template);
 
-    void deployService(@NotNull ICloudServer server, @NotNull ServiceDeployment deployment);
+    void deployService(@NotNull ICloudService server, @NotNull ServiceDeployment deployment);
 
     /**
      * Closes this storage, after it has been closed, no more interaction to this storage should be done and might lead to

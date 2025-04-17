@@ -17,7 +17,7 @@ import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
 import cloud.hytora.driver.player.packet.*;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.remote.Remote;
 import net.md_5.bungee.api.ProxyServer;
@@ -34,7 +34,7 @@ public class ProxyRemoteHandler {
     public ProxyRemoteHandler() {
 
         //load all current groups
-        for (ICloudServer allCachedService : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
+        for (ICloudService allCachedService : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
             IServiceTask serviceGroup = allCachedService.getTask();
             if (!serviceGroup.getVersion().isProxy()) {
                 registerService(allCachedService);
@@ -57,7 +57,7 @@ public class ProxyRemoteHandler {
         IServiceTask task = event.getTask();
         CloudMessages cloudMessages = CloudDriver.getInstance().getStorage().get("cloud::messages").toInstance(CloudMessages.class);
 
-        ICloudServer thisService = CloudDriver.getInstance().getServiceManager().thisServiceOrNull();
+        ICloudService thisService = CloudDriver.getInstance().getServiceManager().thisServiceOrNull();
 
         if (event.isNewMaintenanceValue() && task.getName().equalsIgnoreCase(thisService.getTask().getName())) {
 
@@ -76,7 +76,7 @@ public class ProxyRemoteHandler {
 
     @EventListener
     public void handle(ServiceRegisterEvent event) {
-        ICloudServer cloudServer = event.getCloudServer();
+        ICloudService cloudServer = event.getCloudServer();
         if (cloudServer.getTask() == null) {
             return;
         }
@@ -93,7 +93,7 @@ public class ProxyRemoteHandler {
     @EventListener
     public void handle(DriverCacheUpdateEvent event) {
         ProxyServer.getInstance().getServers().clear();
-        for (ICloudServer service : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
+        for (ICloudService service : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
             if (!service.getTask().getVersion().isProxy()) {
                 this.registerService(service);
             }
@@ -107,7 +107,7 @@ public class ProxyRemoteHandler {
     }
 
 
-    private void registerService(ICloudServer service) {
+    private void registerService(ICloudService service) {
         this.registerService(service.getName(), new InetSocketAddress(service.getHostName(), service.getPort()));
     }
 

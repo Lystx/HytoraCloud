@@ -14,7 +14,6 @@ import cloud.hytora.driver.networking.protocol.packets.defaults.HandshakePacket;
 import cloud.hytora.driver.networking.protocol.packets.defaults.ResponsePacket;
 import cloud.hytora.driver.player.packet.*;
 import cloud.hytora.driver.services.packet.*;
-import cloud.hytora.driver.uuid.packets.CachedUUIDPacket;
 import lombok.Getter;
 
 import java.util.HashMap;
@@ -50,6 +49,7 @@ public class PacketProvider {
         //Service packets
         PacketProvider.autoRegister(ServiceForceShutdownPacket.class);
         PacketProvider.autoRegister(ServiceRequestShutdownPacket.class);
+        PacketProvider.autoRegister(ServiceUpdateNametagsPacket.class);
         PacketProvider.autoRegister(ServiceConfigPacket.class);
         PacketProvider.autoRegister(ServiceCommandPacket.class);
         PacketProvider.autoRegister(ServiceStartPacket.class);
@@ -81,7 +81,6 @@ public class PacketProvider {
         PacketProvider.autoRegister(RedirectPacket.class);
         PacketProvider.autoRegister(ResponsePacket.class);
         PacketProvider.autoRegister(DriverLoggingPacket.class);
-        PacketProvider.autoRegister(CachedUUIDPacket.class);
         PacketProvider.autoRegister(ChannelMessageExecutePacket.class);
         PacketProvider.autoRegister(DriverCallEventPacket.class);
     }

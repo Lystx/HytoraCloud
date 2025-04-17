@@ -34,7 +34,14 @@ public enum ServiceVersion {
             "latest",
             BungeeConfiguration.class, ServerIconFile.class //configurations
     ),
-    WATERFALL(
+    VERAPROXY(
+            VersionType.VERA,
+            "",
+            "VeraProxy",
+            "latest",
+            VeraConfiguration.class, ServerIconFile.class //configurations
+    ),
+    /*WATERFALL(
             VersionType.BUNGEE,
             null, //auto build url link
             "Waterfall",
@@ -47,7 +54,7 @@ public enum ServiceVersion {
             "Velocity",
             "3.0.1",
             VelocityConfiguration.class, ServerIconFile.class //configurations
-    ),
+    ),*/
 
     //=======================================================
     //

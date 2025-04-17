@@ -18,6 +18,8 @@ public interface ChannelMessenger {
      */
     void registerChannel(String channel, ChannelMessageListener consumer);
 
+    <T extends DocumentPacket> void registerPacketChannel(String channel, Consumer<T> handler);
+
     /**
      * Unregisters a channel to listen for
      *
@@ -33,6 +35,10 @@ public interface ChannelMessenger {
     default void sendChannelMessage(ChannelMessage message) {
         this.sendChannelMessage(message, message.getReceivers());
     }
+
+    void sendDocumentPacket(DocumentPacket packet);
+
+    void sendDocumentPacket(DocumentPacket packet, NetworkComponent[] receivers);
 
     /**
      * Sends a {@link ChannelMessage} to a given {@link NetworkComponent} receiver

@@ -13,14 +13,17 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Command({"help", "?"})
-@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
-@CommandPermission("cloud.command.use")
-@CommandDescription("Shows this help menu")
+@Command(
+        value = {"help", "?"},
+        permission = "cloud.command.use",
+        executionScope = CommandScope.CONSOLE_AND_INGAME,
+        description = "Shows this men"
+
+)
 @ApplicationParticipant
 public class HelpCommand {
 
-    @Root
+    @Command.Root
     public void onHelpCommand(CommandSender sender) {
         sender.sendMessage("§8");
         sender.sendMessage("§7Commands§8:");

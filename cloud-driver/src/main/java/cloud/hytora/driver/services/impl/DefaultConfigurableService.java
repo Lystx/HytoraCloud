@@ -14,7 +14,7 @@ import cloud.hytora.driver.services.packet.ServiceConfigPacket;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.NodeManager;
 import cloud.hytora.driver.services.ConfigurableService;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.utils.version.ServiceVersion;
@@ -125,8 +125,8 @@ public class DefaultConfigurableService implements ConfigurableService {
 
 
     @Override
-    public Task<ICloudServer> start() {
-        Task<ICloudServer> task = Task.empty();
+    public Task<ICloudService> start() {
+        Task<ICloudService> task = Task.empty();
 
 
         Task.runAsync(() -> {
@@ -150,7 +150,7 @@ public class DefaultConfigurableService implements ConfigurableService {
                     }
                 }
 
-                ICloudServer service = new UniversalCloudServer(serviceTask.getName(), newServiceId(), port, address);
+                ICloudService service = new UniversalCloudServer(serviceTask.getName(), newServiceId(), port, address);
                 service.setProperties(properties);
                 service.setMaxPlayers(maxPlayers);
                 service.setUniqueId(uniqueId);
@@ -188,7 +188,7 @@ public class DefaultConfigurableService implements ConfigurableService {
 
                 CloudDriver.getInstance().getEventManager().registerDestructiveHandler(ServiceReadyEvent.class, (ExceptionallyBiConsumer<ServiceReadyEvent, DestructiveListener>) (event, listener) -> {
 
-                    ICloudServer cloudServer = event.getCloudServer();
+                    ICloudService cloudServer = event.getCloudServer();
                     if (cloudServer.getUniqueId().equals(this.uniqueId)) {
                         task.setResult(cloudServer);
                         listener.destroy();
@@ -206,7 +206,7 @@ public class DefaultConfigurableService implements ConfigurableService {
     }
 
     private boolean isPortUsed(int port) {
-        for (ICloudServer service : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
+        for (ICloudService service : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
             if (service.getTask().getPossibleNodes().contains(CloudDriver.getInstance().getExecutor().getName()) && service.getPort() == port) {
                 if (service.getPort() == port) {
                     return true;

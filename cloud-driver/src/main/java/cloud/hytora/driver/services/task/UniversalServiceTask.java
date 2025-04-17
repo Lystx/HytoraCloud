@@ -2,14 +2,13 @@ package cloud.hytora.driver.services.task;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.event.defaults.task.TaskMaintenanceChangeEvent;
-import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.property.ProtocolPropertyObject;
 import cloud.hytora.driver.services.ConfigurableService;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.impl.DefaultConfigurableService;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.fallback.SimpleFallback;
@@ -101,7 +100,7 @@ public class UniversalServiceTask extends ProtocolPropertyObject implements ISer
     }
 
     @Override
-    public List<ICloudServer> getOnlineServices() {
+    public List<ICloudService> getOnlineServices() {
         return CloudDriver.getInstance().getServiceManager().getAllServicesByTask(this);
     }
 

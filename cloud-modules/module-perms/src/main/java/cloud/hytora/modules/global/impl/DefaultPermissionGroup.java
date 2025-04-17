@@ -31,11 +31,6 @@ public class DefaultPermissionGroup implements PermissionGroup {
     private String name;
 
     /**
-     * THe color off this group
-     */
-    private String color;
-
-    /**
      * The chat color of this group
      */
     private String chatColor;
@@ -85,10 +80,9 @@ public class DefaultPermissionGroup implements PermissionGroup {
         this.taskPermissions = new ConcurrentHashMap<>();
     }
 
-    public DefaultPermissionGroup(String name, String color, String chatColor, String namePrefix, String prefix, String suffix, int sortId, boolean defaultGroup, Collection<String> inheritedGroups, Map<String, Long> permissions) {
+    public DefaultPermissionGroup(String name, String chatColor, String namePrefix, String prefix, String suffix, int sortId, boolean defaultGroup, Collection<String> inheritedGroups, Map<String, Long> permissions) {
         this();
         this.name = name;
-        this.color = color;
         this.chatColor = chatColor;
         this.namePrefix = namePrefix;
         this.prefix = prefix;
@@ -105,7 +99,6 @@ public class DefaultPermissionGroup implements PermissionGroup {
 
             case WRITE:
                 buf.writeString(name);
-                buf.writeString(color);
                 buf.writeString(chatColor);
                 buf.writeString(namePrefix);
                 buf.writeString(prefix);
@@ -120,7 +113,6 @@ public class DefaultPermissionGroup implements PermissionGroup {
 
             case READ:
                 name = buf.readString();
-                color = buf.readString();
                 chatColor = buf.readString();
                 namePrefix = buf.readString();
                 prefix = buf.readString();
@@ -152,6 +144,10 @@ public class DefaultPermissionGroup implements PermissionGroup {
             taskPermissions.put(CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(e.getKey()), e.getValue());
         }
         return taskPermissions;
+    }
+
+    public Map<String, Collection<String>> taskPerms() {
+        return this.taskPermissions;
     }
 
 
@@ -237,7 +233,7 @@ public class DefaultPermissionGroup implements PermissionGroup {
     public boolean hasPermission(String permission) {
         this.checkForExpiredValues();
         Permission perm = this.getPermissionOrNull(permission);
-        if (perm == null) {
+        if (perm == null) { 
             for (PermissionGroup group : this.findInheritedGroups()) {
                 if (group != null && group.hasPermission(permission)) {
                     return true;
@@ -245,7 +241,7 @@ public class DefaultPermissionGroup implements PermissionGroup {
             }
             return false;
         }
-        return true;
+        return hasPermission(perm);
     }
 
     @Override
@@ -279,6 +275,9 @@ public class DefaultPermissionGroup implements PermissionGroup {
 
     @Override
     public void addInheritedGroup(@NotNull String group) {
+        if (this.inheritedGroups == null) {
+            this.inheritedGroups = new ArrayList<>();
+        }
         this.inheritedGroups.add(group);
     }
 

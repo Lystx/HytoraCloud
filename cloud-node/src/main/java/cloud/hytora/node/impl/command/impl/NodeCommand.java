@@ -4,7 +4,7 @@ import cloud.hytora.context.annotations.ApplicationParticipant;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
-import cloud.hytora.driver.command.completer.NodeCompleter;
+import cloud.hytora.driver.command.completer.impl.NodeCompleter;
 import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.NodeManager;
@@ -12,18 +12,19 @@ import cloud.hytora.driver.node.NodeManager;
 import java.text.DecimalFormat;
 import java.util.List;
 
-@Command({"nodes", "node"})
-@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
-@CommandPermission("cloud.command.use")
-@CommandAutoHelp
-@CommandDescription("Manages all Nodes")
+@Command(
+        value = {"nodes", "node"},
+        permission = "cloud.command.use",
+        description = "Manages all Nodes",
+        executionScope = CommandScope.CONSOLE_AND_INGAME
+)
+@Command.AutoHelp
 @ApplicationParticipant
 public class NodeCommand {
 
     private final NodeManager nodeManager = CloudDriver.getInstance().getNodeManager();
 
-    @Command("list")
-    @CommandDescription("Lists all nodes")
+    @Command(value = "list", description = "Lists all nodes")
     public void executeList(CommandSender sender) {
         List<INode> allConnectedNodes = nodeManager.getAllCachedNodes();
 
@@ -42,10 +43,9 @@ public class NodeCommand {
     }
 
 
-    @Command("info")
-    @Syntax("<name>")
-    @CommandDescription("Gives info on a Node")
-    public void executeInfo(CommandSender sender, @Argument(value = "name", completer = NodeCompleter.class) INode node) {
+    @Command(value = "info", description = "Gives info on a Node")
+    @Command.Syntax("<name>")
+    public void executeInfo(CommandSender sender, @Command.Argument(value = "name", completer = NodeCompleter.class) INode node) {
         if (node == null) {
             sender.sendMessage("§cThere is no such connected Node!");
             return;
@@ -63,10 +63,9 @@ public class NodeCommand {
     }
 
 
-    @Command("stop")
-    @Syntax("<name>")
-    @CommandDescription("Stops a Node")
-    public void executeStop(CommandSender sender, @Argument(value = "name", completer = NodeCompleter.class) INode node) {
+    @Command(value = "stop", description = "Stops a Node")
+    @Command.Syntax("<name>")
+    public void executeStop(CommandSender sender, @Command.Argument(value = "name", completer = NodeCompleter.class) INode node) {
         if (node == null) {
             sender.sendMessage("§cThere is no such connected Node!");
             return;

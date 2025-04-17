@@ -1,6 +1,5 @@
 package cloud.hytora.modules.cloud.command;
 
-import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
@@ -18,17 +17,19 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@CommandDescription("Manages the perms-module")
-@Command({"perms", "perm"})
-@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
-@CommandPermission("cloud.module.perms.command.use")
-@CommandAutoHelp
+@Command(
+        value = {"perms", "perm"},
+        permission = "cloud.module.perms.command.use",
+        description = "Manages the perms-module",
+        executionScope = CommandScope.CONSOLE_AND_INGAME
+)
+@Command.AutoHelp
 public class PermsCommand {
 
 
     @Command("user")
-    @Syntax("<player> info")
-    public void onPlayerInfo(CommandSender sender, @Argument("player") PermissionPlayer player) {
+    @Command.Syntax("<player> info")
+    public void onPlayerInfo(CommandSender sender, @Command.Argument("player") PermissionPlayer player) {
 
         if (player == null) {
             sender.sendMessage("§cThere is no such player registered in the modules' database!");
@@ -45,8 +46,8 @@ public class PermsCommand {
     }
 
     @Command("user")
-    @Syntax("<player> createManually")
-    public void onPlayerCreate(CommandSender sender, @Argument("player") CloudOfflinePlayer player) {
+    @Command.Syntax("<player> createManually")
+    public void onPlayerCreate(CommandSender sender, @Command.Argument("player") CloudOfflinePlayer player) {
         if (player == null) {
             sender.sendMessage("§cThe player has to have at least joined the network yet!");
             return;
@@ -58,8 +59,8 @@ public class PermsCommand {
     }
 
     @Command("user")
-    @Syntax("<player> group add <group>")
-    public void onPlayerGroupAdd(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("group") PermissionGroup group) {
+    @Command.Syntax("<player> group add <group>")
+    public void onPlayerGroupAdd(CommandSender sender, @Command.Argument("player") PermissionPlayer player, @Command.Argument("group") PermissionGroup group) {
 
         if (player == null) {
             sender.sendMessage("§cThe player has to have at least joined the network yet!");
@@ -76,8 +77,8 @@ public class PermsCommand {
     }
 
     @Command("user")
-    @Syntax("<player> group addTemp <group> <time> <unit>")
-    public void onPlayerGroupAddTemporary(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("group") PermissionGroup group, @Argument("time") long time, @Argument("unit") String unit) {
+    @Command.Syntax("<player> group addTemp <group> <time> <unit>")
+    public void onPlayerGroupAddTemporary(CommandSender sender, @Command.Argument("player") PermissionPlayer player, @Command.Argument("group") PermissionGroup group, @Command.Argument("time") long time, @Command.Argument("unit") String unit) {
 
         if (player == null) {
             sender.sendMessage("§cThe player has to have at least joined the network yet!");
@@ -105,8 +106,8 @@ public class PermsCommand {
     }
 
     @Command("user")
-    @Syntax("<player> group remove <group>")
-    public void onPlayerGroupRemove(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("group") PermissionGroup group) {
+    @Command.Syntax("<player> group remove <group>")
+    public void onPlayerGroupRemove(CommandSender sender, @Command.Argument("player") PermissionPlayer player, @Command.Argument("group") PermissionGroup group) {
 
         if (player == null) {
             sender.sendMessage("§cThe player has to have at least joined the network yet!");
@@ -128,8 +129,8 @@ public class PermsCommand {
     }
 
     @Command("user")
-    @Syntax("<player> perms add <permission>")
-    public void onPlayerPermissionAdd(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("permission") String permission) {
+    @Command.Syntax("<player> perms add <permission>")
+    public void onPlayerPermissionAdd(CommandSender sender, @Command.Argument("player") PermissionPlayer player, @Command.Argument("permission") String permission) {
 
         if (player == null) {
             sender.sendMessage("§cThe player has to have at least joined the network yet!");
@@ -147,8 +148,8 @@ public class PermsCommand {
     }
 
     @Command("user")
-    @Syntax("<player> perms addTemp <permission> <time> <unit>")
-    public void onPlayerPermissionAddTemporary(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("permission") String permission, @Argument("time") long time, @Argument("unit") String unit) {
+    @Command.Syntax("<player> perms addTemp <permission> <time> <unit>")
+    public void onPlayerPermissionAddTemporary(CommandSender sender, @Command.Argument("player") PermissionPlayer player, @Command.Argument("permission") String permission, @Command.Argument("time") long time, @Command.Argument("unit") String unit) {
 
         if (player == null) {
             sender.sendMessage("§cThe player has to have at least joined the network yet!");
@@ -177,8 +178,8 @@ public class PermsCommand {
     }
 
     @Command("user")
-    @Syntax("<player> perms remove <permission>")
-    public void onPlayerPermissionRemove(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("permission") String permission) {
+    @Command.Syntax("<player> perms remove <permission>")
+    public void onPlayerPermissionRemove(CommandSender sender, @Command.Argument("player") PermissionPlayer player, @Command.Argument("permission") String permission) {
 
         if (player == null) {
             sender.sendMessage("§cThe player has to have at least joined the network yet!");
@@ -198,10 +199,9 @@ public class PermsCommand {
     }
 
 
-    @Command("user")
-    @Syntax("<player> perms addTask <taskName> <permission>")
-    @CommandDescription("Adds the provided permission for a given task to a player")
-    public void onPlayerTaskPermissionAdd(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("taskName") IServiceTask task, @Argument("permission") String permission) {
+    @Command(value = "user", description = "Adds the provided permission for a given task to a player" )
+    @Command.Syntax("<player> perms addTask <taskName> <permission>")
+    public void onPlayerTaskPermissionAdd(CommandSender sender, @Command.Argument("player") PermissionPlayer player, @Command.Argument("taskName") IServiceTask task, @Command.Argument("permission") String permission) {
 
         if (player == null) {
             sender.sendMessage("§cThe player has to have at least joined the network yet!");
@@ -227,10 +227,9 @@ public class PermsCommand {
         sender.sendMessage("Successfully added permission {} to player {} for task {}!", permission, player.getName(), task.getName());
     }
 
-    @Command("user")
-    @Syntax("<player> perms removeTask <taskName> <permission>")
-    @CommandDescription("Removes the provided permission for a given task from a player")
-    public void onPlayerTaskPermissionRemove(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("taskName") IServiceTask task, @Argument("permission") String permission) {
+    @Command(value = "user", description = "Removes the provided permission for a given task from a player")
+    @Command.Syntax("<player> perms removeTask <taskName> <permission>")
+    public void onPlayerTaskPermissionRemove(CommandSender sender, @Command.Argument("player") PermissionPlayer player, @Command.Argument("taskName") IServiceTask task, @Command.Argument("permission") String permission) {
 
         if (player == null) {
             sender.sendMessage("§cThe player has to have at least joined the network yet!");
@@ -253,10 +252,9 @@ public class PermsCommand {
     }
 
 
-    @Command("user")
-    @Syntax("<player> perms allowPermission <permission>")
-    @CommandDescription("Removes the provided permission from the DeniedPermissions-List")
-    public void onPlayerPermissionAllow(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("permission") String permission) {
+    @Command(value = "user", description = "Removes the provided permission from the DeniedPermissions-List")
+    @Command.Syntax("<player> perms allowPermission <permission>")
+    public void onPlayerPermissionAllow(CommandSender sender, @Command.Argument("player") PermissionPlayer player, @Command.Argument("permission") String permission) {
 
         if (player == null) {
             sender.sendMessage("§cThere is no such player in the module database registered");
@@ -272,10 +270,9 @@ public class PermsCommand {
         sender.sendMessage("Successfully allowed permission {} for player {} !", permission, player.getName());
     }
 
-    @Command("user")
-    @Syntax("<player> perms denyPermission <permission>")
-    @CommandDescription("Denies the provided permission for a player")
-    public void onPlayerPermissionDeny(CommandSender sender, @Argument("player") PermissionPlayer player, @Argument("permission") String permission) {
+    @Command(value = "user", description = "Denies the provided permission for a player")
+    @Command.Syntax("<player> perms denyPermission <permission>")
+    public void onPlayerPermissionDeny(CommandSender sender, @Command.Argument("player") PermissionPlayer player, @Command.Argument("permission") String permission) {
 
         if (player == null) {
             sender.sendMessage("§cThere is no such player in the module database registered");
@@ -292,10 +289,9 @@ public class PermsCommand {
     }
 
 
-
     @Command("group")
-    @Syntax("<group> info")
-    public void onGroupInfo(CommandSender sender, @Argument("group") PermissionGroup group) {
+    @Command.Syntax("<group> info")
+    public void onGroupInfo(CommandSender sender, @Command.Argument("group") PermissionGroup group) {
 
         if (group == null) {
             sender.sendMessage("§cThere is no such group registered in the module database!");
@@ -308,7 +304,6 @@ public class PermsCommand {
         sender.sendMessage("§bSortId: §7" + group.getSortId());
         sender.sendMessage("§bDefaultGroup: §7" + group.isDefaultGroup());
         sender.sendMessage("§bChatColor: §7" + group.getChatColor());
-        sender.sendMessage("§bColor: §7" + group.getColor());
         sender.sendMessage("§bNamePrefix: §7" + group.getNamePrefix());
         sender.sendMessage("§bPrefix: §7" + group.getPrefix());
         sender.sendMessage("§bSuffix: §7" + group.getSuffix());
@@ -317,9 +312,8 @@ public class PermsCommand {
         sender.sendMessage("§8");
     }
 
-    @Command("group")
-    @Syntax("create")
-    @CommandExecutionScope(cloud.hytora.driver.command.CommandScope.CONSOLE)
+    @Command(value = "group", description = "Creates a new Group")
+    @Command.Syntax("create")
     public void onGroupCreate(CommandSender sender) {
         PermissionManager permissionManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class);
         new GroupSetup().start((setup, state) -> {
@@ -343,7 +337,6 @@ public class PermsCommand {
                     permissionGroup.setPrefix(setup.getPrefix());
                     permissionGroup.setSuffix(setup.getSuffix());
                     permissionGroup.setChatColor(setup.getChatColor());
-                    permissionGroup.setColor(setup.getColor());
 
                     for (String s : split) {
                         permissionGroup.addInheritedGroup(s);
@@ -359,8 +352,8 @@ public class PermsCommand {
 
 
     @Command("group")
-    @Syntax("<group> delete")
-    public void onGroupDelete(CommandSender sender, @Argument("group") PermissionGroup group) {
+    @Command.Syntax("<group> delete")
+    public void onGroupDelete(CommandSender sender, @Command.Argument("group") PermissionGroup group) {
         if (group == null) {
             sender.sendMessage("§cThere is no such group in the module database registered");
             return;
@@ -371,10 +364,9 @@ public class PermsCommand {
     }
 
 
-
     @Command("group")
-    @Syntax("<group> perms add <permission>")
-    public void onGroupPermissionAdd(CommandSender sender, @Argument("group") PermissionGroup group, @Argument("permission") String permission) {
+    @Command.Syntax("<group> perms add <permission>")
+    public void onGroupPermissionAdd(CommandSender sender, @Command.Argument("group") PermissionGroup group, @Command.Argument("permission") String permission) {
 
         if (group == null) {
             sender.sendMessage("§cThere is no such group in the module database registered");
@@ -392,8 +384,8 @@ public class PermsCommand {
     }
 
     @Command("group")
-    @Syntax("<group> perms addTemp <permission> <time> <unit>")
-    public void onPlayerPermissionAddTemporary(CommandSender sender, @Argument("group") PermissionGroup group, @Argument("permission") String permission, @Argument("time") long time, @Argument("unit") String unit) {
+    @Command.Syntax("<group> perms addTemp <permission> <time> <unit>")
+    public void onPlayerPermissionAddTemporary(CommandSender sender, @Command.Argument("group") PermissionGroup group, @Command.Argument("permission") String permission, @Command.Argument("time") long time, @Command.Argument("unit") String unit) {
 
         if (group == null) {
             sender.sendMessage("§cThere is no such group in the module database registered");
@@ -419,10 +411,9 @@ public class PermsCommand {
 
     }
 
-    @Command("group")
-    @Syntax("<group> perms addTask <taskName> <permission>")
-    @CommandDescription("Adds the provided permission for a given task to a group")
-    public void onGroupTaskPermissionAdd(CommandSender sender, @Argument("group") PermissionGroup group, @Argument("taskName") IServiceTask task, @Argument("permission") String permission) {
+    @Command(value = "group", description = "Adds the provided permission for a given task to a group")
+    @Command.Syntax("<group> perms addTask <taskName> <permission>")
+    public void onGroupTaskPermissionAdd(CommandSender sender, @Command.Argument("group") PermissionGroup group, @Command.Argument("taskName") IServiceTask task, @Command.Argument("permission") String permission) {
 
         if (group == null) {
             sender.sendMessage("§cThere is no such group in the module database registered");
@@ -444,10 +435,9 @@ public class PermsCommand {
         sender.sendMessage("Successfully added permission {} to group {} for task {}!", permission, group.getName(), task.getName());
     }
 
-    @Command("group")
-    @Syntax("<group> perms removeTask <taskName> <permission>")
-    @CommandDescription("Removes the provided permission for a given task from a group")
-    public void onGroupTaskPermissionRemove(CommandSender sender, @Argument("group") PermissionGroup group, @Argument("taskName") IServiceTask task, @Argument("permission") String permission) {
+    @Command(value = "group", description = "Removes the provided permission for a given task from a group")
+    @Command.Syntax("<group> perms removeTask <taskName> <permission>")
+    public void onGroupTaskPermissionRemove(CommandSender sender, @Command.Argument("group") PermissionGroup group, @Command.Argument("taskName") IServiceTask task, @Command.Argument("permission") String permission) {
 
         if (group == null) {
             sender.sendMessage("§cThere is no such group in the module database registered");
@@ -470,10 +460,9 @@ public class PermsCommand {
     }
 
 
-    @Command("group")
-    @Syntax("<group> perms allowPermission <permission>")
-    @CommandDescription("Removes the provided permission from the DeniedPermissions-List")
-    public void onGroupPermissionAllow(CommandSender sender, @Argument("group") PermissionGroup group, @Argument("permission") String permission) {
+    @Command(value = "group", description = "Removes the provided permission from the DeniedPermissions-List")
+    @Command.Syntax("<group> perms allowPermission <permission>")
+    public void onGroupPermissionAllow(CommandSender sender, @Command.Argument("group") PermissionGroup group, @Command.Argument("permission") String permission) {
 
         if (group == null) {
             sender.sendMessage("§cThere is no such group in the module database registered");
@@ -489,10 +478,9 @@ public class PermsCommand {
         sender.sendMessage("Successfully allowed permission {} for group {} !", permission, group.getName());
     }
 
-    @Command("group")
-    @Syntax("<group> perms denyPermission <permission>")
-    @CommandDescription("Denies the provided permission for a group")
-    public void onGroupPermissionDeny(CommandSender sender, @Argument("group") PermissionGroup group, @Argument("permission") String permission) {
+    @Command(value = "group", description = "Denies the provided permission for a group")
+    @Command.Syntax("<group> perms denyPermission <permission>")
+    public void onGroupPermissionDeny(CommandSender sender, @Command.Argument("group") PermissionGroup group, @Command.Argument("permission") String permission) {
 
         if (group == null) {
             sender.sendMessage("§cThere is no such group in the module database registered");
@@ -508,10 +496,9 @@ public class PermsCommand {
         sender.sendMessage("Successfully denied permission {} for group {} !", permission, group.getName());
     }
 
-    @Command("group")
-    @Syntax("<group> perms remove <permission>")
-    @CommandDescription("Removes the provided permission from a group")
-    public void onGroupPermissionRemove(CommandSender sender, @Argument("group") PermissionGroup group, @Argument("permission") String permission) {
+    @Command(value = "group", description = "Removes the provided permission from a group")
+    @Command.Syntax("<group> perms remove <permission>")
+    public void onGroupPermissionRemove(CommandSender sender, @Command.Argument("group") PermissionGroup group, @Command.Argument("permission") String permission) {
 
         if (group == null) {
             sender.sendMessage("§cThere is no such group in the module database registered");

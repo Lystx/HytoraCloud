@@ -4,16 +4,14 @@ import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.PacketProvider;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
+import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.permission.PermissionGroup;
 import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.modules.DefaultPermissionManager;
 import cloud.hytora.modules.global.impl.DefaultPermissionPlayer;
-import cloud.hytora.modules.global.packets.PermsCacheUpdatePacket;
-import cloud.hytora.modules.global.packets.PermsGroupPacket;
-import cloud.hytora.modules.global.packets.PermsPlayerRequestPacket;
-import cloud.hytora.modules.global.packets.PermsPlayerUpdatePacket;
+import cloud.hytora.modules.global.packets.*;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,23 +22,30 @@ import java.util.List;
 import java.util.UUID;
 
 @Getter
-public class RemotePermissionManager extends DefaultPermissionManager implements PacketHandler<PermsCacheUpdatePacket> {
+public class RemotePermissionManager extends DefaultPermissionManager{
 
     private final List<PermissionGroup> allCachedPermissionGroups;
     private final List<PermissionPlayer> allCachedPermissionPlayers;
 
     public RemotePermissionManager() {
+        super();
         this.allCachedPermissionGroups = new ArrayList<>();
         this.allCachedPermissionPlayers = new ArrayList<>();
 
         //registering packets
-        PacketProvider.autoRegister(PermsCacheUpdatePacket.class);
         PacketProvider.autoRegister(PermsGroupPacket.class);
         PacketProvider.autoRegister(PermsPlayerRequestPacket.class);
         PacketProvider.autoRegister(PermsPlayerUpdatePacket.class);
 
         //registering handler
-        CloudDriver.getInstance().getExecutor().registerPacketHandler(this);
+        /*CloudDriver.getInstance().getExecutor().registerPacketHandler((PacketHandler<PermsGroupUpdatePacket>) (wrapper, packet) -> {
+
+            PermissionGroup permissionGroups = packet.getGroup();
+
+            allCachedPermissionGroups.removeIf(g -> g.getName().equalsIgnoreCase(permissionGroups.getName()));
+            allCachedPermissionGroups.add(permissionGroups);
+        });*/
+        CloudDriver.getInstance().getExecutor().registerPacketHandler(new RemotePlayerUpdatePacketHandler(this));
     }
 
     @Nullable
@@ -93,6 +98,10 @@ public class RemotePermissionManager extends DefaultPermissionManager implements
         });
     }
 
+    @Override
+    public boolean hasEntry(UUID uniqueId) {
+        return false; // TODO: 16.04.2025 query packet and response
+    }
 
     @Nullable
     @Override
@@ -125,11 +134,11 @@ public class RemotePermissionManager extends DefaultPermissionManager implements
 
         PermissionPlayer player = this.allCachedPermissionPlayers.stream().filter(p -> p.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
         if (player == null) {
-             PermsPlayerRequestPacket packet = new PermsPlayerRequestPacket(name, null);
-             packet.awaitResponse().onTaskSucess(bufferedResponse -> {
-                 DefaultPermissionPlayer defaultPermissionPlayer = bufferedResponse.buffer().readObject(DefaultPermissionPlayer.class);
-                 task.setResult(defaultPermissionPlayer);
-             });
+            PermsPlayerRequestPacket packet = new PermsPlayerRequestPacket(name, null);
+            packet.awaitResponse().onTaskSucess(bufferedResponse -> {
+                DefaultPermissionPlayer defaultPermissionPlayer = bufferedResponse.buffer().readObject(DefaultPermissionPlayer.class);
+                task.setResult(defaultPermissionPlayer);
+            });
         } else {
             task.setResult(player);
         }
@@ -138,19 +147,19 @@ public class RemotePermissionManager extends DefaultPermissionManager implements
 
     @Override
     public void updatePermissionPlayer(PermissionPlayer player) {
-        AbstractPacket packet = new PermsPlayerUpdatePacket(player);
-        packet.publishAsync();
+        addToCache(player);
+        PermsUpdatePlayerPacket packet = new PermsUpdatePlayerPacket(player);
+        packet.publish();
+        //AbstractPacket packet = new PermsPlayerUpdatePacket(player);
+        //CloudDriver.getInstance().getExecutor().sendPacket(packet);
     }
 
     @Override
-    public void handle(PacketChannel wrapper, PermsCacheUpdatePacket packet) {
-        Collection<PermissionGroup> permissionGroups = packet.getPermissionGroups();
-        Collection<PermissionPlayer> permissionPlayers = packet.getPermissionPlayers();
+    public void addToCache(PermissionPlayer player) {
 
-        this.allCachedPermissionPlayers.clear();
-        this.allCachedPermissionGroups.clear();
+        this.allCachedPermissionPlayers.removeIf(p -> p.getUniqueId().equals(player.getUniqueId()));
 
-        this.allCachedPermissionPlayers.addAll(permissionPlayers);
-        this.allCachedPermissionGroups.addAll(permissionGroups);
+        this.allCachedPermissionPlayers.add(player);
     }
+
 }

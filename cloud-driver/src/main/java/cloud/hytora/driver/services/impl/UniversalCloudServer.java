@@ -7,6 +7,8 @@ import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.gson.adapter.ExcludeJsonField;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
+import cloud.hytora.driver.message.ChannelMessage;
+import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.services.packet.ServiceCommandPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
@@ -16,12 +18,13 @@ import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.services.IProcessCloudServer;
 import cloud.hytora.driver.services.IServiceCycleData;
 import cloud.hytora.driver.services.ServicePingProperties;
+import cloud.hytora.driver.services.packet.ServiceUpdateNametagsPacket;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
 
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import lombok.NoArgsConstructor;
 
 import lombok.Getter;
@@ -131,6 +134,11 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
     }
 
     @Override
+    public void updateNametags() {
+        this.sendPacket(new ServiceUpdateNametagsPacket(this.getName()));
+    }
+
+    @Override
     public void shutdown() {
         CloudDriver.getInstance().getServiceManager().shutdownService(this);
     }
@@ -180,6 +188,13 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
     }
 
     @Override
+    public void sendChannelMessage(ChannelMessage message) {
+        message.receiver(NetworkComponent.of(this.getName(), ConnectionType.SERVICE));
+
+        CloudDriver.getInstance().getChannelMessenger().sendChannelMessage(message);
+    }
+
+    @Override
     public ConnectionType getType() {
         return ConnectionType.SERVICE;
     }
@@ -206,7 +221,7 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
     }
 
     @Override
-    public void clone(ICloudServer from) {
+    public void clone(ICloudService from) {
 
         this.setServiceState(from.getServiceState());
         this.setServiceVisibility(from.getServiceVisibility());

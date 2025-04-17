@@ -1,7 +1,7 @@
 package cloud.hytora.remote.adapter.proxy;
 
 import cloud.hytora.common.DriverUtility;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.remote.adapter.RemoteAdapter;
 
 import java.util.Collection;
@@ -19,9 +19,9 @@ public interface RemoteProxyAdapter extends RemoteAdapter {
         return DriverUtility.findOrNull(getPlayers(), p -> p.getUniqueId().equals(uniqueId));
     }
 
-    void registerService(ICloudServer server);
+    void registerService(ICloudService server);
 
-    void unregisterService(ICloudServer server);
+    void unregisterService(ICloudService server);
 
     void clearServices();
 

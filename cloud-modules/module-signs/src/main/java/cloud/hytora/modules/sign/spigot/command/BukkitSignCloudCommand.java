@@ -1,6 +1,5 @@
 package cloud.hytora.modules.sign.spigot.command;
 
-import cloud.hytora.common.location.ModifiableLocation;
 import cloud.hytora.common.location.impl.DefaultLocation;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
@@ -21,16 +20,18 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-@Command("sign")
-@CommandPermission("cloud.modules.sign.command.use")
-@CommandExecutionScope(CommandScope.INGAME)
-@CommandAutoHelp
+@Command(
+        value = "sign",
+        permission = "cloud.modules.sign.command.use",
+        executionScope = CommandScope.INGAME,
+        description = "Manages the CloudSigns"
+)
+@Command.AutoHelp
 public class BukkitSignCloudCommand {
 
-    @Command("create")
-    @Syntax("<task>")
-    @CommandDescription("Creates a new cloudSign!")
-    public void createSign(CommandSender sender, @Argument("task") IServiceTask task) {
+    @Command(value = "create", description = "Creates a new cloudSign!")
+    @Command.Syntax("<task>")
+    public void createSign(CommandSender sender, @Command.Argument("task") IServiceTask task) {
         if (task != null) {
             if (task.getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY) {
                 sender.sendMessage("§cYou can not create §eCloudSigns §cfor §eProxies§c!");
@@ -68,8 +69,7 @@ public class BukkitSignCloudCommand {
             sender.sendMessage("§cThis task §cdoesn't exist!");
         }
     }
-    @Command("remove")
-    @CommandDescription("Removes the sign you're looking at!")
+    @Command(value = "remove", description = "Removes the sign you're looking at!")
     public void onRemoveCloudSign(CommandSender sender) {
         Set<Material> materials = new HashSet<>();
         materials.add(Material.AIR);

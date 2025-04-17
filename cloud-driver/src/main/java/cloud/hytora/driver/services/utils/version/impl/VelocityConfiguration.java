@@ -1,6 +1,6 @@
 package cloud.hytora.driver.services.utils.version.impl;
 
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.utils.version.VersionFile;
 
 import java.io.File;
@@ -10,7 +10,7 @@ import java.io.IOException;
 public class VelocityConfiguration extends VersionFile {
 
     @Override
-    public void applyFile(ICloudServer ICloudServer, File file) throws IOException {
+    public void applyFile(ICloudService ICloudServer, File file) throws IOException {
 
         FileWriter writer = new FileWriter(file);
 

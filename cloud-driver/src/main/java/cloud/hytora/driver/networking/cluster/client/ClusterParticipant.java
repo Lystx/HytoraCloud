@@ -1,6 +1,7 @@
 package cloud.hytora.driver.networking.cluster.client;
 
 import cloud.hytora.common.collection.ThreadRunnable;
+import cloud.hytora.common.misc.Util;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
@@ -84,7 +85,10 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
 
                                         @Override
                                         public void channelActive(ChannelHandlerContext ctx) throws Exception {
-                                            ClusterParticipant.this.onActivated(ctx);
+                                            if (ClusterParticipant.this instanceof AdvancedClusterParticipant) {
+                                                ((AdvancedClusterParticipant)ClusterParticipant.this).onActivated(ctx);
+                                            }
+                                            //ClusterParticipant.this.onActivated(ctx);
                                             ClusterParticipant.this.sendPacket(new HandshakePacket(authKey, getName(), ClusterParticipant.this.type, customData));
 
                                             //fire connect event
@@ -96,7 +100,10 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
                                         @Override
                                         public void channelInactive(ChannelHandlerContext ctx) throws Exception {
                                             CloudDriver.getInstance().getEventManager().callEventGlobally(new DriverConnectEvent());
-                                            onClose(ctx);
+                                            //onClose(ctx);
+                                            if (ClusterParticipant.this instanceof AdvancedClusterParticipant) {
+                                                ((AdvancedClusterParticipant)ClusterParticipant.this).onClose(ctx);
+                                            }
                                             super.channelInactive(ctx);
                                         }
 
@@ -129,7 +136,12 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
             HandshakePacket handshake = (HandshakePacket) packet;
             connectedNodeName = handshake.getNodeName();
 
-            ThreadRunnable runnable = new ThreadRunnable(() -> onAuthenticationChanged(wrapper));
+            ThreadRunnable runnable = new ThreadRunnable(() -> {
+               // onAuthenticationChanged(wrapper);
+                if (ClusterParticipant.this instanceof AdvancedClusterParticipant) {
+                    ((AdvancedClusterParticipant)ClusterParticipant.this).onAuthenticationChanged(wrapper);
+                }
+            });
             if (handlePacketsAsync) {
                 runnable.runAsync();
             } else {
@@ -158,18 +170,12 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
         if (this.channel == null) {
             //re-schedule request
 
-            CloudDriver.getInstance().executeIf(() -> sendPacket(packet), () -> getChannel() != null);
+            Util.executeIf(() -> sendPacket(packet), () -> getChannel() != null);
             return;
         }
         this.getChannel().writeAndFlush(packet).addListener((ChannelFutureListener) future -> {
             if (!future.isSuccess()) future.cause().printStackTrace();
         });
     }
-
-    public abstract void onAuthenticationChanged(PacketChannel wrapper);
-
-    public abstract void onActivated(ChannelHandlerContext ctx);
-
-    public abstract void onClose(ChannelHandlerContext ctx);
 
 }

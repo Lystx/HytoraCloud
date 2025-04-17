@@ -4,7 +4,7 @@ import cloud.hytora.driver.CloudDriver;
 
 
 import cloud.hytora.driver.node.INode;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.impl.UniversalCloudServer;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.utils.ServiceState;
@@ -87,7 +87,7 @@ public class NodeServiceQueue {
                         port++;
                     }
 
-                    ICloudServer service = new UniversalCloudServer(task.getName(), this.getPossibleServiceIDByGroup(task), port, node.getConfig().getAddress().getHost());
+                    ICloudService service = new UniversalCloudServer(task.getName(), this.getPossibleServiceIDByGroup(task), port, node.getConfig().getAddress().getHost());
                     service.setRunningNodeName(node.getName());
                     CloudDriver.getInstance().getServiceManager().registerService(service);
 
@@ -118,8 +118,8 @@ public class NodeServiceQueue {
     }
 
     private boolean isPortUsed(int port) {
-        for (ICloudServer service : NodeDriver.getInstance().getServiceManager().getAllCachedServices()) {
-            if (service.getTask().getPossibleNodes().equals(NodeDriver.getInstance().getExecutor().getNodeName())) {
+        for (ICloudService service : NodeDriver.getInstance().getServiceManager().getAllCachedServices()) {
+            if (service.getTask().getPossibleNodes().stream().anyMatch(n -> n.equalsIgnoreCase(NodeDriver.getInstance().getExecutor().getNodeName()))) {
                 if (service.getPort() == port) {
                     return true;
                 }

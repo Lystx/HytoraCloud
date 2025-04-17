@@ -6,6 +6,6 @@ import cloud.hytora.common.task.Task;
 public class ValueHoldsNoObjectException extends RuntimeException {
 
     public ValueHoldsNoObjectException(Task<?> task) {
-        super("Value is not holding any object!");
+        super("[SimpleTask] Task does not allow returning of Nulled values!");
     }
 }

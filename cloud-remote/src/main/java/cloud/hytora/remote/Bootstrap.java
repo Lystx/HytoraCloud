@@ -1,22 +1,15 @@
 package cloud.hytora.remote;
 
-import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.logging.handler.HandledAsyncLogger;
-import cloud.hytora.common.logging.handler.HandledLogger;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
-import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.remote.impl.log.DefaultLogHandler;
 import lombok.var;
 
 import java.io.File;
 import java.lang.instrument.Instrumentation;
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
-
-import static cloud.hytora.driver.CloudDriver.SERVER_PUBLISH_INTERVAL;
 
 public class Bootstrap {
 
@@ -41,7 +34,7 @@ public class Bootstrap {
 
 
         var remote = new Remote(identity, logger, instrumentationInstance, args);
-
+        System.out.println("REMOTE");
         try {
             remote.startApplication();
         } catch (Exception e) {

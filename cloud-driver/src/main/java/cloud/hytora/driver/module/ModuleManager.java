@@ -25,4 +25,10 @@ public interface ModuleManager {
 	@Nonnull
 	List<ModuleController> getModules();
 
+	default ModuleController getModule(String name) {
+		return getModules().stream().filter(m -> m.getModuleConfig().getName().equalsIgnoreCase(name)).findFirst().orElse(null);
+	}
+
+	default void removeModule(ModuleController moduleController) {}
+
 }

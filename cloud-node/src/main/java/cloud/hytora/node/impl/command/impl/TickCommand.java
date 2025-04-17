@@ -8,15 +8,16 @@ import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.tps.TickCounter;
 import cloud.hytora.driver.tps.TickType;
 
-@Command("tps")
-@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
-@CommandPermission("cloud.command.use")
-@CommandDescription("Shows performance of cloud")
+@Command(
+        value = "tps",
+        permission = "cloud.command.use",
+        description = "Shows performance of cloud",
+        executionScope = CommandScope.CONSOLE_AND_INGAME
+)
 @ApplicationParticipant
 public class TickCommand {
 
-    @Command("")
-    @CommandDescription("Shows performance of cloud")
+    @Command.Root
     public void execute(CommandSender sender) {
 
         sender.sendMessage("§8");

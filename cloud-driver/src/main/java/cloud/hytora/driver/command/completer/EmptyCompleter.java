@@ -11,7 +11,7 @@ public class EmptyCompleter implements CommandCompleter {
 
 	@Nonnull
 	@Override
-	public Collection<String> complete(@Nonnull CommandSender sender, @Nonnull String message, @Nonnull String argument) {
+	public Collection<String> complete(@Nonnull CommandSender sender, @Nonnull String argument) {
 		return Collections.emptyList();
 	}
 }

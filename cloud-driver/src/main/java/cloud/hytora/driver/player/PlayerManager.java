@@ -2,54 +2,38 @@ package cloud.hytora.driver.player;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 public interface PlayerManager {
 
-    @NotNull List<ICloudPlayer> getAllCachedCloudPlayers();
+    @NotNull Collection<ICloudPlayer> getAllCachedCloudPlayers();
 
 
-    void setAllCachedCloudPlayers(List<ICloudPlayer> allCachedCloudPlayers);
-
-    @NotNull
-    Optional<ICloudPlayer> getCloudPlayer(@NotNull UUID uniqueId);
-
-    @NotNull
-    Optional<ICloudPlayer> getCloudPlayer(@NotNull String username);
+    void setCachedCloudPlayers(Collection<ICloudPlayer> allCachedCloudPlayers);
 
     @Nullable
-    ICloudPlayer getCloudPlayerByUniqueIdOrNull(@NotNull UUID uniqueId);
+    ICloudPlayer getCachedCloudPlayer(@NotNull UUID uniqueId);
 
     @Nullable
-    ICloudPlayer getCloudPlayerByNameOrNull(@NotNull String username);
+    ICloudPlayer getCachedCloudPlayer(@NotNull String username);
+
 
     @NotNull
-    Task<Collection<CloudOfflinePlayer>> getAllOfflinePlayersAsync();
+    Task<Collection<CloudOfflinePlayer>> getOfflinePlayers();
 
     @NotNull
-    Collection<CloudOfflinePlayer> getAllOfflinePlayersBlockingOrEmpty();
+    Task<CloudOfflinePlayer> getOfflinePlayer(@NotNull UUID uniqueId);
 
     @NotNull
-    Task<CloudOfflinePlayer> getOfflinePlayerByUniqueIdAsync(@NotNull UUID uniqueId);
+    Task<CloudOfflinePlayer> getOfflinePlayer(@NotNull String name);
 
-    @NotNull
-    Task<CloudOfflinePlayer> getOfflinePlayerByNameAsync(@NotNull String name);
-
-    @Nullable
-    CloudOfflinePlayer getOfflinePlayerByUniqueIdBlockingOrNull(@NotNull UUID uniqueId);
-
-    @Nullable
-    CloudOfflinePlayer getOfflinePlayerByNameBlockingOrNull(@NotNull String name);
-
-    void saveOfflinePlayerAsync(@NotNull CloudOfflinePlayer player);
+    Task<Void> saveOfflinePlayer(@NotNull CloudOfflinePlayer player);
 
     /**
      * @return the online count
@@ -60,7 +44,7 @@ public interface PlayerManager {
 
     default int countPlayerCapacity() {
         int capacity = 0;
-        for (ICloudServer allCachedService : CloudDriver.getInstance().getServiceManager().getAllServicesByEnvironment(SpecificDriverEnvironment.PROXY)) {
+        for (ICloudService allCachedService : CloudDriver.getInstance().getServiceManager().getAllServicesByEnvironment(SpecificDriverEnvironment.PROXY)) {
             capacity += allCachedService.getMaxPlayers();
         }
         return capacity;

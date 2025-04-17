@@ -31,5 +31,5 @@ public interface ConfigurableService {
     ConfigurableService ignoreIfLimitOfServicesReached();
 
 
-    Task<ICloudServer> start();
+    Task<ICloudService> start();
 }

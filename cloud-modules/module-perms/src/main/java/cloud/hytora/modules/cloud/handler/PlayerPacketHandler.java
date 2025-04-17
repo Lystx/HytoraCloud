@@ -18,11 +18,14 @@ public class PlayerPacketHandler implements PacketHandler<PermsPlayerRequestPack
 
         PermissionManager permissionManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class);
 
+        System.out.println("RECEIVED REQUEST FOR PERMS PLAYER");
         if (name == null) {
+            System.out.println("==> BY UUID");
             permissionManager.getPlayerAsyncByUniqueId(uniqueId).onTaskSucess(player -> {
                wrapper.prepareResponse().buffer(buf -> buf.writeObject(player)).execute(packet);
             });
         } else {
+            System.out.println("==> BY NAME");
             permissionManager.getPlayerAsyncByName(name).onTaskSucess(player -> {
                 wrapper.prepareResponse().buffer(buf -> buf.writeObject(player)).execute(packet);
             });

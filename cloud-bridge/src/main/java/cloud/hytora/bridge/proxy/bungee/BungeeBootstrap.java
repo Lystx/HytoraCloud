@@ -8,7 +8,7 @@ import cloud.hytora.bridge.proxy.bungee.events.server.ProxyPlayerConnectionListe
 import cloud.hytora.bridge.proxy.bungee.utils.CloudReconnectHandler;
 
 import cloud.hytora.document.DocumentFactory;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.IServiceCycleData;
 import cloud.hytora.driver.services.impl.DefaultServiceCycleData;
 import cloud.hytora.driver.services.utils.*;
@@ -60,7 +60,7 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
 
     @Override
     public void onDisable() {
-        ICloudServer ICloudServer = Remote.getInstance().thisService();
+        ICloudService ICloudServer = Remote.getInstance().thisService();
         ICloudServer.setServiceState(ServiceState.STOPPING);
         ICloudServer.setReady(false);
         ICloudServer.setServiceVisibility(ServiceVisibility.INVISIBLE);
@@ -101,7 +101,7 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
     }
 
     @Override
-    public void registerService(ICloudServer server) {
+    public void registerService(ICloudService server) {
         if (server.getTask().getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY) {
             return;
         }
@@ -123,7 +123,7 @@ public class BungeeBootstrap extends Plugin implements PluginBridge, RemoteProxy
     }
 
     @Override
-    public void unregisterService(ICloudServer server) {
+    public void unregisterService(ICloudService server) {
         if (server.getTask().getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY) {
             return;
         }

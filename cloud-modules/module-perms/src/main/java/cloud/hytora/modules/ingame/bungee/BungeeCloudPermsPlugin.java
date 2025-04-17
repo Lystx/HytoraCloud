@@ -9,14 +9,14 @@ import net.md_5.bungee.api.plugin.Plugin;
 
 public class BungeeCloudPermsPlugin extends Plugin {
 
-
     @Override
     public void onEnable() {
+        CloudDriver.getInstance().getProviderRegistry().setProvider(PermissionManager.class, new RemotePermissionManager());
+
         this.initListeners();
     }
 
     private void initListeners() {
-        CloudDriver.getInstance().getProviderRegistry().setProvider(PermissionManager.class, new RemotePermissionManager());
         ProxyServer.getInstance().getPluginManager().registerListener(this, new BungeeCloudPermsListener());
     }
 }

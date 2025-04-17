@@ -6,7 +6,7 @@ import cloud.hytora.driver.services.ServiceManager;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -24,22 +24,22 @@ import java.util.stream.Collectors;
 public abstract class DefaultServiceManager implements ServiceManager {
 
     /**
-     * All cached {@link ICloudServer} stored in a {@link List}
+     * All cached {@link ICloudService} stored in a {@link List}
      */
-    protected List<ICloudServer> allCachedServices;
+    protected List<ICloudService> allCachedServices;
 
     public DefaultServiceManager() {
         this.allCachedServices = new CopyOnWriteArrayList<>();
         CloudDriver.getInstance().getEventManager().registerListener(this);
     }
 
-    public void setAllCachedServices(List<ICloudServer> allCachedServices) {
+    public void setAllCachedServices(List<ICloudService> allCachedServices) {
         this.allCachedServices = new ArrayList<>(allCachedServices);
     }
 
     @Override
-    public void registerService(ICloudServer service) {
-        ICloudServer uniqueService = this.getServiceByNameOrNull(service.getName());
+    public void registerService(ICloudService service) {
+        ICloudService uniqueService = this.getServiceByNameOrNull(service.getName());
         if (uniqueService != null) {
             //already added
             return;
@@ -48,8 +48,8 @@ public abstract class DefaultServiceManager implements ServiceManager {
     }
 
     @Override
-    public void unregisterService(ICloudServer service) {
-        ICloudServer uniqueService = this.getServiceByNameOrNull(service.getName());
+    public void unregisterService(ICloudService service) {
+        ICloudService uniqueService = this.getServiceByNameOrNull(service.getName());
         if (uniqueService == null) {
             return;
         }
@@ -57,20 +57,20 @@ public abstract class DefaultServiceManager implements ServiceManager {
     }
 
     @Override
-    public ICloudServer getServiceByNameOrNull(@NotNull String name) {
+    public ICloudService getServiceByNameOrNull(@NotNull String name) {
         return this.allCachedServices.stream().filter(s -> s.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
     }
 
     @Override
-    public @NotNull Task<ICloudServer> getServiceByNameOrNullAsync(@NotNull String name) {
+    public @NotNull Task<ICloudService> getServiceByNameOrNullAsync(@NotNull String name) {
         return Task.callAsync(() -> {
            return this.allCachedServices.stream().filter(s -> s.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
         });
     }
 
 
-    public void updateServerInternally(ICloudServer service) {
-        ICloudServer server = this.getServiceByNameOrNull(service.getName());
+    public void updateServerInternally(ICloudService service) {
+        ICloudService server = this.getServiceByNameOrNull(service.getName());
         if (server != null) {
 
             UniversalCloudServer serviceInfo = (UniversalCloudServer) server;
@@ -88,11 +88,11 @@ public abstract class DefaultServiceManager implements ServiceManager {
     }
 
     @Override
-    public @NotNull Task<ICloudServer> getFallbackAsService() {
+    public @NotNull Task<ICloudService> getFallbackAsService() {
         return Task.build(
                 getAvailableFallbacksAsServices()
                         .stream()
-                        .min(Comparator.comparing(ICloudServer::getOnlinePlayerCount)).orElse(null));
+                        .min(Comparator.comparing(ICloudService::getOnlinePlayerCount)).orElse(null));
     }
 
     @Override
@@ -107,7 +107,7 @@ public abstract class DefaultServiceManager implements ServiceManager {
     @Override
     public List<FallbackEntry> getAvailableFallbacks() {
         return CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream()
-                .filter(ICloudServer::isReady)
+                .filter(ICloudService::isReady)
                 .filter(it -> it.getServiceState() == ServiceState.ONLINE)
                 .filter(it -> it.getServiceVisibility() == ServiceVisibility.VISIBLE)
                 .filter(it -> !it.getTask().getVersion().isProxy())
@@ -118,9 +118,9 @@ public abstract class DefaultServiceManager implements ServiceManager {
     }
 
     @Override
-    public @NotNull List<ICloudServer> getAvailableFallbacksAsServices() {
+    public @NotNull List<ICloudService> getAvailableFallbacksAsServices() {
         return CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream()
-                .filter(ICloudServer::isReady)
+                .filter(ICloudService::isReady)
                 .filter(it -> it.getServiceState() == ServiceState.ONLINE)
                 .filter(it -> it.getServiceVisibility() == ServiceVisibility.VISIBLE)
                 .filter(it -> !it.getTask().getVersion().isProxy())

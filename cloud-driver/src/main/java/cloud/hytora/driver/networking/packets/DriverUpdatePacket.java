@@ -14,7 +14,7 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.task.UniversalServiceTask;
 import cloud.hytora.driver.player.ICloudPlayer;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.task.bundle.TaskGroup;
 import cloud.hytora.driver.services.task.bundle.DefaultTaskGroup;
 import cloud.hytora.driver.services.impl.UniversalCloudServer;
@@ -32,7 +32,7 @@ public class DriverUpdatePacket extends AbstractPacket {
 
     private Collection<IServiceTask> serviceTasks;
     private Collection<TaskGroup> parentGroups;
-    private Collection<ICloudServer> allCachedServices;
+    private Collection<ICloudService> allCachedServices;
     private Collection<ICloudPlayer> cloudPlayers;
     private Collection<INode> connectedNodes;
 
@@ -49,7 +49,7 @@ public class DriverUpdatePacket extends AbstractPacket {
                 CloudDriver.getInstance().getServiceTaskManager().getAllTaskGroups(),
                 CloudDriver.getInstance().getServiceManager().getAllCachedServices(),
                 CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers(),
-                CloudDriver.getInstance().getNodeManager().getAllCachedNodes()
+                CloudDriver.getInstance().getNodeManager().getAllCachedNodes() // TODO: 10.04.2025  check why null on startupof server
         );
     }
 
@@ -69,10 +69,10 @@ public class DriverUpdatePacket extends AbstractPacket {
                 CloudDriver.getInstance().getServiceTaskManager().setAllCachedTasks(serviceTasks);
 
                 allCachedServices = buf.readWrapperObjectCollection(UniversalCloudServer.class);
-                CloudDriver.getInstance().getServiceManager().setAllCachedServices((List<ICloudServer>) allCachedServices);
+                CloudDriver.getInstance().getServiceManager().setAllCachedServices((List<ICloudService>) allCachedServices);
 
                 cloudPlayers = buf.readWrapperObjectCollection(UniversalCloudPlayer.class);
-                CloudDriver.getInstance().getPlayerManager().setAllCachedCloudPlayers((List<ICloudPlayer>) cloudPlayers);
+                CloudDriver.getInstance().getPlayerManager().setCachedCloudPlayers(cloudPlayers);
 
                 connectedNodes = buf.readWrapperObjectCollection(UniversalNode.class);
                 CloudDriver.getInstance().getNodeManager().setAllCachedNodes((List<INode>) connectedNodes);

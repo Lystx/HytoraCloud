@@ -11,9 +11,6 @@ import java.util.List;
 
 public class NodeNodeManager extends DefaultNodeManager {
 
-    public NodeNodeManager() {
-        this.registerNode((INode) CloudDriver.getInstance().thisSidesClusterParticipant());
-    }
 
 
     @Override

@@ -1,9 +1,11 @@
 package cloud.hytora.driver.networking.protocol.wrapped;
 
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.IPacketExecutor;
 import cloud.hytora.driver.networking.protocol.packets.BufferedResponse;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionState;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
+import cloud.hytora.driver.services.ICloudService;
 import io.netty.channel.ChannelHandlerContext;
 import cloud.hytora.driver.networking.INetworkExecutor;
 
@@ -17,6 +19,12 @@ public interface PacketChannel extends IPacketExecutor {
      * If a connection has been built up before
      */
     boolean hasEverConnected();
+
+    default ICloudService getPossibleServer() {
+        int port = getClientAddress().getPort();
+        return CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream().filter(s -> s.getName().equalsIgnoreCase(executor().getName())).findFirst().orElse(null);
+    }
+
 
     /**
      * Default method to check if this wrapper is connected

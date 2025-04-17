@@ -1,8 +1,11 @@
 package cloud.hytora.driver.message;
 
+import cloud.hytora.common.misc.ReflectionUtils;
+import cloud.hytora.document.Document;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.message.packet.ChannelMessageExecutePacket;
+import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import lombok.Getter;
 
@@ -32,6 +35,47 @@ public abstract class DefaultChannelMessenger implements ChannelMessenger {
                     return;
                 }
                 handler.handleIncoming(message);
+            }
+        });
+    }
+
+    @Override
+    public void sendDocumentPacket(DocumentPacket packet) {
+        this.sendDoc(packet, null);
+    }
+
+    @Override
+    public void sendDocumentPacket(DocumentPacket packet, NetworkComponent[] receivers) {
+        for (NetworkComponent receiver : receivers) {
+            sendDoc(packet, receiver);
+        }
+    }
+
+    private void sendDoc(DocumentPacket packet, NetworkComponent receiver) {
+        Document data = Document.newJsonDocument();
+        packet.handleData(BufferState.WRITE, data);
+        ChannelMessage message = new ChannelMessageBuilder()
+                .channel(packet.getChannel())
+                .key(packet.getClass().getName())
+                .document(data)
+                .build();
+
+        this.sendChannelMessage(message);
+    }
+
+    @Override
+    public <T extends DocumentPacket> void registerPacketChannel(String channel, Consumer<T> handler) {
+        this.registerChannel(channel, new ChannelMessageListener() {
+            @Override
+            public void handleIncoming(ChannelMessage message) {
+                try {
+                    String className = message.getKey();
+                    T packet = (T) ReflectionUtils.createEmpty(Class.forName(className));
+                    packet.handleData(BufferState.READ, message.getDocument());
+                    handler.accept(packet);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
     }

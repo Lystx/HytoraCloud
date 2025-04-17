@@ -13,7 +13,6 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>module-rest</module>
         <module>module-signs</module>
         <module>module-proxy</module>
         <module>module-notify</module>

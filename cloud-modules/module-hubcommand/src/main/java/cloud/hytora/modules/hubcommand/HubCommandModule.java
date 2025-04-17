@@ -1,6 +1,7 @@
 package cloud.hytora.modules.hubcommand;
 
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.controller.AbstractModule;
 import cloud.hytora.driver.module.controller.base.ModuleConfiguration;
 import cloud.hytora.driver.module.controller.base.ModuleCopyType;
@@ -20,6 +21,11 @@ import cloud.hytora.modules.hubcommand.command.HubCommand;
         environment = ModuleEnvironment.NODE
 )
 public class HubCommandModule extends AbstractModule {
+
+
+    public HubCommandModule(ModuleController controller) {
+        super(controller);
+    }
 
     @ModuleTask(id = 1, state = ModuleState.ENABLED)
     public void enable() {

@@ -27,6 +27,8 @@ public interface ModuleController extends IBufferObject {
 
 	void disableModule();
 
+	void reloadModule();
+
 	void unregisterModule();
 
 	@Nonnull

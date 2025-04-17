@@ -1,18 +1,19 @@
 package cloud.hytora.node.impl.command.impl;
 
 import cloud.hytora.common.function.ExceptionallyConsumer;
+import cloud.hytora.common.misc.Util;
 import cloud.hytora.context.annotations.ApplicationParticipant;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
-import cloud.hytora.driver.command.completer.CloudServerCompleter;
-import cloud.hytora.driver.command.completer.TaskCompleter;
+import cloud.hytora.driver.command.completer.impl.CloudServerCompleter;
+import cloud.hytora.driver.command.completer.impl.TaskCompleter;
 import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.console.Screen;
 import cloud.hytora.driver.console.ScreenManager;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.server.ServiceRequestScreenLeaveEvent;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.deployment.CloudDeployment;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import cloud.hytora.driver.services.task.IServiceTask;
@@ -24,11 +25,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
-@CommandDescription("Manages all services")
-@Command({"service", "ser"})
-@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
-@CommandPermission("cloud.command.use")
-@CommandAutoHelp
+@Command(
+        value = {"service", "ser"},
+        permission = "cloud.command.use",
+        executionScope = CommandScope.CONSOLE_AND_INGAME,
+        description = "Manages all services"
+)
+@Command.AutoHelp
 @ApplicationParticipant
 public class ServiceCommand {
 
@@ -41,24 +44,22 @@ public class ServiceCommand {
         CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class).leaveCurrentScreen();
     }
 
-    @Command("list")
-    @CommandDescription("Lists all online services")
+    @Command(value = "list", description = "Lists all online services")
     public void onListCommand(CommandSender sender) {
         sender.sendMessage("§8");
-        for (ICloudServer service : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
+        for (ICloudService service : CloudDriver.getInstance().getServiceManager().getAllCachedServices()) {
             sender.sendMessage("§b" + service.getName() + " §8[" + service.getServiceState().getName() + " §8/ §7" + service.getServiceVisibility().toString() + "§8] §bSlots §7" + service.getOnlinePlayerCount() + "§8/§7" + service.getMaxPlayers());
         }
         sender.sendMessage("§8");
     }
 
-    @Command("deploy")
-    @Syntax("<service> <templateName> <excludes>")
-    @CommandDescription("Copies a service into its template (exclusions are split by ',', put '#' infront for excluded files, '.' for all files and '!' for only these files)")
+    @Command(value = "deploy", description = "Copies a service into its template (exclusions are split by ',', put '#' infront for excluded files, '.' for all files and '!' for only these files)")
+    @Command.Syntax("<service> <templateName> <excludes>")
     public void onDeployCommand(
             CommandSender sender,
-            @Argument(value = "service", completer = CloudServerCompleter.class) ICloudServer service,
-            @Argument("templateName") String templateName,
-            @Argument("excludes") String excludes
+            @Command.Argument(value = "service", completer = CloudServerCompleter.class) ICloudService service,
+            @Command.Argument("templateName") String templateName,
+            @Command.Argument("excludes") String excludes
     ) {
 
         if (service == null) {
@@ -90,12 +91,12 @@ public class ServiceCommand {
     }
 
 
-    @Command("start")
-    @Syntax("<task> <amount>")
+    @Command(value = "start", description = "Starts an amount of services of given task")
+    @Command.Syntax("<task> <amount>")
     public void onStartCommand(
             CommandSender sender,
-            @Argument(value = "task", completer = TaskCompleter.class) IServiceTask task,
-            @Argument("amount") int amount
+            @Command.Argument(value = "task", completer = TaskCompleter.class) IServiceTask task,
+            @Command.Argument("amount") int amount
 
     ) {
 
@@ -116,11 +117,35 @@ public class ServiceCommand {
 
     }
 
-    @Command("screen")
-    @Syntax("<service>")
+    @Command(value = "upload", description = "Uploads the logs of the given service and sends the link")
+    @Command.Syntax("<service>")
+    public void onUploadCommand(
+            CommandSender sender,
+            @Command.Argument(value = "service", completer = CloudServerCompleter.class) ICloudService service
+    ) {
+        if (service == null) {
+            sender.sendMessage("§cThere is no such Server online!");
+            return;
+        }
+
+        ScreenManager sm = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
+
+        sm.getScreenByName(service.getName()).ifPresentOrElse(new ExceptionallyConsumer<Screen>() {
+            @Override
+            public void acceptExceptionally(Screen screen) throws Exception {
+                String uploadedLink = Util.uploadToHastebin(screen.getAllCachedLines());
+
+                sender.sendMessage("§7Log was §auploaded §7to §e" + uploadedLink);
+            }
+        }, () -> sender.sendMessage("§cNo Screen found for this Service!"));
+
+    }
+
+    @Command(value = "screen", description = "Joins the Output of a server")
+    @Command.Syntax("<service>")
     public void onScreenCommand(
             CommandSender sender,
-            @Argument(value = "service", completer = CloudServerCompleter.class) ICloudServer service
+            @Command.Argument(value = "service", completer = CloudServerCompleter.class) ICloudService service
     ) {
         if (service == null) {
             sender.sendMessage("§cThere is no such Server online!");
@@ -151,12 +176,11 @@ public class ServiceCommand {
     }
 
 
-    @Command("stop")
-    @Syntax("<name>")
-    @CommandDescription("Stops a service")
+    @Command(value = "stop", description = "Stops a service")
+    @Command.Syntax("<name>")
     public void onStopCommand(
             CommandSender sender,
-            @Argument(value = "name", completer = CloudServerCompleter.class) ICloudServer service
+            @Command.Argument(value = "name", completer = CloudServerCompleter.class) ICloudService service
     ) {
         if (service == null) {
             sender.sendMessage("§cThere is no online service matching this name!");
@@ -173,12 +197,11 @@ public class ServiceCommand {
         CloudDriver.getInstance().getServiceManager().shutdownService(service);
     }
 
-    @Command("info")
-    @Syntax("<name>")
-    @CommandDescription("Shows info about a service")
+    @Command(value = "info", description = "Shows info about a service")
+    @Command.Syntax("<name>")
     public void onInfoCommand(
             CommandSender sender,
-            @Argument(value = "name", completer = CloudServerCompleter.class) ICloudServer service
+            @Command.Argument(value = "name", completer = CloudServerCompleter.class) ICloudService service
     ) {
         if (service == null) {
             sender.sendMessage("§cThere is no online service matching this name!");

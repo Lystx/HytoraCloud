@@ -16,6 +16,7 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
 
 public class NodeModuleManager implements ModuleManager {
 
-    private List<DefaultModuleController> modules = Collections.emptyList();
+    private List<DefaultModuleController> modules = new ArrayList<>();
     private Path directory;
 
     @Nonnull
@@ -38,6 +39,17 @@ public class NodeModuleManager implements ModuleManager {
         Logger.constantInstance().debug("Set Module-Loading-Directory to {}!", directory.toString());
         FileUtils.createDirectory(directory);
         this.directory = directory;
+    }
+
+
+    @Override
+    public void removeModule(ModuleController moduleController) {
+        DefaultModuleController defaultModuleController = this.modules.stream().filter(m -> m.getModuleConfig().getName().equalsIgnoreCase(moduleController.getModuleConfig().getName()))
+                .findFirst().orElse(null);
+        if (defaultModuleController == null) {
+            return;
+        }
+        this.modules.remove(defaultModuleController);
     }
 
     @Override
@@ -96,12 +108,15 @@ public class NodeModuleManager implements ModuleManager {
             }
         }
 
-        List<DefaultModuleController> modules = new CopyOnWriteArrayList<>();
+        List<DefaultModuleController> modules = new ArrayList<>();
 
         // resolve modules and load configs
         for (Path file : FileUtils.list(directory).filter(path -> path.toString().endsWith(".jar")).collect(Collectors.toList())) {
+            if (getModules().stream().anyMatch(m -> m.getJarFile().equals(file))) {
+                continue;
+            }
             try {
-                CloudDriver.getInstance().getLogger().info("Resolving module {}..", file.getFileName());
+                CloudDriver.getInstance().getLogger().info("Resolving the module §8'§b{}§8'§f...", file.getFileName());
                 Path selfBasePath = new File(CloudDriver.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath();
 
                 ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -120,6 +135,14 @@ public class NodeModuleManager implements ModuleManager {
 
         // check if the depends are existing
         for (DefaultModuleController module : modules) {
+            if (module.getModuleConfig() == null) {
+                CloudDriver.getInstance().getLogger().error("Missing 'config.json' for module!");
+                continue;
+            }
+            if (this.getModule(module.getModuleConfig().getName()) != null) {
+                //if already loaded skip...
+                continue;
+            }
             for (String depend : module.getModuleConfig().getDepends()) {
                 if (depend.trim().isEmpty()) {
                     continue;
@@ -162,7 +185,9 @@ public class NodeModuleManager implements ModuleManager {
             }
         }
 
-        this.modules = modules;
+        for (DefaultModuleController module : modules) {
+            this.modules.add(module);
+        }
     }
 
     private boolean hasModule(@Nonnull Collection<DefaultModuleController> modules, @Nonnull String depend) {

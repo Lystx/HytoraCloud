@@ -13,20 +13,26 @@ public class NamedThreadFactory implements ThreadFactory {
     protected final IntFunction<String> nameFunction;
     protected final ThreadGroup group;
     protected final AtomicInteger threadNumber = new AtomicInteger(1);
+    protected final ClassLoader classLoader;
 
-    public NamedThreadFactory(@Nonnull IntFunction<String> nameFunction) {
+    public NamedThreadFactory(@Nonnull IntFunction<String> nameFunction, ClassLoader classLoader) {
         SecurityManager securityManager = System.getSecurityManager();
+        this.classLoader = classLoader;
         this.group = (securityManager != null) ? securityManager.getThreadGroup() : Thread.currentThread().getThreadGroup();
         this.nameFunction = nameFunction;
     }
 
     public NamedThreadFactory(@Nonnull String prefix) {
-        this(id -> prefix + "-" + id);
+        this(id -> prefix + "-" + id, ClassLoader.getSystemClassLoader());
+    }
+    public NamedThreadFactory(@Nonnull String prefix, ClassLoader classLoader) {
+        this(id -> prefix + "-" + id, classLoader);
     }
 
     @Override
     public Thread newThread(@Nonnull Runnable task) {
         Thread thread = new Thread(group, task, nameFunction.apply(threadNumber.getAndIncrement()));
+        thread.setContextClassLoader(classLoader);
         if (thread.isDaemon()) thread.setDaemon(false);
         if (thread.getPriority() != Thread.NORM_PRIORITY) thread.setPriority(Thread.NORM_PRIORITY);
         return thread;

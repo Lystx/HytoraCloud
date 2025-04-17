@@ -2,7 +2,7 @@ package cloud.hytora.bridge.proxy.bungee.events.server;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.component.style.ComponentColor;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.ServicePingProperties;
 import cloud.hytora.remote.Remote;
 import net.md_5.bungee.api.Favicon;
@@ -22,7 +22,7 @@ public class ProxyPingListener implements Listener {
     public void handle(ProxyPingEvent event) {
         ServerPing response = event.getResponse();
 
-        ICloudServer ICloudServer = Remote.getInstance().thisService();
+        ICloudService ICloudServer = Remote.getInstance().thisService();
         ServicePingProperties pingProperties = ICloudServer.getPingProperties();
 
         int maxPlayers, onlinePlayers;

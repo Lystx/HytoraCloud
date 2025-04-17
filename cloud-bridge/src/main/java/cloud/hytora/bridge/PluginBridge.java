@@ -1,11 +1,9 @@
 package cloud.hytora.bridge;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.services.ICloudServer;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.driver.services.utils.ServiceVisibility;
-import cloud.hytora.remote.Remote;
 
 import java.io.File;
 
@@ -13,6 +11,13 @@ public interface PluginBridge {
 
     default void bootstrap() {
         //updating service
+
+        if (CloudDriver.getInstance()
+                .getServiceManager()
+                .thisService() == null) {
+            System.out.println("EROR -> SERVICE NULL !");
+            return;
+        }
         CloudDriver.getInstance()
                 .getServiceManager()
                 .thisService()

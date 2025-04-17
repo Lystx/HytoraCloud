@@ -17,9 +17,12 @@ public class BukkitCloudPermsPlugin extends JavaPlugin {
         this.initListeners();
     }
 
+    @Override
+    public void onLoad() {
+        CloudDriver.getInstance().getProviderRegistry().setProvider(PermissionManager.class, new RemotePermissionManager());
+    }
 
     private void initInjections() {
-        CloudDriver.getInstance().getProviderRegistry().setProvider(PermissionManager.class, new RemotePermissionManager());
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
             BukkitCloudPermsHelper.injectPermissible(onlinePlayer);
         }

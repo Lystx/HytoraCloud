@@ -18,11 +18,6 @@ public interface PermissionGroup extends PermissionEntity, IdentityObject {
     void setName(String name);
 
     @Nonnull
-    String getColor();
-
-    void setColor(String color);
-
-    @Nonnull
     String getChatColor();
 
     void setChatColor(String chatColor);

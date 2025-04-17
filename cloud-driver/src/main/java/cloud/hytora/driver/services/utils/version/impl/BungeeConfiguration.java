@@ -1,7 +1,7 @@
 package cloud.hytora.driver.services.utils.version.impl;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 import cloud.hytora.driver.services.utils.version.VersionFile;
 
@@ -13,12 +13,12 @@ import java.util.List;
 public class BungeeConfiguration extends VersionFile {
 
     @Override
-    public void applyFile(ICloudServer ICloudServer, File file) throws IOException {
+    public void applyFile(ICloudService ICloudServer, File file) throws IOException {
 
         FileWriter writer = new FileWriter(file);
 
-        List<ICloudServer> services = CloudDriver.getInstance().getServiceManager().getAllServicesByEnvironment(SpecificDriverEnvironment.MINECRAFT);
-        ICloudServer firstService = services.isEmpty() ? null : services.get(0);
+        List<ICloudService> services = CloudDriver.getInstance().getServiceManager().getAllServicesByEnvironment(SpecificDriverEnvironment.MINECRAFT);
+        ICloudService firstService = services.isEmpty() ? null : services.get(0);
 
         String firstServerName = firstService == null ? "fallback": firstService.getName();
         String firstServerMotd = firstService == null ? "Default HytoraCloud Fallback" : firstService.getMotd();

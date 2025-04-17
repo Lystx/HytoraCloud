@@ -1,0 +1,6 @@
+{
+  "name": "module-fallback-command",
+  "version": "SNAPSHOT-1.0",
+  "author": "Lystx",
+  "main": "cloud.hytora.modules.hubcommand.HubCommandModule"
+}

@@ -6,10 +6,9 @@ import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.component.Component;
 import cloud.hytora.driver.player.ICloudPlayer;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public interface PlayerExecutor {
 
@@ -34,13 +33,13 @@ public interface PlayerExecutor {
 
     void disconnect(String reason);
 
-    void connect(ICloudServer server);
+    void connect(ICloudService server);
 
     default void sendToFallback() {
 
-        Task<ICloudServer> fallback = CloudDriver.getInstance().getServiceManager().getFallbackAsService();
+        Task<ICloudService> fallback = CloudDriver.getInstance().getServiceManager().getFallbackAsService();
         fallback.ifPresentOrElse(
-                (ExceptionallyConsumer<ICloudServer>) this::connect,
+                (ExceptionallyConsumer<ICloudService>) this::connect,
                 (ExceptionallyRunnable) () -> sendMessage("§cCould not find any available fallback...")
                 );
     }

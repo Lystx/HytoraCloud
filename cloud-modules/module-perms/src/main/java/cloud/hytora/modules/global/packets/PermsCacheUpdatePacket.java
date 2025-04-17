@@ -1,5 +1,7 @@
 package cloud.hytora.modules.global.packets;
 
+import cloud.hytora.document.Document;
+import cloud.hytora.driver.message.DocumentPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
@@ -13,27 +15,32 @@ import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class PermsCacheUpdatePacket extends AbstractPacket {
+public class PermsCacheUpdatePacket implements DocumentPacket {
 
     private Collection<PermissionGroup> permissionGroups;
-    private Collection<PermissionPlayer> permissionPlayers;
+
 
     @Override
-    public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
+    public String getChannel() {
+        return "cloud_module_perms_test";
+    }
+
+    @Override
+    public void handleData(BufferState state, Document document) {
         switch (state) {
             case WRITE:
-                buf.writeObjectCollection(permissionGroups);
-                buf.writeObjectCollection(permissionPlayers);
+                document.set("groups", permissionGroups);
                 break;
 
             case READ:
-                permissionGroups = buf.readWrapperObjectCollection(DefaultPermissionGroup.class);
-                permissionPlayers = buf.readWrapperObjectCollection(DefaultPermissionPlayer.class);
+                permissionGroups = new ArrayList<>(document.getBundle("groups").toInstances(DefaultPermissionGroup.class));
                 break;
         }
     }

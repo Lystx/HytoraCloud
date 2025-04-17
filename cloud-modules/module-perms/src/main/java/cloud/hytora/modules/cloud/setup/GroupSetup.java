@@ -28,10 +28,7 @@ public class GroupSetup extends Setup<GroupSetup> {
     @Question(id = 6, question = "What should the chatColor of this group be?")
     private String chatColor;
 
-    @Question(id = 7, question = "What should the general color of this group be?")
-    private String color;
-
-    @Question(id = 8, question = "What groups should this group extend from?")
+    @Question(id = 7, question = "What groups should this group extend from?")
     @QuestionTip("Separate multiple groups with a \",\"")
     private String inheritedGroups;
 

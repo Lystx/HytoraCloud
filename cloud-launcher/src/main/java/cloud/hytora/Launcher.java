@@ -1,6 +1,9 @@
 package cloud.hytora;
 
 
+import cloud.hytora.commands.IncludeDependencyCommand;
+import cloud.hytora.commands.IncludeRepositoryCommand;
+import cloud.hytora.commands.LoggerCommand;
 import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.VersionInfo;
 import cloud.hytora.common.collection.ThreadRunnable;
@@ -14,15 +17,16 @@ import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.ZipUtils;
 import cloud.hytora.context.ApplicationContext;
 import cloud.hytora.context.IApplicationContext;
-import cloud.hytora.script.dependency.Dependency;
-import cloud.hytora.script.dependency.DependencyLoader;
-import cloud.hytora.script.dependency.Repository;
-import cloud.hytora.script.module.ModuleUpdater;
-import cloud.hytora.script.ScriptLoader;
-import cloud.hytora.script.commands.IncludeDependencyCommandI;
-import cloud.hytora.script.commands.IncludeRepositoryCommandI;
-import cloud.hytora.script.commands.PrintCommandI;
-import cloud.hytora.script.commands.RunIScriptCommand;
+import cloud.hytora.dependency.Dependency;
+import cloud.hytora.dependency.DependencyLoader;
+import cloud.hytora.dependency.Repository;
+import cloud.hytora.module.ModuleUpdater;
+import cloud.hytora.script.api.IScriptLoader;
+import cloud.hytora.script.api.impl.DefaultScriptLoader;
+import cloud.hytora.script.defaults.DefaultModifyCommand;
+import cloud.hytora.script.defaults.DefaultPrintCommand;
+import cloud.hytora.script.defaults.DefaultRunCommand;
+import cloud.hytora.script.defaults.DefaultVarCommand;
 import lombok.Getter;
 import org.fusesource.jansi.AnsiConsole;
 
@@ -106,11 +110,15 @@ public class Launcher extends DriverUtility {
         this.moduleUpdater = context.getInstance(ModuleUpdater.class);
 
         logger.info("Loading 'launcher.cloud'...");
-        ScriptLoader loader = ScriptLoader.getInstance();
-        loader.registerCommand("runScript", new RunIScriptCommand());
-        loader.registerCommand("print", new PrintCommandI());
-        loader.registerCommand("includeDependency", new IncludeDependencyCommandI(this.dependencies::add));
-        loader.registerCommand("includeRepository", new IncludeRepositoryCommandI(repository -> repositories.put(repository.getName(), repository)));
+        IScriptLoader loader = new DefaultScriptLoader();
+        loader.registerCommand(new DefaultRunCommand());
+        loader.registerCommand(new DefaultPrintCommand());
+        loader.registerCommand(new DefaultModifyCommand());
+        loader.registerCommand(new DefaultVarCommand());
+
+        loader.registerCommand(new LoggerCommand());
+        loader.registerCommand(new IncludeDependencyCommand(this.dependencies::add));
+        loader.registerCommand(new IncludeRepositoryCommand(repository -> repositories.put(repository.getName(), repository)));
 
         Path launcherFile = Paths.get("launcher.cloud");
         if (!Files.exists(launcherFile)) {
@@ -120,11 +128,13 @@ public class Launcher extends DriverUtility {
                         Files.newOutputStream(launcherFile)
                 );
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                System.out.println("ERORR: " + e.getMessage());
             }
         }
 
-        loader.executeScript(launcherFile)
+        System.out.println("Loading script...");
+        loader.loadScript(launcherFile)
+                .runScript()
                 .onTaskSucess(n -> {
                     APPLICATION_FILE_URL = System.getProperty("cloud.hytora.launcher.application.file");
                     BASE_URL = System.getProperty("cloud.hytora.launcher.updater.baseUrl");
@@ -166,7 +176,7 @@ public class Launcher extends DriverUtility {
                     try {
                         Files.delete(zippedFile);
                         Path cloudInFile = Paths.get("unzipped/cloud.jar");
-                        Files.copy(cloudInFile, LAUNCHER_VERSIONS.resolve(VersionInfo.getNewestVersion().formatCloudJarName()));
+                        Files.copy(cloudInFile, LAUNCHER_VERSIONS.resolve(VersionInfo.getNewestVersion("1.5").formatCloudJarName()));
                         FileUtils.delete(Paths.get("unzipped"));
                         logger.info("Unzipped and moved HytoraCloud-Jar to its folder!");
 
@@ -242,7 +252,7 @@ public class Launcher extends DriverUtility {
 
 
     public String getNewestVersionDownloadUrl() {
-        VersionInfo newestVersion = VersionInfo.getNewestVersion();
+        VersionInfo newestVersion = VersionInfo.getNewestVersion("1.5");
 
         String urlString = DOWNLOAD_URL;
         urlString = urlString.replace("{version}", String.valueOf(newestVersion.getVersion()));
@@ -253,7 +263,7 @@ public class Launcher extends DriverUtility {
 
 
     public String getBaseUrl() {
-        VersionInfo newestVersion = VersionInfo.getNewestVersion();
+        VersionInfo newestVersion = VersionInfo.getNewestVersion("1.5");
 
         String urlString = BASE_URL;
         urlString = urlString.replace("{version}", String.valueOf(newestVersion.getVersion()));
@@ -268,7 +278,7 @@ public class Launcher extends DriverUtility {
         if (!CUSTOM_VERSION.equalsIgnoreCase("null")) {
             jarName = VersionInfo.fromString(CUSTOM_VERSION).formatCloudJarName();
         } else {
-            jarName = VersionInfo.getNewestVersion().formatCloudJarName();
+            jarName = VersionInfo.getNewestVersion(CUSTOM_VERSION).formatCloudJarName();
         }
         Path targetPath = LAUNCHER_VERSIONS.resolve(jarName);
         Path driverTargetPath = LAUNCHER_VERSIONS.resolve("api.jar");

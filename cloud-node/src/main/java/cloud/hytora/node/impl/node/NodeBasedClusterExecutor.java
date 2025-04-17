@@ -8,6 +8,7 @@ import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.defaults.server.ServiceClusterConnectEvent;
 import cloud.hytora.driver.networking.NetworkComponent;
+import cloud.hytora.driver.networking.cluster.client.AdvancedClusterParticipant;
 import cloud.hytora.driver.networking.cluster.client.ClusterParticipant;
 import cloud.hytora.driver.networking.cluster.client.SimpleClusterClientExecutor;
 import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
@@ -21,7 +22,7 @@ import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.node.data.DefaultNodeData;
 import cloud.hytora.driver.node.UniversalNode;
 import cloud.hytora.driver.node.config.DefaultNodeConfig;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.config.MainConfiguration;
 import cloud.hytora.driver.networking.cluster.ClusterClientExecutor;
@@ -39,7 +40,7 @@ import java.util.function.Consumer;
 @Getter
 public class NodeBasedClusterExecutor extends ClusterExecutor {
 
-    private final Map<ICloudServer, Long> bootUpStatistics;
+    private final Map<ICloudService, Long> bootUpStatistics;
     private final String hostName;
     private final int port;
     private final List<PacketHandler<?>> remoteHandlers;
@@ -119,7 +120,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
         } else {
             if (state == ConnectionState.CONNECTED) {
                 // set online
-                ICloudServer service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(executor.getName());
+                ICloudService service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(executor.getName());
                 if (service == null) {
                     //other remote connection
 
@@ -157,7 +158,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
                     return;
                 }
                 NodeDriver base = NodeDriver.getInstance();
-                ICloudServer ICloudServer = base.getServiceManager().getServiceByNameOrNull(service);
+                ICloudService ICloudServer = base.getServiceManager().getServiceByNameOrNull(service);
                 if (ICloudServer != null) {
                     CloudDriver.getInstance().getServiceManager().unregisterService(ICloudServer);
                 } else {
@@ -192,7 +193,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
 
     public Task<Boolean> connectToOtherNode(String authKey, String name, String hostname, int port, Document customData) {
         Task<Boolean> task = Task.empty();
-        ClusterParticipant client = new ClusterParticipant(authKey, name, ConnectionType.NODE, customData) {
+        AdvancedClusterParticipant client = new AdvancedClusterParticipant(authKey, name, ConnectionType.NODE, customData) {
 
             @Override
             public void onAuthenticationChanged(PacketChannel wrapper) {
@@ -284,11 +285,11 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
         super.sendPacket(packet);
     }
 
-    public void registerStats(ICloudServer service) {
+    public void registerStats(ICloudService service) {
         bootUpStatistics.put(service, System.currentTimeMillis());
     }
 
-    public long getStats(ICloudServer service) {
+    public long getStats(ICloudService service) {
         long time = System.currentTimeMillis() - bootUpStatistics.getOrDefault(service, (System.currentTimeMillis() - 1));
         bootUpStatistics.remove(service);
         return time;

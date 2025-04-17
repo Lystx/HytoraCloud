@@ -5,7 +5,7 @@ import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.wrapped.StorableDocument;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.DriverEnvironment;
-import cloud.hytora.driver.exception.IncompatibleDriverEnvironment;
+import cloud.hytora.driver.exception.IncompatibleDriverEnvironmentException;
 import cloud.hytora.driver.module.IModule;
 import cloud.hytora.driver.module.controller.ModuleClassLoader;
 import cloud.hytora.driver.module.ModuleController;
@@ -50,6 +50,12 @@ public class RemoteModuleController implements ModuleController {
     @Override
     public void enableModule() {
         CloudDriver.getInstance().getExecutor().sendPacket(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.ENABLE_MODULE));
+
+    }
+
+    @Override
+    public void reloadModule() {
+        CloudDriver.getInstance().getExecutor().sendPacket(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.RELOAD_MODULE));
 
     }
 
@@ -104,7 +110,7 @@ public class RemoteModuleController implements ModuleController {
     @NotNull
     @Override
     public ModuleClassLoader getClassLoader() {
-        throw new IncompatibleDriverEnvironment(DriverEnvironment.NODE);
+        throw new IncompatibleDriverEnvironmentException(DriverEnvironment.NODE);
     }
 
     @Override

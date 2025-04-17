@@ -27,7 +27,7 @@ public class OfflinePlayerRequestPacket extends AbstractPacket {
     }
 
     public OfflinePlayerRequestPacket(UUID uniqueID) {
-        super(buf -> buf.writeEnum(GET_BY_NAME).writeUniqueId(uniqueID));
+        super(buf -> buf.writeEnum(GET_BY_UUID).writeUniqueId(uniqueID));
     }
 
     @Override

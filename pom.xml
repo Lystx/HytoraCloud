@@ -41,9 +41,10 @@
         <module>cloud-remote</module>
         <module>cloud-commons</module>
         <module>cloud-modules</module>
-        <module>cloud-connector</module>
         <module>cloud-launcher</module>
         <module>cloud-script</module>
+        <module>cloud-modules/module-smartProxy</module>
+        <module>cloud-interface</module>
     </modules>
 
     <dependencies>

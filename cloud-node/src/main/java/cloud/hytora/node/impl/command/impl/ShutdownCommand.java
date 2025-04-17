@@ -9,14 +9,16 @@ import cloud.hytora.node.NodeDriver;
 
 import javax.annotation.Nonnull;
 
-@Command({"shutdown", "exit", "end"})
-@CommandExecutionScope(CommandScope.CONSOLE_AND_INGAME)
-@CommandPermission("cloud.command.use")
-@CommandDescription("Stops the current Cloud-Instance")
+@Command(
+        value = {"shutdown", "exit", "end"},
+        permission = "cloud.command.use",
+        executionScope = CommandScope.CONSOLE_AND_INGAME,
+        description = "Stops the current Cloud-Instance"
+)
 @ApplicationParticipant
 public class ShutdownCommand {
 
-    @Root
+    @Command.Root
     public void onShutdown(@Nonnull CommandSender sender) throws Exception {
         NodeDriver.getInstance().shutdown();
     }

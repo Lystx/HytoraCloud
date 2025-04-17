@@ -5,7 +5,6 @@ import cloud.hytora.driver.http.api.HttpServer;
 import cloud.hytora.driver.module.IModule;
 import cloud.hytora.driver.module.ModuleController;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
@@ -14,14 +13,17 @@ public class AbstractModule implements IModule {
 	/**
 	 * The controller for this module (is being set when being loaded)
 	 */
-	@Setter
-	protected ModuleController controller;
+	protected final ModuleController controller;
 
 	/**
 	 * The instance that is being set from Node loader
 	 */
 	@Setter
 	protected HttpServer httpServer;
+
+	public AbstractModule(ModuleController controller) {
+		this.controller = controller;
+	}
 
 	public void registerTasks(Object moduleTasksClassInstance) {
 		controller.registerModuleTasks(moduleTasksClassInstance);

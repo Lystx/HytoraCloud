@@ -124,7 +124,7 @@ public class SimpleTask<T> implements Task<T> {
     @Override
     public Task<T> setResult(T newValue) throws ValueImmutableException {
         if (newValue == null && this.denyNull) {
-            return this;
+            throw new ValueHoldsNoObjectException(this);
         }
         if (this.immutable && this.heldValue == null) {
             throw new ValueImmutableException(this);
@@ -136,7 +136,11 @@ public class SimpleTask<T> implements Task<T> {
     }
 
     private void releaseLocks() {
-        this.updateListeners.forEach(c -> c.accept(this));
+        try {
+            this.updateListeners.forEach(c -> c.accept(this));
+        } catch (NullPointerException e) {
+            //ignore
+        }
 
         //releasing all locks
         for (CountDownLatch latch : countDownLatches) {
@@ -452,7 +456,7 @@ public class SimpleTask<T> implements Task<T> {
 
     @Override
     public T get() throws ValueHoldsNoObjectException {
-        if (this.isNull()) {
+        if (this.isNull() && this.denyNull) {
             throw new ValueHoldsNoObjectException(this);
         }
         return this.heldValue;

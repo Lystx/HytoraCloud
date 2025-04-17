@@ -13,7 +13,7 @@ import cloud.hytora.driver.services.task.TaskDownloadEntry;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.template.ServiceTemplate;
 import cloud.hytora.driver.services.template.TemplateStorage;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.driver.services.utils.ServiceProcessType;
 import cloud.hytora.driver.services.utils.ServiceState;
@@ -42,8 +42,8 @@ import java.util.jar.JarInputStream;
 public class CloudServerProcessWorker {
 
     @SneakyThrows
-    public Task<ICloudServer> processService(ICloudServer service) {
-        Task<ICloudServer> task = Task.empty(ICloudServer.class).denyNull();
+    public Task<ICloudService> processService(ICloudService service) {
+        Task<ICloudService> task = Task.empty(ICloudService.class).denyNull();
 
 
         service.setServiceState(ServiceState.STARTING);
@@ -92,7 +92,6 @@ public class CloudServerProcessWorker {
                 service.getTask().getVersion().getType(),
                 MainConfiguration.getInstance().getServiceProcessType(),
                 CloudDriver.getInstance().getLogger().getMinLevel(),
-                MainConfiguration.getInstance().getPlayerLoginProcessing(),
                 NodeDriver.getInstance().getExecutor().getHostName(),
                 service.getName(),
                 NodeDriver.getInstance().getExecutor().getPort()
@@ -172,14 +171,16 @@ public class CloudServerProcessWorker {
         }
     }
 
-    private String[] args(ICloudServer service) {
+    private String[] args(ICloudService service) throws IOException {
 
         File parent = (service.getTask().getTaskGroup().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
         File folder = new File(parent, service.getName() + "/");
 
-        Path remoteFile = new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "remote.jar").toPath();
+        Path remoteFile1 = new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "remote.jar").toPath();
+        FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "remote.jar"), new File(folder, "remote.jar"));
         File applicationFile = new File(folder, service.getTask().getVersion().getJar());
 
+        Path remoteFile  = new File(folder, "remote.jar").toPath();
         IServiceTask task = service.getTask();
         int javaVersion = task.getJavaVersion();
         ServiceProcessType serviceProcessType = MainConfiguration.getInstance().getServiceProcessType();

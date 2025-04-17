@@ -1,14 +1,15 @@
 package cloud.hytora.driver.database;
 
 import cloud.hytora.common.task.Task;
+import cloud.hytora.driver.database.api.Database;
 import org.jetbrains.annotations.NotNull;
 
 public interface IDatabaseManager {
 
     @NotNull
-    IDatabase getInternalDatabase();
+    Database getDatabase();
 
-    SectionedDatabase getDatabase();
+    LocalStorage getLocalStorage();
 
     @NotNull
     Task<Boolean> shutdown();

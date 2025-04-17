@@ -7,7 +7,7 @@ import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.modules.notify.NotifyModule;
 import cloud.hytora.modules.notify.config.NotifyConfiguration;
 
@@ -15,7 +15,7 @@ public class ModuleListener {
 
     @EventListener
     public void handleAdd(ServiceRegisterEvent event) {
-        ICloudServer cloudServer = event.getCloudServer();
+        ICloudService cloudServer = event.getCloudServer();
 
         this.notifyNetwork(0, cloudServer);
     }
@@ -23,7 +23,7 @@ public class ModuleListener {
 
     @EventListener
     public void handleRemove(ServiceUnregisterEvent event) {
-        ICloudServer cloudServer = event.getCloudServer();
+        ICloudService cloudServer = event.getCloudServer();
         if (cloudServer == null) {
             return;
         }
@@ -32,7 +32,7 @@ public class ModuleListener {
 
     @EventListener
     public void handleReady(ServiceReadyEvent event) {
-        ICloudServer cloudServer = event.getCloudServer();
+        ICloudService cloudServer = event.getCloudServer();
         if (cloudServer == null) {
             return;
         }
@@ -46,7 +46,7 @@ public class ModuleListener {
      * @param state       the state of message (0 = start, 1 = stop, 2 = ready)
      * @param ICloudServer the server to get info about
      */
-    public void notifyNetwork(int state, ICloudServer ICloudServer) {
+    public void notifyNetwork(int state, ICloudService ICloudServer) {
         NotifyConfiguration config = NotifyModule.getInstance().getConfiguration();
 
         //if module is disabled just ignore execution

@@ -93,4 +93,8 @@ public class DefaultChannelMessage implements ChannelMessage {
         }
     }
 
+    @Override
+    public void receiver(NetworkComponent component) {
+        this.receivers = new NetworkComponent[]{component};
+    }
 }

@@ -18,6 +18,7 @@ public class BungeeCloudPermsListener implements Listener {
             ProxiedPlayer player = (ProxiedPlayer)event.getSender();
             PermissionPlayer permissionPlayer = PermissionPlayer.byUniqueId(player.getUniqueId());
             if (permissionPlayer == null) {
+                System.out.println("ERROR");
                 return;
             }
             if (permissionPlayer.hasPermission("*")) {

@@ -1,20 +1,19 @@
 package cloud.hytora.driver.player.impl;
 
 import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.exception.PlayerNotOnlineException;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.ICloudPlayer;
-import cloud.hytora.driver.player.TemporaryProperties;
 import lombok.*;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 
 @NoArgsConstructor
@@ -30,10 +29,10 @@ public class DefaultCloudOfflinePlayer implements CloudOfflinePlayer {
     protected long lastLogin;
     protected Document properties;
 
-    /**
-     * The temporary properties
-     */
-    protected DefaultTemporaryProperties temporaryProperties = new DefaultTemporaryProperties();
+
+    public DefaultCloudOfflinePlayer(Document data) {
+        this.applyDocument(data);
+    }
 
     @Override
     public void applyBuffer(BufferState state, @NotNull PacketBuffer buffer) throws IOException {
@@ -44,7 +43,6 @@ public class DefaultCloudOfflinePlayer implements CloudOfflinePlayer {
                 buffer.writeLong(firstLogin);
                 buffer.writeLong(lastLogin);
                 buffer.writeDocument(properties);
-                buffer.writeDocument(DocumentFactory.newJsonDocument(temporaryProperties));
                 break;
 
             case READ:
@@ -53,40 +51,33 @@ public class DefaultCloudOfflinePlayer implements CloudOfflinePlayer {
                 firstLogin = buffer.readLong();
                 lastLogin = buffer.readLong();
                 properties = buffer.readDocument();
-                Document tp = buffer.readDocument();
-                this.temporaryProperties = tp.toInstance(DefaultTemporaryProperties.class);
                 break;
         }
     }
 
     @Override
+    public void editProperties(Consumer<Document> properties) {
+        properties.accept(this.properties);
+
+        this.saveOfflinePlayer();
+    }
+
+    @Override
     public boolean isOnline() {
-        return CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(this.uniqueId) != null;
+        return CloudDriver.getInstance().getPlayerManager().getCachedCloudPlayer(this.uniqueId) != null;
     }
 
     @Override
     public ICloudPlayer asOnlinePlayer() throws PlayerNotOnlineException {
         if (this.isOnline()) {
-            return CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(this.uniqueId);
+            return CloudDriver.getInstance().getPlayerManager().getCachedCloudPlayer(this.uniqueId);
         }
         throw new PlayerNotOnlineException();
     }
 
     @Override
-    public TemporaryProperties getTemporaryProperties() {
-
-        for (String propertyName : temporaryProperties.getPropertyNames()) {
-            if (temporaryProperties.hasPropertyExpired(propertyName)) {
-                temporaryProperties.removeProperty(propertyName);
-            }
-        }
-        this.saveOfflinePlayer();
-        return this.temporaryProperties;
-    }
-
-    @Override
     public void saveOfflinePlayer() {
-        CloudDriver.getInstance().getPlayerManager().saveOfflinePlayerAsync(this);
+        CloudDriver.getInstance().getPlayerManager().saveOfflinePlayer(this);
     }
 
     @Nonnull
@@ -98,5 +89,32 @@ public class DefaultCloudOfflinePlayer implements CloudOfflinePlayer {
     @Override
     public String getMainIdentity() {
         return uniqueId.toString();
+    }
+
+    @Override
+    public Document toDocument() {
+        if (properties == null) {
+            properties = Document.newJsonDocument();
+        }
+
+        properties = Document.newJsonDocument(properties.toString());
+
+        return Document.newJsonDocument()
+                .set("name", this.name)
+                .set("uniqueId", this.uniqueId)
+                .set("firstLogin", firstLogin)
+                .set("lastLogin", lastLogin)
+                .set("properties", properties.asRawJsonString())
+                ;
+    }
+
+    @Override
+    public void applyDocument(Document document) {
+        this.name = document.getString("name");
+        this.uniqueId = document.getUniqueId("uniqueId");
+        this.firstLogin = document.getLong("firstLogin");
+        this.lastLogin = document.getLong("lastLogin");
+      //  this.properties = Document.newJsonDocument(document.getDocument("properties").toString());
+        this.properties = Document.newJsonDocument(document.getString("properties"));
     }
 }

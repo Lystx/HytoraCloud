@@ -1,6 +1,6 @@
 package cloud.hytora.driver.services.template;
 
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,7 +12,7 @@ public interface TemplateManager {
 
     void registerStorage(TemplateStorage storage);
 
-    void deployService(@NotNull ICloudServer server, @NotNull ServiceDeployment... deployments);
+    void deployService(@NotNull ICloudService server, @NotNull ServiceDeployment... deployments);
 
     TemplateStorage getStorage(String name);
 }

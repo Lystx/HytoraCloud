@@ -8,7 +8,6 @@ import cloud.hytora.driver.permission.Permission;
 import cloud.hytora.driver.permission.PermissionGroup;
 import cloud.hytora.driver.permission.PermissionManager;
 import cloud.hytora.driver.permission.PermissionPlayer;
-import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.services.task.IServiceTask;
 import lombok.Getter;
@@ -25,18 +24,19 @@ import java.util.stream.Collectors;
 
 @Getter
 @NoArgsConstructor
+@Setter
 public class DefaultPermissionPlayer implements PermissionPlayer {
 
     private String name;
     private UUID uniqueId;
-    private Map<String, Long> permissions; //<Name, Instance>
+    public Map<String, Long> permissions; //<Name, Instance>
 
-    private Map<String, Long> groups; //<Name, TimeOut>
+    public Map<String, Long> groups; //<Name, TimeOut>
 
     @Setter
-    private Collection<String> deniedPermissions;
+    public Collection<String> deniedPermissions;
 
-    private Map<String, Collection<String>> taskPermissions;
+    public Map<String, Collection<String>> taskPermissions;
 
     public DefaultPermissionPlayer(String name, UUID uniqueId) {
         this.name = name;
@@ -121,41 +121,69 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
         }
     }
 
+    public void setTP(Map<String, Collection<String>> tp) {
+        this.taskPermissions = tp;
+    }
+
     @Override
     public void checkForExpiredValues() {
-        boolean modifiedGroups = this.testGroups();
-        boolean modifiedPerms = this.testPerms();
+        boolean modifiedGroups = this.hasRemovedGroups();
+        boolean modifiedPerms = this.hasRemovedPerms();
 
         if (modifiedGroups || modifiedPerms) {
             this.update();
         }
     }
 
-    public boolean testGroups() {
+    public boolean hasRemovedGroups() {
+        if (groups == null || groups.keySet() == null) {
+            return false;
+        }
+
+        Map<String, Long> permissionGroups = new HashMap<>(this.groups);
         long currentTime = System.currentTimeMillis();
-        int sizeBefore = groups.size();
-        for (String groupName : groups.keySet()) {
-            long timeOut = groups.get(groupName);
-            if (timeOut != -1 && currentTime > timeOut || CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).getPermissionGroupByNameOrNull(groupName) == null) {
+        int sizeBefore = permissionGroups.size();
+
+        for (String groupName : permissionGroups.keySet()) {
+            if (permissionGroups.get(groupName) == null) {
+                continue;
+            }
+            long timeOut = permissionGroups.get(groupName);
+
+            if (timeOut == -1 ) {
+                continue;
+            }
+            boolean groupNotFound = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).getPermissionGroupByNameOrNull(groupName) == null;
+            boolean timedOut = currentTime > timeOut;
+
+            if (timedOut || groupNotFound) {
+                CloudDriver.getInstance().getLogger().info("Removed expired group '{}' from {}", groupName, this.getName());
+                if (timedOut) {
+                    CloudDriver.getInstance().getLogger().info("==> Group '{}' has timedOut [TimedOut:{}]", groupName, timeOut);
+                } else {
+                    CloudDriver.getInstance().getLogger().info("==> Group '{}' could not be found. Listed Groups: [{}]", groupName, CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).getAllCachedPermissionGroups().stream().map(PermissionGroup::getName).collect(Collectors.toList()));
+                }
                 groups.remove(groupName);
             }
         }
         if (sizeBefore != groups.size())
-            CloudDriver.getInstance().getLogger().trace("Removed expired groups from {}", this.getName());
+            CloudDriver.getInstance().getLogger().info("Removed expired groups from {}", this.getName());
         return sizeBefore != groups.size();
     }
 
 
-    public boolean testPerms() {
+    public boolean hasRemovedPerms() {
         int sizeBefore = permissions.size();
         for (String permission : permissions.keySet()) {
             Permission dp = Permission.of(permission, permissions.get(permission));
             if (dp.hasExpired()) {
+                CloudDriver.getInstance().getLogger().info("Removed expired permission '{}' from {}", dp.getPermission(), this.getName());
+
                 permissions.remove(permission);
             }
         }
         if (sizeBefore != permissions.size())
-            CloudDriver.getInstance().getLogger().trace("Removed expired perms from {}", this.getName());
+            CloudDriver.getInstance().getLogger().info("Removed expired perms from {}", this.getName());
         return sizeBefore != permissions.size();
     }
 
@@ -227,13 +255,7 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
     @Nullable
     @Override
     public ICloudPlayer toOnlinePlayer() {
-        return CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(uniqueId);
-    }
-
-    @NotNull
-    @Override
-    public CloudOfflinePlayer toOfflinePlayer() {
-        return CloudDriver.getInstance().getPlayerManager().getOfflinePlayerByUniqueIdBlockingOrNull(uniqueId);
+        return CloudDriver.getInstance().getPlayerManager().getCachedCloudPlayer(uniqueId);
     }
 
     @NotNull

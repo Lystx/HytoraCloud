@@ -5,6 +5,7 @@ import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.document.bson.BsonDocument;
 import cloud.hytora.document.empty.EmptyDocument;
 import cloud.hytora.document.gson.GsonDocument;
+import cloud.hytora.document.map.MapDocument;
 import cloud.hytora.document.wrapped.StorableDocument;
 import cloud.hytora.document.wrapped.WrappedDocument;
 import com.google.gson.Gson;
@@ -22,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -86,6 +88,7 @@ public interface Document extends JsonEntity {
 	public static Document newJsonDocument(@Nonnull String key, @Nonnull Object value) {
 		return newJsonDocument().set(key, value);
 	}
+
 
 	@Nonnull
 	@CheckReturnValue

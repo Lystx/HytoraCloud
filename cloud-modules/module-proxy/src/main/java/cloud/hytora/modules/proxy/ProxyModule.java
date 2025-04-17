@@ -3,18 +3,22 @@ package cloud.hytora.modules.proxy;
 import cloud.hytora.common.collection.IRandom;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.scheduler.Scheduler;
-import cloud.hytora.context.annotations.Constructor;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.message.ChannelMessage;
+import cloud.hytora.driver.message.ChannelMessageListener;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.controller.AbstractModule;
+import cloud.hytora.driver.module.controller.base.ModuleConfiguration;
+import cloud.hytora.driver.module.controller.base.ModuleCopyType;
+import cloud.hytora.driver.module.controller.base.ModuleEnvironment;
 import cloud.hytora.driver.module.controller.base.ModuleState;
 import cloud.hytora.driver.module.controller.task.ModuleTask;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
-import cloud.hytora.modules.proxy.command.ProxyCommand;
+import cloud.hytora.modules.proxy.command.SmartProxyCommand;
 import cloud.hytora.modules.proxy.config.*;
 import cloud.hytora.modules.proxy.config.sub.MotdLayOut;
 import cloud.hytora.modules.proxy.config.sub.TabListFrame;
@@ -25,7 +29,17 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ProxyModule {
+@ModuleConfiguration(
+        name = "module-proxy",
+        main = ProxyModule.class,
+        author = "Lystx",
+        description = "",
+        version = "SNAPSHOT-1.0",
+        website = "https://github.com/Lystx/HytoraCloud/tree/master/cloud-modules/module-notify",
+        copyType = ModuleCopyType.NONE,
+        environment = ModuleEnvironment.NODE
+)
+public class ProxyModule extends AbstractModule {
 
     private final Logger logger = Logger.newInstance();
 
@@ -40,16 +54,14 @@ public class ProxyModule {
      */
     private ProxyConfig proxyConfig;
 
-    private final ModuleController controller;
-
     public ProxyModule(ModuleController controller) {
-        this.controller = controller;
-        System.out.println("Loaded ModuleController => " + controller);
+        super(controller);
+
+        instance = this;
     }
 
     @ModuleTask(id = 1, state = ModuleState.LOADED)
     public void load() {
-        instance = this;
 
         loadConfig();
     }
@@ -58,7 +70,20 @@ public class ProxyModule {
     public void enable() {
 
         CloudDriver.getInstance().getEventManager().registerListener(new ModuleListener());
-        CloudDriver.getInstance().getCommandManager().registerCommand(new ProxyCommand());
+        CloudDriver.getInstance().getCommandManager().registerCommand(new SmartProxyCommand());
+
+
+        Scheduler.runTimeScheduler().scheduleDelayedTask(() -> {
+            CloudDriver.getInstance().getChannelMessenger().registerChannel("cloud::module::proxy", new ChannelMessageListener() {
+                @Override
+                public void handleIncoming(ChannelMessage message) {
+                    if (message.getKey().equalsIgnoreCase("update")) {
+                        updateTabList();
+                        updateMotd();
+                    }
+                }
+            });
+        }, 50L);
 
         //scheduling tab update
         Scheduler.runTimeScheduler().scheduleRepeatingTask(this::updateTabList, 0L, (long) (proxyConfig.getTablist().getAnimationInterval() * 1000));
@@ -67,7 +92,7 @@ public class ProxyModule {
     @ModuleTask(id = 3, state = ModuleState.DISABLED)
     public void disable() {
         CloudDriver.getInstance().getEventManager().unregisterListener(ModuleListener.class);
-        CloudDriver.getInstance().getCommandManager().unregisterCommand(ProxyCommand.class);
+        CloudDriver.getInstance().getCommandManager().unregisterCommand(SmartProxyCommand.class);
     }
 
 
@@ -103,7 +128,7 @@ public class ProxyModule {
             cloudPlayer.getProxyServerAsync().onTaskSucess(proxyServer -> {
 
                 PlayerExecutor executor = PlayerExecutor.forPlayer(cloudPlayer);
-                ICloudServer server = cloudPlayer.getServer();
+                ICloudService server = cloudPlayer.getServer();
 
                 if (server != null) {
                     header[0] = server.replacePlaceHolders(header[0]);
@@ -136,10 +161,10 @@ public class ProxyModule {
             if (motd == null) {
                 continue;
             }
-            for (ICloudServer ICloudServer : CloudDriver.getInstance().getServiceManager().getAllServicesByEnvironment(SpecificDriverEnvironment.PROXY)) {
-                ICloudServer.editPingProperties(ping -> {
-                    ping.setMotd(replaceDefault(ICloudServer, (motd.getFirstLine() + "\n" + motd.getSecondLine())));
-                    ping.setVersionText(replaceDefault(ICloudServer, motd.getProtocolText()));
+            for (ICloudService service : CloudDriver.getInstance().getServiceManager().getAllServicesByEnvironment(SpecificDriverEnvironment.PROXY)) {
+                service.editPingProperties(ping -> {
+                    ping.setMotd(replaceDefault(service, (motd.getFirstLine() + "\n" + motd.getSecondLine())));
+                    ping.setVersionText(replaceDefault(service, motd.getProtocolText()));
                     ping.setPlayerInfo(motd.getPlayerInfo().toArray(new String[0]));
                     ping.setCombineAllProxiesIfProxyService(true);
                     ping.setUsePlayerPropertiesOfService(true);
@@ -148,7 +173,7 @@ public class ProxyModule {
         }
     }
 
-    protected String replaceDefault(ICloudServer info, String content) {
+    protected String replaceDefault(ICloudService info, String content) {
         if (content == null) {
             return "";
         }

@@ -3,10 +3,20 @@ package cloud.hytora.driver.command;
 import cloud.hytora.driver.command.sender.CommandSender;
 import cloud.hytora.driver.command.sender.ConsoleCommandSender;
 import cloud.hytora.driver.command.sender.PlayerCommandSender;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 import javax.annotation.Nonnull;
 
 
+/**
+ * A {@link CommandScope} defines where a certain {@link cloud.hytora.driver.command.annotation.Command}
+ * is allowed to be executed or where a command is hosted
+ *
+ *
+ */
+@AllArgsConstructor
+@Getter
 public enum CommandScope {
 
 	/**
@@ -39,23 +49,27 @@ public enum CommandScope {
 
 	private final boolean console, ingame;
 
+	/**
+	 * Sets the default values
+	 */
 	CommandScope() {
 		console = name().contains("CONSOLE");
 		ingame = name().contains("INGAME");
 	}
 
-	public boolean isConsole() {
-		return console;
-	}
-
-	public boolean isIngame() {
-		return ingame;
-	}
-
+	/**
+	 * @return if command can be executed ingame and console-sided
+	 */
 	public boolean isUniversal() {
 		return this == CONSOLE_AND_INGAME;
 	}
 
+	/**
+	 * Checks if the given {@link CommandSender} covers this {@link CommandScope}
+	 *
+	 * @param sender the sender to check
+	 * @return true or false
+	 */
 	public boolean covers(@Nonnull CommandSender sender) {
 		if (sender instanceof PlayerCommandSender && isIngame()) return true;
 		return sender instanceof ConsoleCommandSender && isConsole();

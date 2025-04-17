@@ -23,7 +23,7 @@ public @interface ScheduledModuleTask {
      *
      * @return long delay
      */
-    long delay();
+    long delay() default  -1;
 
     /**
      * The repeating tick if it should repeat

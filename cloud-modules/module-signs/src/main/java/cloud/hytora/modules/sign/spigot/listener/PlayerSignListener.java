@@ -4,7 +4,7 @@ package cloud.hytora.modules.sign.spigot.listener;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.modules.sign.api.CloudSignAPI;
 import cloud.hytora.modules.sign.api.ICloudSign;
 import cloud.hytora.modules.sign.spigot.BukkitCloudSignAPI;
@@ -32,7 +32,7 @@ public class PlayerSignListener implements Listener {
 
         Sign sign = (Sign) event.getClickedBlock().getState();
         Player player = event.getPlayer();
-        ICloudPlayer cloudPlayer = CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(player.getUniqueId());
+        ICloudPlayer cloudPlayer = CloudDriver.getInstance().getPlayerManager().getCachedCloudPlayer(player.getUniqueId());
         ICloudSign cloudSign = ((BukkitCloudSignAPI) CloudSignAPI.getInstance()).getSignUpdater().getCloudSign(sign.getLocation());
 
         if (cloudPlayer != null && cloudSign != null && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
@@ -40,7 +40,7 @@ public class PlayerSignListener implements Listener {
             if (s == null) {
                 return; //no server for this sign (offline layout)
             }
-            ICloudServer service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(s);
+            ICloudService service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(s);
             if (service == null) {
                 return;
             }

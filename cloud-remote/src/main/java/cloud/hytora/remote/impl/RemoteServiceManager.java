@@ -7,17 +7,25 @@ import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUpdateEvent;
 import cloud.hytora.driver.networking.packets.RedirectPacket;
+import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
+import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
+import cloud.hytora.driver.networking.protocol.packets.NetworkResponseState;
 import cloud.hytora.driver.node.packet.NodeRequestServerStartPacket;
+import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.services.packet.ServiceForceShutdownPacket;
 import cloud.hytora.driver.services.packet.ServiceRequestShutdownPacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
-import cloud.hytora.driver.services.ICloudServer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.impl.DefaultServiceManager;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 
+import cloud.hytora.driver.services.utils.ServiceState;
+import cloud.hytora.driver.services.utils.ServiceVisibility;
 import cloud.hytora.remote.Remote;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Comparator;
 
 public class RemoteServiceManager extends DefaultServiceManager {
 
@@ -25,20 +33,38 @@ public class RemoteServiceManager extends DefaultServiceManager {
         AdvancedNetworkExecutor executor = CloudDriver.getInstance().getExecutor();
         executor.registerPacketHandler((PacketHandler<ServiceForceShutdownPacket>) (ctx, packet) -> {
             if (packet.getService().equalsIgnoreCase(Remote.getInstance().thisService().getName())) {
+
+                ICloudService cloudServer = Remote.getInstance().thisService();
+                cloudServer.setServiceState(ServiceState.STOPPING);
+                cloudServer.setServiceVisibility(ServiceVisibility.INVISIBLE);
+                cloudServer.update();
                 Remote.getInstance().shutdown();
             }
         });
     }
 
+
+    @Override
+    public ICloudService findFallback(ICloudPlayer player) {
+        return CloudDriver.getInstance().getServiceManager().getAllCachedServices().stream()
+                .filter(service -> service.getServiceState() == ServiceState.ONLINE)
+                .filter(service -> service.getServiceVisibility() == ServiceVisibility.VISIBLE)
+                .filter(service -> !service.getTask().getVersion().isProxy())
+                .filter(service -> service.getTask().getFallback().isEnabled())
+                .filter(service -> (player.getServer() == null || !player.getServer().getName().equals(service.getName())))
+                .min(Comparator.comparing(s -> s.getOnlinePlayers().size()))
+                .orElse(null);
+    }
+
     @EventListener
     public void handleAdd(ServiceRegisterEvent event) {
-        ICloudServer server = event.getCloudServer();
+        ICloudService server = event.getCloudServer();
         this.registerService(server);
     }
 
     @EventListener
     public void handleRemove(ServiceUnregisterEvent event) {
-        ICloudServer server = this.getServiceByNameOrNull(event.getService());
+        ICloudService server = this.getServiceByNameOrNull(event.getService());
         if (server == null) {
             return;
         }
@@ -47,43 +73,53 @@ public class RemoteServiceManager extends DefaultServiceManager {
 
     @EventListener
     public void handleUpdate(ServiceUpdateEvent event) {
-        ICloudServer server = event.getService();
+        ICloudService server = event.getService();
 
         this.updateServerInternally(server);
     }
 
 
     @Override
-    public Task<ICloudServer> startService(@NotNull ICloudServer service) {
+    public Task<ICloudService> startService(@NotNull ICloudService service) {
+        Task<ICloudService> task = Task.empty();
+        AbstractPacket packet = new NodeRequestServerStartPacket(service, false);
 
-        new NodeRequestServerStartPacket(service, false).publishTo(service.getRunningNodeName());
-        return Task.build(service);
+        packet.awaitResponse(service.getRunningNodeName())
+                .onTaskSucess(response -> {
+                    if (response.state() == NetworkResponseState.OK) {
+                        task.setResult(service);
+                    } else if (response.state() == NetworkResponseState.FAILED) {
+                        task.setFailure(response.error());
+                    }
+
+                });
+        return task;
     }
 
     @Override
-    public ICloudServer thisServiceOrNull() {
+    public ICloudService thisServiceOrNull() {
         return getAllCachedServices().stream().filter(s -> s.getName().equalsIgnoreCase(Remote.getInstance().getProperty().getName())).findFirst().orElse(null);
     }
 
     @Override
-    public Task<ICloudServer> thisService() {
+    public Task<ICloudService> thisService() {
         return Task.callAsyncNonNull(() -> getAllCachedServices().stream().filter(s -> s.getName().equalsIgnoreCase(Remote.getInstance().getProperty().getName())).findFirst().orElse(null));
     }
 
     @Override
-    public void shutdownService(ICloudServer service) {
+    public void shutdownService(ICloudService service) {
         CloudDriver.getInstance().getExecutor().sendPacket(new ServiceRequestShutdownPacket(service.getName()));
     }
 
 
     @Override
-    public void updateService(@NotNull ICloudServer service) {
+    public void updateService(@NotNull ICloudService service) {
         this.updateServerInternally(service);
         CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceUpdateEvent(service));
     }
 
     @Override
-    public void sendPacketToService(ICloudServer service, IPacket packet) {
+    public void sendPacketToService(ICloudService service, IPacket packet) {
         if (service.getName().equalsIgnoreCase(Remote.getInstance().thisService().getName())) {
             CloudDriver.getInstance().getExecutor().handlePacket(null, packet);
             return;

@@ -2,7 +2,7 @@ package cloud.hytora.bridge.proxy.bungee.events.server;
 
 import cloud.hytora.document.Bundle;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.command.CommandObject;
+import cloud.hytora.driver.command.DriverCommandInfo;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.data.RegisteredCommand;
 import cloud.hytora.driver.common.CloudMessages;
@@ -25,7 +25,7 @@ public class ProxyPlayerCommandListener implements Listener {
         if (event.isCommand() || event.isProxyCommand()) {
 
             ProxiedPlayer proxiedPlayer = (ProxiedPlayer)event.getSender();
-            ICloudPlayer cloudPlayer = CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(proxiedPlayer.getUniqueId());
+            ICloudPlayer cloudPlayer = CloudDriver.getInstance().getPlayerManager().getCachedCloudPlayer(proxiedPlayer.getUniqueId());
 
             if (cloudPlayer == null) {
                 proxiedPlayer.disconnect(CloudMessages.getInstance().getPrefix() + " §cCouldn't find your CloudPlayer. Please rejoin!");
@@ -35,11 +35,11 @@ public class ProxyPlayerCommandListener implements Listener {
 
             DriverStorage storage = CloudDriver.getInstance().getStorage();
             Bundle bundle = storage.getBundle("ingameCommands");
-            List<CommandObject> commands = bundle.toList(CommandObject.class);
+            List<DriverCommandInfo> commands = bundle.toList(DriverCommandInfo.class);
 
             String commandLine = event.getMessage().replace("/", "");
             String finalCommandLine = commandLine;
-            CommandObject commandObject = commands.stream().filter(c -> finalCommandLine.startsWith(c.getPath())).findFirst().orElse(null);
+            DriverCommandInfo commandObject = commands.stream().filter(c -> finalCommandLine.startsWith(c.getPath())).findFirst().orElse(null);
             if (commandObject != null) {
                 if (commandLine.startsWith("cloud ")) {
                     commandLine = commandLine.replace("cloud ", "");
