@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 
 @Getter
@@ -262,14 +263,48 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
     @Override
     public Collection<PermissionGroup> getPermissionGroups() {
         this.checkForExpiredValues();
-        return this.groups.keySet().stream().map(s -> CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).getPermissionGroupByNameOrNull(s)).collect(Collectors.toList());
+        return this.groups.keySet().stream().map(s -> {
+            PermissionGroup permissionGroup = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).getPermissionGroupByNameOrNull(s);
+            if (permissionGroup == null) {
+                System.out.println("No permissionGroup found by Name " + s);
+            }
+            return permissionGroup;
+        }).collect(Collectors.toList());
     }
 
     @Nullable
     @Override
     public PermissionGroup getHighestGroup() {
         this.checkForExpiredValues();
-        return getPermissionGroups().stream().min(Comparator.comparingInt(PermissionGroup::getSortId)).orElse(null);
+        Collection<PermissionGroup> permissionGroups = getPermissionGroups();
+        if (permissionGroups.isEmpty()) {
+            return null;
+        }
+        PermissionGroup group = null;
+        for (PermissionGroup permissionGroup : permissionGroups) {
+            if (permissionGroup == null) {
+                continue;
+            }
+            if (group == null) {
+                group = permissionGroup;
+            }
+            if (permissionGroup.getSortId() < group.getSortId()) {
+                group = permissionGroup;
+            }
+        }
+        return group;
+        /*
+        ArrayList<PermissionGroup> wrapped = new ArrayList<>(permissionGroups);
+        return wrapped.stream().min(Comparator.comparingInt(new ToIntFunction<PermissionGroup>() {
+            @Override
+            public int applyAsInt(PermissionGroup value) {
+                if (value == null) {
+                    return 99999;
+                }
+                return Integer.valueOf(value.getSortId());
+            }
+        })).orElse(null);*/
+        //return wrapped.stream().min(Comparator.comparingInt(PermissionGroup::getSortId)).orElse(null);
     }
 
     @Override

@@ -9,9 +9,11 @@ import cloud.hytora.driver.permission.PermissionGroup;
 import cloud.hytora.driver.permission.PermissionManager;
 import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.modules.cloud.setup.GroupSetup;
 import cloud.hytora.modules.global.impl.DefaultPermissionPlayer;
+import cloud.hytora.modules.global.packets.PermsCacheUpdatePacket;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -43,6 +45,27 @@ public class PermsCommand {
         sender.sendMessage("§bAll Groups: §7" + player.getPermissionGroups().stream().map(PermissionGroup::getName).collect(Collectors.joining(", ")));
         sender.sendMessage("§bPermissions: §7" + player.getPermissions().size());
         sender.sendMessage("§8");
+    }
+
+    @Command("debug")
+    @Command.Syntax("<server>")
+    public void onDebug(CommandSender sender, @Command.Argument("server") ICloudService service) {
+
+        if (service == null) {
+            sender.sendMessage("§cThere is no such service online!");
+            return;
+        }
+
+
+        service.sendDocument(
+                new PermsCacheUpdatePacket(
+                        CloudDriver.getInstance()
+                                .getProviderRegistry()
+                                .getUnchecked(PermissionManager.class)
+                                .getAllCachedPermissionGroups()
+                )
+        );
+        sender.sendMessage("§aDone! Debugged");
     }
 
     @Command("user")

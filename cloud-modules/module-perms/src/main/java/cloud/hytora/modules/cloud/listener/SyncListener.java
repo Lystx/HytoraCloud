@@ -64,8 +64,8 @@ public class SyncListener {
     }
 
     @EventListener
-    public void handle(ServiceReadyEvent event) {
-        ICloudService cloudServer = event.getCloudServer();
+    public void handle(ServiceClusterConnectEvent event) {
+        ICloudService cloudServer = event.getCloudService();
 
         //updating cache of service
 

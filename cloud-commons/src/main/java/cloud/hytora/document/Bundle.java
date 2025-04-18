@@ -336,6 +336,7 @@ public interface Bundle extends JsonEntity, Iterable<IEntry> {
 	@Nonnull
 	<T> List<T> toInstances(@Nonnull Class<T> classOfT);
 
+
 	@Nonnull
 	default List<String> toStrings() {
 		return toInstances(String.class);

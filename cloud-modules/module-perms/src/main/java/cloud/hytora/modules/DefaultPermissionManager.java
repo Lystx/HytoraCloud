@@ -30,9 +30,9 @@ public abstract class DefaultPermissionManager implements PermissionManager {
         CloudDriver.getInstance().getProviderRegistry().setProvider(PermissionChecker.class, this);
 
         CloudDriver.getInstance().getChannelMessenger().registerPacketChannel("cloud_module_perms", (Consumer<PermsCacheUpdatePacket>) packet -> {
+            CloudDriver.getInstance().getLogger().debug("====> [Packet] Updated whole cache! [" + packet.getPermissionGroups().size() + "]");
             getAllCachedPermissionGroups().clear();
             getAllCachedPermissionGroups().addAll(packet.getPermissionGroups());
-            CloudDriver.getInstance().getLogger().debug("====> [Packet] Updated whole cache! [" + packet.getPermissionGroups().size() + "]");
         });
         CloudDriver.getInstance().getChannelMessenger().registerPacketChannel("cloud_module_perms", (Consumer<PermsGroupUpdatePacket>) packet -> {
             getAllCachedPermissionGroups().removeIf(g -> g.getName().equalsIgnoreCase(packet.getGroup().getName()));
@@ -47,6 +47,9 @@ public abstract class DefaultPermissionManager implements PermissionManager {
             /*if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
                 packet.publish(); //now sending update to every server
             }*/
+            /*CloudDriver.getInstance().getLogger().debug("====> [Packet] Updated whole cache! [" + packet.getGroups().size() + "]");
+            getAllCachedPermissionGroups().clear();
+            getAllCachedPermissionGroups().addAll(packet.getGroups());*/
             CloudDriver.getInstance().getLogger().debug("====> [Packet] Cached Player '" + packet.getPlayer().getName() + "' !");
             CloudDriver.getInstance().getLogger().debug("=====> Now cache in total: " + CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).getAllCachedPermissionPlayers().size());
         });

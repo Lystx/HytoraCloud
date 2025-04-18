@@ -29,7 +29,7 @@ public class PermsCacheUpdatePacket implements DocumentPacket {
 
     @Override
     public String getChannel() {
-        return "cloud_module_perms_test";
+        return "cloud_module_perms";
     }
 
     @Override

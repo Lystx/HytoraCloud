@@ -2,6 +2,7 @@ package cloud.hytora.driver.message;
 
 import cloud.hytora.driver.networking.NetworkComponent;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -62,5 +63,5 @@ public interface ChannelMessenger {
      *
      * @return cache
      */
-    Map<String, ChannelMessageListener> getCache();
+    Map<String, Collection<ChannelMessageListener>> getCache();
 }

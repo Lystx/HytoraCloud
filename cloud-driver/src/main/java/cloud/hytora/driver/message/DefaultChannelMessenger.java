@@ -9,15 +9,13 @@ import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import lombok.Getter;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 @Getter
 public abstract class DefaultChannelMessenger implements ChannelMessenger {
 
-    private final Map<String, ChannelMessageListener> cache;
+    private final Map<String, Collection<ChannelMessageListener>> cache;
     protected final AdvancedNetworkExecutor executor;
 
     public DefaultChannelMessenger(AdvancedNetworkExecutor executor) {
@@ -28,13 +26,16 @@ public abstract class DefaultChannelMessenger implements ChannelMessenger {
             ChannelMessage message = packet.getChannelMessage();
 
             NetworkComponent[] receivers = message.getReceivers();
-            if (receivers == null || receivers.length == 0 || Arrays.stream(receivers).anyMatch(r -> r.matches(executor))) {
+            if (receivers == null || receivers.length == 0 || Arrays.stream(receivers).anyMatch(r -> r.getName().equalsIgnoreCase(executor.getName()))) {
                 String channel = message.getChannel();
-                ChannelMessageListener handler = cache.get(channel);
+                Collection<ChannelMessageListener> handler = cache.get(channel);
                 if (handler == null) {
                     return;
                 }
-                handler.handleIncoming(message);
+                for (ChannelMessageListener listener : handler) {
+
+                    listener.handleIncoming(message);
+                }
             }
         });
     }
@@ -56,6 +57,7 @@ public abstract class DefaultChannelMessenger implements ChannelMessenger {
         packet.handleData(BufferState.WRITE, data);
         ChannelMessage message = new ChannelMessageBuilder()
                 .channel(packet.getChannel())
+                .receivers(receiver)
                 .key(packet.getClass().getName())
                 .document(data)
                 .build();
@@ -65,24 +67,23 @@ public abstract class DefaultChannelMessenger implements ChannelMessenger {
 
     @Override
     public <T extends DocumentPacket> void registerPacketChannel(String channel, Consumer<T> handler) {
-        this.registerChannel(channel, new ChannelMessageListener() {
-            @Override
-            public void handleIncoming(ChannelMessage message) {
-                try {
-                    String className = message.getKey();
-                    T packet = (T) ReflectionUtils.createEmpty(Class.forName(className));
-                    packet.handleData(BufferState.READ, message.getDocument());
-                    handler.accept(packet);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        this.registerChannel(channel, message -> {
+            try {
+                String className = message.getKey();
+                T packet = (T) ReflectionUtils.createEmpty(Class.forName(className));
+                packet.handleData(BufferState.READ, message.getDocument());
+                handler.accept(packet);
+            } catch (Exception e) {
+                //wrong handler ignoring
             }
         });
     }
 
     @Override
     public void registerChannel(String channel, ChannelMessageListener consumer) {
-        this.cache.put(channel, consumer);
+        Collection<ChannelMessageListener> channelMessageListeners = this.cache.getOrDefault(channel, new ArrayList<>());
+        channelMessageListeners.add(consumer);
+        this.cache.put(channel, channelMessageListeners);
     }
 
     @Override
