@@ -82,7 +82,7 @@ public class Launcher extends DriverUtility {
     public Launcher(Logger logger, String[] args) throws IOException {
         this.args = args;
         this.logger = logger;
-        this.dependencies = newList();
+        this.dependencies = DriverUtility.newList();
         this.repositories = new HashMap<>();
 
         VersionInfo version = VersionInfo.getCurrentVersion();
@@ -163,13 +163,13 @@ public class Launcher extends DriverUtility {
     private void checkForUpdates(VersionInfo version, String... args) {
         if (USE_AUTO_UPDATER) {
             logger.info("Checking for Updates...");
-            if (!version.isUpToDate() || LAUNCHER_VERSIONS.toFile().listFiles().length == 0) {
+            if (!version.isUpToDate() || Objects.requireNonNull(LAUNCHER_VERSIONS.toFile().listFiles()).length == 0) {
                 logger.info("Version (" + version + ") is outdated or your cloud.jar is not existing at all!");
-                logger.info("==> Downloading latest HytoraCloud version...");
+                logger.info("==> Downloading latest HytoraCloud version [ver={}]...", VersionInfo.getNewestVersion("UNKNOWN").toString());
 
                 Path zippedFile = LAUNCHER_DIR.resolve("hytoraCloud.zip");
                 LauncherUtils.downloadVersion(getNewestVersionDownloadUrl(), zippedFile).onTaskSucess(v -> {
-                    logger.info("Downloaded latest RELEASE!");
+                    logger.info("Downloaded latest RELEASE! => " + VersionInfo.getNewestVersion("UNKNOWN").toString());
                     logger.info("Unzipping...");
 
                     ZipUtils.unzipDirectory(zippedFile, "unzipped");
@@ -252,13 +252,16 @@ public class Launcher extends DriverUtility {
 
 
     public String getNewestVersionDownloadUrl() {
-        VersionInfo newestVersion = VersionInfo.getNewestVersion("1.5");
+        VersionInfo newestVersion = VersionInfo.getNewestVersion(VersionInfo.getCurrentVersion().toString());
+
+        String url = "https://raw.github.com/Lystx/HytoraCloud/master/hytoraCloud-updater/" + newestVersion.getVersion();
+        String zipFileUrl = url + "cloud.zip";
 
         String urlString = DOWNLOAD_URL;
         urlString = urlString.replace("{version}", String.valueOf(newestVersion.getVersion()));
         urlString = urlString.replace("{type}", String.valueOf(newestVersion.getType()));
 
-        return urlString;
+        return zipFileUrl;
     }
 
 
@@ -298,7 +301,7 @@ public class Launcher extends DriverUtility {
         IdentifiableClassLoader classLoader = new IdentifiableClassLoader(dependencyResources.toArray(new URL[0]));
         Method method = classLoader.loadClass(mainClass).getMethod("main", String[].class);
 
-        Collection<String> arguments = listOf(args);
+        Collection<String> arguments = DriverUtility.listOf(args);
         arguments.add("--moduleFolder=" + LAUNCHER_MODULES.toString());
 
         Thread thread = new Thread(() -> {

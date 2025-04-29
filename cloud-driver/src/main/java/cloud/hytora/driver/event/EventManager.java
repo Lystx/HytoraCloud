@@ -1,6 +1,7 @@
 package cloud.hytora.driver.event;
 
 import cloud.hytora.common.task.Task;
+import cloud.hytora.driver.PublishingType;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -50,26 +51,8 @@ public interface EventManager {
 	@Nonnull
 	EventManager unregisterAll();
 
-	@Nonnull
-	<E extends CloudEvent> E callEventGlobally(@Nonnull E event);
 
 	@Nonnull
-	<E extends ProtocolTansferableEvent> E callEventOnlyPacketBased(@Nonnull E event);
-
-	@Nonnull
-	<E extends CloudEvent> E callEventOnlyLocally(@Nonnull E event);
-
-	@Nonnull
-	<E extends CloudEvent> Task<E> nextEvent(@Nonnull Class<E> eventClass);
-
-	@Nonnull
-	default <E extends CloudEvent> E awaitNextEvent(@Nonnull Class<E> eventClass) {
-		return nextEvent(eventClass).syncUninterruptedly().get();
-	}
-
-	@Nullable
-	default <E extends CloudEvent> E awaitNextEvent(@Nonnull Class<E> eventClass, long timeout, @Nonnull TimeUnit unit) {
-		return nextEvent(eventClass).timeOut(unit, (int) timeout).syncUninterruptedly().get();
-	}
+	<E extends CloudEvent> E callEvent(@Nonnull E event, PublishingType... type);
 
 }

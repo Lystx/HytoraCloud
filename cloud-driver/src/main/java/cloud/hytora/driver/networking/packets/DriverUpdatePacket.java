@@ -77,7 +77,7 @@ public class DriverUpdatePacket extends AbstractPacket {
                 connectedNodes = buf.readWrapperObjectCollection(UniversalNode.class);
                 CloudDriver.getInstance().getNodeManager().setAllCachedNodes((List<INode>) connectedNodes);
 
-                CloudDriver.getInstance().getEventManager().callEventOnlyLocally(new DriverCacheUpdateEvent());
+                CloudDriver.getInstance().getEventManager().callEvent(new DriverCacheUpdateEvent());
                 break;
 
             case WRITE:

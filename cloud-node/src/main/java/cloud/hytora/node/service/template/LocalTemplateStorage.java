@@ -1,6 +1,7 @@
 package cloud.hytora.node.service.template;
 
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.HytoraCloudConstants;
 import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.IProcessCloudServer;
 import cloud.hytora.driver.services.task.IServiceTask;
@@ -72,7 +73,7 @@ public class LocalTemplateStorage implements TemplateStorage {
                 if (name.equalsIgnoreCase("GLOBAL") || name.equals("GLOBAL_SERVICE") || name.equals("GLOBAL_PROXY")) {
                     continue;
                 }
-                IServiceTask con = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
+                IServiceTask con = CloudDriver.getInstance().getServiceTaskManager().getCachedServiceTask(name);
                 if (con == null) {
                     FileUtils.deleteDirectory(file);
                 }
@@ -131,7 +132,7 @@ public class LocalTemplateStorage implements TemplateStorage {
                     if (!deployment.getOnlyIncludedFiles().isEmpty() && !deployment.getOnlyIncludedFiles().contains(fileName)) {
                         continue;
                     }
-                    if (deployment.getExclusionFiles().contains(fileName) || fileName.equalsIgnoreCase("remote.jar") || fileName.equalsIgnoreCase("plugin.jar")) {
+                    if (deployment.getExclusionFiles().contains(fileName) || fileName.equalsIgnoreCase(HytoraCloudConstants.REMOTE_FILE_NAME) || fileName.equalsIgnoreCase( HytoraCloudConstants.BRIDGE_FILE_NAME)) {
                         continue;
                     }
 

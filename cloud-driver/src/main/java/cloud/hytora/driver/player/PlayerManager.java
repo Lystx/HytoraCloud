@@ -2,6 +2,7 @@ package cloud.hytora.driver.player;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.PublishingType;
 import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
 import org.jetbrains.annotations.NotNull;
@@ -51,19 +52,11 @@ public interface PlayerManager {
     }
 
     /**
-     * registers a cloud player
-     *
-     * @param uniqueId the unique id of the player
-     * @param username the username of the player
-     */
-    void registerCloudPlayer(@NotNull UUID uniqueId, @NotNull String username);
-
-    /**
      * update a cloud player
      *
      * @param cloudPlayer the unique id of the player
      */
-    void updateCloudPlayer(@NotNull ICloudPlayer cloudPlayer);
+    void updateCloudPlayer(@NotNull ICloudPlayer cloudPlayer, PublishingType... type);
 
     /**
      * unregisters a cloud player

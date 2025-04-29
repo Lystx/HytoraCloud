@@ -49,10 +49,10 @@ public class ServiceUnregisterEvent implements ProtocolTansferableEvent {
     }
 
     public ICloudService getCloudServer() {
-        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(this.service);
+        return CloudDriver.getInstance().getServiceManager().getCachedCloudService(this.service);
     }
 
     public Task<ICloudService> getCloudServerAsync() {
-        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNullAsync(this.service);
+        return CloudDriver.getInstance().getServiceManager().getCloudService(this.service);
     }
 }

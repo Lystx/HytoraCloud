@@ -121,6 +121,7 @@ public class RemotePermissionManager extends DefaultPermissionManager{
             packet.awaitResponse().onTaskSucess(bufferedResponse -> {
                 DefaultPermissionPlayer defaultPermissionPlayer = bufferedResponse.buffer().readObject(DefaultPermissionPlayer.class);
                 task.setResult(defaultPermissionPlayer);
+                addToCache(defaultPermissionPlayer);
             });
         } else {
             task.setResult(player);
@@ -138,6 +139,7 @@ public class RemotePermissionManager extends DefaultPermissionManager{
             packet.awaitResponse().onTaskSucess(bufferedResponse -> {
                 DefaultPermissionPlayer defaultPermissionPlayer = bufferedResponse.buffer().readObject(DefaultPermissionPlayer.class);
                 task.setResult(defaultPermissionPlayer);
+                addToCache(defaultPermissionPlayer);
             });
         } else {
             task.setResult(player);
@@ -160,6 +162,16 @@ public class RemotePermissionManager extends DefaultPermissionManager{
         this.allCachedPermissionPlayers.removeIf(p -> p.getUniqueId().equals(player.getUniqueId()));
 
         this.allCachedPermissionPlayers.add(player);
+
+        CloudDriver.getInstance().getPlayerManager().getOfflinePlayer(player.getUniqueId())
+                .onTaskSucess(offlinePlayer -> {
+                    if (offlinePlayer.getProperties().has("module_perms_highest_group")) {
+                        return;
+                    }
+                    offlinePlayer.editProperties(properties -> {
+                        properties.set("module_perms_highest_group", player.getHighestGroup().getName());
+                    });
+                });
     }
 
 }

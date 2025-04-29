@@ -1,14 +1,10 @@
 package cloud.hytora.modules.cloud.listener;
 
-import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.player.CloudPlayerChangeServerEvent;
 import cloud.hytora.driver.event.defaults.player.CloudPlayerLoginEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceClusterConnectEvent;
-import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
-import cloud.hytora.driver.message.ChannelMessage;
-import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.permission.PermissionGroup;
 import cloud.hytora.driver.permission.PermissionManager;
 import cloud.hytora.driver.permission.PermissionPlayer;
@@ -17,8 +13,6 @@ import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.modules.cloud.ModulePermissionManager;
 import cloud.hytora.modules.global.impl.DefaultPermissionPlayer;
 import cloud.hytora.modules.global.packets.PermsCacheUpdatePacket;
-import cloud.hytora.modules.global.packets.PermsGroupUpdatePacket;
-import cloud.hytora.modules.global.packets.PermsPlayerUpdatePacket;
 import cloud.hytora.modules.global.packets.PermsUpdatePlayerPacket;
 
 public class SyncListener {
@@ -27,7 +21,7 @@ public class SyncListener {
     public void handle(CloudPlayerLoginEvent event) {
 
         ICloudPlayer cloudPlayer = event.getCloudPlayer();
-        PermissionManager permissionManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class);
+        PermissionManager permissionManager = CloudDriver.getInstance().getProvider(PermissionManager.class);
         PermissionPlayer permissionPlayer = permissionManager.getPlayerByUniqueIdOrNull(cloudPlayer.getUniqueId());
 
         if (permissionPlayer == null) {
@@ -43,7 +37,6 @@ public class SyncListener {
                 }
                 ((ModulePermissionManager) permissionManager).addToCache(permissionPlayer);
                 permissionPlayer.update();
-                cloudPlayer.sendMessage("§7Deine PermsGroup lautet: §e" + permissionPlayer.getHighestGroup().getName());
             }
         } else if (permissionPlayer.getHighestGroup() == null) {
 
@@ -72,8 +65,8 @@ public class SyncListener {
         cloudServer.sendDocument(
                 new PermsCacheUpdatePacket(
                         CloudDriver.getInstance()
-                                .getProviderRegistry()
-                                .getUnchecked(PermissionManager.class)
+                                
+                                .getProvider(PermissionManager.class)
                                 .getAllCachedPermissionGroups()
                 )
         );

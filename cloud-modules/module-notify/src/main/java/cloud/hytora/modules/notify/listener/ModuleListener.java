@@ -9,6 +9,7 @@ import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
 import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.modules.notify.NotifyModule;
+import cloud.hytora.modules.notify.NotifyState;
 import cloud.hytora.modules.notify.config.NotifyConfiguration;
 
 public class ModuleListener {
@@ -17,7 +18,7 @@ public class ModuleListener {
     public void handleAdd(ServiceRegisterEvent event) {
         ICloudService cloudServer = event.getCloudServer();
 
-        this.notifyNetwork(0, cloudServer);
+        this.notifyNetwork(NotifyState.START, cloudServer);
     }
 
 
@@ -27,7 +28,7 @@ public class ModuleListener {
         if (cloudServer == null) {
             return;
         }
-        this.notifyNetwork(1, cloudServer);
+        this.notifyNetwork(NotifyState.STOP, cloudServer);
     }
 
     @EventListener
@@ -36,7 +37,7 @@ public class ModuleListener {
         if (cloudServer == null) {
             return;
         }
-        this.notifyNetwork(2, cloudServer);
+        this.notifyNetwork(NotifyState.READY, cloudServer);
     }
 
     /**
@@ -44,9 +45,9 @@ public class ModuleListener {
      * receiving notification messages from this module
      *
      * @param state       the state of message (0 = start, 1 = stop, 2 = ready)
-     * @param ICloudServer the server to get info about
+     * @param cloudService the server to get info about
      */
-    public void notifyNetwork(int state, ICloudService ICloudServer) {
+    public void notifyNetwork(NotifyState state, ICloudService cloudService) {
         NotifyConfiguration config = NotifyModule.getInstance().getConfiguration();
 
         //if module is disabled just ignore execution
@@ -56,31 +57,34 @@ public class ModuleListener {
 
 
         String message = "";
-        if (state == 2 && !config.isShowReadyMessage()) { //if state is READY but config has disabled this extra message -> ignore execution
+        if (state == NotifyState.READY && !config.isShowReadyMessage()) { //if state is READY but config has disabled this extra message -> ignore execution
             return;
         }
 
         switch (state) {
-            case 0: //starting of server
+            case START: //starting of server
                 message = config.getMessages().getStartMessage();
                 break;
-            case 1: //stopping of server
+            case STOP: //stopping of server
                 message = config.getMessages().getStopMessage();
                 break;
 
-            case 2: //ready of server
+            case READY: //ready of server
                 message = config.getMessages().getReadyMessage();
                 break;
         }
 
         //applying placeholders
-        message = ICloudServer.replacePlaceHolders(message);
+        message = cloudService.replacePlaceHolders(message);
 
 
         //iterating through all players
         for (ICloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
             if (!config.getEnabledNotifications().contains(player.getUniqueId())) {
                 continue; //player has disabled messages or is not empowered to receive some
+            }
+            if (!player.hasPermission("cloud.modules.notify.command.use")) {
+                continue;
             }
             PlayerExecutor executor = PlayerExecutor.forPlayer(player);
 

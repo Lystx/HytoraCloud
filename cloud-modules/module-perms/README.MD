@@ -36,12 +36,12 @@ The Perms-Module consists of:
 **Accessing the PermissionManager**
 ````java
 /* METHOD 1 (unchecked & unsafe) */
-PermissionManager pm = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class);
+PermissionManager pm = CloudDriver.getInstance().getUnchecked(PermissionManager.class);
 //do stuff
 
 
 /* METHOD 2 (checked & safe) */
-CloudDriver.getInstance().getProviderRegistry().get(PermissionManager.class).ifPresent(pm -> {
+CloudDriver.getInstance().get(PermissionManager.class).ifPresent(pm -> {
     //do stuff
 });
 

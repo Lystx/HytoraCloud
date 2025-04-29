@@ -26,7 +26,7 @@ public interface Permission extends IBufferObject {
      * @return new instance or null if {@link PermissionManager} is not defined
      */
     static Permission of(String permission, long expirationDate) {
-        return CloudDriver.getInstance().getProviderRegistry().get(PermissionManager.class).mapOrElse(permissionManager -> permissionManager.createPermission(permission, expirationDate), () -> null);
+        return CloudDriver.getInstance().get(PermissionManager.class).mapOrElse(permissionManager -> permissionManager.createPermission(permission, expirationDate), () -> null);
     }
 
     /**

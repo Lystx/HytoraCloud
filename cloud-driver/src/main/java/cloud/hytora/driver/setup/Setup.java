@@ -1,17 +1,13 @@
 package cloud.hytora.driver.setup;
 
 import cloud.hytora.common.function.BiSupplier;
-import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.misc.ReflectionUtils;
-import cloud.hytora.driver.command.Console;
 import cloud.hytora.driver.console.Screen;
 import cloud.hytora.driver.console.ScreenManager;
-import cloud.hytora.driver.console.TabCompleter;
 import cloud.hytora.driver.setup.annotations.*;
 import cloud.hytora.driver.CloudDriver;
 import com.google.gson.internal.Primitives;
 import lombok.Getter;
-import org.jline.reader.Candidate;
 
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
@@ -121,18 +117,18 @@ public abstract class Setup<T extends Setup<?>> {
         this.loadSetupParts();
         this.uniqueSetupName = "setup#" + UUID.randomUUID();
         
-        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class).registerScreen(uniqueSetupName, false);
+        CloudDriver.getInstance().getProvider(ScreenManager.class).registerScreen(uniqueSetupName, false);
         this.cachedCommandHistory = getSetupScreen().getHistory();
     }
     
     public Screen getSetupScreen() {
-        return CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class).getScreenByNameOrNull(this.uniqueSetupName);
+        return CloudDriver.getInstance().getProvider(ScreenManager.class).getScreenByNameOrNull(this.uniqueSetupName);
     }
 
     public void start(SetupListener<T> finishHandler) {
         this.setupListener = finishHandler;
 
-        ScreenManager screenManager = CloudDriver.getInstance().getProviderRegistry().get(ScreenManager.class).get();
+        ScreenManager screenManager = CloudDriver.getInstance().get(ScreenManager.class).get();
         Screen screen = screenManager.getScreenByNameOrNull(this.uniqueSetupName);
         screen.registerTabCompleter(buffer -> {
 
@@ -167,7 +163,7 @@ public abstract class Setup<T extends Setup<?>> {
 
     @SuppressWarnings("unchecked")
     private void exit(boolean success) {
-        ScreenManager unchecked = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
+        ScreenManager unchecked = CloudDriver.getInstance().getProvider(ScreenManager.class);
         if (getSetupScreen() != null) {
             getSetupScreen().setHistory(this.cachedCommandHistory);
         }

@@ -40,6 +40,17 @@ public class NodeScreenManager implements ScreenManager {
     }
 
     @Override
+    public void update(String name, Consumer<Screen> handler) {
+        Screen screen = this.getScreenByNameOrNull(name);
+        if (screen == null) {
+            return;
+        }
+        handler.accept(screen);
+
+        this.allCachedScreens.put(screen.getName(), screen);
+    }
+
+    @Override
     public void joinScreen(Screen screen) {
         this.currentScreenName = screen.getName();
         if (lastScreenName == null) {
@@ -94,9 +105,11 @@ public class NodeScreenManager implements ScreenManager {
 
 
     @Override
-    public void registerScreen(String name, boolean enableCommandManager) {
-        this.allCachedScreens.put(name, new NodeScreen(name));
+    public Screen registerScreen(String name, boolean enableCommandManager) {
+        NodeScreen nodeScreen = new NodeScreen(name);
+        this.allCachedScreens.put(name, nodeScreen);
         this.allCachedScreenSettings.put(name, enableCommandManager);
+        return nodeScreen;
     }
 
     @Override

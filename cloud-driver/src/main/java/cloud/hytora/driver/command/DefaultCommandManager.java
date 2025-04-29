@@ -43,11 +43,12 @@ public abstract class DefaultCommandManager implements CommandManager {
      * Registering default {@link ArgumentParser}
      */
     public DefaultCommandManager() {
-        this.active = true;
+        this.active = false;
         this.registerParser(int.class, Integer::parseInt);
         this.registerParser(double.class, Double::parseDouble);
         this.registerParser(long.class, Long::parseLong);
         this.registerParser(byte.class, Byte::parseByte);
+        this.registerParser(UUID.class, UUID::fromString);
         this.registerParser(short.class, Short::parseShort);
         this.registerParser(float.class, Float::parseFloat);
         this.registerParser(boolean.class, Boolean::valueOf);

@@ -2,12 +2,12 @@ package cloud.hytora.remote.impl;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.PublishingType;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUpdateEvent;
 import cloud.hytora.driver.networking.packets.RedirectPacket;
-import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.networking.protocol.packets.NetworkResponseState;
 import cloud.hytora.driver.node.packet.NodeRequestServerStartPacket;
@@ -64,7 +64,7 @@ public class RemoteServiceManager extends DefaultServiceManager {
 
     @EventListener
     public void handleRemove(ServiceUnregisterEvent event) {
-        ICloudService server = this.getServiceByNameOrNull(event.getService());
+        ICloudService server = this.getCachedCloudService(event.getService());
         if (server == null) {
             return;
         }
@@ -82,7 +82,7 @@ public class RemoteServiceManager extends DefaultServiceManager {
     @Override
     public Task<ICloudService> startService(@NotNull ICloudService service) {
         Task<ICloudService> task = Task.empty();
-        AbstractPacket packet = new NodeRequestServerStartPacket(service, false);
+        AbstractPacket packet = new NodeRequestServerStartPacket(service, true);
 
         packet.awaitResponse(service.getRunningNodeName())
                 .onTaskSucess(response -> {
@@ -97,12 +97,12 @@ public class RemoteServiceManager extends DefaultServiceManager {
     }
 
     @Override
-    public ICloudService thisServiceOrNull() {
+    public ICloudService thisService() {
         return getAllCachedServices().stream().filter(s -> s.getName().equalsIgnoreCase(Remote.getInstance().getProperty().getName())).findFirst().orElse(null);
     }
 
     @Override
-    public Task<ICloudService> thisService() {
+    public Task<ICloudService> getThisService() {
         return Task.callAsyncNonNull(() -> getAllCachedServices().stream().filter(s -> s.getName().equalsIgnoreCase(Remote.getInstance().getProperty().getName())).findFirst().orElse(null));
     }
 
@@ -113,9 +113,26 @@ public class RemoteServiceManager extends DefaultServiceManager {
 
 
     @Override
-    public void updateService(@NotNull ICloudService service) {
+    public void updateService(@NotNull ICloudService service, PublishingType... type) {
         this.updateServerInternally(service);
-        CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceUpdateEvent(service));
+
+        PublishingType publishingType = PublishingType.get(type);
+
+        switch (publishingType) {
+            case INTERNAL:
+                this.updateServerInternally(service);
+                break;
+
+            case GLOBAL:
+                updateService(service, PublishingType.INTERNAL);
+                updateService(service, PublishingType.PROTOCOL);
+                break;
+            case PROTOCOL:
+                //calling update event on every other side
+                CloudDriver.getInstance().getEventManager().callEvent(new ServiceUpdateEvent(service), PublishingType.PROTOCOL);
+
+                break;
+        }
     }
 
     @Override

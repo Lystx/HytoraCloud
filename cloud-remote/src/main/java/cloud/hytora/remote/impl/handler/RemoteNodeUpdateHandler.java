@@ -26,6 +26,7 @@ public class RemoteNodeUpdateHandler implements PacketHandler<NodeCycleDataPacke
             return;
         }
         node.setLastCycleData(data);
+        // TODO: 20.04.2025 update node data
     }
 }
 

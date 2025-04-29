@@ -45,6 +45,21 @@ public interface WrappedDocument extends Document {
 		return getTargetDocument().toInstance(classOfT);
 	}
 
+	@Override
+	default int bufferIndex() {
+		return getTargetDocument().bufferIndex();
+	}
+
+	@Override
+	default Document append(Object object) {
+		return getTargetDocument().append(object);
+	}
+
+	@Override
+	default <T> T read(Class<T> typeClass) {
+		return getTargetDocument().read(typeClass);
+	}
+
 	@Nonnull
 	@Override
 	default String asRawJsonString() {

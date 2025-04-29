@@ -3,6 +3,7 @@ package cloud.hytora.node.service.helper;
 import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.HytoraCloudConstants;
 import cloud.hytora.driver.console.Screen;
 import cloud.hytora.driver.console.ScreenManager;
 import cloud.hytora.driver.module.ModuleController;
@@ -55,7 +56,7 @@ public class CloudServerProcessWorker {
 
         // create server dir
         File parent = (service.getTask().getTaskGroup().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
-        File serverDir = new File(parent, service.getName() + "/");
+        File serverDir = new File(parent, service.getName() + "@" + service.getUniqueId() + "/");
 
         FileUtils.forceMkdir(serverDir);
 
@@ -78,11 +79,11 @@ public class CloudServerProcessWorker {
         FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, jar), new File(serverDir, jar));
 
         // copy plugin
-        FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "plugin.jar"), new File(serverDir, "plugins/plugin.jar"));
+        FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER,  HytoraCloudConstants.BRIDGE_FILE_NAME), new File(serverDir, "plugins/"  + HytoraCloudConstants.BRIDGE_FILE_NAME));
 
         if (serviceProcessType == ServiceProcessType.WRAPPER) {
             //copy remote file
-            FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "remote.jar"), new File(serverDir, "remote.jar"));
+            FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, HytoraCloudConstants.REMOTE_FILE_NAME), new File(serverDir, HytoraCloudConstants.REMOTE_FILE_NAME));
         }
 
         // write property for identify service
@@ -121,10 +122,10 @@ public class CloudServerProcessWorker {
             versionFile.applyFile(service, file);
         }
 
-        File folder = new File(parent, service.getName() + "/");
+        File folder = new File(parent, service.getName() + "@" + service.getUniqueId() + "/");
 
 
-        ScreenManager screenManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
+        ScreenManager screenManager = CloudDriver.getInstance().getProvider(ScreenManager.class);
 
         StartedProcess result = new ProcessExecutor()
                 .command(this.args(service))
@@ -174,13 +175,13 @@ public class CloudServerProcessWorker {
     private String[] args(ICloudService service) throws IOException {
 
         File parent = (service.getTask().getTaskGroup().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
-        File folder = new File(parent, service.getName() + "/");
+        File folder = new File(parent, service.getName() + "@" + service.getUniqueId() + "/");
 
-        Path remoteFile1 = new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "remote.jar").toPath();
-        FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "remote.jar"), new File(folder, "remote.jar"));
+        Path remoteFile1 = new File(NodeDriver.STORAGE_VERSIONS_FOLDER,  HytoraCloudConstants.REMOTE_FILE_NAME).toPath();
+        FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, HytoraCloudConstants.REMOTE_FILE_NAME), new File(folder, HytoraCloudConstants.REMOTE_FILE_NAME));
         File applicationFile = new File(folder, service.getTask().getVersion().getJar());
 
-        Path remoteFile  = new File(folder, "remote.jar").toPath();
+        Path remoteFile  = new File(folder, HytoraCloudConstants.REMOTE_FILE_NAME).toPath();
         IServiceTask task = service.getTask();
         int javaVersion = task.getJavaVersion();
         ServiceProcessType serviceProcessType = MainConfiguration.getInstance().getServiceProcessType();

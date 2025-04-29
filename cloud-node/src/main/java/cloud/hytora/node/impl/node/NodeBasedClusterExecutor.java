@@ -6,6 +6,7 @@ import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.PublishingType;
 import cloud.hytora.driver.event.defaults.server.ServiceClusterConnectEvent;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.cluster.client.AdvancedClusterParticipant;
@@ -120,7 +121,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
         } else {
             if (state == ConnectionState.CONNECTED) {
                 // set online
-                ICloudService service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(executor.getName());
+                ICloudService service = CloudDriver.getInstance().getServiceManager().getCachedCloudService(executor.getName());
                 if (service == null) {
                     //other remote connection
 
@@ -149,7 +150,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
 
                 service.update();
 
-                CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceClusterConnectEvent(service));
+                CloudDriver.getInstance().getEventManager().callEvent(new ServiceClusterConnectEvent(service), PublishingType.GLOBAL);
 
             } else {
                 String service = executor.getName();
@@ -158,9 +159,9 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
                     return;
                 }
                 NodeDriver base = NodeDriver.getInstance();
-                ICloudService ICloudServer = base.getServiceManager().getServiceByNameOrNull(service);
-                if (ICloudServer != null) {
-                    CloudDriver.getInstance().getServiceManager().unregisterService(ICloudServer);
+                ICloudService cloudService = base.getServiceManager().getCachedCloudService(service);
+                if (cloudService != null) {
+                    CloudDriver.getInstance().getServiceManager().unregisterService(cloudService);
                 } else {
                     NodeDriver.getInstance().getLogger().warn("§a==> Channel §e{} - {} tried to disconnect but no matching Service was found!", executor.getName(), executor.getChannel());
                 }
@@ -224,6 +225,7 @@ public class NodeBasedClusterExecutor extends ClusterExecutor {
 
                 for (PacketHandler packetHandler : new ArrayList<>(NodeBasedClusterExecutor.this.remoteHandlers)) {
                     try {
+                        ((AbstractPacket)packet).channel(wrapper);
                         packetHandler.handle(wrapper, packet);
                     } catch (Exception e) {
                         if (e instanceof ClassCastException) {

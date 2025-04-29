@@ -4,7 +4,6 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.permission.PermissionGroup;
 import cloud.hytora.driver.permission.PermissionManager;
 import cloud.hytora.driver.permission.PermissionPlayer;
-import cloud.hytora.driver.services.ICloudService;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -93,7 +92,7 @@ public class BukkitCloudPermissible extends PermissibleBase {
                 perms.put(permission.getPermission(), new PermissionAttachmentInfo(this, permission.getPermission(), null, true));
             }
 
-            for (String taskPermission : permissionPlayer.getTaskPermissions(CloudDriver.getInstance().getServiceManager().thisServiceOrNull().getTask().getName())) {
+            for (String taskPermission : permissionPlayer.getTaskPermissions(CloudDriver.getInstance().getServiceManager().thisService().getTask().getName())) {
                 perms.put(taskPermission, new PermissionAttachmentInfo(this, taskPermission, null, true));
             }
 
@@ -112,7 +111,7 @@ public class BukkitCloudPermissible extends PermissibleBase {
                     perms.put(permission, new PermissionAttachmentInfo(this, permission, null, false));
                 }
 
-                for (String taskPermission : group.getTaskPermissions(CloudDriver.getInstance().getServiceManager().thisServiceOrNull().getTask().getName())) {
+                for (String taskPermission : group.getTaskPermissions(CloudDriver.getInstance().getServiceManager().thisService().getTask().getName())) {
                     perms.put(taskPermission, new PermissionAttachmentInfo(this, taskPermission, null, true));
                 }
 
@@ -125,7 +124,7 @@ public class BukkitCloudPermissible extends PermissibleBase {
 
     public PermissionPlayer getPermissionPlayer() {
         if (permissionPlayer == null)
-            permissionPlayer = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).getPlayerByUniqueIdOrNull(player.getUniqueId());
+            permissionPlayer = CloudDriver.getInstance().getProvider(PermissionManager.class).getPlayerByUniqueIdOrNull(player.getUniqueId());
 
         return permissionPlayer;
     }

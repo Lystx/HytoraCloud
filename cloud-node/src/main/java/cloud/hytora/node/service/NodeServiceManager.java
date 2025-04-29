@@ -2,6 +2,8 @@ package cloud.hytora.node.service;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.HytoraCloudConstants;
+import cloud.hytora.driver.PublishingType;
 import cloud.hytora.driver.console.Screen;
 import cloud.hytora.driver.console.ScreenManager;
 import cloud.hytora.driver.event.EventListener;
@@ -47,10 +49,10 @@ public class NodeServiceManager extends DefaultServiceManager {
     public void registerService(ICloudService service) {
         super.registerService(service);
 
-        ScreenManager screenManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
+        ScreenManager screenManager = CloudDriver.getInstance().getProvider(ScreenManager.class);
         screenManager.registerScreen(service.getName(), false);
 
-        CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceRegisterEvent(service));
+        CloudDriver.getInstance().getEventManager().callEvent(new ServiceRegisterEvent(service), PublishingType.GLOBAL);
 
         if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
@@ -60,20 +62,23 @@ public class NodeServiceManager extends DefaultServiceManager {
 
     @Override
     public void unregisterService(ICloudService service) {
-        service = this.getServiceByNameOrNull(service.getName());
-        CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceUnregisterEvent(service.getName()));
+        service = this.getCachedCloudService(service.getName());
+        CloudDriver.getInstance().getEventManager().callEvent(new ServiceUnregisterEvent(service.getName()), PublishingType.GLOBAL);
         super.unregisterService(service);
 
 
-        ScreenManager screenManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
+        ScreenManager screenManager = CloudDriver.getInstance().getProvider(ScreenManager.class);
         Screen screen = screenManager.getScreenByNameOrNull(service.getName());
         IServiceTask con = service.getTask();
 
         File parent = (con.getTaskGroup().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
-        File folder = new File(parent, service.getName() + "/");
+        File folder = new File(parent, service.getName() + "@" + service.getUniqueId() + "/");
 
         if (!service.isReady() && CloudDriver.getInstance().isRunning()) {
-            NodeDriver.getInstance().getLogger().warn("Service {} probably crashed during startup because it was not authenticated when it stopped", service.getName());
+            NodeDriver.getInstance().getLogger().warn("§8=============§8[§cCrash§8]=============");
+            NodeDriver.getInstance().getLogger().warn("§8=> §7Service§8: §8[§cName§8: §c{}, ID§8: §c{}§8]", service.getName(), service.getUniqueId());
+            NodeDriver.getInstance().getLogger().warn("§8=> §7Explanation§8: §cProbably crashed during startup. Service was not authenticated by the Node");
+            NodeDriver.getInstance().getLogger().warn("    §8=> §7by the time it was stopped. Probably didn't made it to the authentication-part§8.");
 
             File crashFolder = new File(NodeDriver.LOG_FOLDER, "crashes/");
             crashFolder.mkdirs();
@@ -85,10 +90,11 @@ public class NodeServiceManager extends DefaultServiceManager {
 
             try {
                 cloud.hytora.common.misc.FileUtils.writeToFile(crashFile, screen.getAllCachedLines());
+                NodeDriver.getInstance().getLogger().warn("§8=> §7Log saved to§8: §a{}", crashFile.getName());
                 NodeDriver.getInstance().getLogger().warn("Saving logs to identify crash under {}...", crashFile.getName());
             } catch (IOException e) {
-                e.printStackTrace();
-                NodeDriver.getInstance().getLogger().warn("Couldn't save crash logs...");
+                //e.printStackTrace();
+                NodeDriver.getInstance().getLogger().warn("§8=> §7Log saved to§8: §cCoudln't save §8[§e{}§8]", crashFile.getName(), e.getMessage());
             }
             ServiceCrashPrevention scp = MainConfiguration.getInstance().getServiceCrashPrevention();
 
@@ -100,10 +106,11 @@ public class NodeServiceManager extends DefaultServiceManager {
                     NodeDriver.getInstance().getServiceQueue().getPausedGroups().remove(con.getName());
                     NodeDriver.getInstance().getServiceQueue().dequeue();
                 }, scp.getTimeUnit().toMillis(scp.getTime()));
-
-                NodeDriver.getInstance().getLogger().warn("Due to ServiceCrashPrevention (SCP) being enabled, starting services of ServiceTask {} is now paused for {} {}", con.getName(), scp.getTime(), scp.getTimeUnit().name().toLowerCase());
+                NodeDriver.getInstance().getLogger().warn("§8=> §7SCP§8: §aEnabled §8[§7Services of this Task wont start for §e{} {}§8]", scp.getTime(), scp.getTimeUnit().name());
+            } else {
+                NodeDriver.getInstance().getLogger().warn("§8=> §7SCP§8: §cDisabled §8[§7Services will start immediately§8]");
             }
-
+            NodeDriver.getInstance().getLogger().warn("§8=============§8[§cCrash§8]=============");
         }
 
         if (con.getTaskGroup().getShutdownBehaviour().isStatic()) {
@@ -111,7 +118,7 @@ public class NodeServiceManager extends DefaultServiceManager {
             File property = new File(folder, "property.json");
             property.delete();
 
-            File bridgePlugin = new File(folder, "plugins/plugin.jar");
+            File bridgePlugin = new File(folder, "plugins/" + HytoraCloudConstants.BRIDGE_FILE_NAME);
             bridgePlugin.delete();
 
             File applicationFile = new File(folder, con.getVersion().getJar());
@@ -140,12 +147,12 @@ public class NodeServiceManager extends DefaultServiceManager {
     }
 
     @Override
-    public Task<ICloudService> thisService() {
+    public Task<ICloudService> getThisService() {
         return Task.empty();
     }
 
     @Override
-    public ICloudService thisServiceOrNull() {
+    public ICloudService thisService() {
         return null;
     }
 
@@ -174,20 +181,33 @@ public class NodeServiceManager extends DefaultServiceManager {
     }
 
     @Override
-    public void updateService(@NotNull ICloudService service) {
+    public void updateService(@NotNull ICloudService service, PublishingType... type) {
         CloudDriver.getInstance().getLogger().debug("Updated Server {}", service.getName());
-        this.updateServerInternally(service);
+        PublishingType publishingType = PublishingType.get(type);
 
-        //calling update event on every other side
-        CloudDriver.getInstance().getEventManager().callEventOnlyPacketBased(new ServiceUpdateEvent(service));
-        if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
-            DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+        switch (publishingType) {
+            case INTERNAL:
+                this.updateServerInternally(service);
+                break;
+
+            case GLOBAL:
+                updateService(service, PublishingType.INTERNAL);
+                updateService(service, PublishingType.PROTOCOL);
+                break;
+            case PROTOCOL:
+                if (NodeDriver.getInstance().getNodeManager().isHeadNode()) {
+                    DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
+                }
+                //calling update event on every other side
+                CloudDriver.getInstance().getEventManager().callEvent(new ServiceUpdateEvent(service), PublishingType.PROTOCOL);
+                break;
         }
+
     }
 
     @EventListener
     public void handleStop(ServiceUnregisterEvent event) {
-        ScreenManager sm = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
+        ScreenManager sm = CloudDriver.getInstance().getProvider(ScreenManager.class);
         if (sm.isScreenActive(event.getService())) {
             sm.leaveCurrentScreen();
         }

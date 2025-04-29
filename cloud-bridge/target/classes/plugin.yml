@@ -1,6 +1,0 @@
-
-name: HytoraCloud-Bridge
-main: cloud.hytora.bridge.spigot.SpigotBootstrap
-description: Establishes the comunication between cloud and server
-version: SNAPSHOT-1.0
-load: STARTUP

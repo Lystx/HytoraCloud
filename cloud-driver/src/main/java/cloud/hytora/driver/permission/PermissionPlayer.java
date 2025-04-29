@@ -34,7 +34,7 @@ public interface PermissionPlayer extends PermissionEntity {
 	static PermissionPlayer byName(String name) {
 		return CloudDriver
 				.getInstance()
-				.getProviderRegistry()
+				
 				.get(PermissionManager.class)
 				.mapOrElse(pm -> pm.getPlayerByNameOrNull(name), () -> null);
 	}
@@ -42,7 +42,7 @@ public interface PermissionPlayer extends PermissionEntity {
 	static PermissionPlayer byUniqueId(UUID uniqueID) {
 		return CloudDriver
 				.getInstance()
-				.getProviderRegistry()
+				
 				.get(PermissionManager.class)
 				.mapOrElse(pm -> pm.getPlayerByUniqueIdOrNull(uniqueID), () -> null);
 	}

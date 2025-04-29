@@ -81,7 +81,7 @@ public class BukkitCloudSignUpdater implements Runnable {
                                 !server.getName().equalsIgnoreCase(
                                         CloudDriver.getInstance()
                                                 .getServiceManager()
-                                                .thisServiceOrNull()
+                                                .thisService()
                                                 .getName()
                                 )
                         ).collect(Collectors.toList());
@@ -258,8 +258,8 @@ public class BukkitCloudSignUpdater implements Runnable {
             Collection<ICloudSign> offlineSigns = new ArrayList<>();
             for (Integer count : allSigns) {
                 ICloudSign sign = new BukkitCloudSignGroup(name, CloudSignAPI.getInstance().getSignManager().getAllCachedCloudSigns()).getCloudSigns().get(count);
-                ICloudService s = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(sign.getTaskName() + "-" + count);
-                if (s == null || s.getServiceVisibility().equals(ServiceVisibility.INVISIBLE) || s.getServiceState().equals(ServiceState.STOPPING) || s.getName().equalsIgnoreCase(CloudDriver.getInstance().getServiceManager().thisServiceOrNull().getName())) {
+                ICloudService s = CloudDriver.getInstance().getServiceManager().getCachedCloudService(sign.getTaskName() + "-" + count);
+                if (s == null || s.getServiceVisibility().equals(ServiceVisibility.INVISIBLE) || s.getServiceState().equals(ServiceState.STOPPING) || s.getName().equalsIgnoreCase(CloudDriver.getInstance().getServiceManager().thisService().getName())) {
                     offlineSigns.add(sign);
                 }
             }

@@ -21,27 +21,28 @@ public class CloudPlayerExecutor implements PlayerExecutor {
 
     @Override
     public void sendMessage(String message) {
-        this.sendPacketToProxy(new CloudPlayerPlainMessagePacket(getExecutorUniqueId(), message));
+        this.sendPacketToProxy(PacketCloudPlayer.forPlayerPlainMessage(getExecutorUniqueId(), message));
     }
 
     @Override
     public void sendMessage(Component component) {
-        this.sendPacketToProxy(new CloudPlayerComponentMessagePacket(getExecutorUniqueId(), component));
+        this.sendPacketToProxy(PacketCloudPlayer.forPlayerComponentMessage(getExecutorUniqueId(), component));
     }
 
     @Override
     public void setTabList(String header, String footer) {
-        this.sendPacketToProxy(new CloudPlayerTabListPacket(getExecutorUniqueId(), header, footer));
+        this.sendPacketToProxy(PacketCloudPlayer.forPlayerTabList(getExecutorUniqueId(), header, footer));
     }
 
     @Override
     public void disconnect(String reason) {
-        this.sendPacketToProxy(new CloudPlayerKickPacket(getExecutorUniqueId(), this.player.getProxyServer() == null ? "UNKNOWN" : this.player.getProxyServer().getName(), reason));
+        PacketCloudPlayer packet = PacketCloudPlayer.forPlayerKick(getExecutorUniqueId(), reason);
+        this.sendPacketToProxy(packet);
     }
 
     @Override
     public void connect(ICloudService server) {
-        this.sendPacketToProxy(new CloudPlayerSendServicePacket(getExecutorUniqueId(), server.getName()));
+        this.sendPacketToProxy(PacketCloudPlayer.forPlayerSend(getExecutorUniqueId(), server.getName()));
     }
 
     private void sendPacketToProxy(AbstractPacket packet) {

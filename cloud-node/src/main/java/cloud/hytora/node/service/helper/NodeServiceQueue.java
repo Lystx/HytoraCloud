@@ -62,6 +62,7 @@ public class NodeServiceQueue {
                                     return;
                                 }
                                 node.startServer(cloudServer);
+                                dequeue();
                             });
                 });
 
@@ -70,7 +71,7 @@ public class NodeServiceQueue {
     private void queue() {
         CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks().stream()
                 .filter(con -> this.getAmountOfGroupServices(con) < con.getMinOnlineService())
-                .filter(con -> !pausedGroups.contains(con.getName()))
+                .filter(con -> pausedGroups.stream().noneMatch(s -> s.equalsIgnoreCase(con.getName())))
                 .sorted(Comparator.comparingInt(IServiceTask::getStartOrder))
                 .forEach(task -> {
 

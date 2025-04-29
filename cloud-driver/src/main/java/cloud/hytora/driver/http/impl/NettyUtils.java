@@ -2,7 +2,6 @@ package cloud.hytora.driver.http.impl;
 
 import cloud.hytora.common.collection.NamedThreadFactory;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.DriverEnvironment;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFactory;
@@ -122,7 +121,7 @@ public class NettyUtils {
 
 
 	public static int getThreadAmount() {
-		return CloudDriver.getInstance().getEnvironment() == DriverEnvironment.SERVICE ? 8 : Runtime.getRuntime().availableProcessors() * 2;
+		return CloudDriver.getInstance().getEnvironment() == CloudDriver.Environment.SERVICE ? 8 : Runtime.getRuntime().availableProcessors() * 2;
 	}
 
 	private NettyUtils() {}

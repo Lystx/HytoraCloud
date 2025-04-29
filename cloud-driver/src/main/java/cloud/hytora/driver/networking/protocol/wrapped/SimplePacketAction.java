@@ -16,6 +16,7 @@ import cloud.hytora.driver.networking.protocol.packets.defaults.ResponsePacket;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -44,7 +45,7 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
 
         this.state = NetworkResponseState.OK;
         this.data = DocumentFactory.newJsonDocument();
-        this.buffer = PacketBuffer.unsafe();
+        this.buffer = PacketBuffer.unPooled();
     }
 
     @Override
@@ -55,7 +56,7 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
 
     @Override
     public ChanneledPacketAction<R> error(Throwable state) {
-        this.error = error;
+        this.error = state;
         return this;
     }
 
@@ -63,6 +64,13 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
     public ChanneledPacketAction<R> data(Document document) {
         this.data = document;
         return this;
+    }
+
+    @Override
+    public ChanneledPacketAction<R> data(Consumer<Document> document) {
+        Document d = Document.newJsonDocument();
+        document.accept(d);
+        return data(d);
     }
 
     @Override
@@ -133,8 +141,9 @@ public class SimplePacketAction<R> implements ChanneledPacketAction<R> {
                 throw new IllegalStateException("Can't execute SingleQuery from normal NetworkExecutor!");
             }
 
+            UUID queryId = packet.transferInfo().getInternalQueryId();
             ((AdvancedNetworkExecutor)executor).registerSelfDestructivePacketHandler((PacketHandler<ResponsePacket>) (wrap, packet1) -> {
-                if (packet1.transferInfo().getInternalQueryId().equals(packet.transferInfo().getInternalQueryId())) {
+                if (packet1.transferInfo().getInternalQueryId().equals(queryId)) {
                     task.setResult((R) packet1);
                 }
             });

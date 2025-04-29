@@ -5,7 +5,6 @@ import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.driver.event.DestructiveListener;
 import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
 import cloud.hytora.driver.networking.EndpointNetworkExecutor;
@@ -130,7 +129,7 @@ public class DefaultConfigurableService implements ConfigurableService {
 
 
         Task.runAsync(() -> {
-            if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
+            if (CloudDriver.getInstance().getEnvironment() == CloudDriver.Environment.NODE) {
                 EndpointNetworkExecutor executor = (EndpointNetworkExecutor) CloudDriver.getInstance().getExecutor();
 
                 ClusterClientExecutor nodeClient = executor.getClient(node).orElse(null);

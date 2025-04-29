@@ -34,6 +34,8 @@ public class RemoteModuleControllerPacket extends AbstractPacket {
 
         UNREGISTER_MODULE,
 
+        API_UPDATE,
+
         RELOAD_CONFIG,
 
         GET_JAR_FILE,

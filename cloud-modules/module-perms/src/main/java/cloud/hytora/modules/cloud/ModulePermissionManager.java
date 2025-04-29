@@ -1,12 +1,15 @@
 package cloud.hytora.modules.cloud;
 
 import cloud.hytora.common.function.ExceptionallySupplier;
+import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.database.IDatabaseManager;
 import cloud.hytora.driver.database.api.Database;
 import cloud.hytora.driver.database.api.action.query.ExecutedQuery;
+import cloud.hytora.driver.event.EventListener;
+import cloud.hytora.driver.event.defaults.player.CloudPlayerLoginFirstTimeEvent;
 import cloud.hytora.driver.permission.Permission;
 import cloud.hytora.driver.permission.PermissionGroup;
 import cloud.hytora.driver.permission.PermissionPlayer;
@@ -36,6 +39,7 @@ public class ModulePermissionManager extends DefaultPermissionManager {
         super();
         this.cachedPermissionGroups = new ArrayList<>();
         this.allCachedPermissionPlayers = new ArrayList<>();
+        CloudDriver.getInstance().getEventManager().registerListener(this);
     }
 
     private void updateCache() {
@@ -53,7 +57,7 @@ public class ModulePermissionManager extends DefaultPermissionManager {
 
     public Task<Collection<PermissionGroup>> loadGroups() {
         Task<Collection<PermissionGroup>> collectionTask = Task.empty();
-        Database database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
+        Database database = CloudDriver.getInstance().getProvider(IDatabaseManager.class).getDatabase();
 
         database.query("module_perms_groups")
                 .executeAsync()
@@ -69,7 +73,6 @@ public class ModulePermissionManager extends DefaultPermissionManager {
                     for (Document document : collect) {
                         i++;
                         if (cachedPermissionGroups.stream().anyMatch(g -> g.getName().equalsIgnoreCase(document.getString("name")))) {
-                            System.out.println("Found duplicate PermissionGroup -> " + document.getString("name"));
                             continue;
                         }
                         PermissionGroup group = new DefaultPermissionGroup();
@@ -101,7 +104,7 @@ public class ModulePermissionManager extends DefaultPermissionManager {
 
                         for (String key : taskPermissions.keySet()) {
                             Collection<String> value = taskPermissions.get(key);
-                            IServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(key);
+                            IServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getCachedServiceTask(key);
                             if (task == null) {
                                 continue;
                             }
@@ -118,7 +121,7 @@ public class ModulePermissionManager extends DefaultPermissionManager {
                 });
 
 
-        //LocalStorage database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getLocalStorage();
+        //LocalStorage database = CloudDriver.getInstance().getUnchecked(IDatabaseManager.class).getLocalStorage();
         //LocalStorageSection<DefaultPermissionGroup> section = database.getSection(DefaultPermissionGroup.class);
 
         return collectionTask;
@@ -130,7 +133,7 @@ public class ModulePermissionManager extends DefaultPermissionManager {
         if (this.getPermissionGroupByNameOrNull(group.getName()) != null) {
             return;
         }
-        //LocalStorage database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getLocalStorage();
+        //LocalStorage database = CloudDriver.getInstance().getUnchecked(IDatabaseManager.class).getLocalStorage();
         //LocalStorageSection<DefaultPermissionGroup> section = database.getSection(DefaultPermissionGroup.class);
 
         updatePermissionGroup(group);
@@ -147,10 +150,10 @@ public class ModulePermissionManager extends DefaultPermissionManager {
         if (group == null) {
             return;
         }
-        Database database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
+        Database database = CloudDriver.getInstance().getProvider(IDatabaseManager.class).getDatabase();
 
 
-        //LocalStorage database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getLocalStorage();
+        //LocalStorage database = CloudDriver.getInstance().getUnchecked(IDatabaseManager.class).getLocalStorage();
         //LocalStorageSection<DefaultPermissionGroup> section = database.getSection(DefaultPermissionGroup.class);
         this.cachedPermissionGroups.remove(group);
         //section.delete(name);
@@ -175,9 +178,9 @@ public class ModulePermissionManager extends DefaultPermissionManager {
 
     @Override
     public void updatePermissionGroup(PermissionGroup group) {
-        Database database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
+        Database database = CloudDriver.getInstance().getProvider(IDatabaseManager.class).getDatabase();
 
-        //LocalStorage database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getLocalStorage();
+        //LocalStorage database = CloudDriver.getInstance().getUnchecked(IDatabaseManager.class).getLocalStorage();
         //LocalStorageSection<DefaultPermissionGroup> section = database.getSection(DefaultPermissionGroup.class);
 
         this.cachedPermissionGroups.removeIf(g -> g.getName().equalsIgnoreCase(group.getName()));
@@ -219,18 +222,14 @@ public class ModulePermissionManager extends DefaultPermissionManager {
 
     @Override
     public void updatePermissionPlayer(PermissionPlayer player) {
+        PermissionGroup oldGroup = allCachedPermissionPlayers.stream().filter(pp -> pp.getUniqueId().equals(player.getUniqueId())).findFirst().map(PermissionPlayer::getHighestGroup).orElse(null);
 
         this.allCachedPermissionPlayers.removeIf(p -> p.getUniqueId().equals(player.getUniqueId()));
         this.checkDouble();
         this.allCachedPermissionPlayers.add(player);
 
-        /*LocalStorage database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getLocalStorage();
-        LocalStorageSection<DefaultPermissionPlayer> section = database.getSection(DefaultPermissionPlayer.class);
 
-        section.upsert(player.getUniqueId().toString(), (DefaultPermissionPlayer) player);
-*/
-
-        Database database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
+        Database database = CloudDriver.getInstance().getProvider(IDatabaseManager.class).getDatabase();
 
         PlayerData data = new PlayerData(
                 ((DefaultPermissionPlayer) player).permissions,
@@ -246,35 +245,54 @@ public class ModulePermissionManager extends DefaultPermissionManager {
                 .set("data", Document.newJsonDocument(data).asRawJsonString())
                 .executeAsync();
 
+
         if (player.isOnline()) {
             ICloudPlayer onlinePlayer = player.toOnlinePlayer();
             ICloudService server = onlinePlayer.getServer();
             ICloudService proxyServer = onlinePlayer.getProxyServer();
 
             if (server != null) {
-                System.out.println("Sending Perms update to -> " + server.getName() + " -> " + (player.getHighestGroup() == null ? "none" : player.getHighestGroup().getName()));
-
-
                 server.sendDocument(new PermsUpdatePlayerPacket(player));
             }
             if (proxyServer != null) {
                 proxyServer.sendDocument(new PermsUpdatePlayerPacket(player));
             }
+            onlinePlayer.editProperties(properties -> {
+                properties.set("module_perms_highest_group", player.getHighestGroup().getName());
+            });
+        } else {
+
+            CloudDriver.getInstance()
+                    .getPlayerManager().
+                    getOfflinePlayer(player.getUniqueId())
+                    .onTaskSucess(offlinePlayer -> {
+                        offlinePlayer.editProperties(properties -> {
+                            properties.set("module_perms_highest_group", player.getHighestGroup().getName());
+                        });
+                    });
         }
 
 
-        /*ICloudPlayer cp = CloudDriver.getInstance().getPlayerManager().getCloudPlayerByUniqueIdOrNull(player.getUniqueId());
-        if (cp == null || !cp.isOnline()) {
+
+        if (oldGroup == null) {
             return;
         }
-        cp.executor().disconnect(
+        if (!oldGroup.getName().equalsIgnoreCase(player.getHighestGroup().getName())) { //if group has changed
+            System.out.println("Player group changed from " + oldGroup.getName() + " to " + player.getHighestGroup().getName() + " for " + player.getName());
+            ICloudPlayer cp = CloudDriver.getInstance().getPlayerManager().getCachedCloudPlayer(player.getUniqueId());
+            if (cp == null || !cp.isOnline()) {
+                return;
+            }
 
-                "§8§m------------------------------\n" +
-                        "§8\n" +
-                        "§cYour PermissionGroup has changed§8! §cPlease rejoin§c!\n" +
-                        "§8\n" +
-                        "§8§m------------------------------"
-        );*/
+            cp.executor().disconnect(
+
+                    "§8§m------------------------------\n" +
+                            "§8\n" +
+                            "§cYour PermissionGroup has changed§8! §cPlease rejoin§c!\n" +
+                            "§8\n" +
+                            "§8§m------------------------------"
+            );
+        }
     }
 
 
@@ -284,7 +302,7 @@ public class ModulePermissionManager extends DefaultPermissionManager {
         return this.allCachedPermissionPlayers.stream().filter(p -> p.getName().equalsIgnoreCase(name)).findFirst().orElseGet(
                 (ExceptionallySupplier<PermissionPlayer>) () -> {
 
-                    Database database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
+                    Database database = CloudDriver.getInstance().getProvider(IDatabaseManager.class).getDatabase();
 
                     ExecutedQuery query = database
                             .query("module_perms_players")
@@ -293,7 +311,7 @@ public class ModulePermissionManager extends DefaultPermissionManager {
 
                     CloudDriver.getInstance().getLogger().debug("§cLoading PP!");
 
-                    //LocalStorage database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getLocalStorage();
+                    //LocalStorage database = CloudDriver.getInstance().getUnchecked(IDatabaseManager.class).getLocalStorage();
                     //LocalStorageSection<DefaultPermissionPlayer> section = database.getSection(DefaultPermissionPlayer.class);
                     //DefaultPermissionPlayer player = section.findByMatch("name", name);
 
@@ -324,11 +342,6 @@ public class ModulePermissionManager extends DefaultPermissionManager {
 
 
     @Override
-    public PermissionPlayer createPlayer(String name, UUID uniqueId) {
-        return super.createPlayer(name, uniqueId);
-    }
-
-    @Override
     public Task<PermissionPlayer> getPlayerAsyncByUniqueId(UUID uniqueId) {
         return Task.callAsync(() -> getPlayerByUniqueIdOrNull(uniqueId));
     }
@@ -345,8 +358,8 @@ public class ModulePermissionManager extends DefaultPermissionManager {
         }
         return CloudDriver
                 .getInstance()
-                .getProviderRegistry()
-                .getUnchecked(IDatabaseManager.class)
+                
+                .getProvider(IDatabaseManager.class)
                 .getDatabase()
                 .query("module_perms_players")
                 .where("uniqueId", uniqueId)
@@ -358,7 +371,7 @@ public class ModulePermissionManager extends DefaultPermissionManager {
     public PermissionPlayer getPlayerByUniqueIdOrNull(@NotNull UUID uniqueId) {
         return this.allCachedPermissionPlayers.stream().filter(p -> p.getUniqueId().equals(uniqueId)).findFirst().orElseGet((ExceptionallySupplier<PermissionPlayer>) () -> {
 
-            Database database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
+            Database database = CloudDriver.getInstance().getProvider(IDatabaseManager.class).getDatabase();
 
             ExecutedQuery query = database
                     .query("module_perms_players")
@@ -367,7 +380,7 @@ public class ModulePermissionManager extends DefaultPermissionManager {
 
 
 
-            /*LocalStorage database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getLocalStorage();
+            /*LocalStorage database = CloudDriver.getInstance().getUnchecked(IDatabaseManager.class).getLocalStorage();
             LocalStorageSection<DefaultPermissionPlayer> section = database.getSection(DefaultPermissionPlayer.class);
             DefaultPermissionPlayer player = section.findById(uniqueId.toString());*/
 
@@ -403,6 +416,7 @@ public class ModulePermissionManager extends DefaultPermissionManager {
         }
         this.allCachedPermissionPlayers.add(player);
         this.checkDouble();
+
     }
 
 
@@ -419,4 +433,19 @@ public class ModulePermissionManager extends DefaultPermissionManager {
         this.allCachedPermissionPlayers.addAll(players);
 
     }
+
+    @EventListener
+    public void handleFirstJoin(CloudPlayerLoginFirstTimeEvent event) {
+        ICloudPlayer player = event.getCloudPlayer();
+
+        Scheduler.runTimeScheduler().scheduleDelayedTask(() -> {
+            this.cachedPermissionGroups.stream().filter(PermissionGroup::isDefaultGroup).findFirst().ifPresent(firstGroup -> {
+                player.editProperties(properties -> {
+                    properties.set("module_perms_highest_group", firstGroup.getName());
+                });
+            });
+
+        }, 50L);
+    }
+
 }

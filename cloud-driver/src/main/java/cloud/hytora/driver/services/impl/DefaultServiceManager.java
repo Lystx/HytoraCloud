@@ -39,7 +39,7 @@ public abstract class DefaultServiceManager implements ServiceManager {
 
     @Override
     public void registerService(ICloudService service) {
-        ICloudService uniqueService = this.getServiceByNameOrNull(service.getName());
+        ICloudService uniqueService = this.getCachedCloudService(service.getName());
         if (uniqueService != null) {
             //already added
             return;
@@ -49,7 +49,7 @@ public abstract class DefaultServiceManager implements ServiceManager {
 
     @Override
     public void unregisterService(ICloudService service) {
-        ICloudService uniqueService = this.getServiceByNameOrNull(service.getName());
+        ICloudService uniqueService = this.getCachedCloudService(service.getName());
         if (uniqueService == null) {
             return;
         }
@@ -57,12 +57,12 @@ public abstract class DefaultServiceManager implements ServiceManager {
     }
 
     @Override
-    public ICloudService getServiceByNameOrNull(@NotNull String name) {
+    public ICloudService getCachedCloudService(@NotNull String name) {
         return this.allCachedServices.stream().filter(s -> s.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
     }
 
     @Override
-    public @NotNull Task<ICloudService> getServiceByNameOrNullAsync(@NotNull String name) {
+    public @NotNull Task<ICloudService> getCloudService(@NotNull String name) {
         return Task.callAsync(() -> {
            return this.allCachedServices.stream().filter(s -> s.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
         });
@@ -70,7 +70,7 @@ public abstract class DefaultServiceManager implements ServiceManager {
 
 
     public void updateServerInternally(ICloudService service) {
-        ICloudService server = this.getServiceByNameOrNull(service.getName());
+        ICloudService server = this.getCachedCloudService(service.getName());
         if (server != null) {
 
             UniversalCloudServer serviceInfo = (UniversalCloudServer) server;

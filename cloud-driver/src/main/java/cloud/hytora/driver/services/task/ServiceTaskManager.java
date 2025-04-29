@@ -7,11 +7,19 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 // TODO: 04.08.2022 documentation and remove Optionals (Tasks)
 public interface ServiceTaskManager {
+
+
+    default int countPlayerCapacity() {
+        int max = 0;
+        for (IServiceTask serviceTask : getAllCachedTasks().stream().filter(t -> t.getVersion().isProxy()).collect(Collectors.toList())) {
+            max += serviceTask.getDefaultMaxPlayers();
+        }
+        return max;
+    }
 
     Collection<TaskGroup> getAllTaskGroups();
 
@@ -21,12 +29,8 @@ public interface ServiceTaskManager {
 
     void removeTaskGroup(@NotNull TaskGroup taskGroup);
 
-    default @NotNull Optional<TaskGroup> getTaskGroupByName(@NotNull String name) {
-        return this.getAllTaskGroups().stream().filter(it -> it.getName().equalsIgnoreCase(name)).findAny();
-    }
-
-    default @Nullable TaskGroup getTaskGroupByNameOrNull(@NotNull String name) {
-        return this.getTaskGroupByName(name).orElse(null);
+    default @Nullable TaskGroup getCachedTaskGroup(@NotNull String name) {
+        return this.getAllTaskGroups().stream().filter(it -> it.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
     }
 
     @NotNull Collection<IServiceTask> getAllCachedTasks();
@@ -37,13 +41,13 @@ public interface ServiceTaskManager {
 
     void removeTask(@NotNull IServiceTask task);
 
-    default @NotNull Task<IServiceTask> getTaskByNameAsync(@NotNull String name) {
+    default @NotNull Task<IServiceTask> getServiceTask(@NotNull String name) {
         return Task.callAsync(() -> {
             return this.getAllCachedTasks().stream().filter(it -> it.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
         });
     }
 
-    default @Nullable IServiceTask getTaskByNameOrNull(@NotNull String name) {
+    default @Nullable IServiceTask getCachedServiceTask(@NotNull String name) {
         return this.getAllCachedTasks().stream().filter(it -> it.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
     }
 

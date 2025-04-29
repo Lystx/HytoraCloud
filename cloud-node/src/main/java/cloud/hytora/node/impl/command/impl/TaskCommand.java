@@ -42,7 +42,7 @@ public class TaskCommand {
     @Command.Syntax("<name>")
     public void execute(CommandSender sender, @Command.Argument(value = "name", completer = TaskCompleter.class) String name) {
 
-        IServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
+        IServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getCachedServiceTask(name);
 
         if (task == null) {
             sender.sendMessage("§cThis ServiceTask does not exists");
@@ -88,7 +88,7 @@ public class TaskCommand {
 
                 UniversalServiceTask serviceTask = new UniversalServiceTask();
 
-                if (!CloudDriver.getInstance().getServiceTaskManager().getTaskGroupByName(parentName).isPresent()) {
+                if (CloudDriver.getInstance().getServiceTaskManager().getCachedTaskGroup(parentName) == null) {
                     DefaultTaskGroup parent = new DefaultTaskGroup(name, version.getEnvironment(), shutdownBehaviour, new String[]{
                             "-XX:+UseG1GC",
                             "-XX:+ParallelRefProcEnabled",
@@ -175,7 +175,7 @@ public class TaskCommand {
     @Command(value = "delete", description = "Deletes a task")
     @Command.Syntax("<name>")
     public void executeDelete(CommandSender sender, @Command.Argument(value = "name", completer = TaskCompleter.class) String name) {
-        IServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
+        IServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getCachedServiceTask(name);
         if (task == null) {
             sender.sendMessage("§cThere is no existing ServiceTask with the name §e" + name + "§c!");
             return;
@@ -189,7 +189,7 @@ public class TaskCommand {
     @Command(value = "toggleMaintenance", description = "Toggles maintenance mode for a task")
     @Command.Syntax("<name>")
     public void executeToggleMaintenance(CommandSender sender, @Command.Argument(value = "name", completer = TaskCompleter.class) String name) {
-        IServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name);
+        IServiceTask task = CloudDriver.getInstance().getServiceTaskManager().getCachedServiceTask(name);
         if (task == null) {
             sender.sendMessage("§cThere is no existing ServiceTask with the name §e" + name + "§c!");
             return;

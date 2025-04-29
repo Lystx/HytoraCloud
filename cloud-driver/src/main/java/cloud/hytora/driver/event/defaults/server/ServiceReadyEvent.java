@@ -45,10 +45,10 @@ public class ServiceReadyEvent implements ProtocolTansferableEvent {
     }
 
     public ICloudService getCloudServer() {
-        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(this.name);
+        return CloudDriver.getInstance().getServiceManager().getCachedCloudService(this.name);
     }
 
     public Task<ICloudService> getCloudServerAsync() {
-        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNullAsync(this.name);
+        return CloudDriver.getInstance().getServiceManager().getCloudService(this.name);
     }
 }

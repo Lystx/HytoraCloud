@@ -5,6 +5,7 @@ import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.gson.adapter.ExcludeJsonField;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.PublishingType;
 import cloud.hytora.driver.common.CloudMessages;
 import cloud.hytora.driver.exception.ModuleNeededException;
 import cloud.hytora.driver.exception.PlayerNotOnlineException;
@@ -13,6 +14,7 @@ import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.permission.PermissionChecker;
 import cloud.hytora.driver.permission.PermissionManager;
 import cloud.hytora.driver.permission.PermissionPlayer;
+import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.connection.DefaultPlayerConnection;
 import cloud.hytora.driver.player.connection.PlayerConnection;
@@ -67,23 +69,23 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
     @Nullable
     @Override
     public ICloudService getServer() {
-        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(this.serverName);
+        return CloudDriver.getInstance().getServiceManager().getCachedCloudService(this.serverName);
     }
 
     @NotNull
     @Override
     public ICloudService getProxyServer() {
-        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(this.proxyName);
+        return CloudDriver.getInstance().getServiceManager().getCachedCloudService(this.proxyName);
     }
 
     @Override
     public Task<ICloudService> getServerAsync() {
-        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNullAsync(this.serverName);
+        return CloudDriver.getInstance().getServiceManager().getCloudService(this.serverName);
     }
 
     @Override
     public Task<ICloudService> getProxyServerAsync() {
-        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNullAsync(this.proxyName);
+        return CloudDriver.getInstance().getServiceManager().getCloudService(this.proxyName);
     }
 
     @Override
@@ -99,7 +101,7 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
 
     @Override
     public @NotNull PermissionPlayer asPermissionPlayer() throws ModuleNeededException {
-        Task<PermissionManager> task = CloudDriver.getInstance().getProviderRegistry().get(PermissionManager.class);
+        Task<PermissionManager> task = CloudDriver.getInstance().get(PermissionManager.class);
         if (task.isNull()) {
             throw new ModuleNeededException("Permission Module");
         }
@@ -107,8 +109,8 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
     }
 
     @Override
-    public void update() {
-        CloudDriver.getInstance().getPlayerManager().updateCloudPlayer(this);
+    public void update(PublishingType... type) {
+        CloudDriver.getInstance().getPlayerManager().updateCloudPlayer(this, type);
     }
 
     @Override
@@ -134,6 +136,10 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
         }
     }
 
+    @Override
+    public String toString() {
+        return "UniversalCloudPlayer[name=" + getName() + " uuid=" + getUniqueId() + " server=" + serverName + " proxy=" + proxyName + "]";
+    }
 
     @Override
     public void clone(ICloudPlayer from) {
@@ -159,7 +165,7 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
 
     @Override
     public boolean hasPermission(@NotNull String permission) {
-        PermissionChecker permissionChecker = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionChecker.class);
+        PermissionChecker permissionChecker = CloudDriver.getInstance().getProvider(PermissionChecker.class);
         return permissionChecker != null && permissionChecker.hasPermission(this.uniqueId, permission);
     }
 
@@ -177,5 +183,18 @@ public class UniversalCloudPlayer extends DefaultCloudOfflinePlayer implements I
     @Override
     public ICloudPlayer getPlayer() {
         return this;
+    }
+
+
+    public static ICloudPlayer fromOfflinePlayer(CloudOfflinePlayer player) {
+        UniversalCloudPlayer cloudPlayer = new UniversalCloudPlayer();
+
+        cloudPlayer.setUniqueId(player.getUniqueId());
+        cloudPlayer.setName(player.getName());
+        cloudPlayer.setFirstLogin(player.getFirstLogin());
+        cloudPlayer.setLastLogin(player.getLastLogin());
+        cloudPlayer.setProperties(player.getProperties());
+
+        return cloudPlayer;
     }
 }

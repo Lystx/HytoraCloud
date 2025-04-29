@@ -9,7 +9,7 @@ var cloud.hytora.launcher.devmode = false
 
 var cloud.hytora.launcher.autoupdater = false
 var cloud.hytora.launcher.module.autoupdater = false
-var cloud.hytora.launcher.application.file = https://raw.githubusercontent.com/Lystx/HytoraCloud/master/application.json
+var cloud.hytora.launcher.application.file = https://raw.githubusercontent.com/Lystx/HytoraCloud/master/hytoraCloud-updater/application.json
 var cloud.hytora.launcher.updater.baseUrl = https://github.com/Lystx/HytoraCloud/releases/download/v{version}
 var cloud.hytora.launcher.updater.url = {cloud.baseUrl}/HytoraCloud-{type}-{version}.zip
 var cloud.hytora.launcher.customVersion = null

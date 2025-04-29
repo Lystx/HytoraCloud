@@ -4,6 +4,7 @@ import cloud.hytora.common.function.ExceptionallyConsumer;
 import cloud.hytora.common.misc.Util;
 import cloud.hytora.context.annotations.ApplicationParticipant;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.HytoraCloudConstants;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.completer.impl.CloudServerCompleter;
@@ -41,7 +42,7 @@ public class ServiceCommand {
 
     @EventListener
     public void handleQuit(ServiceRequestScreenLeaveEvent event) {
-        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class).leaveCurrentScreen();
+        CloudDriver.getInstance().getProvider(ScreenManager.class).leaveCurrentScreen();
     }
 
     @Command(value = "list", description = "Lists all online services")
@@ -128,7 +129,7 @@ public class ServiceCommand {
             return;
         }
 
-        ScreenManager sm = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
+        ScreenManager sm = CloudDriver.getInstance().getProvider(ScreenManager.class);
 
         sm.getScreenByName(service.getName()).ifPresentOrElse(new ExceptionallyConsumer<Screen>() {
             @Override
@@ -152,13 +153,13 @@ public class ServiceCommand {
             return;
         }
 
-        ScreenManager sm = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
+        ScreenManager sm = CloudDriver.getInstance().getProvider(ScreenManager.class);
 
         sm.getScreenByName(service.getName()).ifPresentOrElse(new ExceptionallyConsumer<Screen>() {
             @Override
             public void acceptExceptionally(Screen screen) throws Exception {
                 screen.addInputHandler((ExceptionallyConsumer<String>) s -> {
-                    if (s.equalsIgnoreCase("leave") || s.equalsIgnoreCase("-l")) {        CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class).leaveCurrentScreen();
+                    if (s.equalsIgnoreCase("leave") || s.equalsIgnoreCase("-l")) {        CloudDriver.getInstance().getProvider(ScreenManager.class).leaveCurrentScreen();
 
                     } else {
                         if (s.trim().isEmpty()) {
@@ -219,7 +220,7 @@ public class ServiceCommand {
         sender.sendMessage("§bReady: §7" + (service.isReady() ? "§aYes" : "§cNo"));
         sender.sendMessage("§bUptime: §7" + service.getReadableUptime());
         sender.sendMessage("§bLast Sync: §7" + new SimpleDateFormat("HH:mm:ss").format(service.getLastCycleData().getTimestamp()));
-        sender.sendMessage("§bWould time out at: §7" + new SimpleDateFormat("HH:mm:ss").format(service.getLastCycleData().getTimestamp() + CloudDriver.SERVER_PUBLISH_INTERVAL));
+        sender.sendMessage("§bWould time out at: §7" + new SimpleDateFormat("HH:mm:ss").format(service.getLastCycleData().getTimestamp() + HytoraCloudConstants.SERVER_PUBLISH_INTERVAL));
         sender.sendMessage("§bPacket Latency: §7" + service.getLastCycleData().getLatency());
         sender.sendMessage("§bCycle Data: §7" + service.getLastCycleData().getData().asFormattedJsonString());
         sender.sendMessage("§8");

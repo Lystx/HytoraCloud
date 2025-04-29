@@ -11,6 +11,7 @@ import cloud.hytora.application.elements.StartPanelInfoBox;
 import cloud.hytora.application.elements.event.CommitHistoryLoadedEvent;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.PublishingType;
 import cloud.hytora.driver.console.Screen;
 import cloud.hytora.driver.networking.protocol.ProtocolAddress;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
@@ -68,7 +69,7 @@ public class Bootstrap {
                     GitHub github = GitHubBuilder.fromEnvironment().build();
                     GHRepository repository = github.getRepository("Lystx/HytoraCloud");
                     Collection<GHCommit> cachedCommits = repository.listCommits().toList();
-                    CloudDriver.getInstance().getEventManager().callEventGlobally(new CommitHistoryLoadedEvent(cachedCommits));
+                    CloudDriver.getInstance().getEventManager().callEvent(new CommitHistoryLoadedEvent(cachedCommits), PublishingType.GLOBAL);
                     CloudDriver.getInstance().getLogger().info("Loaded GitHub data");
                 } catch (Exception e) {
                     CloudDriver.getInstance().getLogger().info("Couldn't load GitHub data");

@@ -2,12 +2,10 @@ package cloud.hytora.driver.permission;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.common.IdentityObject;
-import cloud.hytora.driver.services.task.IServiceTask;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public interface PermissionGroup extends PermissionEntity, IdentityObject {
@@ -57,7 +55,7 @@ public interface PermissionGroup extends PermissionEntity, IdentityObject {
     default Collection<PermissionGroup> findInheritedGroups() {
         return Collections.unmodifiableCollection(
                 getInheritedGroups().stream()
-                        .map(CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class)::getPermissionGroupByNameOrNull).collect(Collectors.toList())
+                        .map(CloudDriver.getInstance().getProvider(PermissionManager.class)::getPermissionGroupByNameOrNull).collect(Collectors.toList())
         );
     }
 

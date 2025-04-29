@@ -147,7 +147,7 @@ public class DefaultModuleController implements ModuleController {
             if (state != ModuleState.DISABLED) return; // must be disabled first
 
             this.reloadConfig();
-            Logger.constantInstance().info("Loading the Module §8'§e" + moduleConfig.getName() + "§8'§f...");
+            Logger.constantInstance().debug("Loading the Module §8'§e" + moduleConfig.getName() + "§8'§f...");
             try {
 
                 state = ModuleState.LOADED;
@@ -165,7 +165,6 @@ public class DefaultModuleController implements ModuleController {
     @Override
     public void enableModule() {
         if (module == null) {
-            System.out.println("E1");
             return; // was never initialized
         }
         if (state != ModuleState.LOADED) {
@@ -173,13 +172,13 @@ public class DefaultModuleController implements ModuleController {
             return; // must be loaded first
         }
 
-        Logger.constantInstance().info("Enabling the Module §8'§6" + moduleConfig.getName() + "§8'§f...");
+        Logger.constantInstance().debug("Enabling the Module §8'§6" + moduleConfig.getName() + "§8'§f...");
 
         try {
             state = ModuleState.ENABLED;
             if (this.moduleConfig.getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
                 this.callTasks(this.state);
-                Logger.constantInstance().info("The Module §8'§a" + moduleConfig.getName() + "§8'§fhas been fully enabled§8!");
+                Logger.constantInstance().debug("The §3CloudModule §8'§b" + moduleConfig.getName() + "§8'§fhas been loadded §8and §7enabled§8!");
             }
         } catch (Throwable ex) {
             Logger.constantInstance().error("An error occurred while enabling module " + module);
@@ -194,7 +193,7 @@ public class DefaultModuleController implements ModuleController {
             if (module == null) return; // Was never initialized
             if (state == ModuleState.DISABLED) return; // Is already disabled
 
-            Logger.constantInstance().info("Disabling the Module §8'§c" + module + "§8'§f...");
+            Logger.constantInstance().debug("Disabling the Module §8'§c" + module + "§8'§f...");
 
             try {
                 state = ModuleState.DISABLED;
@@ -214,13 +213,13 @@ public class DefaultModuleController implements ModuleController {
     @Override
     public void reloadModule() {
 
-        Logger.constantInstance().info("Calling §6Reload §fon the Module §8'§6" + moduleConfig.getName() + "§8'§f...");
+        Logger.constantInstance().debug("Calling §6Reload §fon the Module §8'§6" + moduleConfig.getName() + "§8'§f...");
 
         try {
             state = ModuleState.RELOADING;
             if (this.moduleConfig.getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
                 this.callTasks(this.state);
-                Logger.constantInstance().info("The Module §8'§a" + moduleConfig.getName() + "§8'§fhas been fully reloaded§8!");
+                Logger.constantInstance().debug("The Module §8'§a" + moduleConfig.getName() + "§8'§fhas been fully reloaded§8!");
                 state = ModuleState.RELOADING;
             }
         } catch (Throwable ex) {
@@ -245,6 +244,12 @@ public class DefaultModuleController implements ModuleController {
         }
     }
 
+    @Override
+    public void update() {
+        if (this.moduleConfig.getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
+            callTasks(ModuleState.API_UPDATE);
+        }
+    }
 
     @Override
     public void registerModuleTasks(Object objectClass) {

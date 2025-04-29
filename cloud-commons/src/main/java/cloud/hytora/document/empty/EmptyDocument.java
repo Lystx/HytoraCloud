@@ -28,6 +28,21 @@ public class EmptyDocument implements Document {
 	private static final Collection<IEntry> entries = Collections.emptyList();
 
 	@Override
+	public int bufferIndex() {
+		return 0;
+	}
+
+	@Override
+	public Document append(Object object) {
+		return this;
+	}
+
+	@Override
+	public <T> T read(Class<T> typeClass) {
+		return null;
+	}
+
+	@Override
 	public DocumentWrapper<org.bson.Document> asBsonDocument() {
 		return null;
 	}

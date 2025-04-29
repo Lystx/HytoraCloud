@@ -1,12 +1,16 @@
 package cloud.hytora.driver.player;
 
+import cloud.hytora.common.location.impl.CloudEntityLocation;
 import cloud.hytora.common.task.Task;
+import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.PublishingType;
 import cloud.hytora.driver.command.sender.PlayerCommandSender;
 import cloud.hytora.driver.common.ICloneableObject;
 import cloud.hytora.driver.exception.ModuleNeededException;
 import cloud.hytora.driver.permission.PermissionPlayer;
 import cloud.hytora.driver.player.connection.PlayerConnection;
 import cloud.hytora.driver.player.executor.PlayerExecutor;
+import cloud.hytora.driver.player.executor.PlayerLocationFinder;
 import cloud.hytora.driver.services.ICloudService;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,6 +30,18 @@ public interface ICloudPlayer extends CloudOfflinePlayer, PlayerCommandSender, I
     ICloudService getProxyServer();
 
     Task<ICloudService> getProxyServerAsync();
+
+    @Override
+    default boolean hasPermission(@NotNull String perm) {
+        return CloudOfflinePlayer.super.hasPermission(perm);
+    }
+
+    @Nullable
+    default CloudEntityLocation<Double, Float> getLocation() {
+        PlayerLocationFinder locationFinder = CloudDriver.getInstance().getProvider(PlayerLocationFinder.class);
+
+        return locationFinder == null ? null : locationFinder.getLocation(this);
+    }
 
 
     default PlayerExecutor executor() {
@@ -77,7 +93,7 @@ public interface ICloudPlayer extends CloudOfflinePlayer, PlayerCommandSender, I
      * Updates the player and all its data all over the network
      * inside the whole cluster system (services & nodes)
      */
-    void update();
+    void update(PublishingType... type);
 
     /**
      * Tries to get the {@link PermissionPlayer} of this player

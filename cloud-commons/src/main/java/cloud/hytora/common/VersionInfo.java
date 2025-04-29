@@ -13,7 +13,7 @@ public class VersionInfo {
 
     // TODO: 07.08.2022 important
     public static VersionInfo getCurrentVersion() {
-        return new VersionInfo(Type.SNAPSHOT, 1.5);
+        return new VersionInfo(Type.STABLE, 2.0);
     }
 
     private final Type type;
@@ -93,10 +93,10 @@ public class VersionInfo {
     public static VersionInfo getNewestVersion(String offlineVersion) {
         if (NEWEST_VERSION == null) {
             if (!DriverUtility.hasInternetConnection()) {
-                return new VersionInfo(Type.UNKNOWN, Integer.valueOf(offlineVersion));
+                return new VersionInfo(Type.UNKNOWN, Integer.parseInt(offlineVersion));
             }
             try {
-                Document document = DocumentFactory.newJsonDocumentByURL("https://raw.githubusercontent.com/Lystx/HytoraCloud/master/application.json");
+                Document document = DocumentFactory.newJsonDocumentByURL("https://raw.githubusercontent.com/Lystx/HytoraCloud/master/hytoraCloud-updater/application.json");
 
                 String versionString = document.get("version").toString();
                 return (NEWEST_VERSION = fromString(versionString));

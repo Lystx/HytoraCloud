@@ -8,6 +8,10 @@ import org.jetbrains.annotations.NotNull;
 
 public class RemoteCommandManager extends DefaultCommandManager {
 
+	public RemoteCommandManager() {
+		this.setActive(true);
+	}
+
 	@Override
 	protected void handleCommandChange() {
 	}

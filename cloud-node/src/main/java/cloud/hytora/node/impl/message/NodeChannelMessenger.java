@@ -25,6 +25,9 @@ public class NodeChannelMessenger extends DefaultChannelMessenger {
 
         if (receiver.length > 0) {
             for (NetworkComponent messageReceiver : receiver) {
+                if (messageReceiver == null) {
+                    continue;
+                }
                 Optional<ClusterClientExecutor> client = executor.getClient(messageReceiver.getName());
                 client.ifPresent(clusterClientExecutor -> clusterClientExecutor.sendPacket(packet));
             }

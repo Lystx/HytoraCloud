@@ -18,6 +18,7 @@ import java.util.function.BiConsumer;
 public abstract class AbstractDocument implements Document {
 
 	protected final AtomicBoolean editable;
+	protected int bufferIndex;
 
 	public AbstractDocument(boolean editable) {
 		this(new AtomicBoolean(editable));
@@ -114,6 +115,26 @@ public abstract class AbstractDocument implements Document {
 			return (DocumentWrapper<Gson>) this;
 		}
 		return null;
+	}
+
+
+	@Override
+	public int bufferIndex() {
+		return bufferIndex;
+	}
+
+	@Override
+	public <T> T read(Class<T> typeClass) {
+		T instance = this.getInstance("buf_" + bufferIndex, typeClass);
+		bufferIndex++;
+		return instance;
+	}
+
+	@Override
+	public Document append(Object object) {
+		this.set("buf_" + bufferIndex, object);
+		bufferIndex++;
+		return this;
 	}
 
 	@Nonnull

@@ -8,6 +8,7 @@ import cloud.hytora.common.logging.handler.HandledLogger;
 import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.logging.handler.LogHandler;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.PublishingType;
 import cloud.hytora.driver.command.Console;
 import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
 import cloud.hytora.driver.exception.CloudException;
@@ -35,7 +36,7 @@ public class CloudBootstrap {
 
             CloudDriver driver = new NodeDriver(logger, console, Arrays.asList(args).contains("--devMode"), modulePath);
 
-            logger.addHandler(entry -> driver.getEventManager().callEventGlobally(new DriverLogEvent(entry)));
+            //logger.addHandler(entry -> driver.getEventManager().callEvent(new DriverLogEvent(entry), PublishingType.GLOBAL));
         } catch (Exception e) {
             e.printStackTrace();
         }

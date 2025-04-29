@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 
 @Getter
@@ -82,7 +81,7 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
     public Map<IServiceTask, Collection<String>> getTaskPermissions() {
         Map<IServiceTask, Collection<String>> taskPermissions = new ConcurrentHashMap<>();
         for (Map.Entry<String, Collection<String>> e : this.taskPermissions.entrySet()) {
-            taskPermissions.put(CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(e.getKey()), e.getValue());
+            taskPermissions.put(CloudDriver.getInstance().getServiceTaskManager().getCachedServiceTask(e.getKey()), e.getValue());
         }
         return taskPermissions;
     }
@@ -154,7 +153,7 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
             if (timeOut == -1 ) {
                 continue;
             }
-            boolean groupNotFound = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).getPermissionGroupByNameOrNull(groupName) == null;
+            boolean groupNotFound = CloudDriver.getInstance().getProvider(PermissionManager.class).getPermissionGroupByNameOrNull(groupName) == null;
             boolean timedOut = currentTime > timeOut;
 
             if (timedOut || groupNotFound) {
@@ -162,7 +161,7 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
                 if (timedOut) {
                     CloudDriver.getInstance().getLogger().info("==> Group '{}' has timedOut [TimedOut:{}]", groupName, timeOut);
                 } else {
-                    CloudDriver.getInstance().getLogger().info("==> Group '{}' could not be found. Listed Groups: [{}]", groupName, CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).getAllCachedPermissionGroups().stream().map(PermissionGroup::getName).collect(Collectors.toList()));
+                    CloudDriver.getInstance().getLogger().info("==> Group '{}' could not be found. Listed Groups: [{}]", groupName, CloudDriver.getInstance().getProvider(PermissionManager.class).getAllCachedPermissionGroups().stream().map(PermissionGroup::getName).collect(Collectors.toList()));
                 }
                 groups.remove(groupName);
             }
@@ -250,7 +249,7 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
 
     @Override
     public void update() {
-        CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).updatePermissionPlayer(this);
+        CloudDriver.getInstance().getProvider(PermissionManager.class).updatePermissionPlayer(this);
     }
 
     @Nullable
@@ -264,7 +263,7 @@ public class DefaultPermissionPlayer implements PermissionPlayer {
     public Collection<PermissionGroup> getPermissionGroups() {
         this.checkForExpiredValues();
         return this.groups.keySet().stream().map(s -> {
-            PermissionGroup permissionGroup = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).getPermissionGroupByNameOrNull(s);
+            PermissionGroup permissionGroup = CloudDriver.getInstance().getProvider(PermissionManager.class).getPermissionGroupByNameOrNull(s);
             if (permissionGroup == null) {
                 System.out.println("No permissionGroup found by Name " + s);
             }

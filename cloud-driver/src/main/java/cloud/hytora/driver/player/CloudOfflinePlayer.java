@@ -1,10 +1,12 @@
 package cloud.hytora.driver.player;
 
 import cloud.hytora.document.Document;
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.common.Documentable;
 import cloud.hytora.driver.common.IdentityObject;
 import cloud.hytora.driver.exception.PlayerNotOnlineException;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
+import cloud.hytora.driver.permission.PermissionManager;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -19,6 +21,15 @@ public interface CloudOfflinePlayer extends IBufferObject, IdentityObject, Docum
      */
     @NotNull
     String getName();
+
+
+    default boolean hasPermission(String perm) {
+        PermissionManager permissionManager = CloudDriver.getInstance().getProvider(PermissionManager.class);
+        if (permissionManager == null) {
+            return false;
+        }
+        return permissionManager.hasPermission(this.getUniqueId(), perm);
+    }
 
     /**
      * Checks if this player is currently online
@@ -62,6 +73,9 @@ public interface CloudOfflinePlayer extends IBufferObject, IdentityObject, Docum
     void setProperties(@Nonnull Document properties);
 
     void editProperties(Consumer<Document> properties);
+
+    @Deprecated
+    PlayerUnsafe unsafe();
 
     /**
      * The time as long (date in millis) when this player has

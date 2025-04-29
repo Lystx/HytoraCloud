@@ -35,6 +35,14 @@ import java.util.function.Consumer;
  */
 public interface Document extends JsonEntity {
 
+	int bufferIndex();
+
+	Document append(Object object);
+
+	<T> T read(Class<T> typeClass);
+
+
+
 	@Nonnull
 	@CheckReturnValue
 	public static Document emptyDocument() {

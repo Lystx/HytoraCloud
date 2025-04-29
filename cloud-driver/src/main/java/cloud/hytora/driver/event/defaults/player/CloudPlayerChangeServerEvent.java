@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.util.UUID;
 
-public class CloudPlayerChangeServerEvent implements  ProtocolTansferableEvent {
+public class CloudPlayerChangeServerEvent implements ProtocolTansferableEvent {
 
     @Nullable
     private UUID playerId;
@@ -45,10 +45,10 @@ public class CloudPlayerChangeServerEvent implements  ProtocolTansferableEvent {
     }
 
     public ICloudService getServer() {
-        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(this.server);
+        return CloudDriver.getInstance().getServiceManager().getCachedCloudService(this.server);
     }
 
     public Task<ICloudService> getCloudServerAsync() {
-        return CloudDriver.getInstance().getServiceManager().getServiceByNameOrNullAsync(this.server);
+        return CloudDriver.getInstance().getServiceManager().getCloudService(this.server);
     }
 }

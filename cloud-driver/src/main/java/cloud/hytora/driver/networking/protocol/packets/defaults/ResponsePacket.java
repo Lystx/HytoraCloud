@@ -18,6 +18,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
+
 @AllArgsConstructor
 public class ResponsePacket extends AbstractPacket implements BufferedResponse {
 
@@ -59,7 +60,7 @@ public class ResponsePacket extends AbstractPacket implements BufferedResponse {
             case WRITE:
                 buf.writeString(responderName);
                 buf.writeOptionalThrowable(error);
-                buf.writeEnum(state);
+                buf.writeEnum(this.state);
                 buf.writeOptionalDocument(data);
                 buf.writeBuffer(buffer);
                 break;

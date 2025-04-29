@@ -17,6 +17,8 @@ public interface ChanneledPacketAction<R> {
 
     ChanneledPacketAction<R> data(Document document);
 
+    ChanneledPacketAction<R> data(Consumer<Document> document);
+
     ChanneledPacketAction<R> buffer(Consumer<PacketBuffer> buf);
 
     ChanneledPacketAction<R> buffer(PacketBuffer buf);

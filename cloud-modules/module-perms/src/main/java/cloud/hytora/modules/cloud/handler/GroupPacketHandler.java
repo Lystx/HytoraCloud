@@ -10,7 +10,7 @@ public class GroupPacketHandler implements PacketHandler<PermsGroupPacket> {
 
     @Override
     public void handle(PacketChannel wrapper, PermsGroupPacket packet) {
-        PermissionManager permissionManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class);
+        PermissionManager permissionManager = CloudDriver.getInstance().getProvider(PermissionManager.class);
         switch (packet.getPayLoad()) {
             case CREATE:
                 permissionManager.addPermissionGroup(packet.getGroup());

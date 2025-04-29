@@ -1,11 +1,17 @@
 package cloud.hytora.modules.sign.spigot.command;
 
 import cloud.hytora.common.location.impl.DefaultLocation;
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.sender.CommandSender;
+import cloud.hytora.driver.command.sender.PlayerCommandSender;
+import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
+import cloud.hytora.modules.npc.api.*;
+import cloud.hytora.modules.npc.spigot.entity.npc.NPCAction;
+import cloud.hytora.modules.npc.spigot.gui.CloudServiceGUI;
 import cloud.hytora.modules.sign.api.ICloudSign;
 import cloud.hytora.modules.sign.api.def.UniversalCloudSign;
 import cloud.hytora.modules.sign.api.CloudSignAPI;
@@ -19,6 +25,8 @@ import org.bukkit.block.Sign;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 @Command(
         value = "sign",
@@ -69,6 +77,49 @@ public class BukkitSignCloudCommand {
             sender.sendMessage("§cThis task §cdoesn't exist!");
         }
     }
+
+
+    @Command(value = "gui", description = "Opens gui")
+    public void onGuiOpen(CommandSender sender) {
+        ICloudService cloudService = CloudDriver.getInstance().getServiceManager().thisService();
+
+
+
+        NPCManager npcManager = CloudDriver.getInstance().getProvider(NPCManager.class);
+        NPCFactory npcFactory = npcManager.getNPCFactory(cloudService);
+        CloudNPCMeta meta = npcFactory.createMeta();
+
+        meta.setDisplayName("§8» §bLobby §8┃ §7Klick mich")
+                .nextId()
+                .setInternalName("npc_qsg")
+                .setSkinName("ByQuadrix")
+                .addHologramLine(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        IServiceTask qsg = CloudDriver.getInstance().getServiceTaskManager().getCachedServiceTask("Lobby");
+
+                        long onlineP = qsg.getOnlineServices().stream().map(ICloudService::getOnlinePlayers).count();
+                        long onlineSer = qsg.getOnlineServices().size();
+
+                        return "§8» §7Spieler§8: §a" + onlineP + " §7Servers§8: §a" + onlineSer;
+                    }
+                }, TimeUnit.SECONDS, 5)
+                .addHologramLine("§7This is test line")
+                .setLocation(((PlayerCommandSender)sender).getPlayer().getLocation())
+                .addFunction(NPCFunction.LOOK)
+                .addClickAction(NPCAction.click(cloudPlayer -> {
+                    cloudPlayer.sendMessage("§aClicked QSG!");
+                    new CloudServiceGUI(cloudService).open(Bukkit.getPlayer(sender.getName()));
+                }))
+                .updateSkinAfterSpawn(1);
+
+        CloudNPC npc = npcFactory.createNPC(meta);
+
+        npc.spawn();
+
+        sender.sendMessage("§aDone npc!");
+    }
+
     @Command(value = "remove", description = "Removes the sign you're looking at!")
     public void onRemoveCloudSign(CommandSender sender) {
         Set<Material> materials = new HashSet<>();

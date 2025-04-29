@@ -3,6 +3,7 @@ package cloud.hytora.node.impl.database.cloud;
 import cloud.hytora.common.task.Task;
 
 
+import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.database.LocalStorage;
 import cloud.hytora.driver.database.IDatabaseManager;
 import cloud.hytora.driver.database.api.Database;
@@ -48,8 +49,10 @@ public class DefaultDatabaseManager implements IDatabaseManager {
         //database cannot be null
         try {
             this.database.connect();
+            CloudDriver.getInstance().getLogger().info("§7Database has connected §asuccessfully §8[§aHost§8: §7{} §aPort§8: §7{} §aDatabase§8: §7{}§8]", database.getConfig().getHost(), database.getConfig().getPort(), database.getConfig().getDatabase());
             this.setupTables();
         } catch (Exception e) {
+            CloudDriver.getInstance().getLogger().error("§cCouldn't connect to database of type §e{}", config.getType());
             e.printStackTrace();
         }
 

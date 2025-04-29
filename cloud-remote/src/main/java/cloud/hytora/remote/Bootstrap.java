@@ -3,6 +3,7 @@ package cloud.hytora.remote;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.PublishingType;
 import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
 import cloud.hytora.driver.services.utils.RemoteIdentity;
 import cloud.hytora.remote.impl.log.DefaultLogHandler;
@@ -29,7 +30,7 @@ public class Bootstrap {
         var identity = RemoteIdentity.read(new File("property.json"));
         var logger = new HandledAsyncLogger(identity.getLogLevel());
         logger.addHandler(new DefaultLogHandler());
-        logger.addHandler(entry -> CloudDriver.getInstance().getEventManager().callEventGlobally(new DriverLogEvent(entry)));
+        //logger.addHandler(entry -> CloudDriver.getInstance().getEventManager().callEvent(new DriverLogEvent(entry), PublishingType.GLOBAL));
         Logger.setFactory(logger);
 
 

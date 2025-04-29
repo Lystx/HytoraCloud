@@ -1,6 +1,5 @@
 package cloud.hytora.modules.global.impl;
 
-import cloud.hytora.common.misc.CollectionUtils;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
@@ -141,7 +140,7 @@ public class DefaultPermissionGroup implements PermissionGroup {
     public Map<IServiceTask, Collection<String>> getTaskPermissions() {
         Map<IServiceTask, Collection<String>> taskPermissions = new ConcurrentHashMap<>();
         for (Map.Entry<String, Collection<String>> e : this.taskPermissions.entrySet()) {
-            taskPermissions.put(CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(e.getKey()), e.getValue());
+            taskPermissions.put(CloudDriver.getInstance().getServiceTaskManager().getCachedServiceTask(e.getKey()), e.getValue());
         }
         return taskPermissions;
     }
@@ -256,7 +255,7 @@ public class DefaultPermissionGroup implements PermissionGroup {
             return true;
         } else {
             for (String groupName : getInheritedGroups()) {
-                PermissionGroup group = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).getPermissionGroupByNameOrNull(groupName);
+                PermissionGroup group = CloudDriver.getInstance().getProvider(PermissionManager.class).getPermissionGroupByNameOrNull(groupName);
                 if (group == null) {
                     continue;
                 }
@@ -270,7 +269,7 @@ public class DefaultPermissionGroup implements PermissionGroup {
 
     @Override
     public void update() {
-        CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).updatePermissionGroup(this);
+        CloudDriver.getInstance().getProvider(PermissionManager.class).updatePermissionGroup(this);
     }
 
     @Override

@@ -1,6 +1,5 @@
 package cloud.hytora.modules.sign.api.def;
 
-import cloud.hytora.common.location.ModifiableLocation;
 import cloud.hytora.common.location.impl.DefaultLocation;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
@@ -55,11 +54,11 @@ public class UniversalCloudSign implements ICloudSign {
 
     @Override
     public Task<IServiceTask> findTaskAsync() {
-        return CloudDriver.getInstance().getServiceTaskManager().getTaskByNameAsync(this.taskName);
+        return CloudDriver.getInstance().getServiceTaskManager().getServiceTask(this.taskName);
     }
 
     @Override
     public IServiceTask findTask() {
-        return CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(this.taskName);
+        return CloudDriver.getInstance().getServiceTaskManager().getCachedServiceTask(this.taskName);
     }
 }

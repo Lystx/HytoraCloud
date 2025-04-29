@@ -37,13 +37,11 @@
     <modules>
         <module>cloud-node</module>
         <module>cloud-driver</module>
-        <module>cloud-bridge</module>
         <module>cloud-remote</module>
         <module>cloud-commons</module>
         <module>cloud-modules</module>
         <module>cloud-launcher</module>
         <module>cloud-script</module>
-        <module>cloud-modules/module-smartProxy</module>
         <module>cloud-interface</module>
     </modules>
 

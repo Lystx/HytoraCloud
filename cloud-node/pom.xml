@@ -133,16 +133,6 @@
                             <goal>run</goal>
                         </goals>
 
-                        <!-- Copies the final plugin file to the resource directory -->
-                        <configuration>
-                            <failOnError>false</failOnError>
-                            <target name="copyAction">
-                                <copy
-                                        file="${basedir}/../cloud-bridge/target/plugin.jar"
-                                        tofile="${basedir}/src/main/resources/impl/plugin.jar"
-                                />
-                            </target>
-                        </configuration>
                     </execution>
                     <execution>
                         <id>copy_remote</id>
@@ -151,16 +141,6 @@
                             <goal>run</goal>
                         </goals>
 
-                        <!-- Copies the final remote file to the resource directory -->
-                        <configuration>
-                            <failOnError>false</failOnError>
-                            <target name="copyAction">
-                                <copy
-                                        file="${basedir}/../cloud-remote/target/remote.jar"
-                                        tofile="${basedir}/src/main/resources/impl/remote.jar"
-                                />
-                            </target>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

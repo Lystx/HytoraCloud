@@ -9,7 +9,6 @@ import org.jetbrains.annotations.NotNull;
 public class NodeCommandManager extends DefaultCommandManager {
 
     public NodeCommandManager() {
-        this.setActive(true);
     }
 
     @Override

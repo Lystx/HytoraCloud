@@ -13,7 +13,7 @@ public class NodeServiceShutdownHandler implements PacketHandler<ServiceRequestS
     public void handle(PacketChannel wrapper, ServiceRequestShutdownPacket packet) {
         String serverName = packet.getService();
         ServiceManager serviceManager = CloudDriver.getInstance().getServiceManager();
-        ICloudService service = serviceManager.getServiceByNameOrNull(serverName);
+        ICloudService service = serviceManager.getCachedCloudService(serverName);
 
 
         if (service != null) {

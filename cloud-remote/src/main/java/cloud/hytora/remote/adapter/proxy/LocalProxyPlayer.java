@@ -14,5 +14,7 @@ public interface LocalProxyPlayer {
 
     String getServer();
 
+    void setTabList(String header, String footer);
+
     void connect(String server);
 }

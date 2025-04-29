@@ -1,6 +1,7 @@
 package cloud.hytora.node.service;
 
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.PublishingType;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.defaults.task.TaskUpdateEvent;
 
@@ -58,7 +59,7 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
     @EventListener
     public void handle(TaskUpdateEvent event) {
         IServiceTask packetTask = event.getTask();
-        IServiceTask task = getTaskByNameOrNull(packetTask.getName());
+        IServiceTask task = getCachedServiceTask(packetTask.getName());
 
         if (task == null) {
             return;
@@ -66,7 +67,7 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
 
         CloudDriver.getInstance().getLogger().trace("Updated Task {}", task.getName());
         task.clone(packetTask);
-        CloudDriver.getInstance().getEventManager().callEventOnlyPacketBased(new TaskUpdateEvent(task));
+        CloudDriver.getInstance().getEventManager().callEvent(new TaskUpdateEvent(task), PublishingType.PROTOCOL);
 
         NodeDriver.getInstance().getServiceQueue().dequeue();
 
@@ -124,7 +125,7 @@ public class NodeServiceTaskManager extends DefaultServiceTaskManager implements
     @Override
     public void update(@NotNull IServiceTask task) {
         this.database.getSection(IServiceTask.class).update(task.getName(), task);
-        CloudDriver.getInstance().getEventManager().callEventGlobally(new TaskUpdateEvent(task));
+        CloudDriver.getInstance().getEventManager().callEvent(new TaskUpdateEvent(task), PublishingType.GLOBAL);
         if (NodeDriver.getInstance().getNodeManager() != null && NodeDriver.getInstance().getNodeManager().isHeadNode()) {
             DriverUpdatePacket.publishUpdate(CloudDriver.getInstance().getExecutor());
         }

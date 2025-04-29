@@ -7,6 +7,7 @@ import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.ICloudPlayer;
+import cloud.hytora.driver.player.PlayerUnsafe;
 import lombok.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -60,6 +61,12 @@ public class DefaultCloudOfflinePlayer implements CloudOfflinePlayer {
         properties.accept(this.properties);
 
         this.saveOfflinePlayer();
+    }
+
+
+    @Deprecated
+    public PlayerUnsafe unsafe() {
+        return new DefaultPlayerUnsafe(this);
     }
 
     @Override

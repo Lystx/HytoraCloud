@@ -20,6 +20,10 @@ public interface PlayerExecutor {
         return new CloudPlayerExecutor(player);
     }
 
+    static PlayerExecutor forProxy(UUID playerId, ICloudService proxy) {
+        return new PlayerIdExecutor(playerId, proxy);
+    }
+
     /**
      * The uuid this executor is for
      */

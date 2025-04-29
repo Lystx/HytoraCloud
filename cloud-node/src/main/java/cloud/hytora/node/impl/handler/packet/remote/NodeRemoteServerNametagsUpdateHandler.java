@@ -12,7 +12,7 @@ public class NodeRemoteServerNametagsUpdateHandler implements PacketHandler<Serv
     @Override
     public void handle(PacketChannel wrapper, ServiceUpdateNametagsPacket packet) {
         String server = packet.getService();
-        Task<ICloudService> service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNullAsync(server);
+        Task<ICloudService> service = CloudDriver.getInstance().getServiceManager().getCloudService(server);
         service.ifPresent(s -> s.sendPacket(packet));
     }
 }

@@ -28,7 +28,11 @@ public enum ModuleState {
 	/**
 	 * @see ModuleController#unregisterModule()
 	 */
-	UNREGISTERED;
+	UNREGISTERED,
 
 
+	/**
+	 * This is for api usages to update a module
+	 */
+	API_UPDATE
 }

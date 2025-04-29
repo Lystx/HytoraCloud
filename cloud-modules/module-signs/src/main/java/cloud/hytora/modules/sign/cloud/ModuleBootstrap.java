@@ -46,7 +46,7 @@ public class ModuleBootstrap extends AbstractModule {
 
         //setting value in api
         CloudSignAPI.getInstance().setSignConfiguration(configuration);
-        Logger.constantInstance().info("Loaded config {}", CloudSignAPI.getInstance().getSignConfiguration());
+        Logger.constantInstance().debug("Loaded config {}", CloudSignAPI.getInstance().getSignConfiguration());
     }
 
     @ModuleTask(id = 2, state = ModuleState.ENABLED)
@@ -65,7 +65,7 @@ public class ModuleBootstrap extends AbstractModule {
 
         CloudSignAPI.getInstance().publishConfiguration();
         CloudSignAPI.getInstance().getSignManager().update();
-        CloudDriver.getInstance().getLogger().info("§aSuccessfully enabled Module §fCloud-Signs§a!");
+        CloudDriver.getInstance().getLogger().debug("§aSuccessfully enabled Module §fCloud-Signs§a!");
     }
 
 

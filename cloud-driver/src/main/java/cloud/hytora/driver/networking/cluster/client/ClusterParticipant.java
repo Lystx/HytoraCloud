@@ -5,6 +5,7 @@ import cloud.hytora.common.misc.Util;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.PublishingType;
 import cloud.hytora.driver.event.defaults.driver.DriverConnectEvent;
 import cloud.hytora.driver.networking.protocol.codec.NetworkBossHandler;
 import cloud.hytora.driver.networking.protocol.codec.PacketDecoder;
@@ -56,7 +57,7 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
     }
 
 
-    public Task<Channel> openConnection(String hostname, int port) {
+    public Task<Channel> openConnection(String hostname, int port, Runnable... handlers) {
         Task<Channel> result = Task.empty(Channel.class).denyNull();
 
         if (active) {
@@ -92,14 +93,16 @@ public abstract class ClusterParticipant extends AbstractNetworkComponent<Cluste
                                             ClusterParticipant.this.sendPacket(new HandshakePacket(authKey, getName(), ClusterParticipant.this.type, customData));
 
                                             //fire connect event
-                                            CloudDriver.getInstance().getEventManager().callEventGlobally(new DriverConnectEvent());
+                                            CloudDriver.getInstance().getEventManager().callEvent(new DriverConnectEvent(), PublishingType.GLOBAL);
                                             super.channelActive(ctx);
+                                            for (Runnable handler : handlers) {
+                                                handler.run();
+                                            }
 
                                         }
 
                                         @Override
                                         public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-                                            CloudDriver.getInstance().getEventManager().callEventGlobally(new DriverConnectEvent());
                                             //onClose(ctx);
                                             if (ClusterParticipant.this instanceof AdvancedClusterParticipant) {
                                                 ((AdvancedClusterParticipant)ClusterParticipant.this).onClose(ctx);

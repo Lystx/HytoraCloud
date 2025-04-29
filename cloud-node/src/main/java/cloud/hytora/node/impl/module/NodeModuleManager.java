@@ -116,7 +116,7 @@ public class NodeModuleManager implements ModuleManager {
                 continue;
             }
             try {
-                CloudDriver.getInstance().getLogger().info("Resolving the module §8'§b{}§8'§f...", file.getFileName());
+                CloudDriver.getInstance().getLogger().debug("Resolving the module §8'§b{}§8'§f...", file.getFileName());
                 Path selfBasePath = new File(CloudDriver.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath();
 
                 ClassLoader classLoader = Thread.currentThread().getContextClassLoader();

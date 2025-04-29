@@ -40,7 +40,7 @@ public class PlayerSignListener implements Listener {
             if (s == null) {
                 return; //no server for this sign (offline layout)
             }
-            ICloudService service = CloudDriver.getInstance().getServiceManager().getServiceByNameOrNull(s);
+            ICloudService service = CloudDriver.getInstance().getServiceManager().getCachedCloudService(s);
             if (service == null) {
                 return;
             }

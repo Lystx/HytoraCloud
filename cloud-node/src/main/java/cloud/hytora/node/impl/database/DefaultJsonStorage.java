@@ -4,7 +4,6 @@ import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.DriverEnvironment;
 import cloud.hytora.node.NodeDriver;
 
 
@@ -34,7 +33,7 @@ public class DefaultJsonStorage implements IJsonStorage {
         File collectionFolder = new File(NodeDriver.STORAGE_FOLDER, collection + "/");
         try {
 
-            if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE && !CloudDriver.getInstance().getNodeManager().isHeadNode()) {
+            if (CloudDriver.getInstance().getEnvironment() == CloudDriver.Environment.NODE && !CloudDriver.getInstance().getNodeManager().isHeadNode()) {
                 return collectionFolder;
             }
         } catch (Exception e) {

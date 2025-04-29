@@ -104,7 +104,7 @@ public class JLine3Console implements Console {
         if (!formatted.endsWith(System.lineSeparator()) && !entry.getMessage().startsWith("\r")) {
             formatted += System.lineSeparator();
         }
-        ScreenManager sm = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
+        ScreenManager sm = CloudDriver.getInstance().getProvider(ScreenManager.class);
         Screen console = sm.getScreenByNameOrNull("console");
         if (console != null) {
             console.cacheLine(entry.getMessage());
@@ -121,7 +121,7 @@ public class JLine3Console implements Console {
         if (!text.endsWith(System.lineSeparator()) && !text.startsWith("\r")) {
             text += System.lineSeparator();
         }
-        ScreenManager sm = CloudDriver.getInstance().getProviderRegistry().getUnchecked(ScreenManager.class);
+        ScreenManager sm = CloudDriver.getInstance().getProvider(ScreenManager.class);
         Screen console = sm.getScreenByNameOrNull("console");
         if (console != null) {
             console.cacheLine(text);

@@ -4,6 +4,7 @@ package cloud.hytora.driver.provider.defaults;
 import cloud.hytora.common.misc.Util;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.event.EventManager;
 import cloud.hytora.driver.provider.*;
 
 import java.util.Collection;
@@ -15,9 +16,11 @@ public class DefaultProviderRegistry implements ProviderRegistry {
 
     private final Map<Class<?>, ProviderEntry<?>> entries;
     private final boolean registerInstancesAsEventListener;
+    protected final EventManager manager;
 
-    public DefaultProviderRegistry(boolean registerInstancesAsEventListener) {
+    public DefaultProviderRegistry(boolean registerInstancesAsEventListener, EventManager eventManager) {
         this.registerInstancesAsEventListener = registerInstancesAsEventListener;
+        this.manager = eventManager;
         this.entries = new ConcurrentHashMap<>();
     }
 
@@ -29,7 +32,7 @@ public class DefaultProviderRegistry implements ProviderRegistry {
         }
 
         if (registerInstancesAsEventListener) {
-            CloudDriver.getInstance().getEventManager().registerListener(provider);
+            manager.registerListener(provider);
         }
         this.entries.put(service, new DefaultProviderEntry<>(service, provider, immutable, needsReplacement));
         Util.executeIf(() -> {
@@ -48,7 +51,7 @@ public class DefaultProviderRegistry implements ProviderRegistry {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T getUnchecked(Class<T> service) throws ProviderNotRegisteredException {
+    public <T> T getProvider(Class<T> service) throws ProviderNotRegisteredException {
         ProviderEntry<T> entry = (ProviderEntry<T>) this.entries.get(service);
         if (entry == null) {
             throw new ProviderNotRegisteredException(service);
@@ -95,7 +98,7 @@ public class DefaultProviderRegistry implements ProviderRegistry {
             throw new ProviderNeedsReplacementException(service);
         }
 
-        CloudDriver.getInstance().getEventManager().unregisterListener(service);
+        manager.unregisterListener(service);
         this.entries.remove(service);
     }
 

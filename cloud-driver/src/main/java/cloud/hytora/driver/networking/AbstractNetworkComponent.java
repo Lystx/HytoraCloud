@@ -62,6 +62,7 @@ public abstract class AbstractNetworkComponent<T extends AbstractNetworkComponen
     @Override
     public <P extends IPacket> void registerSelfDestructivePacketHandler(@NotNull PacketHandler<P> packetHandler) {
         this.registerPacketHandler((PacketHandler<P>) (wrapper, packet) -> {
+            ((AbstractPacket)packet).channel(wrapper);
             packetHandler.handle(wrapper, packet);
             unRegisterChannelHandler("global_packet_channel", packetHandler);
         });
@@ -96,10 +97,12 @@ public abstract class AbstractNetworkComponent<T extends AbstractNetworkComponen
     public <P extends IPacket> void handlePacket(PacketChannel wrapper, @NotNull P packet) {
         ThreadRunnable runnable = new ThreadRunnable(() -> {
 
+            ((AbstractPacket)packet).channel(wrapper);
             List<PacketHandler<?>> packetHandlers = this.channelPacketHandlers.get(packet.getDestinationChannel());
 
             for (PacketHandler packetHandler : new ArrayList<>(packetHandlers)) {
                 try {
+
                     packetHandler.handle(wrapper, packet);
                 } catch (Exception e) {
                     if (e instanceof ClassCastException) {

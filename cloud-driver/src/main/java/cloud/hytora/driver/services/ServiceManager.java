@@ -2,6 +2,7 @@ package cloud.hytora.driver.services;
 
 
 import cloud.hytora.common.task.Task;
+import cloud.hytora.driver.PublishingType;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.services.fallback.FallbackEntry;
@@ -13,7 +14,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 // TODO: 04.08.2022 rework documentation
@@ -57,7 +60,7 @@ public interface ServiceManager {
      *
      * @param service the service to update
      */
-    void updateService(ICloudService service);
+    void updateService(ICloudService service, PublishingType... type);
 
     /**
      * Tries to unregister a given {@link ICloudService}
@@ -84,7 +87,15 @@ public interface ServiceManager {
 
 
     default List<ICloudService> getAllServicesByTask(@NotNull IServiceTask serviceTask) {
-        return this.getAllCachedServices().stream().filter(it -> it.getTask() != null && it.getTask().getName().equalsIgnoreCase(serviceTask.getName())).collect(Collectors.toList());
+        if (serviceTask == null) {
+            return new ArrayList<>();
+        }
+        return this.getAllCachedServices()
+                .stream()
+                .filter(Objects::nonNull)
+                .filter(it -> it.getTask() != null)
+                .filter(it -> it.getTask().getName().equalsIgnoreCase(serviceTask.getName()))
+                .collect(Collectors.toList());
     }
 
     default List<ICloudService> getAllServicesByState(@NotNull ServiceState serviceState) {
@@ -96,31 +107,22 @@ public interface ServiceManager {
     }
 
     @NotNull
-    Task<ICloudService> getServiceByNameOrNullAsync(@NotNull String name);
+    Task<ICloudService> getCloudService(@NotNull String name);
 
-    ICloudService getServiceByNameOrNull(@NotNull String name);
+    ICloudService getCachedCloudService(@NotNull String name);
 
     Task<ICloudService> startService(@NotNull ICloudService service);
 
     @Nonnull
     Task<ICloudService> getFallbackAsService();
 
-    Task<ICloudService> thisService();
+    Task<ICloudService> getThisService();
 
-    ICloudService thisServiceOrNull();
+    ICloudService thisService();
 
-    @Nullable
-    default ICloudService getFallbackAsServiceOrNull() {
-        return getFallbackAsService().get();
-    }
 
     @Nonnull
     Task<FallbackEntry> getFallbackAsEntry();
-
-    @Nullable
-    default FallbackEntry getFallbackAsEntryOrNull() {
-        return getFallbackAsEntry().get();
-    }
 
     @Nonnull
     List<ICloudService> getAvailableFallbacksAsServices();

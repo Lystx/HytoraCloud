@@ -1,18 +1,17 @@
 package cloud.hytora.driver.networking.protocol.packets;
 
 import cloud.hytora.common.task.Task;
+import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.DriverEnvironment;
-import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
 import cloud.hytora.driver.networking.EndpointNetworkExecutor;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.packets.RedirectPacket;
-import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 
 import java.util.UUID;
 
+import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -38,6 +37,12 @@ public abstract class AbstractPacket implements IPacket {
      * The channel this is going to be sent to
      */
     protected String destinationChannel;
+
+    /**
+     * the channel that received the packet
+     */
+    @Setter
+    public PacketChannel channel;
 
     public AbstractPacket() {
         this.buffer = PacketBuffer.unsafe();
@@ -71,7 +76,7 @@ public abstract class AbstractPacket implements IPacket {
 
     @Override
     public void publishTo(String... receivers) {
-        if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
+        if (CloudDriver.getInstance().getEnvironment() == CloudDriver.Environment.NODE) {
             EndpointNetworkExecutor executor = (EndpointNetworkExecutor) CloudDriver.getInstance().getExecutor();
             for (String receiver : receivers) {
 
@@ -89,6 +94,26 @@ public abstract class AbstractPacket implements IPacket {
             return null;
         });
     }
+
+    public Task<Void> respond(NetworkResponseState state, Consumer<PacketBuffer> bufferConsumer) {
+        PacketBuffer packetBuffer = PacketBuffer.unPooled();
+        bufferConsumer.accept(packetBuffer);
+        return channel.prepareResponse().buffer(packetBuffer).state(state).execute(this);
+    }
+    public Task<Void> respond(NetworkResponseState state) {
+        return channel.prepareResponse().state(state).execute(this);
+    }
+
+    public Task<Void> respond(NetworkResponseState state, Document data) {
+        return channel.prepareResponse().data(data).state(state).execute(this);
+    }
+
+    public Task<Void> respond(NetworkResponseState state, Document data, Consumer<PacketBuffer> bufferConsumer) {
+        PacketBuffer packetBuffer = PacketBuffer.unPooled();
+        bufferConsumer.accept(packetBuffer);
+        return channel.prepareResponse().buffer(packetBuffer).data(data).state(state).execute(this);
+    }
+
 
     public Task<BufferedResponse> awaitResponse() {
         return CloudDriver.getInstance().getExecutor().getPacketChannel().prepareSingleQuery().execute(this);

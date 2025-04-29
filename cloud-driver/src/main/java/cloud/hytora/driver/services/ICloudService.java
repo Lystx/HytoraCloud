@@ -4,12 +4,14 @@ import cloud.hytora.common.identification.ModifiableUUIDHolder;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.PublishingType;
 import cloud.hytora.driver.common.IClusterObject;
 import cloud.hytora.driver.message.ChannelMessage;
 import cloud.hytora.driver.message.DocumentPacket;
 import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.IPacketExecutor;
 import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
+import cloud.hytora.driver.node.INode;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.deployment.ServiceDeployment;
@@ -45,6 +47,10 @@ public interface ICloudService extends IClusterObject<ICloudService>, NetworkCom
     void setLastCycleData(IServiceCycleData data);
 
     String getRunningNodeName();
+
+    default INode getNode() {
+        return CloudDriver.getInstance().getNodeManager().getNodeByNameOrNull(this.getRunningNodeName());
+    }
 
     void setRunningNodeName(String name);
 
@@ -161,7 +167,7 @@ public interface ICloudService extends IClusterObject<ICloudService>, NetworkCom
         packet.publish(NetworkComponent.of(this.getName(), ConnectionType.SERVICE));
     }
 
-    void update();
+    void update(PublishingType... type);
 
     long getCreationTimestamp();
 

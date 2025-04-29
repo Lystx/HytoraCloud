@@ -45,7 +45,7 @@ public class PermsModule extends AbstractModule {
     @ModuleTask(id = 1, state = ModuleState.LOADED)
     public void load() {
 
-        Database db = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getDatabase();
+        Database db = CloudDriver.getInstance().getProvider(IDatabaseManager.class).getDatabase();
 
         db.createTableSafely(
                 "module_perms_groups",
@@ -74,12 +74,13 @@ public class PermsModule extends AbstractModule {
         PacketProvider.autoRegister(PermsPlayerUpdatePacket.class);
 
         CloudDriver.getInstance()
-                .getProviderRegistry()
+                
                 .setProvider(PermissionManager.class, new ModulePermissionManager());
 
         CloudDriver.getInstance()
                 .getEventManager()
                 .registerListener(new SyncListener());
+
     }
 
     @ModuleTask(id = 2, state = ModuleState.ENABLED)
@@ -88,11 +89,11 @@ public class PermsModule extends AbstractModule {
 
 
 
-        //LocalStorage database = CloudDriver.getInstance().getProviderRegistry().getUnchecked(IDatabaseManager.class).getLocalStorage();
+        //LocalStorage database = CloudDriver.getInstance().getUnchecked(IDatabaseManager.class).getLocalStorage();
         //database.registerSection("module-perms-groups", DefaultPermissionGroup.class);
         //database.registerSection("module-perms-players", DefaultPermissionPlayer.class);
 
-        PermissionManager pm = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class);
+        PermissionManager pm = CloudDriver.getInstance().getProvider(PermissionManager.class);
         ((ModulePermissionManager)pm).loadGroups().onTaskSucess(groups -> {
 
             if (groups.isEmpty()) {
@@ -120,9 +121,8 @@ public class PermsModule extends AbstractModule {
                 nextGroup.addInheritedGroup("Player");
 
                 nextGroup.update(); //make sure it's saved
-                System.out.println("Added DefaultGroups");
             } else {
-                CloudDriver.getInstance().getLogger().info("Perms-Module loaded {} PermissionGroups!", groups.size());
+                CloudDriver.getInstance().getLogger().info("The §3Perms§8-§3Module §7loaded §3{} §7PermissionGroups§8!", groups.size());
 
             }
         });
@@ -136,7 +136,7 @@ public class PermsModule extends AbstractModule {
         //registering commands and parsers
         CloudDriver.getInstance().getCommandManager().registerCommand(new PermsCommand());
         CloudDriver.getInstance().getCommandManager().registerParser(PermissionPlayer.class, PermissionPlayer::byName);
-        CloudDriver.getInstance().getCommandManager().registerParser(PermissionGroup.class, s -> CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).getPermissionGroupByNameOrNull(s));
+        CloudDriver.getInstance().getCommandManager().registerParser(PermissionGroup.class, s -> CloudDriver.getInstance().getProvider(PermissionManager.class).getPermissionGroupByNameOrNull(s));
 
     }
 }

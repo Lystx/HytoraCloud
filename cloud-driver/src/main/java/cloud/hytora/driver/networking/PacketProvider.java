@@ -39,6 +39,7 @@ public class PacketProvider {
 
         //registering packets...
         PacketProvider.autoRegister(HandshakePacket.class);
+        PacketProvider.autoRegister(AuthenticationPacket.class);
         PacketProvider.autoRegister(NodeConnectionDataRequestPacket.class);
         PacketProvider.autoRegister(NodeConnectionDataResponsePacket.class);
         PacketProvider.autoRegister(NodeCycleDataPacket.class);
@@ -55,6 +56,7 @@ public class PacketProvider {
         PacketProvider.autoRegister(ServiceStartPacket.class);
 
         //updating packet
+        PacketProvider.autoRegister(DriverRequestCachePacket.class);
         PacketProvider.autoRegister(DriverUpdatePacket.class);
         PacketProvider.autoRegister(StorageUpdatePacket.class);
 
@@ -66,16 +68,8 @@ public class PacketProvider {
         PacketProvider.autoRegister(ServiceTaskExecutePacket.class);
 
         //cloud player packets
-        PacketProvider.autoRegister(CloudPlayerLoginPacket.class);
-        PacketProvider.autoRegister(CloudPlayerDisconnectPacket.class);
-        PacketProvider.autoRegister(CloudPlayerUpdatePacket.class);
-        PacketProvider.autoRegister(CloudPlayerKickPacket.class);
-        PacketProvider.autoRegister(CloudPlayerSendServicePacket.class);
-        PacketProvider.autoRegister(CloudPlayerPlainMessagePacket.class);
-        PacketProvider.autoRegister(CloudPlayerComponentMessagePacket.class);
-        PacketProvider.autoRegister(CloudPlayerTabListPacket.class);
-        PacketProvider.autoRegister(OfflinePlayerRequestPacket.class);
-        PacketProvider.autoRegister(CloudPlayerExecuteCommandPacket.class);
+        PacketProvider.autoRegister(PacketCloudPlayer.class);
+        PacketProvider.autoRegister(PacketOfflinePlayer.class);
 
         //util packets
         PacketProvider.autoRegister(RedirectPacket.class);

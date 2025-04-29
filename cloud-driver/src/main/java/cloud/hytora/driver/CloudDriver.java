@@ -1,6 +1,5 @@
 package cloud.hytora.driver;
 
-import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.collection.NamedThreadFactory;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.context.IApplicationContext;
@@ -65,7 +64,7 @@ import java.util.concurrent.ScheduledExecutorService;
  * @since SNAPSHOT-1.0
  */
 @Getter
-public abstract class CloudDriver extends DriverUtility {
+public abstract class CloudDriver extends DefaultProviderRegistry {
 
     /**
      * The static instance of this Driver
@@ -76,17 +75,12 @@ public abstract class CloudDriver extends DriverUtility {
     /**
      * The current driver environment
      */
-    protected final DriverEnvironment environment;
+    protected final Environment environment;
 
     /**
      * The default logger service
      */
     protected final Logger logger;
-
-    /**
-     * The provider registry to register/get providers
-     */
-    protected final ProviderRegistry providerRegistry;
 
     /**
      * The default event manager
@@ -119,40 +113,9 @@ public abstract class CloudDriver extends DriverUtility {
     @Setter
     protected boolean running;
 
-
-    /**
-     * The interval that services take to publish their data to the cluster
-     * (here: every 1.5 minutes)
-     */
-    public static final int SERVER_PUBLISH_INTERVAL = 90_000;
-
-    /**
-     * The max lost cycles of a server before it is declared timed out
-     * (here: 3 minutes)
-     */
-    public static final int SERVER_MAX_LOST_CYCLES = 2;
-
-
-    /**
-     * The interval that nodes take to publish their data to the cluster
-     * (here: every 5 seconds)
-     */
-    public static final int NODE_PUBLISH_INTERVAL = 5_000;
-
-    /**
-     * The max lost cycles of a node before it is declared timed out
-     * (here: 25 seconds)
-     */
-    public static final int NODE_MAX_LOST_CYCLES = 5;
-
-    /**
-     * The public name for the Dashboard to be identified
-     */
-    public static final String APPLICATION_NAME = "Application";
-
     /**
      * Constructs a new {@link CloudDriver} instance with a provided {@link Logger} instance <br>
-     * and a provided {@link DriverEnvironment} to declare the environment this Instance runs on
+     * and a provided {@link Environment} to declare the environment this Instance runs on
      * Then setting default instances for Interfaces like {@link EventManager} or {@link Scheduler}
      * and finally registering all {@link AbstractPacket}s
      * <br><br>
@@ -160,13 +123,13 @@ public abstract class CloudDriver extends DriverUtility {
      * @param logger      the logger instance
      * @param environment the environment
      */
-    public CloudDriver(Logger logger, DriverEnvironment environment) {
+    public CloudDriver(Logger logger, Environment environment) {
+        super(true, (new DefaultEventManager()));
         instance = this;
 
+        this.eventManager = this.manager; //from Super method is set
         this.environment = environment;
         this.logger = logger;
-        this.eventManager = new DefaultEventManager(); //eventManager needs to come before Registry bc it is needed in Registry
-        this.providerRegistry = new DefaultProviderRegistry(true);
         this.templateManager = new DefaultTemplateManager();
         this.tickWorker = new DefaultTickWorker(20);
         this.scheduler = Scheduler.runTimeScheduler();
@@ -189,11 +152,18 @@ public abstract class CloudDriver extends DriverUtility {
         if (System.getProperty("io.netty.leakDetection.level") == null) {
             ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
         }
+
+        //registering all packets
         PacketProvider.registerPackets();
 
-        this.running = true;
+        this.running = true; //set running state
 
-        this.providerRegistry.setProvider(PlayerFullJoinExecutor.class, new DefaultFullJoinExecutor());
+        //setting first provider
+        this.setProvider(PlayerFullJoinExecutor.class, new DefaultFullJoinExecutor());
+    }
+
+    public ProviderRegistry getProviderRegistry() {
+        return this;
     }
 
     /**
@@ -215,21 +185,6 @@ public abstract class CloudDriver extends DriverUtility {
      * @param args      the arguments to replace in the message
      */
     public abstract void logToExecutor(NetworkComponent component, String message, Object... args);
-
-    /**
-     * Sends a message to the provided {@link NetworkComponent} and also logs this message<br>
-     * to the <b>current Driver Instance</b>
-     * <br> <br>
-     *
-     * @param component the component to send a message to
-     * @param message   the message to send (use {} to replace arguments)
-     * @param args      the arguments to replace in the message
-     * @see CloudDriver#logToExecutor(NetworkComponent, String, Object...) for more information
-     */
-    public void logToExecutorAndSelf(NetworkComponent component, String message, Object... args) {
-        this.logToExecutor(component, message, args);
-        this.logger.info(message, args);
-    }
 
     /**
      * The current {@link DriverStorage} instance where
@@ -321,5 +276,30 @@ public abstract class CloudDriver extends DriverUtility {
     public abstract AdvancedNetworkExecutor getExecutor();
 
 
+    /**
+     * The {@link Environment} defines the Environment <br>
+     * that a <b>{@link CloudDriver}</b> runs on
+     * <br><br>
+     * @author  Lystx
+     * @since   SNAPSHOT-1.0
+     */
+    public enum Environment {
+
+        /**
+         * Should not be used
+         */
+        UNKNOWN,
+
+        /**
+         * The environment is a Node
+         */
+        NODE,
+
+        /**
+         * The Environment is a Remote
+         */
+        SERVICE
+
+    }
 }
 

@@ -18,7 +18,7 @@ public class NodeServiceConfigureHandler implements PacketHandler<ServiceConfigP
     @Override
     public void handle(PacketChannel wrapper, ServiceConfigPacket packet) {
 
-        IServiceTask serviceTask = CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(packet.getServiceTask());
+        IServiceTask serviceTask = CloudDriver.getInstance().getServiceTaskManager().getCachedServiceTask(packet.getServiceTask());
         UUID uniqueId = packet.getUniqueId();
         Document properties = packet.getProperties();
         Collection<ServiceTemplate> templates = packet.getTemplates();

@@ -2,28 +2,23 @@ package cloud.hytora.driver.player.impl;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.DriverEnvironment;
+import cloud.hytora.driver.PublishingType;
 import cloud.hytora.driver.event.EventListener;
 import cloud.hytora.driver.event.EventManager;
-import cloud.hytora.driver.event.defaults.player.CloudPlayerUpdateEvent;
 import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
-import cloud.hytora.driver.player.packet.CloudPlayerUpdatePacket;
 import cloud.hytora.driver.player.CloudOfflinePlayer;
 import cloud.hytora.driver.player.ICloudPlayer;
 import cloud.hytora.driver.player.PlayerManager;
 import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
-import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
-import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public abstract class DefaultPlayerManager implements PlayerManager {
 
-    @Setter
     protected Map<UUID, ICloudPlayer> cachedCloudPlayers = new ConcurrentHashMap<>();
 
 
@@ -44,23 +39,22 @@ public abstract class DefaultPlayerManager implements PlayerManager {
         if (executor == null) {
             return;
         }
-        executor.registerPacketHandler((PacketHandler<CloudPlayerUpdatePacket>) (wrapper, packet) -> {
-
-            ICloudPlayer player = packet.getPlayer();
-            ICloudPlayer cachedCloudPlayer = this.getCachedCloudPlayer(player.getUniqueId());
-            if (cachedCloudPlayer != null) {
-                cachedCloudPlayer.clone(player);
-                if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
-                    cachedCloudPlayer.update();
-                }
-                cachedCloudPlayers.put(player.getUniqueId(), cachedCloudPlayer);
-                eventManager.callEventGlobally(new CloudPlayerUpdateEvent(cachedCloudPlayer));
-            }
-        });
-
-
         eventManager.registerListener(this);
 
+    }
+
+
+    protected void updateInternal(@Nullable ICloudPlayer player) {
+        if (player == null) {
+            return;
+        }
+        ICloudPlayer cachedCloudPlayer = this.getCachedCloudPlayer(player.getUniqueId());
+        if (cachedCloudPlayer != null) {
+            cachedCloudPlayer.clone(player);
+            cachedCloudPlayers.put(player.getUniqueId(), cachedCloudPlayer);
+        } else {
+            cachedCloudPlayers.put(player.getUniqueId(), player);
+        }
     }
 
     @EventListener
@@ -78,11 +72,17 @@ public abstract class DefaultPlayerManager implements PlayerManager {
         this.cachedCloudPlayers = cachedCloudPlayers;
     }
 
-    public abstract void registerCloudPlayer(@NotNull UUID uniqueID, @NotNull String username);
+    public abstract boolean hasJoinedTheNetworkBefore(UUID uniqueId, Consumer<CloudOfflinePlayer> handler);
 
     public abstract void unregisterCloudPlayer(@NotNull UUID uuid, @NotNull String name);
 
-    public abstract void updateCloudPlayer(@NotNull ICloudPlayer cloudPlayer);
+
+    public void registerPlayer(ICloudPlayer player) {
+        this.cachedCloudPlayers.put(player.getUniqueId(), player);
+    }
+
+    @Override
+    public abstract void updateCloudPlayer(@NotNull ICloudPlayer cloudPlayer, PublishingType... type);
 
     public abstract Task<ICloudPlayer> constructPlayer(@NotNull UUID uniqueId, @NotNull String name);
 

@@ -11,11 +11,13 @@ import cloud.hytora.driver.node.config.INodeConfig;
 import cloud.hytora.driver.node.data.DefaultNodeData;
 import cloud.hytora.driver.node.data.INodeData;
 import cloud.hytora.driver.services.ICloudService;
+import cloud.hytora.driver.services.utils.ServiceState;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.config.ConfigManager;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -70,15 +72,38 @@ public class BaseNode extends AbstractNode {
 
     @Override
     public void stopServer(ICloudService server) {
+        UUID id = server.getUniqueId();
+        IProcessCloudServer processCloudServer = (IProcessCloudServer)server;
+
+
+        //Server never connected so shutdownPacket wont work
+        if (!server.isReady()) {
+            Process process = processCloudServer.getProcess();
+            process.destroyForcibly();
+            CloudDriver.getInstance().getServiceManager().unregisterService(server);
+            CloudDriver.getInstance().getLogger().info("§cHad to force stop the Process of §e" + server.getName() +"§c!");
+            return;
+        }
+        //sending shutdown packet
         server.sendPacket(new ServiceForceShutdownPacket(server.getName()));
+
+        //checking 3 seconds later if service has shut down or if no response
+        //if no response -> force destroy the process
         Task.runTaskLater(() -> {
-            Process process = ((IProcessCloudServer)server).getProcess();
-            if (process == null) {
+            Process process = processCloudServer.getProcess();
+            ICloudService newPossibleService = CloudDriver.getInstance().getServiceManager().getCachedCloudService(server.getName());
+            if (process == null || !process.isAlive() || newPossibleService == null) {
+                return;
+            }
+            UUID newestPossibleId = newPossibleService.getUniqueId();
+
+            //if new server with same name started within this time do not destroy new process after 5 secs.
+            if (!id.equals(newestPossibleId)) {
                 return;
             }
             CloudDriver.getInstance().getLogger().info("§cHad to force stop the Process of §e" + server.getName() +"§c!");
             process.destroyForcibly();
-        }, TimeUnit.SECONDS, 5);
+        }, TimeUnit.SECONDS, 3);
     }
 
     @Override

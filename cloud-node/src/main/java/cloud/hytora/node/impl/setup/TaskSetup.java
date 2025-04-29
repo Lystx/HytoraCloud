@@ -98,7 +98,7 @@ public class TaskSetup extends Setup<TaskSetup> {
 
         @Override
         public Boolean supply(String name) {
-            return CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(name) != null;
+            return CloudDriver.getInstance().getServiceTaskManager().getCachedServiceTask(name) != null;
         }
     }
 

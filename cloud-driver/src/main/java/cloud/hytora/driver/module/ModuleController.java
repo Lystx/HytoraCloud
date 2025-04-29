@@ -31,6 +31,8 @@ public interface ModuleController extends IBufferObject {
 
 	void unregisterModule();
 
+	void update();
+
 	@Nonnull
 	ModuleManager getManager();
 

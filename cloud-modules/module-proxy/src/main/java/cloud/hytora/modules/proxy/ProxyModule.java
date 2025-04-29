@@ -4,8 +4,6 @@ import cloud.hytora.common.collection.IRandom;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.message.ChannelMessage;
-import cloud.hytora.driver.message.ChannelMessageListener;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.controller.AbstractModule;
 import cloud.hytora.driver.module.controller.base.ModuleConfiguration;
@@ -18,7 +16,7 @@ import cloud.hytora.driver.player.executor.PlayerExecutor;
 import cloud.hytora.driver.services.ICloudService;
 import cloud.hytora.driver.services.task.IServiceTask;
 import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
-import cloud.hytora.modules.proxy.command.SmartProxyCommand;
+import cloud.hytora.modules.proxy.command.ProxyCommand;
 import cloud.hytora.modules.proxy.config.*;
 import cloud.hytora.modules.proxy.config.sub.MotdLayOut;
 import cloud.hytora.modules.proxy.config.sub.TabListFrame;
@@ -70,29 +68,22 @@ public class ProxyModule extends AbstractModule {
     public void enable() {
 
         CloudDriver.getInstance().getEventManager().registerListener(new ModuleListener());
-        CloudDriver.getInstance().getCommandManager().registerCommand(new SmartProxyCommand());
-
-
-        Scheduler.runTimeScheduler().scheduleDelayedTask(() -> {
-            CloudDriver.getInstance().getChannelMessenger().registerChannel("cloud::module::proxy", new ChannelMessageListener() {
-                @Override
-                public void handleIncoming(ChannelMessage message) {
-                    if (message.getKey().equalsIgnoreCase("update")) {
-                        updateTabList();
-                        updateMotd();
-                    }
-                }
-            });
-        }, 50L);
+        CloudDriver.getInstance().getCommandManager().registerCommand(new ProxyCommand());
 
         //scheduling tab update
         Scheduler.runTimeScheduler().scheduleRepeatingTask(this::updateTabList, 0L, (long) (proxyConfig.getTablist().getAnimationInterval() * 1000));
     }
 
+    @ModuleTask(id = 4, state = ModuleState.API_UPDATE)
+    public void update() {
+        updateTabList();
+        updateMotd();
+    }
+
     @ModuleTask(id = 3, state = ModuleState.DISABLED)
     public void disable() {
         CloudDriver.getInstance().getEventManager().unregisterListener(ModuleListener.class);
-        CloudDriver.getInstance().getCommandManager().unregisterCommand(SmartProxyCommand.class);
+        CloudDriver.getInstance().getCommandManager().unregisterCommand(ProxyCommand.class);
     }
 
 
@@ -120,38 +111,36 @@ public class ProxyModule extends AbstractModule {
 
     public void updateTabList() {
         String[] tabList = selectTabList();
-        final String[] header = {tabList[0]};
-        final String[] footer = {tabList[1]};
+        String[] header = {tabList[0]};
+        String[] footer = {tabList[1]};
 
         //setting tabList
         for (ICloudPlayer cloudPlayer : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
-            cloudPlayer.getProxyServerAsync().onTaskSucess(proxyServer -> {
+            ICloudService proxyServer = cloudPlayer.getProxyServer();
 
-                PlayerExecutor executor = PlayerExecutor.forPlayer(cloudPlayer);
-                ICloudService server = cloudPlayer.getServer();
+            PlayerExecutor executor = PlayerExecutor.forPlayer(cloudPlayer);
+            ICloudService server = cloudPlayer.getServer();
 
-                if (server != null) {
-                    header[0] = server.replacePlaceHolders(header[0]);
-                    footer[0] = server.replacePlaceHolders(footer[0]);
-                }
+            if (server != null) {
+                header[0] = server.replacePlaceHolders(header[0]);
+                footer[0] = server.replacePlaceHolders(footer[0]);
+            }
 
-                //proxy place holder
-                header[0] = header[0].replace("{proxy}", proxyServer.getName());
-                footer[0] = footer[0].replace("{proxy}", proxyServer.getName());
+            //proxy place holder
+            header[0] = header[0].replace("{proxy}", proxyServer.getName());
+            footer[0] = footer[0].replace("{proxy}", proxyServer.getName());
 
-                header[0] = header[0].replace("{service}", (cloudPlayer.getServer() == null ? "UNKNOWN" : cloudPlayer.getServer().getName()));
-                footer[0] = footer[0].replace("{service}", (cloudPlayer.getServer() == null ? "UNKNOWN" : cloudPlayer.getServer().getName()));
+            header[0] = header[0].replace("{service}", (cloudPlayer.getServer() == null ? "UNKNOWN" : cloudPlayer.getServer().getName()));
+            footer[0] = footer[0].replace("{service}", (cloudPlayer.getServer() == null ? "UNKNOWN" : cloudPlayer.getServer().getName()));
 
-                //player placeholder
-                header[0] = header[0].replace("{players.online}", "" + CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers().size());
-                footer[0] = footer[0].replace("{players.online}", "" + CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers().size());
-                footer[0] = footer[0].replace("{players.max}", "" + CloudDriver.getInstance().getPlayerManager().countPlayerCapacity());
-                header[0] = header[0].replace("{players.max}", "" + CloudDriver.getInstance().getPlayerManager().countPlayerCapacity());
+            //player placeholder
+            header[0] = header[0].replace("{players.online}", "" + CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers().size());
+            footer[0] = footer[0].replace("{players.online}", "" + CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers().size());
+            footer[0] = footer[0].replace("{players.max}", "" + CloudDriver.getInstance().getPlayerManager().countPlayerCapacity());
+            header[0] = header[0].replace("{players.max}", "" + CloudDriver.getInstance().getPlayerManager().countPlayerCapacity());
 
-                executor.setTabList(header[0], footer[0]);
-            });
+            executor.setTabList(header[0], footer[0]);
         }
-
     }
 
     public void updateMotd() {
@@ -199,13 +188,13 @@ public class ProxyModule extends AbstractModule {
 
 
     public void loadConfig() {
-        logger.info("Loading proxy config...");
+        logger.debug("Loading proxy config...");
         if (controller.getConfig().isEmpty()) {
             controller.getConfig().set(proxyConfig = ProxyConfig.defaultConfig());
             controller.getConfig().save();
         } else {
             proxyConfig = controller.getConfig().toInstance(ProxyConfig.class);
         }
-        logger.info("Loaded config {}", proxyConfig);
+        logger.debug("Loaded config {}", proxyConfig);
     }
 }

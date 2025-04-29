@@ -1,6 +1,7 @@
 package cloud.hytora.driver.node.data;
 
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.HytoraCloudConstants;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.BufferState;
 import com.sun.management.OperatingSystemMXBean;
@@ -90,11 +91,11 @@ public class DefaultNodeData implements INodeData {
 
 	public boolean hasTimedOut() {
 		long lastCycleDelay = System.currentTimeMillis() - timestamp - 30; // we allow 30ms delay
-		int lostCycles = (int) lastCycleDelay / CloudDriver.NODE_PUBLISH_INTERVAL;
+		int lostCycles = (int) lastCycleDelay / HytoraCloudConstants.NODE_PUBLISH_INTERVAL;
 		if (lostCycles > 0) {
 			CloudDriver.getInstance().getLogger().trace("Node timeout: lost {} cycles ({}ms)", lostCycles, lastCycleDelay);
 		}
-		return lostCycles >= CloudDriver.NODE_MAX_LOST_CYCLES;
+		return lostCycles >= HytoraCloudConstants.NODE_MAX_LOST_CYCLES;
 	}
 
 	@Override

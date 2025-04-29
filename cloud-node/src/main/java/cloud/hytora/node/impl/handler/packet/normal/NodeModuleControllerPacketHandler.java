@@ -39,6 +39,9 @@ public class NodeModuleControllerPacketHandler implements PacketHandler<RemoteMo
             case UNREGISTER_MODULE:
                 controller.unregisterModule();
                 break;
+            case API_UPDATE:
+                controller.update();
+                break;
             case RELOAD_CONFIG:
                 wrapper.prepareResponse().buffer(buf -> buf.writeDocument(controller.reloadConfig())).execute(packet);
                 break;

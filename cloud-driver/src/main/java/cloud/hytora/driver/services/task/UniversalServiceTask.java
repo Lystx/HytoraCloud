@@ -1,6 +1,7 @@
 package cloud.hytora.driver.services.task;
 
 import cloud.hytora.common.task.Task;
+import cloud.hytora.driver.PublishingType;
 import cloud.hytora.driver.event.defaults.task.TaskMaintenanceChangeEvent;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.CloudDriver;
@@ -95,7 +96,7 @@ public class UniversalServiceTask extends ProtocolPropertyObject implements ISer
         return CloudDriver
                 .getInstance()
                 .getServiceTaskManager()
-                .getTaskGroupByNameOrNull(
+                .getCachedTaskGroup(
                         this.parent);
     }
 
@@ -163,7 +164,7 @@ public class UniversalServiceTask extends ProtocolPropertyObject implements ISer
     public void setMaintenance(boolean maintenance) {
         if (this.maintenance != maintenance) {
             //change incoming
-            CloudDriver.getInstance().getEventManager().callEventGlobally(new TaskMaintenanceChangeEvent(this, maintenance));
+            CloudDriver.getInstance().getEventManager().callEvent(new TaskMaintenanceChangeEvent(this, maintenance), PublishingType.GLOBAL);
         }
         this.maintenance = maintenance;
     }

@@ -19,7 +19,7 @@ public class BukkitCloudPermsPlugin extends JavaPlugin {
 
     @Override
     public void onLoad() {
-        CloudDriver.getInstance().getProviderRegistry().setProvider(PermissionManager.class, new RemotePermissionManager());
+        CloudDriver.getInstance().setProvider(PermissionManager.class, new RemotePermissionManager());
     }
 
     private void initInjections() {

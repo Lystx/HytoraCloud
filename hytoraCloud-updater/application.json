@@ -1,0 +1,40 @@
+{
+  "version": "STABLE-2.0",
+  "modules": [
+    {
+      "name": "module-proxy",
+      "url": "{cloud.baseUrl}/{module.name}.jar",
+      "version": "SNAPSHOT-1.2"
+    }
+  ],
+  "updates": [
+    {
+      "date": "04.06.2022 - 11:06",
+      "committer": "Lystx",
+      "type": "ADD_CONTENT",
+      "message": "First update entry",
+      "versionNow": "SNAPSHOT-1.0"
+    },
+    {
+      "date": "04.06.2022 - 23:12",
+      "committer": "Lystx",
+      "type": "ADD_CONTENT",
+      "message": "Added CPU Usages for Nodes",
+      "versionNow": "SNAPSHOT-1.0"
+    },
+    {
+      "date": "04.06.2022 - 23:38",
+      "committer": "Lystx",
+      "type": "ADD_CONTENT",
+      "message": "Finished StartPanel",
+      "versionNow": "SNAPSHOT-1.0"
+    },
+    {
+      "date": "29.04.2025 - 13:22",
+      "committer": "Lystx",
+      "type": "ADD_CONTENT",
+      "message": "General recodel",
+      "versionNow": "STABLE-2.0"
+    }
+  ]
+}

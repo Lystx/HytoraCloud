@@ -10,7 +10,7 @@ public interface Screen {
 
     void cacheLine(String line);
 
-    void registerTabCompleter(TabCompleter completer);
+    Screen registerTabCompleter(TabCompleter completer);
 
     void suggestInput(String input);
 

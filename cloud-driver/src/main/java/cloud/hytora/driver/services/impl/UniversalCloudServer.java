@@ -1,14 +1,18 @@
 package cloud.hytora.driver.services.impl;
 
+import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.gson.adapter.ExcludeJsonField;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.HytoraCloudConstants;
+import cloud.hytora.driver.PublishingType;
 import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
 import cloud.hytora.driver.message.ChannelMessage;
 import cloud.hytora.driver.networking.NetworkComponent;
+import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.services.packet.ServiceCommandPacket;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
@@ -33,6 +37,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -71,6 +77,9 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
     @ExcludeJsonField
     private IServiceCycleData lastCycleData;
 
+    @ExcludeJsonField
+    private PacketChannel channel;
+
     public UniversalCloudServer(String taskName, int id, int port, String hostname) {
         this.task = taskName;
 
@@ -85,7 +94,7 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
         this.creationTimestamp = System.currentTimeMillis();
         this.properties = DocumentFactory.newJsonDocument();
         this.uniqueId = UUID.randomUUID();
-        this.runningNodeName = getTask().findAnyNode() == null ? "UNKNOWN": getTask().findAnyNode().getName();
+        this.runningNodeName = getTask().findAnyNode() == null ? "UNKNOWN" : getTask().findAnyNode().getName();
 
         this.pingProperties = new DefaultPingProperties();
         this.pingProperties.setMotd(this.motd);
@@ -107,24 +116,27 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
         CloudDriver.getInstance().getTemplateManager().deployService(this, deployments);
     }
 
+    private int lastLostCycle = -1;
+
     @Override
     public boolean isTimedOut() {
         long lastCycleDelay = System.currentTimeMillis() - this.lastCycleData.getTimestamp() - 30;
-        int lostCycles = (int) lastCycleDelay / CloudDriver.SERVER_PUBLISH_INTERVAL;
-        if (lostCycles > 0) {
-            CloudDriver.getInstance().getLogger().warn("Service timeout " + this.getName() + ": lost {} cycles ({}ms)", lostCycles, lastCycleDelay);
+        int lostCycles = (int) lastCycleDelay / HytoraCloudConstants.SERVER_PUBLISH_INTERVAL;
+        if (lostCycles > 0 && lostCycles != lastLostCycle) {
+            lastLostCycle = lostCycles;
+            CloudDriver.getInstance().getLogger().log(LogLevel.WARN, "§7The Service §8'§c{}§8' §7has not sent the required data §8[§cLost cycles: §4{} §8| §cDelay: §4{}§8]", this.getName(), lostCycles, lastCycleDelay);
         }
-        return lostCycles >= CloudDriver.SERVER_MAX_LOST_CYCLES;
+        return lostCycles >= HytoraCloudConstants.SERVER_MAX_LOST_CYCLES;
     }
 
     @Override
     public IServiceTask getTask() {
-        return CloudDriver.getInstance().getServiceTaskManager().getTaskByNameOrNull(this.task);
+        return CloudDriver.getInstance().getServiceTaskManager().getCachedServiceTask(this.task);
     }
 
     @Override
     public Task<IServiceTask> getTaskAsync() {
-        return CloudDriver.getInstance().getServiceTaskManager().getTaskByNameAsync(this.task);
+        return CloudDriver.getInstance().getServiceTaskManager().getServiceTask(this.task);
     }
 
     @Override
@@ -165,19 +177,25 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
         return this.task.equals(that.task);
     }
 
-    public void update() {
-        CloudDriver.getInstance().getServiceManager().updateService(this);
+    @Override
+    public void update(PublishingType... type) {
+        CloudDriver.getInstance().getServiceManager().updateService(this, type);
     }
+
 
     @Override
     public void sendPacket(IPacket packet) {
+        if (channel != null) {
+            channel.sendPacket(packet);
+            return;
+        }
         CloudDriver.getInstance().getServiceManager().sendPacketToService(this, packet);
     }
 
     @Override
     public void setReady(boolean ready) {
         if (!this.ready && ready) { //if not ready yet but parameter is true
-            CloudDriver.getInstance().getEventManager().callEventGlobally(new ServiceReadyEvent(this.getName()));
+            CloudDriver.getInstance().getEventManager().callEvent(new ServiceReadyEvent(this.getName()), PublishingType.GLOBAL);
         }
         this.ready = ready;
     }
@@ -254,11 +272,14 @@ public class UniversalCloudServer implements IProcessCloudServer, IBufferObject 
 
         input = input.replace("{server.node}", this.getRunningNodeName());
 
+        input = input.replace("{server.type}", getTask().getTaskGroup().getShutdownBehaviour().name());
+
         input = input.replace("{server.state}", this.getServiceState().getName());
         input = input.replace("{server.visibility}", this.getServiceVisibility().name());
         input = input.replace("{server.creationTime}", String.valueOf(this.getCreationTimestamp()));
         input = input.replace("{server.uptime}", String.valueOf(this.getReadableUptime()));
         input = input.replace("{server.uptimeDif}", String.valueOf(System.currentTimeMillis() - this.getCreationTimestamp()));
+        input = input.replace("{server.uptimeDifFormat}", new SimpleDateFormat("mm:ss").format(new Date(System.currentTimeMillis() - this.getCreationTimestamp())));
         input = input.replace("{server.properties}", this.getProperties().asRawJsonString());
 
         return getTask().replacePlaceHolders(input);

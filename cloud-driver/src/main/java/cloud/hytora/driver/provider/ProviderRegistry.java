@@ -67,7 +67,7 @@ public interface ProviderRegistry {
      * @return the found instance
      * @throws ProviderNotRegisteredException if there is no such provider
      */
-    <T> T getUnchecked(Class<T> service) throws ProviderNotRegisteredException;
+    <T> T getProvider(Class<T> service) throws ProviderNotRegisteredException;
 
     /**
      * All registered {@link ProviderEntry}s of this registry

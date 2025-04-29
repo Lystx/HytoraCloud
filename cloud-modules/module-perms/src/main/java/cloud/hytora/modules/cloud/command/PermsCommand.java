@@ -60,8 +60,8 @@ public class PermsCommand {
         service.sendDocument(
                 new PermsCacheUpdatePacket(
                         CloudDriver.getInstance()
-                                .getProviderRegistry()
-                                .getUnchecked(PermissionManager.class)
+                                
+                                .getProvider(PermissionManager.class)
                                 .getAllCachedPermissionGroups()
                 )
         );
@@ -338,7 +338,7 @@ public class PermsCommand {
     @Command(value = "group", description = "Creates a new Group")
     @Command.Syntax("create")
     public void onGroupCreate(CommandSender sender) {
-        PermissionManager permissionManager = CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class);
+        PermissionManager permissionManager = CloudDriver.getInstance().getProvider(PermissionManager.class);
         new GroupSetup().start((setup, state) -> {
             switch (state) {
                 case CANCELLED:
@@ -382,7 +382,7 @@ public class PermsCommand {
             return;
         }
 
-        CloudDriver.getInstance().getProviderRegistry().getUnchecked(PermissionManager.class).deletePermissionGroup(group.getName());
+        CloudDriver.getInstance().getProvider(PermissionManager.class).deletePermissionGroup(group.getName());
         sender.sendMessage("Successfully deleted group {}", group.getName());
     }
 

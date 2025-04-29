@@ -4,6 +4,7 @@ import cloud.hytora.common.task.Task;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.function.Consumer;
 
 public interface ScreenManager {
 
@@ -13,6 +14,8 @@ public interface ScreenManager {
 
     void joinScreen(Screen screen);
 
+    void update(String name, Consumer<Screen> handler);
+
     void leaveCurrentScreen();
 
     boolean isCurrentlyInScreen();
@@ -21,7 +24,7 @@ public interface ScreenManager {
 
     boolean isCurrentScreenAllowCommandManager();
 
-    void registerScreen(String name, boolean enableCommandManager);
+    Screen registerScreen(String name, boolean enableCommandManager);
 
     boolean isScreenActive(String name);
 
