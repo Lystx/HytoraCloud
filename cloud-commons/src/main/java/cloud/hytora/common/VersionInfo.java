@@ -4,6 +4,7 @@ import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Arrays;
 
@@ -11,10 +12,11 @@ import java.util.Arrays;
 @AllArgsConstructor
 public class VersionInfo {
 
-    // TODO: 07.08.2022 important
-    public static VersionInfo getCurrentVersion() {
-        return new VersionInfo(Type.STABLE, 2.0);
-    }
+
+    @Getter
+    @Setter
+    private static VersionInfo currentVersion = new VersionInfo(Type.STABLE, 2.0);
+
 
     private final Type type;
     private final double version;
@@ -97,7 +99,6 @@ public class VersionInfo {
             }
             try {
                 Document document = DocumentFactory.newJsonDocumentByURL("https://raw.githubusercontent.com/Lystx/HytoraCloud/master/hytoraCloud-updater/application.json");
-
                 String versionString = document.get("version").toString();
                 return (NEWEST_VERSION = fromString(versionString));
             } catch (Exception e) {

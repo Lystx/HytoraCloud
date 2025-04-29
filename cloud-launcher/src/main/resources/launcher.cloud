@@ -13,9 +13,10 @@ var cloud.hytora.launcher.customVersion = null
 
 
 if ($cloud.hytora.launcher.devmode$) -> {
-    log INFO "DevMode is activated!"
+    log INFO "Developer-mode is activated!"
+    log INFO "=> That means that the player 'Lystx' has every permission for developing purposes!"
 } else -> {
-    log INFO "DevMode is not activated!"
+    log INFO "Developer-mode is not activated!"
 }
 
 run includeRepositories();

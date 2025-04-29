@@ -1,22 +1,11 @@
-CHANGES FROM SNAPSHOT-1.5 to 2.0
+No Changes
 
+this was the first stable version of HytoraCloud
 
+first version was SNAPSHOT-1.0
+=> This version is SNAPSHOT-1.5
 
-=> General code cleanup
-    => Changed the way login requests were made from the proxy to the cloud
-        -> now using query on login and managing login on Node-side
-    => Cleaned CloudDriver and implemented ProviderRegistry
-    => Added PublishType to #update() Method on cloud entities
+but sadly over the course of 4 years where I didnt work on the cloud
+some providers/requests that are web-based stopped working, so i had to rework the cloud
 
-=> Bug-fixes:
-    => fixed shutdown bug when server crashed
-    =>
-
-
-=> API extensions:
-
-    =>
-
-=> New Modules:
-
-    =>
+and that brings us to version STABLE-2.0 (see other directory)

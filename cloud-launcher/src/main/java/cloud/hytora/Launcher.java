@@ -20,6 +20,9 @@ import cloud.hytora.context.IApplicationContext;
 import cloud.hytora.dependency.Dependency;
 import cloud.hytora.dependency.DependencyLoader;
 import cloud.hytora.dependency.Repository;
+import cloud.hytora.document.Document;
+import cloud.hytora.document.DocumentFactory;
+import cloud.hytora.document.wrapped.StorableDocument;
 import cloud.hytora.module.ModuleUpdater;
 import cloud.hytora.script.api.IScriptLoader;
 import cloud.hytora.script.api.impl.DefaultScriptLoader;
@@ -85,7 +88,17 @@ public class Launcher extends DriverUtility {
         this.dependencies = DriverUtility.newList();
         this.repositories = new HashMap<>();
 
-        VersionInfo version = VersionInfo.getCurrentVersion();
+        Document document = DocumentFactory.newJsonDocument(new File(LAUNCHER_DIR.toFile(), "auto_updater.json"));
+
+        if (document.isEmpty()) {
+            document.set("lastVersion", VersionInfo.getCurrentVersion().toString());
+            document.saveToFile(new File(LAUNCHER_DIR.toFile(), "auto_updater.json"));
+        }
+
+        String lastVersion = document.getString("lastVersion");
+        VersionInfo version = VersionInfo.fromString(lastVersion);
+        VersionInfo.setCurrentVersion(version);
+
 
         logger.log(LogLevel.NULL, "         ██▓    ▄▄▄       █    ██  ███▄    █  ▄████▄   ██░ ██ ▓█████  ██▀███  ");
         logger.log(LogLevel.NULL, "        ▓██▒   ▒████▄     ██  ▓██▒ ██ ▀█   █ ▒██▀ ▀█  ▓██░ ██▒▓█   ▀ ▓██ ▒ ██▒");
@@ -137,8 +150,6 @@ public class Launcher extends DriverUtility {
                 .runScript()
                 .onTaskSucess(n -> {
                     APPLICATION_FILE_URL = System.getProperty("cloud.hytora.launcher.application.file");
-                    BASE_URL = System.getProperty("cloud.hytora.launcher.updater.baseUrl");
-                    DOWNLOAD_URL = System.getProperty("cloud.hytora.launcher.updater.url").replace("{cloud.baseUrl}", BASE_URL);
                     USE_AUTO_UPDATER = System.getProperty("cloud.hytora.launcher.autoupdater").equalsIgnoreCase("true");
                     USE_MODULE_AUTO_UPDATER = System.getProperty("cloud.hytora.launcher.module.autoupdater").equalsIgnoreCase("true");
                     CUSTOM_VERSION = System.getProperty("cloud.hytora.launcher.customVersion");
@@ -163,46 +174,68 @@ public class Launcher extends DriverUtility {
     private void checkForUpdates(VersionInfo version, String... args) {
         if (USE_AUTO_UPDATER) {
             logger.info("Checking for Updates...");
+            VersionInfo newestVersion = VersionInfo.getNewestVersion("UNKNOWN");
             if (!version.isUpToDate() || Objects.requireNonNull(LAUNCHER_VERSIONS.toFile().listFiles()).length == 0) {
                 logger.info("Version (" + version + ") is outdated or your cloud.jar is not existing at all!");
-                logger.info("==> Downloading latest HytoraCloud version [ver={}]...", VersionInfo.getNewestVersion("UNKNOWN").toString());
+                logger.info("==> Downloading latest HytoraCloud version [ver={}]...", newestVersion.toString());
 
                 Path zippedFile = LAUNCHER_DIR.resolve("hytoraCloud.zip");
-                LauncherUtils.downloadVersion(getNewestVersionDownloadUrl(), zippedFile).onTaskSucess(v -> {
-                    logger.info("Downloaded latest RELEASE! => " + VersionInfo.getNewestVersion("UNKNOWN").toString());
-                    logger.info("Unzipping...");
 
-                    ZipUtils.unzipDirectory(zippedFile, "unzipped");
-                    try {
-                        Files.delete(zippedFile);
-                        Path cloudInFile = Paths.get("unzipped/cloud.jar");
-                        Files.copy(cloudInFile, LAUNCHER_VERSIONS.resolve(VersionInfo.getNewestVersion("1.5").formatCloudJarName()));
-                        FileUtils.delete(Paths.get("unzipped"));
-                        logger.info("Unzipped and moved HytoraCloud-Jar to its folder!");
 
+                String startBatURL = getNewestVersionDownloadUrl("start.bat");
+                File startBat = new File("start.bat");
+
+                String startSHURL = getNewestVersionDownloadUrl("start.sh");
+                File startSH = new File("start.sh");
+
+                String cloudFileURL = getNewestVersionDownloadUrl(newestVersion.toString().toUpperCase());
+                File cloudFile = new File(LAUNCHER_VERSIONS.toFile(), newestVersion.formatCloudJarName());
+
+                logger.info("Checking §estart.bat");
+                if (!startBat.exists()) {
+                    LauncherUtils.downloadVersion(startBatURL, startBat.toPath()).onTaskSucess(e -> {
+                        logger.info("§8[§e1§8/§e3§8] Downloaded §8'§a{}§8'", "start.bat");
+                    });
+                }
+                logger.info("Checking §estart.sh");
+                if (!startSH.exists()) {
+                    LauncherUtils.downloadVersion(startSHURL, startSH.toPath()).onTaskSucess(e -> {
+                        logger.info("§8[§e2§8/§e3§8] Downloaded §8'§a{}§8'", "start.sh");
+                    });
+                }
+                logger.info("Checking {}", newestVersion.formatCloudJarName());
+                if (!cloudFile.exists()) {
+                    LauncherUtils.downloadVersion(cloudFileURL, cloudFile.toPath()).onTaskSucess(e -> {
+                        logger.info("§8[§e3§8/§e3§8] Downloaded §8'§a{}§8'", newestVersion.formatCloudJarName());
                         try {
-                            Thread.sleep(1500);
-                            this.checkForUpdates(version, args);
-                        } catch (InterruptedException e) {
-                            throw new WrappedException(e);
+                            Document document = DocumentFactory.newJsonDocument(new File(LAUNCHER_DIR.toFile(), "auto_updater.json"));
+                            document.set("lastVersion", newestVersion.toString());
+                            document.saveToFile(new File(LAUNCHER_DIR.toFile(), "auto_updater.json"));
+                            VersionInfo.setCurrentVersion(newestVersion);
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
                         }
-                    } catch (IOException e) {
-                        throw new WrappedException(e);
-                    }
 
-                });
+                    });
+                }
+
+                try {
+                    Thread.sleep(1500);
+                    this.checkForUpdates(version, args);
+                } catch (InterruptedException e) {
+                    throw new WrappedException(e);
+                }
                 return;
             }
-
         }
-        
+
         if (!USE_AUTO_UPDATER) {
             logger.info("AutoUpdater has been disabled!");
             logger.info("Directly starting CloudNode...");
         } else if (!CUSTOM_VERSION.equalsIgnoreCase("null")) {
             logger.info("Custom version [val={}] has been selected! Skipping AutoUpdater", VersionInfo.fromString(CUSTOM_VERSION));
         } else {
-            logger.info("Cloud is up to date with latest release!");
+            logger.info("Your CloudSystem is up to date with latest release! §8[§e{}§8]", VersionInfo.getCurrentVersion().toString());
         }
 
         ThreadRunnable runnable = new ThreadRunnable(() -> {
@@ -251,17 +284,11 @@ public class Launcher extends DriverUtility {
     }
 
 
-    public String getNewestVersionDownloadUrl() {
+    public String getNewestVersionDownloadUrl(String data) {
         VersionInfo newestVersion = VersionInfo.getNewestVersion(VersionInfo.getCurrentVersion().toString());
 
-        String url = "https://raw.github.com/Lystx/HytoraCloud/master/hytoraCloud-updater/" + newestVersion.getVersion();
-        String zipFileUrl = url + "cloud.zip";
-
-        String urlString = DOWNLOAD_URL;
-        urlString = urlString.replace("{version}", String.valueOf(newestVersion.getVersion()));
-        urlString = urlString.replace("{type}", String.valueOf(newestVersion.getType()));
-
-        return zipFileUrl;
+        String url = "https://raw.github.com/Lystx/HytoraCloud/master/hytoraCloud-updater/" + newestVersion.getVersion() + "/" + data;
+        return url;
     }
 
 
@@ -276,7 +303,7 @@ public class Launcher extends DriverUtility {
     }
 
     private void startApplication(String[] args, Collection<URL> dependencyResources) throws Throwable {
-        
+
         String jarName;
         if (!CUSTOM_VERSION.equalsIgnoreCase("null")) {
             jarName = VersionInfo.fromString(CUSTOM_VERSION).formatCloudJarName();
@@ -296,7 +323,7 @@ public class Launcher extends DriverUtility {
         }
 
         dependencyResources.add(targetPath.toUri().toURL());
-       // dependencyResources.add(driverTargetPath.toUri().toURL());
+        // dependencyResources.add(driverTargetPath.toUri().toURL());
 
         IdentifiableClassLoader classLoader = new IdentifiableClassLoader(dependencyResources.toArray(new URL[0]));
         Method method = classLoader.loadClass(mainClass).getMethod("main", String[].class);
