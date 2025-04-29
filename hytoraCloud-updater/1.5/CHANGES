@@ -1,0 +1,22 @@
+CHANGES FROM SNAPSHOT-1.5 to 2.0
+
+
+
+=> General code cleanup
+    => Changed the way login requests were made from the proxy to the cloud
+        -> now using query on login and managing login on Node-side
+    => Cleaned CloudDriver and implemented ProviderRegistry
+    => Added PublishType to #update() Method on cloud entities
+
+=> Bug-fixes:
+    => fixed shutdown bug when server crashed
+    =>
+
+
+=> API extensions:
+
+    =>
+
+=> New Modules:
+
+    =>
