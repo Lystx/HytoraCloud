@@ -8,13 +8,17 @@ import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.VersionInfo;
 import cloud.hytora.common.collection.ThreadRunnable;
 import cloud.hytora.common.collection.WrappedException;
+import cloud.hytora.common.logging.ConsoleColor;
 import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
 import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.common.logging.handler.HandledLogger;
+import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.misc.FileUtils;
-import cloud.hytora.common.misc.ZipUtils;
+import cloud.hytora.common.progressbar.ProgressBar;
+import cloud.hytora.common.progressbar.ProgressBarStyle;
+import cloud.hytora.common.progressbar.ProgressPrinter;
 import cloud.hytora.context.ApplicationContext;
 import cloud.hytora.context.IApplicationContext;
 import cloud.hytora.dependency.Dependency;
@@ -22,7 +26,6 @@ import cloud.hytora.dependency.DependencyLoader;
 import cloud.hytora.dependency.Repository;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentFactory;
-import cloud.hytora.document.wrapped.StorableDocument;
 import cloud.hytora.module.ModuleUpdater;
 import cloud.hytora.script.api.IScriptLoader;
 import cloud.hytora.script.api.impl.DefaultScriptLoader;
@@ -37,10 +40,12 @@ import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarFile;
 
 /**
@@ -81,6 +86,8 @@ public class Launcher extends DriverUtility {
 
     private final DependencyLoader dependencyLoader;
     private final ModuleUpdater moduleUpdater;
+
+    AtomicBoolean run = new AtomicBoolean(false);
 
     public Launcher(Logger logger, String[] args) throws IOException {
         this.args = args;
@@ -145,10 +152,17 @@ public class Launcher extends DriverUtility {
             }
         }
 
+        if (run.get()) {
+            return;
+        }
         System.out.println("Loading script...");
         loader.loadScript(launcherFile)
                 .runScript()
                 .onTaskSucess(n -> {
+                    if (run.get()) {
+                        return;
+                    }
+                    run.set(true);
                     APPLICATION_FILE_URL = System.getProperty("cloud.hytora.launcher.application.file");
                     USE_AUTO_UPDATER = System.getProperty("cloud.hytora.launcher.autoupdater").equalsIgnoreCase("true");
                     USE_MODULE_AUTO_UPDATER = System.getProperty("cloud.hytora.launcher.module.autoupdater").equalsIgnoreCase("true");
@@ -175,11 +189,11 @@ public class Launcher extends DriverUtility {
         if (USE_AUTO_UPDATER) {
             logger.info("Checking for Updates...");
             VersionInfo newestVersion = VersionInfo.getNewestVersion("UNKNOWN");
+            logger.info("Input: " + version + " | Your version: " + VersionInfo.getCurrentVersion() + " | Newest Version: " + newestVersion);
             if (!version.isUpToDate() || Objects.requireNonNull(LAUNCHER_VERSIONS.toFile().listFiles()).length == 0) {
                 logger.info("Version (" + version + ") is outdated or your cloud.jar is not existing at all!");
                 logger.info("==> Downloading latest HytoraCloud version [ver={}]...", newestVersion.toString());
 
-                Path zippedFile = LAUNCHER_DIR.resolve("hytoraCloud.zip");
 
 
                 String startBatURL = getNewestVersionDownloadUrl("start.bat");
@@ -188,22 +202,19 @@ public class Launcher extends DriverUtility {
                 String startSHURL = getNewestVersionDownloadUrl("start.sh");
                 File startSH = new File("start.sh");
 
-                String cloudFileURL = getNewestVersionDownloadUrl(newestVersion.toString().toUpperCase());
+                String cloudFileURL = getNewestVersionDownloadUrl(newestVersion.toString().toUpperCase() + ".jar");
                 File cloudFile = new File(LAUNCHER_VERSIONS.toFile(), newestVersion.formatCloudJarName());
 
-                logger.info("Checking §estart.bat");
                 if (!startBat.exists()) {
                     LauncherUtils.downloadVersion(startBatURL, startBat.toPath()).onTaskSucess(e -> {
                         logger.info("§8[§e1§8/§e3§8] Downloaded §8'§a{}§8'", "start.bat");
                     });
                 }
-                logger.info("Checking §estart.sh");
                 if (!startSH.exists()) {
                     LauncherUtils.downloadVersion(startSHURL, startSH.toPath()).onTaskSucess(e -> {
                         logger.info("§8[§e2§8/§e3§8] Downloaded §8'§a{}§8'", "start.sh");
                     });
                 }
-                logger.info("Checking {}", newestVersion.formatCloudJarName());
                 if (!cloudFile.exists()) {
                     LauncherUtils.downloadVersion(cloudFileURL, cloudFile.toPath()).onTaskSucess(e -> {
                         logger.info("§8[§e3§8/§e3§8] Downloaded §8'§a{}§8'", newestVersion.formatCloudJarName());
@@ -216,15 +227,23 @@ public class Launcher extends DriverUtility {
                             ex.printStackTrace();
                         }
 
+                        try {
+                            Thread.sleep(1500);
+                            this.checkForUpdates(newestVersion, args);
+                        } catch (InterruptedException e2) {
+                            throw new WrappedException(e2);
+                        }
+
+                    }).onTaskFailed(e -> {
+                        logger.info("§cFailed to Download CloudFile");
+                        try {
+                            throw e;
+                        } catch (Throwable ex) {
+                            ex.printStackTrace();
+                        }
                     });
                 }
 
-                try {
-                    Thread.sleep(1500);
-                    this.checkForUpdates(version, args);
-                } catch (InterruptedException e) {
-                    throw new WrappedException(e);
-                }
                 return;
             }
         }
@@ -284,11 +303,10 @@ public class Launcher extends DriverUtility {
     }
 
 
-    public String getNewestVersionDownloadUrl(String data) {
+    public static String getNewestVersionDownloadUrl(String data) {
         VersionInfo newestVersion = VersionInfo.getNewestVersion(VersionInfo.getCurrentVersion().toString());
 
-        String url = "https://raw.github.com/Lystx/HytoraCloud/master/hytoraCloud-updater/" + newestVersion.getVersion() + "/" + data;
-        return url;
+        return "https://raw.github.com/Lystx/HytoraCloud/master/hytoraCloud-updater/" + newestVersion.getVersion() + "/" + data;
     }
 
 
@@ -303,6 +321,34 @@ public class Launcher extends DriverUtility {
     }
 
     private void startApplication(String[] args, Collection<URL> dependencyResources) throws Throwable {
+        LauncherUtils.clearConsole();
+        System.out.println("\n");
+        System.out.println("  _                     _ _                     _                     _____                                                 \n" +
+                " | |                   | (_)                   | |                   |  __ \\                                                \n" +
+                " | |     ___   __ _  __| |_ _ __   __ _        | | __ ___   ____ _   | |__) |___ ___ ___  ___  _   _ _ __ ___ ___ ___       \n" +
+                " | |    / _ \\ / _` |/ _` | | '_ \\ / _` |   _   | |/ _` \\ \\ / / _` |  |  _  // _ / __/ __|/ _ \\| | | | '__/ __/ _ / __|      \n" +
+                " | |___| (_) | (_| | (_| | | | | | (_| |  | |__| | (_| |\\ V | (_| |  | | \\ |  __\\__ \\__ | (_) | |_| | | | (_|  __\\__ \\_ _ _ \n" +
+                " |______\\___/ \\__,_|\\__,_|_|_| |_|\\__, |   \\____/ \\__,_| \\_/ \\__,_|  |_|  \\_\\___|___|___/\\___/ \\__,_|_|  \\___\\___|___(_(_(_)\n" +
+                "                                   __/ |                                                                                    \n" +
+                "                                  |___/                                                                                     ");
+        System.out.println("\n");
+
+
+        ProgressBar pb = new ProgressBar(ProgressBarStyle.COLORED_UNICODE_BLOCK, 100);
+        pb.setAppendProgress(false);
+        pb.setBarLength(65);
+        pb.setPrintAutomatically(true);
+        pb.setExpandingAnimation(true);
+
+        for (int i = 0; i < 65; i++) {
+            if (pb.step()) {
+                Thread.sleep(100);
+            }
+        }
+
+        pb.setExtraMessage("Successfully downloaded! Cleaning up unused bytes...");
+        pb.close("");
+        System.out.println("\n");
 
         String jarName;
         if (!CUSTOM_VERSION.equalsIgnoreCase("null")) {
@@ -311,7 +357,6 @@ public class Launcher extends DriverUtility {
             jarName = VersionInfo.getNewestVersion(CUSTOM_VERSION).formatCloudJarName();
         }
         Path targetPath = LAUNCHER_VERSIONS.resolve(jarName);
-        Path driverTargetPath = LAUNCHER_VERSIONS.resolve("api.jar");
 
         String mainClass;
         try (JarFile jarFile = new JarFile(targetPath.toFile())) {
@@ -323,7 +368,6 @@ public class Launcher extends DriverUtility {
         }
 
         dependencyResources.add(targetPath.toUri().toURL());
-        // dependencyResources.add(driverTargetPath.toUri().toURL());
 
         IdentifiableClassLoader classLoader = new IdentifiableClassLoader(dependencyResources.toArray(new URL[0]));
         Method method = classLoader.loadClass(mainClass).getMethod("main", String[].class);

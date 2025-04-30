@@ -7,6 +7,9 @@ import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
 import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.misc.StringUtils;
+import cloud.hytora.common.progressbar.HytoraProgressBar;
+import cloud.hytora.common.progressbar.ProgressBar;
+import cloud.hytora.common.progressbar.ProgressBarStyle;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.context.ApplicationContext;
@@ -432,7 +435,7 @@ public class NodeDriver extends CloudDriver {
             this.logger.info("§8");
             this.logger.info("§8");
             this.logger.info("This §aNode §fhas successfully §abooted up §fand is now ready for personal use!");
-            this.logger.info("=> Thanks for using §bHytoraCloud§8!");
+            this.logger.info("§8» §7Thanks for using §bHytoraCloud§8!");
             this.logger.info("§8");
             this.logger.info("§8");
 
@@ -473,9 +476,9 @@ public class NodeDriver extends CloudDriver {
         DefaultNodeConfig nodeConfig = config.getNodeConfig();
 
 
-        FileUtils.copyResource("/impl/"  + HytoraCloudConstants.BRIDGE_FILE_NAME, STORAGE_VERSIONS_FOLDER + "/"  + HytoraCloudConstants.BRIDGE_FILE_NAME, getClass());
+        FileUtils.copyResource("/impl/" + HytoraCloudConstants.BRIDGE_FILE_NAME, STORAGE_VERSIONS_FOLDER + "/" + HytoraCloudConstants.BRIDGE_FILE_NAME, getClass());
         FileUtils.copyResource("/impl/" + HytoraCloudConstants.REMOTE_FILE_NAME, STORAGE_VERSIONS_FOLDER + "/" + HytoraCloudConstants.REMOTE_FILE_NAME, getClass());
-        this.logger.info("Copying §a"  + HytoraCloudConstants.BRIDGE_FILE_NAME + " §fand §a" + HytoraCloudConstants.REMOTE_FILE_NAME + " §fto §a" + STORAGE_VERSIONS_FOLDER + "§f...");
+        this.logger.info("Copying §a" + HytoraCloudConstants.BRIDGE_FILE_NAME + " §fand §a" + HytoraCloudConstants.REMOTE_FILE_NAME + " §fto §a" + STORAGE_VERSIONS_FOLDER + "§f...");
 
         String nodeName = setup.getName();
         String host = setup.getHost();
@@ -612,6 +615,14 @@ public class NodeDriver extends CloudDriver {
         return context;
     }
 
+    private void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void shutdown() {
         if (!this.running) {
@@ -629,40 +640,28 @@ public class NodeDriver extends CloudDriver {
 
 
         this.logger.info("§7Trying to terminate the §cCloudsystem§8...");
-        PlayerExecutor.forAll().disconnect("§cThe network was shut down!");
+        this.logger.info("§8");
+        this.logger.info("§8");
+        ShutdownAction[] shutdownActions = ShutdownAction.values();
 
-        Task.runTaskLater(() -> {
+        ProgressBar pb = new HytoraProgressBar(ProgressBarStyle.COLORED_UNICODE_BLOCK, 65, shutdownActions);
+        pb.setPrinter(this.console);
+        pb.setTaskName("Initializing...");
 
+        pb.stepTo(0);
+        sleep(1000L);
 
-            this.moduleManager.disableModules();
-            this.moduleManager.unregisterModules();
+        for (ShutdownAction shutdownAction : shutdownActions) {
+            pb.setTaskName(shutdownAction.getMessage());
+            //pb.addStep(stepPerAction);
+            pb.step();
 
-            this.webServer.shutdown();
-
-            //shutting down servers
-            for (ICloudService service : new ArrayList<>(this.serviceManager.getAllCachedServices())) {
-                IProcessCloudServer cloudServer = ((IProcessCloudServer) service);
-                Process process = cloudServer.getProcess();
-                if (process != null) {
-                    process.destroyForcibly();
-                }
-            }
-
-            Task.runSync(() -> logger.info("Terminating in §8[§c3§8]"));
-            Task.runTaskLater(() -> logger.info("Terminating in §8[§c2§8]"), TimeUnit.SECONDS, 1);
-            Task.runTaskLater(() -> logger.info("Terminating in §8[§c1§8]"), TimeUnit.SECONDS, 2);
-
-            //Shutting down networking and database
-            Task.multiTasking(this.executor.shutdown(), this.databaseManager.shutdown()).registerListener(wrapper -> {
-                Task.runTaskLater(() -> {
-                    FileUtils.delete(NodeDriver.SERVICE_DIR_DYNAMIC.toPath());
-                    FileUtils.delete(NodeDriver.STORAGE_TEMP_FOLDER.toPath());
-
-                    logger.info("§aSuccessfully exited the CloudSystem§8!");
-                    System.exit(0);
-                }, TimeUnit.SECONDS, 3);
-            });
-        }, TimeUnit.SECONDS, 1);
+            shutdownAction.getHandler().accept(this);
+            sleep(shutdownAction.getSleepTime());
+        }
+        sleep(100);
+        pb.close("§aSuccessfully exited the CloudSystem§8!");
+        System.exit(0);
     }
 
 }

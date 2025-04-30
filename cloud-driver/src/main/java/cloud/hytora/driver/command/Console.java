@@ -1,6 +1,7 @@
 package cloud.hytora.driver.command;
 
 import cloud.hytora.common.logging.handler.LogEntry;
+import cloud.hytora.common.progressbar.ProgressPrinter;
 import cloud.hytora.driver.setup.Setup;
 
 import javax.annotation.Nonnull;
@@ -9,7 +10,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-public interface Console {
+public interface Console extends ProgressPrinter {
 
 	void setCommandInputValue(@Nonnull String commandInputValue);
 

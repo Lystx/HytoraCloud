@@ -57,6 +57,10 @@ public class VersionInfo {
         return "HytoraCloud" + "-" + toString() + ".jar";
     }
 
+    public String formatModuleJarName(String moduleName) {
+        return moduleName + "-" + toString() + ".jar";
+    }
+
     public boolean isNewerAs(VersionInfo version) {
         return this.getVersion() > version.getVersion();
     }

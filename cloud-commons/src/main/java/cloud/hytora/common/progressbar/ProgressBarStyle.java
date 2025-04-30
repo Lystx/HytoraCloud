@@ -9,12 +9,12 @@ public enum ProgressBarStyle {
     /**
      * A simple style using ascii (no color or utf-8 symbols)
      */
-    ASCII("[", "]", "=", ">"),
+    ASCII("§8[", "§8]", "§a=", "§a>", "§f="),
 
     /**
      * A nice style using utf-8 symbols (no colors)
      */
-    UNICODE_BLOCK("│", "│", "█", ""),
+    UNICODE_BLOCK("│", "│", "█", "", "█"),
 
     /**
      * This is in testing
@@ -24,7 +24,7 @@ public enum ProgressBarStyle {
     /**
      * A nice style using utf-8 symbols and colors aswell
      */
-    COLORED_UNICODE_BLOCK("\u001b[33m│", "│\u001b[0m", "█", "");
+    COLORED_UNICODE_BLOCK("", "", "§a█", "", "§f█");
 
     /**
      * The left bracket that catches the process
@@ -45,4 +45,14 @@ public enum ProgressBarStyle {
      * The string that is appended after the cursor
      */
     private final String cursorEnd;
+
+    private final String spacer;
+
+    ProgressBarStyle(String leftBracket, String rightBracket, String cursor, String cursorEnd) {
+        this.leftBracket = leftBracket;
+        this.rightBracket = rightBracket;
+        this.cursor = cursor;
+        this.cursorEnd = cursorEnd;
+        this.spacer = " ";
+    }
 }

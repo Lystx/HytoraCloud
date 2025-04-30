@@ -5,8 +5,6 @@ import cloud.hytora.common.misc.StringUtils;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
@@ -52,7 +50,12 @@ public class ProgressBar {
     /**
      * The total maxLength of this bar
      */
-    private final long total;
+    private long maxPercentage;
+
+    /**
+     * the length of the bar
+     */
+    private int barLength;
 
     /**
      * The extra custom message that is appended at the end of the progress-line
@@ -63,6 +66,8 @@ public class ProgressBar {
      * The name of this progress that is appended before the percentage of the progress
      */
     private String taskName;
+
+    private String spacer;
 
     /**
      * If \r should not be in front of message
@@ -80,11 +85,6 @@ public class ProgressBar {
     private long current;
 
     /**
-     * The maximum percentage
-     */
-    private int percentagedWith;
-
-    /**
      * If you have to execute {@link ProgressBar#print()}
      * manually or if it is being executed after calling {@link ProgressBar#step()}
      */
@@ -100,35 +100,39 @@ public class ProgressBar {
      */
     private int modifiedFakeDisplay;
 
+    private int calculatedStep;
+
     /**
      * Constructs a new {@link ProgressBar} with a pre-set {@link ProgressBarStyle}
      *
-     * @param style     the style to use
-     * @param maxLength the maximum length of the progress (like 100 for 100%)
+     * @param style         the style to use
+     * @param maxPercentage the maximum length of the progress (like 100 for 100%)
      */
-    public ProgressBar(ProgressBarStyle style, long maxLength) {
-        this(style.getLeftBracket(), style.getRightBracket(), style.getCursor(), style.getCursorEnd(), maxLength);
+    public ProgressBar(ProgressBarStyle style, long maxPercentage) {
+        this(style.getLeftBracket(), style.getRightBracket(), style.getCursor(), style.getCursorEnd(), style.getSpacer(), maxPercentage);
     }
 
     /**
      * Constructs a new {@link ProgressBar} with a custom pre-set
      *
-     * @param leftBracket  the left bracket that catches the progress
-     * @param rightBracket the left bracket that catches the progress
-     * @param cursor       the cursor that displays the progress
-     * @param cursorEnd    the end that is being appended to the cursorEnd
-     * @param maxLength    the maximum length of the progress (like 100 for 100%)
+     * @param leftBracket   the left bracket that catches the progress
+     * @param rightBracket  the left bracket that catches the progress
+     * @param cursor        the cursor that displays the progress
+     * @param cursorEnd     the end that is being appended to the cursorEnd
+     * @param maxPercentage the maximum length of the progress (like 100 for 100%)
      */
-    public ProgressBar(String leftBracket, String rightBracket, String cursor, String cursorEnd, long maxLength) {
+    public ProgressBar(String leftBracket, String rightBracket, String cursor, String cursorEnd, String spacer, long maxPercentage) {
         this.leftBracket = leftBracket;
+        this.spacer = spacer;
         this.rightBracket = rightBracket;
         this.cursor = cursor;
+        this.barLength = (int) maxPercentage;
         this.cursorEnd = cursorEnd;
-        this.total = maxLength;
-        this.percentagedWith = 100;
+        this.maxPercentage = maxPercentage;
         this.appendProgress = false;
 
         this.modifiedFakeDisplay = -1;
+        this.calculatedStep = -1;
 
         this.startTime = System.currentTimeMillis();
         this.startDateTime = LocalDateTime.now();
@@ -137,12 +141,12 @@ public class ProgressBar {
         this.printer = new ProgressPrinter() {
             @Override
             public void print(String progress) {
-                System.out.println(progress);
+
+                System.out.print(ConsoleColor.toColoredString('§', progress));
             }
 
             @Override
             public void flush(String progress) {
-
             }
         };
 
@@ -153,18 +157,33 @@ public class ProgressBar {
         this.appendProgress = true;
     }
 
+
+    public void setSizeEntryBased(int size, int maxEntries) {
+        int stepSize = size / maxEntries;
+
+        this.calculatedStep = stepSize;
+
+        this.barLength = (int) (stepSize * maxEntries);
+    }
+
     /**
      * Steps one step up in the progress
      */
-    public void step() {
-        current++;
+    public boolean step() {
+        if (current >= maxPercentage) {
+            return false;
+        }
+        if (calculatedStep != -1) {
+            current = current + calculatedStep;
+        } else {
+            current++;
+        }
         this.stepTo(current);
+        return true;
     }
 
-    public void setFakePercentage(int actualMax, int displayMax) {
+    public void setFakePercentage(int displayMax) {
         this.modifiedFakeDisplay = displayMax;
-
-        this.percentagedWith = actualMax;
     }
 
     /**
@@ -173,7 +192,26 @@ public class ProgressBar {
      * @param n the number to step to
      */
     public void stepTo(long n) {
+        if (n > maxPercentage) {
+            return;
+        }
         this.current = n;
+
+        if (printAutomatically) {
+            print();
+        }
+    }
+
+    /**
+     * Steps to a given step in this progress
+     *
+     * @param n the number to step to
+     */
+    public void addStep(long n) {
+        if ((this.current + n) > maxPercentage) {
+            return;
+        }
+        this.current = this.current + n;
 
         if (printAutomatically) {
             print();
@@ -186,62 +224,51 @@ public class ProgressBar {
     public void print() {
 
         long eta = current == 0 ? 0 :
-                (total - current) * (System.currentTimeMillis() - startTime) / current;
+                (maxPercentage - current) * (System.currentTimeMillis() - startTime) / current;
 
         long start = current == 0 ? 0 :
                 (current) * (System.currentTimeMillis() - startTime) / current;
 
-        int finalTotal = this.modifiedFakeDisplay == -1 ? (int) this.total : this.modifiedFakeDisplay;
 
         String etaHms = current == 0 ? "N/A" :
                 String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(eta),
                         TimeUnit.MILLISECONDS.toMinutes(eta) % TimeUnit.HOURS.toMinutes(1),
                         TimeUnit.MILLISECONDS.toSeconds(eta) % TimeUnit.MINUTES.toSeconds(1));
 
-        String startHms = current == 0 ? "N/A" :
-                String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(start),
-                        TimeUnit.MILLISECONDS.toMinutes(start) % TimeUnit.HOURS.toMinutes(1),
-                        TimeUnit.MILLISECONDS.toSeconds(start) % TimeUnit.MINUTES.toSeconds(1));
-
-        String info = "(" + this.current + "/" + finalTotal + ", [" + startHms + " / " + etaHms + "])";
-
-        int percent = (int) (current * percentagedWith / finalTotal);
+        int percent = (int) (current * 100 / maxPercentage);
 
 
         StringBuilder cursorProcess = new StringBuilder();
-        StringBuilder emptyProcess = new StringBuilder();
-        StringBuilder borderProcess = new StringBuilder();
 
         //cursor
-        for (int i = 0; i < percent; i++) {
+
+        for (int i = 0; i <  percent; i++) {
             cursorProcess.append(cursor);
         }
 
-        int emptySpaces = current == 0 ? (int) (Math.log10(total)) : (int) (Math.log10(total)) - (int) (Math.log10(current));
-        int borderSpaces = current == 0 ? (int) (Math.log10(total)) : (int) (Math.log10(total)) - (int) (Math.log10(current));
 
-        //empty
-        for (int i = 0; i < emptySpaces; i++) {
-            emptyProcess.append(" ");
+        int borderSpaces = current == 0 ? (int) (Math.log10(barLength)) : (int) (Math.log10(barLength)) - (int) (Math.log10(current));
+
+
+        int x = barLength - percent;
+
+        if (x < 0) {
+            x = 0;
         }
 
-        //border
-        for (int i = 0; i < borderSpaces; i++) {
-            borderProcess.append(" ");
-        }
-
-        String string = (this.appendProgress ? "" : "\r") + (taskName != null ? (taskName + ConsoleColor.DEFAULT) : "") +
-                String.join("", Collections.nCopies(percent == 0 ? 2 : 2 - (int) (Math.log10(percent)), "")) +
-                String.format(" %d%% " + leftBracket, (int) (current * 100 / total)) +
+        String string = (this.appendProgress ? "" : "\r")  +
+                "§8» §7" +
+                String.join("", Collections.nCopies(percent == 0 ? 2 : 2 - (int) (Math.log10(percent)), " ")) +
+                String.format(" %d%% " + leftBracket, ((percent))) +
                 (expandingAnimation ? cursorProcess.toString() : cursor) +
                 cursorEnd +
-                (expandingAnimation ? emptyProcess.toString() : "") +
+                String.join("", Collections.nCopies(x, spacer)) +
                 rightBracket +
-                borderProcess.toString() +
-                String.format(info + " " + this.extraMessage, current, finalTotal, etaHms);
+                String.join("", Collections.nCopies(borderSpaces, " ")) +
+                " §8[" + (taskName != null ? ("§8=> §7" + taskName + " §8| ") : "") + "§eETA§8: §e" + etaHms + "§8]";
+
 
         this.printer.print(string);
-
     }
 
     /**

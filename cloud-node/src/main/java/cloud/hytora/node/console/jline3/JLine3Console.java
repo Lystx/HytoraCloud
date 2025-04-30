@@ -1,5 +1,6 @@
 package cloud.hytora.node.console.jline3;
 
+import cloud.hytora.common.logging.ConsoleColor;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
 import cloud.hytora.common.logging.handler.LogEntry;
@@ -138,11 +139,17 @@ public class JLine3Console implements Console {
             text += System.lineSeparator();
         }
         if (text.startsWith("\r")) {
-            print(text);
+            print0(text);
             return this;
         }
-        print(Ansi.ansi().eraseLine(Ansi.Erase.ALL).toString() + '\r' + text + Ansi.ansi().reset().toString());
+        print0(Ansi.ansi().eraseLine(Ansi.Erase.ALL).toString() + '\r' + text + Ansi.ansi().reset().toString());
         return this;
+    }
+
+    @Override
+    public void print(String text) {
+        text = ConsoleColor.toColoredString('§', text);
+        print0(Ansi.ansi().eraseLine(Ansi.Erase.ALL).toString() + text + Ansi.ansi().reset().toString());
     }
 
     @Override
@@ -201,7 +208,7 @@ public class JLine3Console implements Console {
         ((LineReaderImpl) lineReader).setPrompt(prompt);
     }
 
-    private void print(@Nonnull String text) {
+    private void print0(@Nonnull String text) {
         lineReader.getTerminal().puts(InfoCmp.Capability.carriage_return);
         lineReader.getTerminal().writer().print(text);
         lineReader.getTerminal().writer().flush();
@@ -213,6 +220,11 @@ public class JLine3Console implements Console {
 
         lineReader.callWidget(LineReader.REDRAW_LINE);
         lineReader.callWidget(LineReader.REDISPLAY);
+    }
+
+    @Override
+    public void flush(String progress) {
+
     }
 
 

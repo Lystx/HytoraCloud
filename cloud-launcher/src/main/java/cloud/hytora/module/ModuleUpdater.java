@@ -5,7 +5,7 @@ import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.VersionInfo;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.misc.FileUtils;
-import cloud.hytora.common.progressbar.ProgressBar;
+import cloud.hytora.common.progressbar.HytoraProgressBar;
 import cloud.hytora.common.progressbar.ProgressBarStyle;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.context.annotations.CacheContext;
@@ -50,7 +50,6 @@ public class ModuleUpdater {
             }
             ModuleInfo moduleInfo = new ModuleInfo(
                     doc.get("name").toString(),
-                    doc.get("url").toString(),
                     VersionInfo.fromString(doc.get("version").toString())
             );
             launcher.getLogger().debug("Loaded ModuleInfo[name={}, url={}, version={}]", moduleInfo.getName(), moduleInfo.getUrl(), moduleInfo.getVersion());
@@ -73,7 +72,7 @@ public class ModuleUpdater {
             url = url.replace("{module.name}", name);
             url = url.replace("{module.version}", currentVersion.toString());
 
-            ModuleInfo localModule = findCurrentModule(name, url);
+            ModuleInfo localModule = findCurrentModule(name);
             if (localModule == null || module.getVersion().isNewerAs(localModule.getVersion())) {
                 Logger.constantInstance().info("'{}' is either not existing or needs to be updated to Version '{}' [Current-Version: {}]", module.getName(), module.getVersion(), (localModule == null ? "Not existing" : localModule.getVersion()));
                 downloadModule(module, url)
@@ -108,13 +107,9 @@ public class ModuleUpdater {
 
     public Task<Path> downloadModule(ModuleInfo module, String url) {
         Task<Path> task = Task.empty();
-        ProgressBar pb = new ProgressBar(ProgressBarStyle.ASCII, 100L);
+        HytoraProgressBar pb = new HytoraProgressBar(ProgressBarStyle.COLORED_UNICODE_BLOCK);
 
-        pb.setAppendProgress(false);
-        pb.setFakePercentage(30, 100);
-        pb.setPrintAutomatically(true);
-        pb.setExpandingAnimation(true);
-        pb.setTaskName("Downloading " + module.getName());
+        pb.setTaskName("Downloading " + module.getName() + "...");
 
 
         DriverUtility.downloadVersion(url, Launcher.LAUNCHER_MODULES.resolve(module.getName() + "-" + module.getVersion() + ".jar"), pb)
@@ -136,7 +131,7 @@ public class ModuleUpdater {
     }
 
 
-    private ModuleInfo findCurrentModule(String name, String url) {
+    private ModuleInfo findCurrentModule(String name) {
         Path moduleFile = FileUtils.list(Launcher.LAUNCHER_MODULES)
                 .filter(path -> path.getFileName().toString().endsWith(".jar"))
                 .filter(path -> path.getFileName().toString().contains(name))
@@ -150,7 +145,6 @@ public class ModuleUpdater {
         return document == null ? null
                 : new ModuleInfo(
                 name,
-                url,
                 VersionInfo.fromString(document.getString("version"))
         );
     }

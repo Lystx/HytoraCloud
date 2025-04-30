@@ -27,6 +27,10 @@ public class CloudMessages {
     }
 
     public static CloudMessages getInstance() {
-        return CloudDriver.getInstance().getStorage().get("cloud::messages").toInstance(CloudMessages.class);
+        try {
+            return CloudDriver.getInstance().getStorage().get("cloud::messages").toInstance(CloudMessages.class);
+        } catch (NullPointerException e) {
+            return null;
+        }
     }
 }

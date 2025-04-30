@@ -1,9 +1,9 @@
 {
   "name": "module-perms",
+  "version": "STABLE-2.0",
   "main" : "cloud.hytora.modules.PermsModule",
   "author" : "Lystx",
   "description" : "Implementation for integrated Permissions-System",
-  "version" : "SNAPSHOT-1.0",
   "website" : "https://github.com/Lystx/HytoraCloud/tree/master/cloud-modules/module-perms",
   "copy" : "ALL",
   "environment" : "ALL"

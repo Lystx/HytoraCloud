@@ -1,2 +1,2 @@
-java -jar CloudSystem.jar
+java -jar launcher.jar
 PAUSE
