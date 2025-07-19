@@ -6,7 +6,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import cloud.hytora.common.misc.CollectionUtils;
-import cloud.hytora.common.misc.GsonUtils;
 import cloud.hytora.document.Bundle;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.IEntry;
@@ -46,7 +45,7 @@ public class GsonDocument extends AbstractDocument implements DocumentWrapper<Gs
 
 	public GsonDocument(@Nonnull Map<String, Object> values) {
 		this();
-		GsonUtils.setDocumentProperties(GsonHelper.DEFAULT_GSON, object, values);
+		GsonHelper.setDocumentProperties(GsonHelper.DEFAULT_GSON, object, values);
 	}
 
 	public GsonDocument(@Nonnull JsonObject object, boolean editable) {

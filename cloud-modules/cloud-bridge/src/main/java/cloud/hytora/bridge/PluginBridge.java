@@ -1,16 +1,20 @@
 package cloud.hytora.bridge;
 
 import cloud.hytora.bridge.proxy.ProxyRemoteHandler;
+import cloud.hytora.common.DriverUtility;
+import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.LoggingDriver;
-import cloud.hytora.driver.services.ICloudService;
-import cloud.hytora.driver.services.IServiceCycleData;
-import cloud.hytora.driver.services.utils.RemoteIdentity;
-import cloud.hytora.driver.services.utils.ServiceState;
-import cloud.hytora.driver.services.utils.ServiceVisibility;
+import cloud.hytora.driver.common.LoggingDriver;
+import cloud.hytora.driver.entity.services.CloudService;
+import cloud.hytora.driver.entity.services.ServiceCycleData;
+import cloud.hytora.driver.entity.services.utils.RemoteIdentity;
+import cloud.hytora.driver.entity.services.utils.ServiceState;
+import cloud.hytora.driver.entity.services.utils.ServiceVisibility;
+import cloud.hytora.driver.networking.packets.entities.PacketCloudEntityPlayerExtension;
+import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
+import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.remote.Remote;
 import cloud.hytora.remote.adapter.RemoteAdapter;
-import cloud.hytora.remote.adapter.proxy.RemoteProxyAdapter;
 
 import java.io.File;
 import java.util.HashMap;
@@ -22,11 +26,11 @@ public interface PluginBridge extends RemoteAdapter, LoggingDriver {
     Map<UUID, String> FIRST_JOIN_SERVER = new HashMap<>();
 
 
-    default ICloudService getFirstJoinServer(UUID uuid) {
+    default CloudService getFirstJoinServer(UUID uuid) {
         return CloudDriver.getInstance().getServiceManager().getCachedCloudService(FIRST_JOIN_SERVER.get(uuid));
     }
 
-    default void setFirstJoinServer(UUID uuid, ICloudService service) {
+    default void setFirstJoinServer(UUID uuid, CloudService service) {
         FIRST_JOIN_SERVER.put(uuid, service.getName());
     }
 
@@ -36,38 +40,34 @@ public interface PluginBridge extends RemoteAdapter, LoggingDriver {
 
 
     default void updateServiceInfo() {
-        CloudDriver.getInstance()
-                .getServiceManager()
-                .getThisService().onTaskSucess(cloudService -> {
+        CloudService cloudService = CloudDriver.getInstance()
+                .getServiceManager().thisService();
+        if (cloudService == null) {
+            CloudDriver.getInstance().getLogger().error("§cCould not update ServiceInfo because service is not set yet!");
+            return;
+        }
 
-                    IServiceCycleData cycleData = Remote.getInstance().createCycleData();
+        ServiceCycleData cycleData = Remote.getInstance().createCycleData();
 
-                    cloudService.setServiceVisibility(ServiceVisibility.VISIBLE);
-                    cloudService.setServiceState(ServiceState.ONLINE);
-                    if (cycleData != null) {
-                        cloudService.setLastCycleData(cycleData);
-                    }
-                    cloudService.setReady(true);
-                    cloudService.update();
+        cloudService.setServiceVisibility(ServiceVisibility.VISIBLE);
+        cloudService.setServiceState(ServiceState.ONLINE);
+        if (cycleData != null) {
+            cloudService.setLastCycleData(cycleData);
+        }
+        cloudService.setReady(true);
+        cloudService.update();
 
-                    info("==========[CloudService#UpdateServiceInfo]=========");
-                    info("The ServiceInfo got updated to: [");
-                    info("name={}", cloudService.getName() + ",");
-                    info("uniqueId={}", cloudService.getUniqueId() + ",");
-                    info("address={}", cloudService.getHostName() + ":" + cloudService.getPort() + ",");
-                    info("state={}", cloudService.getServiceState() + ",");
-                    info("visibility={}", cloudService.getServiceVisibility() + ",");
-                    info("]");
-                    info("==========[CloudService#UpdateServiceInfo]=========");
-
-                }).onTaskFailed(e -> CloudDriver.getInstance().getLogger().error("§cCould not update ServiceInfo because service is not set yet!"));
+        System.out.println(" ");
+        DriverUtility.printColored("Bridge", "§7Service is aware of itsself §8[%1identification§8=%2" + cloudService.getName() + "§8@%2" + cloudService.getUniqueId() + "§8,%1state§8=%2" + cloudService.getServiceState() + "§8,%1visibility§8=%2" + cloudService.getServiceVisibility() + "§8]");
+        System.out.println(" ");
     }
 
     default RemoteIdentity getIdentity() {
         return RemoteIdentity.read(new File("property.json"));
     }
 
-    void shutdown();
+    @Override
+    Task<Boolean> shutdown();
 
     default void initialize() {
         if (Remote.getInstance().thisService().getTask().getVersion().isProxy()) {
@@ -78,10 +78,13 @@ public interface PluginBridge extends RemoteAdapter, LoggingDriver {
     }
 
 
+    default void disconnectConnection(UUID connectionId) {
+
+    }
+
     default void displayServerInfoStopping() {
-        ICloudService cloudService = Remote.getInstance().thisService();
+        CloudService cloudService = Remote.getInstance().thisService();
         cloudService.setServiceState(ServiceState.STOPPING);
-        cloudService.setReady(false);
         cloudService.setServiceVisibility(ServiceVisibility.INVISIBLE);
         cloudService.update();
     }

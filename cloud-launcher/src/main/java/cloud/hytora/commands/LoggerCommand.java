@@ -2,7 +2,6 @@ package cloud.hytora.commands;
 
 import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.Logger;
-import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.script.api.IScript;
 import cloud.hytora.script.api.IScriptCommand;
 import org.jetbrains.annotations.NotNull;

@@ -1,9 +1,8 @@
 package cloud.hytora.driver.event.defaults;
 
-import cloud.hytora.driver.event.CloudEvent;
-import cloud.hytora.driver.event.DestructiveListener;
-import cloud.hytora.driver.event.EventOrder;
-import cloud.hytora.driver.event.RegisteredListener;
+import cloud.hytora.driver.event.LocalEvent;
+import cloud.hytora.driver.event.listener.DestructiveListener;
+import cloud.hytora.driver.event.type.EventOrder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -14,15 +13,15 @@ import java.util.function.Consumer;
 
 @AllArgsConstructor
 @Getter
-public class DefaultDestructiveListener<E extends CloudEvent> implements DestructiveListener {
+public class DefaultDestructiveListener<E extends LocalEvent> implements DestructiveListener {
 
 	private final Class<E> eventClass;
 	private final BiConsumer<DestructiveListener, ? super E> action;
 	private final Consumer<DestructiveListener> destroyHandler;
 
 	@Override
-	public void execute(@Nonnull CloudEvent cloudEvent) {
-		action.accept(this, eventClass.cast(cloudEvent));
+	public void execute(@Nonnull LocalEvent iEvent) {
+		action.accept(this, eventClass.cast(iEvent));
 	}
 
 	@Nonnull

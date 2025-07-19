@@ -1,10 +1,10 @@
 package cloud.hytora.driver.networking.protocol.codec.buf;
 
 import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.DocumentWrapper;
 import cloud.hytora.document.wrapped.WrappedDocument;
-import cloud.hytora.driver.networking.protocol.packets.BufferState;
+import cloud.hytora.driver.networking.protocol.types.BufferState;
+import cloud.hytora.simplejson.api.Json;
 import com.google.gson.Gson;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,7 +27,7 @@ public class ProtocolDocument implements WrappedDocument, IBufferObject {
 		switch (state) {
 
 			case READ:
-				targetDocument = DocumentFactory.newJsonDocument(buf.readString());
+				targetDocument = Document.gson(buf.readString());
 				break;
 
 			case WRITE:
@@ -41,13 +41,18 @@ public class ProtocolDocument implements WrappedDocument, IBufferObject {
 	}
 
 	@Override
-	public DocumentWrapper<org.bson.Document> asBsonDocument() {
-		return targetDocument.asBsonDocument();
+	public DocumentWrapper<org.bson.Document> asBson() {
+		return targetDocument.asBson();
 	}
 
 	@Override
-	public DocumentWrapper<Gson> asGsonDocument() {
-		return targetDocument.asGsonDocument();
+	public DocumentWrapper<Gson> asGson() {
+		return targetDocument.asGson();
+	}
+
+	@Override
+	public DocumentWrapper<Json> asJson() {
+		return targetDocument.asJson();
 	}
 
 	@Override

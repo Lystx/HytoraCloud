@@ -42,7 +42,7 @@ public interface CommandManager {
 	 * @param sender the sender that executes
 	 * @param input the input that was given
 	 */
-	void executeCommand(@Nonnull CommandSender sender, @Nonnull String input);
+	void executeCommand(@Nonnull CommandSender sender, @Nonnull String input, boolean... ignoreInputHandlers);
 
 	/**
 	 * Searches for completions for given input at command-index.
@@ -120,6 +120,12 @@ public interface CommandManager {
 	@Nonnull
 	@CheckReturnValue
 	Collection<RegisteredCommand> getCommands();
+
+	Collection<DriverCommandInfo> getRegisteredCommands();
+
+	Collection<DriverCommandInfo> getCachedRegisteredCommands();
+
+	void setRegisteredCommands(Collection<DriverCommandInfo> commands);
 
 	/**
 	 * @return all cached and registered {@link ArgumentParser}

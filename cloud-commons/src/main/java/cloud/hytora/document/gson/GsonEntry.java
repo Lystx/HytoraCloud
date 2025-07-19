@@ -4,9 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import cloud.hytora.document.Bundle;
 import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.IEntry;
-import com.google.gson.JsonPrimitive;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -76,6 +74,7 @@ public class GsonEntry implements IEntry {
 	public String toString() {
 		return toString(null);
 	}
+
 
 	@Override
 	public long toLong(long def) {
@@ -149,7 +148,7 @@ public class GsonEntry implements IEntry {
 	public Bundle toBundle() {
 		if (isNull()) throw new IllegalStateException("Not a bundle");
 		if (element.isJsonArray()) return new GsonBundle(element.getAsJsonArray());
-		return DocumentFactory.newJsonBundle(element);
+		return Bundle.newGsonBundle(element);
 	}
 
 	@Override

@@ -1,6 +1,6 @@
 package cloud.hytora.modules.proxy;
 
-import cloud.hytora.common.collection.IRandom;
+import cloud.hytora.common.random.IRandom;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.driver.CloudDriver;
@@ -11,11 +11,11 @@ import cloud.hytora.driver.module.controller.base.ModuleCopyType;
 import cloud.hytora.driver.module.controller.base.ModuleEnvironment;
 import cloud.hytora.driver.module.controller.base.ModuleState;
 import cloud.hytora.driver.module.controller.task.ModuleTask;
-import cloud.hytora.driver.player.ICloudPlayer;
-import cloud.hytora.driver.player.executor.PlayerExecutor;
-import cloud.hytora.driver.services.ICloudService;
-import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
+import cloud.hytora.driver.entity.player.CloudPlayer;
+
+import cloud.hytora.driver.entity.services.CloudService;
+import cloud.hytora.driver.entity.services.task.ServiceTask;
+import cloud.hytora.driver.entity.services.utils.SpecificDriverEnvironment;
 import cloud.hytora.modules.proxy.command.ProxyCommand;
 import cloud.hytora.modules.proxy.config.*;
 import cloud.hytora.modules.proxy.config.sub.MotdLayOut;
@@ -115,11 +115,13 @@ public class ProxyModule extends AbstractModule {
         String[] footer = {tabList[1]};
 
         //setting tabList
-        for (ICloudPlayer cloudPlayer : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
-            ICloudService proxyServer = cloudPlayer.getProxyServer();
+        for (CloudPlayer cloudPlayer : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
+            if (!cloudPlayer.isConnected()) {
+                continue;
+            }
+            CloudService proxyServer = cloudPlayer.getProxyServer();
 
-            PlayerExecutor executor = PlayerExecutor.forPlayer(cloudPlayer);
-            ICloudService server = cloudPlayer.getServer();
+            CloudService server = cloudPlayer.getServer();
 
             if (server != null) {
                 header[0] = server.replacePlaceHolders(header[0]);
@@ -127,11 +129,11 @@ public class ProxyModule extends AbstractModule {
             }
 
             //proxy place holder
-            header[0] = header[0].replace("{proxy}", proxyServer.getName());
-            footer[0] = footer[0].replace("{proxy}", proxyServer.getName());
+            header[0] = header[0].replace("{proxy}", proxyServer == null ? "Loading...": proxyServer.getName());
+            footer[0] = footer[0].replace("{proxy}", proxyServer == null ? "Loading..." : proxyServer.getName());
 
-            header[0] = header[0].replace("{service}", (cloudPlayer.getServer() == null ? "UNKNOWN" : cloudPlayer.getServer().getName()));
-            footer[0] = footer[0].replace("{service}", (cloudPlayer.getServer() == null ? "UNKNOWN" : cloudPlayer.getServer().getName()));
+            header[0] = header[0].replace("{service}", (cloudPlayer.getServer() == null ? "Loading..." : cloudPlayer.getServer().getName()));
+            footer[0] = footer[0].replace("{service}", (cloudPlayer.getServer() == null ? "Loading..." : cloudPlayer.getServer().getName()));
 
             //player placeholder
             header[0] = header[0].replace("{players.online}", "" + CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers().size());
@@ -139,18 +141,18 @@ public class ProxyModule extends AbstractModule {
             footer[0] = footer[0].replace("{players.max}", "" + CloudDriver.getInstance().getPlayerManager().countPlayerCapacity());
             header[0] = header[0].replace("{players.max}", "" + CloudDriver.getInstance().getPlayerManager().countPlayerCapacity());
 
-            executor.setTabList(header[0], footer[0]);
+            cloudPlayer.asProxyPlayer().setTabList(header[0], footer[0]);
         }
     }
 
     public void updateMotd() {
-        for (IServiceTask serviceTask : CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks().stream().filter(t -> t.getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY).collect(Collectors.toList())) {
+        for (ServiceTask serviceTask : CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks().stream().filter(t -> t.getTaskGroup().getEnvironment() == SpecificDriverEnvironment.PROXY).collect(Collectors.toList())) {
 
             MotdLayOut motd = selectMotd(serviceTask);
             if (motd == null) {
                 continue;
             }
-            for (ICloudService service : CloudDriver.getInstance().getServiceManager().getAllServicesByEnvironment(SpecificDriverEnvironment.PROXY)) {
+            for (CloudService service : CloudDriver.getInstance().getServiceManager().getAllServicesByEnvironment(SpecificDriverEnvironment.PROXY)) {
                 service.editPingProperties(ping -> {
                     ping.setMotd(replaceDefault(service, (motd.getFirstLine() + "\n" + motd.getSecondLine())));
                     ping.setVersionText(replaceDefault(service, motd.getProtocolText()));
@@ -162,7 +164,7 @@ public class ProxyModule extends AbstractModule {
         }
     }
 
-    protected String replaceDefault(ICloudService info, String content) {
+    protected String replaceDefault(CloudService info, String content) {
         if (content == null) {
             return "";
         }
@@ -178,7 +180,7 @@ public class ProxyModule extends AbstractModule {
     }
 
     @Nullable
-    public MotdLayOut selectMotd(IServiceTask task) {
+    public MotdLayOut selectMotd(ServiceTask task) {
         List<MotdLayOut> elements = task.isMaintenance() ? proxyConfig.getMotd().getMaintenances() : proxyConfig.getMotd().getDefaults();
         if (elements.isEmpty()) {
             return null;

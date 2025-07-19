@@ -1,14 +1,11 @@
 package cloud.hytora.node.console;
 
 import cloud.hytora.common.function.ExceptionallyBiConsumer;
-import cloud.hytora.common.logging.Logger;
-import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.console.Screen;
-import cloud.hytora.driver.console.ScreenManager;
-import org.jetbrains.annotations.Nullable;
+import cloud.hytora.driver.command.console.screen.Screen;
+import cloud.hytora.driver.command.console.screen.ScreenManager;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,18 +27,18 @@ public class NodeScreenManager implements ScreenManager {
     }
 
     @Override
-    public Task<Screen> getScreenByName(String name) {
+    public Task<Screen> getScreen(String name) {
         return Task.build(allCachedScreens.get(name));
     }
 
     @Override
-    public Screen getScreenByNameOrNull(String name) {
+    public Screen getCachedScreen(String name) {
         return allCachedScreens.get(name);
     }
 
     @Override
     public void update(String name, Consumer<Screen> handler) {
-        Screen screen = this.getScreenByNameOrNull(name);
+        Screen screen = this.getCachedScreen(name);
         if (screen == null) {
             return;
         }
@@ -89,7 +86,7 @@ public class NodeScreenManager implements ScreenManager {
         CloudDriver.getInstance().getCommandManager().setInActiveHandler(null);
         CloudDriver.getInstance().getCommandManager().setActive(true);
         if (this.lastScreenName != null) {
-            this.joinScreen(this.getScreenByNameOrNull(lastScreenName));
+            this.joinScreen(this.getCachedScreen(lastScreenName));
         }
     }
 
@@ -123,7 +120,7 @@ public class NodeScreenManager implements ScreenManager {
     }
 
     public Screen getCurrentScreen() {
-        return this.getScreenByNameOrNull(this.currentScreenName);
+        return this.getCachedScreen(this.currentScreenName);
     }
 
     @Override

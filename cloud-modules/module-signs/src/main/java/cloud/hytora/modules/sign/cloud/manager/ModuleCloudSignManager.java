@@ -2,7 +2,6 @@ package cloud.hytora.modules.sign.cloud.manager;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.document.Bundle;
-import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.IEntry;
 import cloud.hytora.modules.sign.api.def.UniversalCloudSign;
 import cloud.hytora.modules.sign.api.CloudSignAPI;
@@ -37,7 +36,7 @@ public class ModuleCloudSignManager implements ICloudSignManager {
     @Override
     public void loadCloudSignsSync() {
         try {
-            Bundle bundle = DocumentFactory.newJsonBundle(this.signFile);
+            Bundle bundle = Bundle.newGsonBundle(this.signFile);
             for (IEntry entry : bundle) {
                 allCachedCloudSigns.add(entry.toInstance(UniversalCloudSign.class));
             }
@@ -49,7 +48,7 @@ public class ModuleCloudSignManager implements ICloudSignManager {
     @Override
     public Task<Collection<ICloudSign>> loadCloudSignsAsync() {
         return Task.callAsync(() -> {
-            Bundle bundle = DocumentFactory.newJsonBundle(this.signFile);
+            Bundle bundle = Bundle.newGsonBundle(this.signFile);
             for (IEntry entry : bundle) {
                 allCachedCloudSigns.add(entry.toInstance(UniversalCloudSign.class));
             }
@@ -95,7 +94,7 @@ public class ModuleCloudSignManager implements ICloudSignManager {
     @Override
     public void update() {
 
-        Bundle bundle = DocumentFactory.newJsonBundle();
+        Bundle bundle = Bundle.newGsonBundle();
         for (ICloudSign cachedCloudSign : allCachedCloudSigns) {
             bundle.add(cachedCloudSign);
         }

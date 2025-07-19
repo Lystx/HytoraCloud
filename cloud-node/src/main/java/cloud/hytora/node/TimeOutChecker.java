@@ -1,12 +1,10 @@
 package cloud.hytora.node;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.HytoraCloudConstants;
-import cloud.hytora.driver.node.INode;
-import cloud.hytora.driver.node.data.INodeData;
-import cloud.hytora.driver.services.ICloudService;
-import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.utils.ServiceState;
+import cloud.hytora.driver.entity.node.INode;
+import cloud.hytora.driver.entity.node.data.INodeCycleData;
+import cloud.hytora.driver.entity.services.CloudService;
+import cloud.hytora.driver.entity.services.utils.ServiceState;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -21,11 +19,11 @@ public class TimeOutChecker implements Runnable {
     }
 
     private void checkServiceTimeout() {
-        for (ICloudService service : NodeDriver.getInstance().getServiceManager().getAllServicesByState(ServiceState.ONLINE)) {
+        for (CloudService service : NodeDriver.getInstance().getServiceManager().getAllServicesByState(ServiceState.ONLINE)) {
             if (!service.isTimedOut()) {
                 continue; //if not timed out ignoring
             }
-            CloudDriver.getInstance().getLogger().warn("§7The Service §8'§c{}§8' §7has timed out and will now be stopped§8. [§cLost-Cycles: {}, §cLast-Sync: {}§8]", service.getName(), HytoraCloudConstants.SERVER_MAX_LOST_CYCLES, new SimpleDateFormat("HH:mm:ss").format(service.getLastCycleData().getTimestamp()));
+            CloudDriver.getInstance().getLogger().warn("§7The Service §8'§c{}§8' §7has timed out and will now be stopped§8. [§cLost-Cycles: {}, §cLast-Sync: {}§8]", service.getName(), CloudDriver.Constants.SERVER_MAX_LOST_CYCLES, new SimpleDateFormat("HH:mm:ss").format(service.getLastCycleData().getTimestamp()));
             CloudDriver.getInstance().getServiceManager().shutdownService(service);
             return;
         }
@@ -38,7 +36,7 @@ public class TimeOutChecker implements Runnable {
             if (node.getName().equalsIgnoreCase(NodeDriver.getInstance().getNode().getName())) {
                 continue;
             }
-            INodeData cycleData = node.getLastCycleData();
+            INodeCycleData cycleData = node.getLastCycleData();
             if (cycleData == null) {
                 continue;
             }

@@ -2,7 +2,6 @@ package cloud.hytora.node.impl.module;
 
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.wrapped.StorableDocument;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.module.controller.AbstractModule;
@@ -13,7 +12,7 @@ import cloud.hytora.driver.module.controller.base.*;
 import cloud.hytora.driver.module.controller.task.ModuleTask;
 import cloud.hytora.driver.module.controller.task.ScheduledModuleTask;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
-import cloud.hytora.driver.networking.protocol.packets.BufferState;
+import cloud.hytora.driver.networking.protocol.types.BufferState;
 import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.node.NodeDriver;
 import org.jetbrains.annotations.NotNull;
@@ -93,10 +92,11 @@ public class DefaultModuleController implements ModuleController {
         dataFolder = manager.getModulesDirectory().resolve(moduleConfig.getName());
         dataFolder.toFile().mkdirs();
 
-        Document config = DocumentFactory.newJsonDocument();
+        Document config = Document.gson();
         if (getConfig().isEmpty()) {
             config.saveToFile(dataFolder.resolve("config.json"));
         }
+        this.state = ModuleState.DISABLED;
     }
 
 
@@ -121,6 +121,7 @@ public class DefaultModuleController implements ModuleController {
 
         classLoader.setModule((module = abstractModule));
 
+        this.state = ModuleState.DISABLED;
 
 
         /*if (!(instance instanceof AbstractModule)) {
@@ -143,8 +144,14 @@ public class DefaultModuleController implements ModuleController {
     @Override
     public void loadModule() {
         synchronized (this) {
-            if (module == null) return; // was never initialized
-            if (state != ModuleState.DISABLED) return; // must be disabled first
+            if (module == null) {
+                Logger.constantInstance().error("Tried loading §eNulled §cModule-Instance!");
+                return; // was never initialized
+            }
+            if (state != ModuleState.DISABLED) {
+                Logger.constantInstance().error("Tried loading §cModule §cthat had the wrong State from start!");
+                return; // must be disabled first
+            }
 
             this.reloadConfig();
             Logger.constantInstance().debug("Loading the Module §8'§e" + moduleConfig.getName() + "§8'§f...");
@@ -164,26 +171,28 @@ public class DefaultModuleController implements ModuleController {
 
     @Override
     public void enableModule() {
-        if (module == null) {
-            return; // was never initialized
-        }
-        if (state != ModuleState.LOADED) {
-
-            return; // must be loaded first
-        }
-
-        Logger.constantInstance().debug("Enabling the Module §8'§6" + moduleConfig.getName() + "§8'§f...");
-
-        try {
-            state = ModuleState.ENABLED;
-            if (this.moduleConfig.getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
-                this.callTasks(this.state);
-                Logger.constantInstance().debug("The §3CloudModule §8'§b" + moduleConfig.getName() + "§8'§fhas been loadded §8and §7enabled§8!");
+        synchronized (this) {
+            if (module == null) {
+                return; // was never initialized
             }
-        } catch (Throwable ex) {
-            Logger.constantInstance().error("An error occurred while enabling module " + module);
-            ex.printStackTrace();
-            disableModule();
+            if (state != ModuleState.LOADED) {
+
+                return; // must be loaded first
+            }
+
+            Logger.constantInstance().debug("Enabling the Module §8'§6" + moduleConfig.getName() + "§8'§f...");
+
+            try {
+                state = ModuleState.ENABLED;
+                if (this.moduleConfig.getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
+                    this.callTasks(this.state);
+                    Logger.constantInstance().debug("The §3CloudModule §8'§b" + moduleConfig.getName() + "§8'§fhas been loadded §8and §7enabled§8!");
+                }
+            } catch (Throwable ex) {
+                Logger.constantInstance().error("An error occurred while enabling module " + module);
+                ex.printStackTrace();
+                disableModule();
+            }
         }
     }
 
@@ -329,7 +338,7 @@ public class DefaultModuleController implements ModuleController {
     @Override
     public StorableDocument reloadConfig() {
         synchronized (this) {
-            return config = DocumentFactory.newStorableJsonDocumentUnchecked(this.getDataFolder().resolve("config.json"));
+            return config = Document.gsonStorable(this.getDataFolder().resolve("config.json").toFile());
         }
     }
 

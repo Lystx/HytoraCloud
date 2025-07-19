@@ -1,9 +1,6 @@
 package cloud.hytora.modules.notify;
 
-import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.message.ChannelMessage;
-import cloud.hytora.driver.message.ChannelMessageListener;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.controller.AbstractModule;
 import cloud.hytora.driver.module.controller.base.ModuleConfiguration;
@@ -11,7 +8,6 @@ import cloud.hytora.driver.module.controller.base.ModuleCopyType;
 import cloud.hytora.driver.module.controller.base.ModuleEnvironment;
 import cloud.hytora.driver.module.controller.base.ModuleState;
 import cloud.hytora.driver.module.controller.task.ModuleTask;
-import cloud.hytora.driver.module.controller.task.ScheduledModuleTask;
 import cloud.hytora.modules.notify.command.NotifyCommand;
 import cloud.hytora.modules.notify.config.NotifyConfiguration;
 import cloud.hytora.modules.notify.listener.ModuleListener;

@@ -1,6 +1,14 @@
 package cloud.hytora.driver.networking.protocol.wrapped;
 
+import cloud.hytora.common.task.Task;
+import cloud.hytora.driver.networking.AbstractHandlingNetworkExecutor;
+import cloud.hytora.driver.networking.HandlingNetworkExecutor;
+import cloud.hytora.driver.networking.packets.response.PacketResponse;
+import cloud.hytora.driver.networking.protocol.SimpleNetworkComponent;
+import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
+import cloud.hytora.driver.networking.protocol.types.BufferState;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundInvoker;
@@ -8,16 +16,24 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import cloud.hytora.driver.networking.INetworkExecutor;
-import cloud.hytora.driver.networking.protocol.packets.BufferedResponse;
-import cloud.hytora.driver.networking.protocol.packets.ConnectionState;
+import cloud.hytora.driver.networking.NetworkExecutor;
+import cloud.hytora.driver.networking.packets.response.BufferedResponse;
+import cloud.hytora.driver.networking.protocol.types.ConnectionState;
+import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.Optional;
-import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @AllArgsConstructor @Getter @NoArgsConstructor @Setter
-public class SimplePacketChannel implements PacketChannel {
+public class SimplePacketChannel extends SimpleNetworkComponent implements PacketChannel {
+
+    private UUID uniqueId;
+    private boolean authenticated;
 
     /**
      * The wrapped context
@@ -32,7 +48,7 @@ public class SimplePacketChannel implements PacketChannel {
     /**
      * The participant
      */
-    private INetworkExecutor participant;
+    private NetworkExecutor participant;
 
     /**
      * The state of this context
@@ -50,7 +66,7 @@ public class SimplePacketChannel implements PacketChannel {
     }
 
     @Override
-    public INetworkExecutor executor() {
+    public NetworkExecutor executor() {
         return participant;
     }
 
@@ -60,29 +76,34 @@ public class SimplePacketChannel implements PacketChannel {
     }
 
     @Override
-    public PacketChannel overrideExecutor(INetworkExecutor executor) {
+    public PacketChannel overrideExecutor(NetworkExecutor executor) {
         participant = executor;
         return this;
     }
 
     @Override
-    public ChanneledPacketAction<Set<BufferedResponse>> prepareMultiQuery() {
-        return new SimplePacketAction(this, Set.class, "multiQuery");
-    }
-
-
-    @Override
-    public ChanneledPacketAction<BufferedResponse> prepareSingleQuery() {
+    public @NotNull PacketAction<BufferedResponse> sendQuery() {
         return new SimplePacketAction<>(this, BufferedResponse.class, "singleQuery");
     }
 
     @Override
-    public ChanneledPacketAction<Void> prepareTransfer() {
-        return new SimplePacketAction<>(this, Void.class, "transfer");
+    public @NotNull PacketAction<BufferedResponse> sendQuery(IPacket packet) {
+        PacketAction<BufferedResponse> action = sendQuery();
+        ((SimplePacketAction<BufferedResponse>)action).setPacket(packet);
+
+        return action;
     }
 
     @Override
-    public ChanneledPacketAction<Void> prepareResponse() {
+    public @NotNull PacketAction<Void> sendResponse(IPacket packet) {
+        PacketAction<Void> action = sendResponse();
+        ((SimplePacketAction<Void>)action).setPacket(packet);
+
+        return action;
+    }
+
+    @Override
+    public @NotNull PacketAction<Void> sendResponse() {
         return new SimplePacketAction<>(this, Void.class, "response");
     }
 
@@ -93,14 +114,58 @@ public class SimplePacketChannel implements PacketChannel {
 
     @Override
     public void flushPacket(IPacket packet) {
+        if (!this.isActive()) {
+            return;
+        }
         ChannelOutboundInvoker invoker = this.wrapped.channel() == null ? this.wrapped : this.wrapped.channel();
         invoker.writeAndFlush(packet).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+    }
+
+
+    @Override
+    public void sendPacketSync(@Nonnull IPacket packet) {
+
+        if (!this.isActive()) {
+            return;
+        }
+        ChannelFuture future = writePacket(packet);
+        if (future != null) {
+            try {
+                future.sync();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    private ChannelFuture writePacket(@Nonnull IPacket packet) {
+        if (!this.isActive()) {
+            return null;
+        }
+        try {
+            return this.wrapped.channel().writeAndFlush(packet);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
     }
 
     @Override
     public void close() {
         wrapped.channel().close();
     }
+
+
+    @Override
+    public boolean isActive() {
+        return wrapped.channel().isActive();
+    }
+
+    @Override
+    public boolean isWritable() {
+        return wrapped.channel().isWritable();
+    }
+
 
     @Override
     public ChannelHandlerContext context() {
@@ -122,8 +187,49 @@ public class SimplePacketChannel implements PacketChannel {
         return "[name=" + participant.getName() + ", type= " + participant.getType() + ", state=" + state + ", modificationTime=" + modificationTime + ", connected=" + everConnected + "]";
     }
 
+    @NotNull
+    public Task<BufferedResponse> registerQueryResponseHandler(@NotNull UUID uniqueId) {
+        Task<BufferedResponse> task = Task.empty();
+        if (executor() instanceof HandlingNetworkExecutor) {
+            HandlingNetworkExecutor executor = (HandlingNetworkExecutor)executor();
+            ((AbstractHandlingNetworkExecutor<?>)executor).registerQueryHandler(uniqueId, (wrapper, packet) -> {
+                if (packet instanceof PacketResponse) {
+                    PacketResponse response = (PacketResponse)packet;
+                    task.setResult(response);
+                }
+            });
+        }
+        return task;
+    }
+
+    @NotNull
+    @Override
+    public Task<BufferedResponse> sendPacketQueryAsync(@NotNull IPacket packet) {
+        Task<BufferedResponse> task = registerQueryResponseHandler(packet.transferInfo().getInternalQueryId());
+        sendPacket(packet);
+        return task;
+    }
+
+    @javax.annotation.Nullable
+    @Override
+    public BufferedResponse sendPacketQuery(@Nonnull IPacket packet) {
+        return sendPacketQueryAsync(packet).timeOut(TimeUnit.SECONDS, 10).syncUninterruptedly().orElse(null);
+    }
+
+
+
+
     @Override
     public void sendPacket(IPacket packet) {
         this.flushPacket(packet);
+    }
+
+    @Override
+    public void log(String message, Object... args) {
+
+    }
+
+    @Override
+    public void applyBuffer(BufferState state, @NotNull PacketBuffer buf) throws IOException {
     }
 }

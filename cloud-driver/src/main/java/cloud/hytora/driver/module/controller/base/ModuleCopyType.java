@@ -1,7 +1,7 @@
 package cloud.hytora.driver.module.controller.base;
 
 
-import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
+import cloud.hytora.driver.entity.services.utils.SpecificDriverEnvironment;
 
 import javax.annotation.Nonnull;
 

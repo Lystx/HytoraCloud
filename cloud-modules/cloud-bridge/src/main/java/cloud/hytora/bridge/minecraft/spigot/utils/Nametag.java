@@ -1,9 +1,9 @@
 package cloud.hytora.bridge.minecraft.spigot.utils;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.permission.PermissionGroup;
-import cloud.hytora.driver.permission.PermissionManager;
-import cloud.hytora.driver.permission.PermissionPlayer;
+import cloud.hytora.driver.module.permission.PermissionGroup;
+import cloud.hytora.driver.module.permission.PermissionManager;
+import cloud.hytora.driver.module.permission.PermissionPlayer;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Team;
@@ -33,7 +33,7 @@ public class Nametag {
         }
 
 
-        PermissionPlayer permissionPlayer = pm.getPlayerByUniqueIdOrNull(player.getUniqueId());
+        PermissionPlayer permissionPlayer = pm.getPermissionPlayer(player.getUniqueId());
         PermissionGroup playerPermissionGroup = playerPermissionGroupFunction != null ? playerPermissionGroupFunction.apply(player) : permissionPlayer.getHighestGroup();
 
         initScoreboard(player);
@@ -49,7 +49,7 @@ public class Nametag {
                     all) : null;
 
             if (targetPermissionGroup == null) {
-                targetPermissionGroup = pm.getPlayerByUniqueIdOrNull(all.getUniqueId()).getHighestGroup();
+                targetPermissionGroup = pm.getPermissionPlayer(all.getUniqueId()).getHighestGroup();
             }
 
             if (targetPermissionGroup != null) {

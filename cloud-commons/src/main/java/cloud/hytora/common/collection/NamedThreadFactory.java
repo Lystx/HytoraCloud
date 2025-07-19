@@ -1,5 +1,7 @@
 package cloud.hytora.common.collection;
 
+import cloud.hytora.common.Holder;
+
 import javax.annotation.Nonnull;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,6 +33,10 @@ public class NamedThreadFactory implements ThreadFactory {
 
     @Override
     public Thread newThread(@Nonnull Runnable task) {
+
+        if (Holder.SINGLE_THREAD) {
+            return Thread.currentThread();
+        }
         Thread thread = new Thread(group, task, nameFunction.apply(threadNumber.getAndIncrement()));
         thread.setContextClassLoader(classLoader);
         if (thread.isDaemon()) thread.setDaemon(false);

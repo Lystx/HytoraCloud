@@ -1,8 +1,8 @@
 package cloud.hytora.driver.event.defaults;
 
-import cloud.hytora.driver.event.CloudEvent;
-import cloud.hytora.driver.event.EventOrder;
-import cloud.hytora.driver.event.RegisteredListener;
+import cloud.hytora.driver.event.LocalEvent;
+import cloud.hytora.driver.event.type.EventOrder;
+import cloud.hytora.driver.event.listener.RegisteredListener;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -16,13 +16,13 @@ public class DefaultRegisteredListener implements RegisteredListener {
 
 	private final Object holder;
 	private final Method method;
-	private final Class<? extends CloudEvent> eventClass;
+	private final Class<? extends LocalEvent> eventClass;
 	private final EventOrder order;
 	private final boolean ignoreCancelled;
 
 	@Override
-	public void execute(@Nonnull CloudEvent cloudEvent) throws Exception {
-		method.invoke(holder, cloudEvent);
+	public void execute(@Nonnull LocalEvent iEvent) throws Exception {
+		method.invoke(holder, iEvent);
 	}
 
 }

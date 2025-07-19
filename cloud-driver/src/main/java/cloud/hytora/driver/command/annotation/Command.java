@@ -53,12 +53,20 @@ public @interface Command {
 
 	}
 
+	@Target(ElementType.METHOD)
+	@Retention(RetentionPolicy.RUNTIME)
+	@interface HideAutoHelp {
+
+
+	}
+
     @Target(ElementType.METHOD)
     @Retention(RetentionPolicy.RUNTIME)
     @interface Syntax {
 
         @Nonnull
         String value();
+
 
     }
 

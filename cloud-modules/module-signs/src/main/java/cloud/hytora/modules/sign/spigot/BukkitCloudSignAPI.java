@@ -1,10 +1,7 @@
 package cloud.hytora.modules.sign.spigot;
 
-import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.message.ChannelMessage;
-import cloud.hytora.driver.networking.NetworkComponent;
+import cloud.hytora.driver.common.message.base.ChannelMessage;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
-import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
 import cloud.hytora.modules.sign.api.CloudSignAPI;
 import cloud.hytora.modules.sign.api.ICloudSignManager;
 import cloud.hytora.modules.sign.api.protocol.SignProtocolType;

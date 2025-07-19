@@ -1,10 +1,12 @@
 package cloud.hytora.driver.networking.protocol.codec;
 
+import cloud.hytora.driver.common.http.impl.NettyUtils;
 import cloud.hytora.driver.networking.protocol.codec.buf.DefaultPacketBuffer;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
-import cloud.hytora.driver.networking.INetworkExecutor;
+import cloud.hytora.driver.networking.NetworkExecutor;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import lombok.AllArgsConstructor;
@@ -14,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 public class PacketDecoder extends ByteToMessageDecoder {
 
-    private final INetworkExecutor participant;
+    private final NetworkExecutor participant;
 
     @Override
     protected void decode(ChannelHandlerContext context, ByteBuf byteBuf, List<Object> list) throws Exception {

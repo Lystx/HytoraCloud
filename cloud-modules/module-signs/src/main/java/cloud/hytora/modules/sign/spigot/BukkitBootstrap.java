@@ -1,8 +1,8 @@
 package cloud.hytora.modules.sign.spigot;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.modules.npc.api.NPCManager;
-import cloud.hytora.modules.npc.spigot.impl.SpigotNPCManager;
+import cloud.hytora.driver.common.message.base.ChannelMessage;
+import cloud.hytora.driver.common.message.IMessageChannel;
 import cloud.hytora.modules.sign.api.CloudSignAPI;
 import cloud.hytora.modules.sign.api.ICloudSignManager;
 import cloud.hytora.modules.sign.spigot.command.BukkitSignCloudCommand;
@@ -17,7 +17,7 @@ public class BukkitBootstrap extends JavaPlugin {
 
     @Getter
     private static BukkitBootstrap instance;
-
+    private IMessageChannel<ChannelMessage> signChannel;
 
     @Override
     public void onEnable() {
@@ -28,25 +28,23 @@ public class BukkitBootstrap extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new PlayerSignListener(), this);
 
         CloudDriver.getInstance().getCommandManager().registerCommand(new BukkitSignCloudCommand());
-        CloudDriver.getInstance().getChannelMessenger().registerChannel(CloudSignAPI.CHANNEL_NAME, new BukkitMessageHandler());
+        this.signChannel = CloudDriver.getInstance().getChannelMessenger().registerChannel(ChannelMessage.class, CloudSignAPI.CHANNEL_NAME);
+        this.signChannel.registerListener(new BukkitMessageHandler());
 
 
         CloudSignAPI.getInstance().getSignManager().loadCloudSignsSync();
 
         
-        CloudDriver.getInstance().setProvider(NPCManager.class, new SpigotNPCManager());
         CloudDriver.getInstance().setProvider(ICloudSignManager.class, CloudSignAPI.getInstance().getSignManager());
         
 
-        CloudDriver.getInstance().getProvider(NPCManager.class).load(this);
 
     }
 
     @Override
     public void onDisable() {
         CloudDriver.getInstance().getCommandManager().unregisterCommand(BukkitSignCloudCommand.class);
-        CloudDriver.getInstance().getChannelMessenger().unregisterChannel(CloudSignAPI.CHANNEL_NAME);
+        this.signChannel.unregister();
 
-        CloudDriver.getInstance().getProvider(NPCManager.class).unload();
     }
 }

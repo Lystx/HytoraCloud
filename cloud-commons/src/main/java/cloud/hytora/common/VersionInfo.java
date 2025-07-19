@@ -1,7 +1,6 @@
 package cloud.hytora.common;
 
 import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,10 +14,15 @@ public class VersionInfo {
 
     @Getter
     @Setter
-    private static VersionInfo currentVersion = new VersionInfo(Type.STABLE, 2.0);
+    private static VersionInfo currentVersion = new VersionInfo(
+            Type.STABLE,
+            "Smurf",
+            2.0
+    );
 
 
     private final Type type;
+    private final String name;
     private final double version;
 
     public static VersionInfo fromString(String input) {
@@ -31,7 +35,7 @@ public class VersionInfo {
             try {
                 double version = Double.parseDouble(data[1]);
 
-                return new VersionInfo(type, version);
+                return new VersionInfo(type, "Unknown", version);
             } catch (NumberFormatException e) {
                 throw new NumberFormatException("DriverVersion needs to be following schema: 'TYPE-VERSION' (version is double)");
             }
@@ -99,10 +103,10 @@ public class VersionInfo {
     public static VersionInfo getNewestVersion(String offlineVersion) {
         if (NEWEST_VERSION == null) {
             if (!DriverUtility.hasInternetConnection()) {
-                return new VersionInfo(Type.UNKNOWN, Integer.parseInt(offlineVersion));
+                return new VersionInfo(Type.UNKNOWN, "Offline", Integer.parseInt(offlineVersion));
             }
             try {
-                Document document = DocumentFactory.newJsonDocumentByURL("https://raw.githubusercontent.com/Lystx/HytoraCloud/master/hytoraCloud-updater/application.json");
+                Document document = Document.gsonByUrl("https://raw.githubusercontent.com/Lystx/HytoraCloud/master/hytoraCloud-updater/application.json");
                 String versionString = document.get("version").toString();
                 return (NEWEST_VERSION = fromString(versionString));
             } catch (Exception e) {

@@ -13,7 +13,6 @@ public class NodeCommandManager extends DefaultCommandManager {
 
     @Override
     protected void handleCommandChange() {
-        updateIngameCommands();
     }
 
     @Override

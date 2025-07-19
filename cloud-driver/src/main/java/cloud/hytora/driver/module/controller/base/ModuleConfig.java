@@ -3,7 +3,7 @@ package cloud.hytora.driver.module.controller.base;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
-import cloud.hytora.driver.networking.protocol.packets.BufferState;
+import cloud.hytora.driver.networking.protocol.types.BufferState;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

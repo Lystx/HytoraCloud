@@ -1,7 +1,7 @@
 package cloud.hytora.driver.command.sender;
 
 import cloud.hytora.common.logging.Logger;
-import cloud.hytora.driver.command.Console;
+import cloud.hytora.driver.command.console.Console;
 
 import javax.annotation.Nonnull;
 

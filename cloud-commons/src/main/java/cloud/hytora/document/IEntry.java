@@ -1,5 +1,6 @@
 package cloud.hytora.document;
 
+import cloud.hytora.common.function.BiSupplier;
 import cloud.hytora.document.gson.GsonEntry;
 
 import javax.annotation.CheckReturnValue;
@@ -24,6 +25,9 @@ import java.util.UUID;
  * @see Document#entries()
  * @see Bundle#entries()
  *
+ * @version DEV-1.0
+ * @since DEV-1.0
+ * @author Lystx
  */
 public interface IEntry extends JsonEntity {
 
@@ -86,6 +90,10 @@ public interface IEntry extends JsonEntity {
 	 * @return this entry as string, could be {@code null} if this is {@link #isNull() null}
 	 */
 	String toString();
+
+	default <T> T toInstance(BiSupplier<IEntry, T> supplier) {
+		return supplier.supply(this);
+	}
 
 	String toString(@Nullable String def);
 

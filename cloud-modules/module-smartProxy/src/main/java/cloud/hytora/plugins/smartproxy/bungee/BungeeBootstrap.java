@@ -3,8 +3,8 @@ package cloud.hytora.plugins.smartproxy.bungee;
 import cloud.hytora.common.misc.Util;
 import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.message.ChannelMessage;
-import cloud.hytora.driver.message.ChannelMessageListener;
+import cloud.hytora.driver.common.message.base.ChannelMessage;
+import cloud.hytora.driver.common.message.IMessageChannel;
 import cloud.hytora.plugins.smartproxy.bungee.listener.PlayerInjectListener;
 import lombok.Getter;
 import net.md_5.bungee.api.ProxyServer;
@@ -23,6 +23,8 @@ public class BungeeBootstrap extends Plugin {
     @Getter
     private static BungeeBootstrap instance;
 
+    private IMessageChannel<ChannelMessage> proxyChannel;
+
     public BungeeBootstrap() {
         instance = this;
 
@@ -32,25 +34,24 @@ public class BungeeBootstrap extends Plugin {
     @Override
     public void onLoad() {
 
-        CloudDriver.getInstance().getChannelMessenger()
-                .registerChannel("cloud_module_smartproxy", new ChannelMessageListener() {
-                    @Override
-                    public void handleIncoming(ChannelMessage message) {
-                        if (message.getKey().equalsIgnoreCase("PROXY_SET_IP")) {
-                            Document document = message.getDocument();
 
-                            try {
-                                InetSocketAddress client_address = Util.getAddress(document.getString("CLIENT_ADDRESS"));
-                                InetSocketAddress channel_address = Util.getAddress(document.getString("CHANNEL_ADDRESS"));
+        this.proxyChannel = CloudDriver.getInstance().getChannelMessenger().registerChannel(ChannelMessage.class, "cloud_module_smartproxy");
+        this.proxyChannel.registerListener((message, startTime) -> {
+            if (message.getKey().equalsIgnoreCase("PROXY_SET_IP")) {
+                Document document = message.getDocument();
 
-                                addresses.put(channel_address, client_address);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
+                try {
+                    InetSocketAddress client_address = Util.getAddress(document.getString("CLIENT_ADDRESS"));
+                    InetSocketAddress channel_address = Util.getAddress(document.getString("CHANNEL_ADDRESS"));
 
-                        }
-                    }
-                });
+                    addresses.put(channel_address, client_address);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            }
+        });
+
     }
 
     @Override

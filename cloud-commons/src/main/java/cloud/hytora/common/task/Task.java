@@ -1,20 +1,18 @@
 package cloud.hytora.common.task;
 
 import cloud.hytora.common.collection.NamedThreadFactory;
+import cloud.hytora.common.collection.WrappedException;
 import cloud.hytora.common.scheduler.Scheduler;
 import cloud.hytora.common.task.def.SimpleTask;
-import cloud.hytora.common.task.exception.ValueHoldsNoObjectException;
-import cloud.hytora.common.task.exception.ValueImmutableException;
+import cloud.hytora.common.task.exception.TaskHoldsNoValueException;
+import cloud.hytora.common.task.exception.TaskImmutableException;
 import cloud.hytora.common.function.ExceptionallyRunnable;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -33,6 +31,11 @@ import java.util.function.Supplier;
  * have received a value or have been updated once
  * The immutable changed can be retrieved or change using {@link Task#isImmutable()}
  * and {@link Task#setImmutable(boolean)} at any time
+ *
+ *
+ * @version STABLE-1.0
+ * @since DEV-0.2
+ * @author Lystx
  */
 public interface Task<T> extends Serializable {
 
@@ -214,16 +217,16 @@ public interface Task<T> extends Serializable {
      * This is unsafe to use because of Exception-Throwing
      * You should rather use {@link Task#orElse(Object)} to avoid exceptions
      * and provide your own custom value to return if nothing set
-     * See why it throws {@link ValueHoldsNoObjectException} down below.
+     * See why it throws {@link TaskHoldsNoValueException} down below.
      * If there is no object being held right now and the value is immutable
      * the exception won't be thrown because there is no value, and maybe
      * it needs a value first to act immutable. After the value was changed
      * and it is tried to update another time it will of course throw the exception
      *
      * @return value or nothing
-     * @throws ValueHoldsNoObjectException if there is no value held right now
+     * @throws TaskHoldsNoValueException if there is no value held right now
      */
-    T get() throws ValueHoldsNoObjectException;
+    T get() throws TaskHoldsNoValueException;
 
     /**
      * Tries to get the current held object as a specific wrapper class
@@ -232,9 +235,9 @@ public interface Task<T> extends Serializable {
      * @param wrapperClass the class to get it as
      * @param <V>          the generic of the value to hold
      * @return value or null
-     * @throws ValueHoldsNoObjectException if there is no value held right now
+     * @throws TaskHoldsNoValueException if there is no value held right now
      */
-    <V> V as(Class<? extends V> wrapperClass) throws ValueHoldsNoObjectException;
+    <V> V as(Class<? extends V> wrapperClass) throws TaskHoldsNoValueException;
 
     /**
      * Provides an exception for this value
@@ -258,6 +261,8 @@ public interface Task<T> extends Serializable {
      */
     Task<T> syncUninterruptedly();
 
+    Task<T> throwOnTimeOut(Supplier<Throwable> error);
+
     default <V> V syncUninterruptedlyAndMap(Function<T, V> mapper) {
         return syncUninterruptedly().map(mapper).get();
     }
@@ -280,6 +285,8 @@ public interface Task<T> extends Serializable {
         return timeOut(unit, timeOut, null);
     }
 
+    T get(long timeout, @Nonnull TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException;
+
     /**
      * Tries to retrieve the current held object if it is set
      * If there is no current object held, the provided value
@@ -299,6 +306,16 @@ public interface Task<T> extends Serializable {
      * @return the current held object or the value of the supplier
      */
     T orGet(Supplier<? extends T> other);
+
+    default T getBeforeTimeout(long timeout, @Nonnull TimeUnit unit) {
+        try {
+            return get(timeout, unit);
+        } catch (ExecutionException | InterruptedException ex) {
+            throw new WrappedException(ex);
+        } catch (TimeoutException ex) {
+            throw new IllegalStateException("Operation timed out (" + timeout + " " + unit + ")");
+        }
+    }
 
     /**
      * Tries to retrieve the current held object.
@@ -377,7 +394,7 @@ public interface Task<T> extends Serializable {
      * @param value the value to set
      * @return current value
      */
-    Task<T> setResult(T value) throws ValueImmutableException;
+    Task<T> setResult(T value) throws TaskImmutableException;
 
     /**
      * Sets the immutable state of this value

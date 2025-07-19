@@ -6,10 +6,10 @@ import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
 import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.misc.ReflectionUtils;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.console.Screen;
-import cloud.hytora.driver.console.ScreenManager;
+import cloud.hytora.driver.command.console.screen.Screen;
+import cloud.hytora.driver.command.console.screen.ScreenManager;
 import cloud.hytora.node.console.ColorTranslator;
-import cloud.hytora.driver.command.Console;
+import cloud.hytora.driver.command.console.Console;
 import cloud.hytora.node.console.ConsoleReadThread;
 import lombok.Getter;
 import lombok.Setter;
@@ -50,15 +50,23 @@ public class JLine3Console implements Console {
     public JLine3Console(String promptTemplate) throws Exception {
         System.setProperty("library.jansi.version", "HytoraCloud");
         this.promptTemplate = promptTemplate;
+
         try {
             AnsiConsole.systemInstall();
         } catch (Throwable ex) {
             ex.printStackTrace();
         }
 
-        this.terminal = TerminalBuilder.builder().system(true).encoding(StandardCharsets.UTF_8).build();
+        this.terminal = TerminalBuilder.builder()
+                .system(true)
+                .encoding(StandardCharsets.UTF_8)
+                .build();
 
-        this.lineReader = new InternalLineReaderBuilder(terminal).completer(new JLine3Completer()).option(Option.DISABLE_EVENT_EXPANSION, true).variable(LineReader.BELL_STYLE, "off").build();
+        this.lineReader = new InternalLineReaderBuilder(terminal)
+                .completer(new JLine3Completer())
+                .option(Option.DISABLE_EVENT_EXPANSION, true)
+                .variable(LineReader.BELL_STYLE, "off")
+                .build();
 
         this.resetPrompt();
         consoleReadThread.start();
@@ -106,7 +114,7 @@ public class JLine3Console implements Console {
             formatted += System.lineSeparator();
         }
         ScreenManager sm = CloudDriver.getInstance().getProvider(ScreenManager.class);
-        Screen console = sm.getScreenByNameOrNull("console");
+        Screen console = sm.getCachedScreen("console");
         if (console != null) {
             console.cacheLine(entry.getMessage());
         }
@@ -123,7 +131,7 @@ public class JLine3Console implements Console {
             text += System.lineSeparator();
         }
         ScreenManager sm = CloudDriver.getInstance().getProvider(ScreenManager.class);
-        Screen console = sm.getScreenByNameOrNull("console");
+        Screen console = sm.getCachedScreen("console");
         if (console != null) {
             console.cacheLine(text);
         }
@@ -149,6 +157,7 @@ public class JLine3Console implements Console {
     @Override
     public void print(String text) {
         text = ConsoleColor.toColoredString('§', text);
+        text = Logger.formatMessage(text);
         print0(Ansi.ansi().eraseLine(Ansi.Erase.ALL).toString() + text + Ansi.ansi().reset().toString());
     }
 

@@ -1,27 +1,26 @@
 package cloud.hytora.driver.networking.cluster;
 
-import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.PublishingType;
-import cloud.hytora.driver.event.defaults.driver.DriverConnectEvent;
-import cloud.hytora.driver.event.defaults.driver.DriverDisconnectEvent;
+import cloud.hytora.driver.common.PublishingType;
+import cloud.hytora.driver.event.defaults.driver.CloudEventDriverConnect;
+import cloud.hytora.driver.event.defaults.driver.CloudEventDriverDisconnect;
 import cloud.hytora.driver.networking.EndpointNetworkExecutor;
-import cloud.hytora.driver.networking.cluster.client.SimpleClusterClientExecutor;
+import cloud.hytora.driver.networking.NetworkComponent;
 import cloud.hytora.driver.networking.protocol.codec.NetworkBossHandler;
 import cloud.hytora.driver.networking.protocol.codec.PacketDecoder;
 import cloud.hytora.driver.networking.protocol.codec.PacketEncoder;
 import cloud.hytora.driver.networking.protocol.codec.prepender.NettyPacketLengthDeserializer;
 import cloud.hytora.driver.networking.protocol.codec.prepender.NettyPacketLengthSerializer;
-import cloud.hytora.driver.networking.protocol.packets.ConnectionState;
-import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
+import cloud.hytora.driver.networking.protocol.types.ConnectionState;
+import cloud.hytora.driver.networking.protocol.types.ConnectionType;
 
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.networking.protocol.packets.IPacket;
-import cloud.hytora.driver.networking.protocol.packets.defaults.HandshakePacket;
+import cloud.hytora.driver.networking.packets.auth.PacketHandshake;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
 import cloud.hytora.driver.networking.protocol.wrapped.SimplePacketChannel;
-import cloud.hytora.driver.networking.AbstractNetworkComponent;
+import cloud.hytora.driver.networking.AbstractHandlingNetworkExecutor;
 
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -39,15 +38,15 @@ import io.netty.util.concurrent.EventExecutorGroup;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Getter
 @Setter
-public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterExecutor> implements EndpointNetworkExecutor {
+public abstract class ClusterExecutor extends AbstractHandlingNetworkExecutor<ClusterExecutor> implements EndpointNetworkExecutor {
 
     /**
      * The name of this node
@@ -60,10 +59,9 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
     private final String authKey;
 
     /**
-     * All cached clients
+     * ALl the connected channels stored by their identifier
      */
-    private final List<ClusterClientExecutor> allCachedConnectedClients;
-    private final Map<ChannelHandlerContext, PacketChannel> cachedContexts = new HashMap<>();
+    private final Map<UUID, PacketChannel> connectedChannels;
 
     //netty stuff
     private NioEventLoopGroup bossGroup;
@@ -76,9 +74,15 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
 
         this.authKey = authKey;
         this.nodeName = nodeName;
-        this.allCachedConnectedClients = new CopyOnWriteArrayList<>();
+
+        this.connectedChannels = new HashMap<>();
 
         this.packetChannel = new SimplePacketChannel();
+        this.packetChannel.setAuthenticated(true);
+        this.packetChannel.setUniqueId(UUID.randomUUID());
+        this.packetChannel.setName(nodeName);
+        this.packetChannel.setType(ConnectionType.NODE);
+
         this.packetChannel.setState(ConnectionState.DISCONNECTED);
         this.packetChannel.setModificationTime(System.currentTimeMillis());
         this.packetChannel.setParticipant(this);
@@ -86,8 +90,9 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
         this.packetChannel.setWrapped(null);
     }
 
-    public Task<ClusterExecutor> openConnection(String hostname, int port) {
-        Task<ClusterExecutor> connectPromise = Task.empty();
+
+    public Task<EndpointNetworkExecutor> openConnection(String hostname, int port) {
+        Task<EndpointNetworkExecutor> connectPromise = Task.empty();
         connectPromise.denyNull();
 
 
@@ -112,61 +117,71 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
 
                                              @Override
                                              public void channelActive(ChannelHandlerContext ctx) {
-                                                 ClusterClientExecutor clusterClientExecutor = addConnectedClient(ctx.channel());
+                                                 SimplePacketChannel packetChannel = new SimplePacketChannel();
 
-                                                 SimplePacketChannel wrapper = new SimplePacketChannel();
+                                                 packetChannel.setName("NOT_RESOLVED_YET");
+                                                 packetChannel.setUniqueId(UUID.randomUUID());
+                                                 packetChannel.setType(ConnectionType.SERVICE);
+                                                 packetChannel.setAuthenticated(false);
+                                                 packetChannel.setParticipant(packetChannel);
+                                                 packetChannel.setWrapped(ctx);
+                                                 packetChannel.setModificationTime(System.currentTimeMillis());
+                                                 packetChannel.setState(ConnectionState.CONNECTED);
+                                                 packetChannel.setEverConnected(true);
 
-                                                 wrapper.setParticipant(clusterClientExecutor);
-                                                 wrapper.setWrapped(ctx);
-                                                 wrapper.setModificationTime(System.currentTimeMillis());
-                                                 wrapper.setState(ConnectionState.CONNECTED);
-                                                 wrapper.setEverConnected(true);
-
-                                                 cachedContexts.put(ctx, wrapper);
+                                                 connectedChannels.put(packetChannel.getUniqueId(), packetChannel);
                                              }
 
                                              @Override
                                              public void channelRead0(ChannelHandlerContext channelHandlerContext, AbstractPacket packet) {
 
-                                                 SimpleClusterClientExecutor client = (SimpleClusterClientExecutor) getConnectedClientByChannel(channelHandlerContext.channel());
+                                                 PacketChannel channel = getConnectedChannel(channelHandlerContext.channel());
 
-                                                 if (client == null) {
+
+                                                 if (channel == null) {
+                                                     CloudDriver.getInstance().getLogger().error("Tried to read Packet from unknown channel that has not been registered before! Closing channel for safety reasons...");
                                                      channelHandlerContext.close();
                                                      return;
                                                  }
 
-                                                 PacketChannel channel = cachedContexts.get(channelHandlerContext);
-                                                 if (!client.isAuthenticated()) {
+                                                 if (!channel.isAuthenticated()) {
 
-                                                     if (packet instanceof HandshakePacket) {
-                                                         HandshakePacket authPacket = (HandshakePacket) packet;
+                                                     if (packet instanceof PacketHandshake) {
+                                                         PacketHandshake authPacket = (PacketHandshake) packet;
+
+                                                         channel.setName(authPacket.getClientName());
+
                                                          if (!authPacket.getAuthKey().equalsIgnoreCase(authKey)) {
-                                                             System.out.println(" ");
-                                                             System.out.println("<===  WARNING   =====>");
-                                                             System.out.println(StringUtils.format("Tried to authenticate '{0}' but a wrong AuthKey was provided", client.getName()));
-                                                             System.out.println("Closing channel...");
-                                                             System.out.println("<===  WARNING   =====>");
-                                                             System.out.println(" ");
+
+                                                             CloudDriver.getInstance().getLogger().error(" §8 ");
+                                                             CloudDriver.getInstance().getLogger().error(" §8<=====[§4ERROR§8]=====>");
+                                                             CloudDriver.getInstance().getLogger().error(" §cTried to authenticate §e{} §cbut wrong AuthKey was provided", channel.getName());
+                                                             CloudDriver.getInstance().getLogger().error(" §cClosing channel...");
+                                                             CloudDriver.getInstance().getLogger().error(" §8<=====[§4ERROR§8]=====>");
+                                                             CloudDriver.getInstance().getLogger().error(" §8 ");
                                                              channelHandlerContext.close();
                                                              return;
                                                          }
-                                                         client.setName(authPacket.getClientName());
-                                                         client.setAuthenticated(true);
-                                                         client.setType(authPacket.getType());
-                                                         client.setData(authPacket.getExtraData());
+                                                         channel.setAuthenticated(true);
+                                                         channel.setType(authPacket.getType());
+
+                                                         //channel.setData(authPacket.getExtraData());
 
                                                          //setting node name and sending back
                                                          authPacket.setNodeName(getNodeName());
-                                                         client.sendPacket(authPacket);
+                                                         channel.sendPacket(authPacket);
 
-                                                         handleConnectionChange(ConnectionState.CONNECTED, client, cachedContexts.get(channelHandlerContext));
+                                                         //updating value in cache
+                                                         connectedChannels.put(channel.getUniqueId(), channel);
+
+                                                         handleConnectionChange(ConnectionState.CONNECTED, channel);
                                                      } else {
-                                                         System.out.println(" ");
-                                                         System.out.println("<===  WARNING   =====>");
-                                                         System.out.println(StringUtils.format("Tried to authenticate '{0}' but instead of {1}, the first Packet was a {2}", client.getName(), HandshakePacket.class.getName(), packet.getClass().getName()));
-                                                         System.out.println("Closing channel...");
-                                                         System.out.println("<===  WARNING   =====>");
-                                                         System.out.println(" ");
+                                                         CloudDriver.getInstance().getLogger().error(" §8 ");
+                                                         CloudDriver.getInstance().getLogger().error(" §8<=====[§4ERROR§8]=====>");
+                                                         CloudDriver.getInstance().getLogger().error(" §cTried to authenticate §e{} §cbut the first Packet was {} instead of {}", channel.getName(), packet.getClass().getSimpleName(), PacketHandshake.class.getSimpleName());
+                                                         CloudDriver.getInstance().getLogger().error(" §cClosing channel...");
+                                                         CloudDriver.getInstance().getLogger().error(" §8<=====[§4ERROR§8]=====>");
+                                                         CloudDriver.getInstance().getLogger().error(" §8 ");
                                                          channelHandlerContext.close();
                                                      }
                                                      return;
@@ -177,13 +192,11 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
                                              @Override
                                              public void channelInactive(final ChannelHandlerContext ctx) {
                                                  closeClient(ctx);
-                                                 cachedContexts.remove(ctx, packetChannel);
                                              }
 
                                              @Override
                                              public void channelUnregistered(final ChannelHandlerContext ctx) {
                                                  closeClient(ctx);
-                                                 cachedContexts.remove(ctx, packetChannel);
                                              }
                                          }
                                 );
@@ -192,7 +205,7 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
                 .bind(hostname, port).addListener(future -> {
                     this.packetChannel.setEverConnected(true);
                     this.packetChannel.setState(ConnectionState.CONNECTED);
-                    CloudDriver.getInstance().getEventManager().callEvent(new DriverConnectEvent(), PublishingType.GLOBAL);
+                    CloudDriver.getInstance().getEventManager().callEvent(new CloudEventDriverConnect(), PublishingType.INTERNAL);
                     if (future.isSuccess()) {
                         connectPromise.setResult(this);
                     } else {
@@ -208,7 +221,7 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
         Task<Boolean> shutdownWorkerPromise = Task.empty();
         Task<Boolean> executePromise = Task.empty();
 
-        CloudDriver.getInstance().getEventManager().callEvent(new DriverDisconnectEvent(), PublishingType.GLOBAL);
+        CloudDriver.getInstance().getEventManager().callEvent(new CloudEventDriverDisconnect(), PublishingType.INTERNAL);
         Task<Boolean> promise = Task.multiTasking(shutdownBossPromise, shutdownBossPromise, executePromise);
 
         this.bossGroup.shutdownGracefully(0, 1, TimeUnit.MINUTES).addListener(it -> shutdownBossPromise.setResult(true));
@@ -234,54 +247,68 @@ public abstract class ClusterExecutor extends AbstractNetworkComponent<ClusterEx
         return ConnectionType.NODE;
     }
 
-    public ClusterClientExecutor getConnectedClientByChannel(Channel channel) {
-        return this.allCachedConnectedClients.stream().filter(it -> it.getChannel() == channel).findAny().orElse(null);
+    public Collection<PacketChannel> getConnectedChannels() {
+        return connectedChannels.values();
+    }
+
+
+    @Override
+    public PacketChannel getConnectedChannel(Channel channel) {
+        return getConnectedChannels().stream().filter(c -> c.context().channel() == channel).findFirst().orElse(null);
     }
 
     public void closeClient(ChannelHandlerContext context) {
-        ClusterClientExecutor connectedClient = getConnectedClientByChannel(context.channel());
-        if (connectedClient == null) {
+        PacketChannel connectedChannel = getConnectedChannel(context.channel());
+        if (connectedChannel == null) {
             return;
         }
-        this.handleConnectionChange(ConnectionState.DISCONNECTED, connectedClient, cachedContexts.get(context));
-        this.allCachedConnectedClients.remove(connectedClient);
+        this.handleConnectionChange(ConnectionState.DISCONNECTED, connectedChannel);
+
+        this.connectedChannels.remove(connectedChannel.getUniqueId());
     }
 
 
-    public List<ClusterClientExecutor> getAllClientsByType(ConnectionType type) {
-        return this.getAllCachedConnectedClients()
-                .stream()
-                .filter(it -> it instanceof SimpleClusterClientExecutor)
-                .map(it -> ((SimpleClusterClientExecutor) it))
-                .filter(it -> it.getType().equals(type))
-                .collect(Collectors.toList());
+    public @NotNull Collection<PacketChannel> getAllConnectedChannels() {
+        return getConnectedChannels();
     }
 
-    public Optional<ClusterClientExecutor> getClient(String name) {
-        return this.getAllCachedConnectedClients().stream()
-                .filter(client -> client.getName().equals(name)).findAny();
+    public @NotNull Collection<PacketChannel> getConnectedChannels(ConnectionType type) {
+        return this.getConnectedChannels().stream().filter(it -> it.getType().equals(type)).collect(Collectors.toList());
+    }
+
+
+    @Override
+    public PacketChannel getConnectedChannel(String name) {
+        return this.getConnectedChannels().stream().filter(client -> client.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
+    }
+
+    @Override
+    public PacketChannel getConnectedChannel(UUID uniqueId) {
+        return this.getConnectedChannels().stream().filter(client -> client.getUniqueId().equals(uniqueId)).findFirst().orElse(null);
+    }
+
+    @Override
+    public void sendPacket(IPacket packet, NetworkComponent component) {
+        String name = component.getName();
+        PacketChannel connectedChannel = getConnectedChannel(name);
+        if (connectedChannel != null) {
+            connectedChannel.sendPacket(packet);
+        }
     }
 
 
     public void sendPacketToType(AbstractPacket packet, ConnectionType type) {
-        this.getAllClientsByType(type).forEach(it -> it.sendPacket(packet));
+        this.getConnectedChannels(type).forEach(it -> it.sendPacket(packet));
     }
-
-    public ClusterClientExecutor addConnectedClient(Channel channel) {
-        ClusterClientExecutor clientExecutor = new SimpleClusterClientExecutor(channel);
-        this.allCachedConnectedClients.add(clientExecutor);
-
-        return clientExecutor;
-    }
-
-
 
 
     public void sendPacketToAll(IPacket packet) {
-        allCachedConnectedClients.forEach(it -> it.sendPacket(packet));
+        for (PacketChannel connectedChannel : new ArrayList<>(getConnectedChannels())) {
+            connectedChannel.sendPacket(packet);
+        }
     }
 
-    public abstract void handleConnectionChange(ConnectionState state, ClusterClientExecutor executor, PacketChannel wrapper);
+    public abstract void handleConnectionChange(ConnectionState state, PacketChannel channel);
 
 
 }

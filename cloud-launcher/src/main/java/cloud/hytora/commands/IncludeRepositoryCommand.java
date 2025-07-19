@@ -1,6 +1,5 @@
 package cloud.hytora.commands;
 
-import cloud.hytora.dependency.Dependency;
 import cloud.hytora.dependency.Repository;
 import cloud.hytora.script.api.IScript;
 import cloud.hytora.script.api.IScriptCommand;

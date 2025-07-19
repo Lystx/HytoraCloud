@@ -2,7 +2,6 @@ package cloud.hytora.document.map;
 
 import cloud.hytora.document.gson.GsonHelper;
 import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.common.misc.CollectionUtils;
 import cloud.hytora.document.Bundle;
 import cloud.hytora.document.IEntry;
@@ -110,7 +109,7 @@ public class MapDocument extends AbstractDocument {
 			return (Document) value;
 		}
 		if (value instanceof String) {
-			return DocumentFactory.newJsonDocument((String) value);
+			return Document.gson((String) value);
 		}
 		if (!(value instanceof Map)) {
 			throw new IllegalStateException("'" + path + "' is not a Map or Document: " + value.getClass().getName());

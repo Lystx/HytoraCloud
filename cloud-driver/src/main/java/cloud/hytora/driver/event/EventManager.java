@@ -1,12 +1,11 @@
 package cloud.hytora.driver.event;
 
-import cloud.hytora.common.task.Task;
-import cloud.hytora.driver.PublishingType;
+import cloud.hytora.driver.common.PublishingType;
+import cloud.hytora.driver.event.listener.DestructiveListener;
+import cloud.hytora.driver.event.listener.RegisteredListener;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -29,12 +28,12 @@ public interface EventManager {
 
 
 	@Nonnull
-	<E extends CloudEvent> RegisteredListener registerHandler(@Nonnull Class<E> eventClass, @Nonnull Consumer<E> handler);
+	<E extends LocalEvent> RegisteredListener registerHandler(@Nonnull Class<E> eventClass, @Nonnull Consumer<E> handler);
 
 	@Nonnull
-	<E extends CloudEvent> DestructiveListener registerSelfDestructiveHandler(@Nonnull Class<E> eventClass, @Nonnull Consumer<E> handler);
+	<E extends LocalEvent> DestructiveListener registerSelfDestructiveHandler(@Nonnull Class<E> eventClass, @Nonnull Consumer<E> handler);
 
-	<E extends CloudEvent> void registerDestructiveHandler(@Nonnull Class<E> eventClass, @Nonnull BiConsumer<E, DestructiveListener> handler);
+	<E extends LocalEvent> void registerDestructiveHandler(@Nonnull Class<E> eventClass, @Nonnull BiConsumer<E, DestructiveListener> handler);
 
 	/**
 	 * Unregisters all listeners of the given class.
@@ -53,6 +52,6 @@ public interface EventManager {
 
 
 	@Nonnull
-	<E extends CloudEvent> E callEvent(@Nonnull E event, PublishingType... type);
+	<E extends LocalEvent> E callEvent(@Nonnull E event, PublishingType... type);
 
 }

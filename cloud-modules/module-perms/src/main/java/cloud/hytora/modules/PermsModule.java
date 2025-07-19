@@ -11,11 +11,11 @@ import cloud.hytora.driver.module.controller.base.ModuleCopyType;
 import cloud.hytora.driver.module.controller.base.ModuleEnvironment;
 import cloud.hytora.driver.module.controller.base.ModuleState;
 import cloud.hytora.driver.module.controller.task.ModuleTask;
-import cloud.hytora.driver.networking.PacketProvider;
-import cloud.hytora.driver.permission.Permission;
-import cloud.hytora.driver.permission.PermissionGroup;
-import cloud.hytora.driver.permission.PermissionManager;
-import cloud.hytora.driver.permission.PermissionPlayer;
+import cloud.hytora.driver.networking.packets.PacketRegistry;
+import cloud.hytora.driver.module.permission.Permission;
+import cloud.hytora.driver.module.permission.PermissionGroup;
+import cloud.hytora.driver.module.permission.PermissionManager;
+import cloud.hytora.driver.module.permission.PermissionPlayer;
 import cloud.hytora.modules.cloud.ModulePermissionManager;
 import cloud.hytora.modules.cloud.command.PermsCommand;
 import cloud.hytora.modules.cloud.handler.GroupPacketHandler;
@@ -69,29 +69,21 @@ public class PermsModule extends AbstractModule {
 
         );
 
-        PacketProvider.autoRegister(PermsGroupPacket.class);
-        PacketProvider.autoRegister(PermsPlayerRequestPacket.class);
-        PacketProvider.autoRegister(PermsPlayerUpdatePacket.class);
+        // TODO: 19.07.2025 solve with internal messageChannel
+        PacketRegistry.autoRegister(PermsGroupPacket.class);
+        PacketRegistry.autoRegister(PermsPlayerRequestPacket.class);
+        PacketRegistry.autoRegister(PermsPlayerUpdatePacket.class);
+        PacketRegistry.autoRegister(PermsCacheUpdatePacket.class);
 
-        CloudDriver.getInstance()
-                
-                .setProvider(PermissionManager.class, new ModulePermissionManager());
+        CloudDriver.getInstance().setProvider(PermissionManager.class, new ModulePermissionManager());
 
-        CloudDriver.getInstance()
-                .getEventManager()
-                .registerListener(new SyncListener());
+        CloudDriver.getInstance().getEventManager().registerListener(new SyncListener());
 
     }
 
     @ModuleTask(id = 2, state = ModuleState.ENABLED)
     public void enable() {
 
-
-
-
-        //LocalStorage database = CloudDriver.getInstance().getUnchecked(IDatabaseManager.class).getLocalStorage();
-        //database.registerSection("module-perms-groups", DefaultPermissionGroup.class);
-        //database.registerSection("module-perms-players", DefaultPermissionPlayer.class);
 
         PermissionManager pm = CloudDriver.getInstance().getProvider(PermissionManager.class);
         ((ModulePermissionManager)pm).loadGroups().onTaskSucess(groups -> {
@@ -104,7 +96,6 @@ public class PermsModule extends AbstractModule {
                 permissionGroup.setPrefix("&7");
                 permissionGroup.setSuffix("&7");
                 permissionGroup.setSortId(9999);
-                permissionGroup.setNamePrefix("&7");
                 permissionGroup.addPermission(Permission.of("cloud.test.permanent.permission"));
                 permissionGroup.addPermission(Permission.of("cloud.test.temporary.permission", TimeUnit.DAYS, 30));
 
@@ -116,13 +107,12 @@ public class PermsModule extends AbstractModule {
                 nextGroup.setPrefix("&4");
                 nextGroup.setSuffix("&7");
                 nextGroup.setSortId(0);
-                nextGroup.setNamePrefix("&4");
                 nextGroup.addPermission(Permission.of("*"));
                 nextGroup.addInheritedGroup("Player");
 
                 nextGroup.update(); //make sure it's saved
             } else {
-                CloudDriver.getInstance().getLogger().info("The §3Perms§8-§3Module §7loaded §3{} §7PermissionGroups§8!", groups.size());
+                CloudDriver.getInstance().getLogger().info("The %1Perms§8-%2Module §7loaded %2{} §7PermissionGroups§8!", groups.size());
 
             }
         });
@@ -135,8 +125,8 @@ public class PermsModule extends AbstractModule {
 
         //registering commands and parsers
         CloudDriver.getInstance().getCommandManager().registerCommand(new PermsCommand());
-        CloudDriver.getInstance().getCommandManager().registerParser(PermissionPlayer.class, PermissionPlayer::byName);
-        CloudDriver.getInstance().getCommandManager().registerParser(PermissionGroup.class, s -> CloudDriver.getInstance().getProvider(PermissionManager.class).getPermissionGroupByNameOrNull(s));
+        CloudDriver.getInstance().getCommandManager().registerParser(PermissionPlayer.class, s -> CloudDriver.getInstance().getProvider(PermissionManager.class).getPermissionPlayer(s));
+        CloudDriver.getInstance().getCommandManager().registerParser(PermissionGroup.class, s -> CloudDriver.getInstance().getProvider(PermissionManager.class).getPermissionGroup(s));
 
     }
 }

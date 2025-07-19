@@ -1,16 +1,15 @@
 package cloud.hytora.modules.global.packets;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
-import cloud.hytora.driver.networking.protocol.packets.BufferState;
+import cloud.hytora.driver.networking.protocol.types.BufferState;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
-import cloud.hytora.driver.permission.PermissionGroup;
+import cloud.hytora.driver.module.permission.PermissionGroup;
 import cloud.hytora.modules.global.impl.DefaultPermissionGroup;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 
 @Getter

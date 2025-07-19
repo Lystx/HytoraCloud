@@ -1,7 +1,7 @@
 package cloud.hytora.modules.sign.cloud.handler;
 
-import cloud.hytora.driver.message.ChannelMessage;
-import cloud.hytora.driver.message.ChannelMessageListener;
+import cloud.hytora.driver.common.message.base.ChannelMessage;
+import cloud.hytora.driver.common.message.MessageListener;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.modules.sign.api.def.UniversalCloudSign;
 import cloud.hytora.modules.sign.api.CloudSignAPI;
@@ -9,10 +9,11 @@ import cloud.hytora.modules.sign.api.ICloudSign;
 import cloud.hytora.modules.sign.api.ICloudSignManager;
 import cloud.hytora.modules.sign.api.protocol.SignProtocolType;
 
-public class ModuleMessageHandler implements ChannelMessageListener {
+public class ModuleMessageHandler implements MessageListener<ChannelMessage> {
+
 
     @Override
-    public void handleIncoming(ChannelMessage message) {
+    public void handleMessage(ChannelMessage message, long startTime) throws Exception {
         ICloudSignManager signManager = CloudSignAPI.getInstance().getSignManager();
         PacketBuffer buffer = message.buffer();
 
@@ -35,5 +36,6 @@ public class ModuleMessageHandler implements ChannelMessageListener {
                 }
                 break;
         }
+
     }
 }

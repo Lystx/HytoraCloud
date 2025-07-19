@@ -1,8 +1,8 @@
 package cloud.hytora.node.console.jline3;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.console.ScreenManager;
-import cloud.hytora.driver.console.TabCompleter;
+import cloud.hytora.driver.command.console.screen.ScreenManager;
+import cloud.hytora.driver.command.console.TabCompleter;
 import org.jline.reader.Candidate;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;

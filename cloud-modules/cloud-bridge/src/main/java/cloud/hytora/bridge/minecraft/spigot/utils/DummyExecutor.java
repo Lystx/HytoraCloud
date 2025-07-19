@@ -1,7 +1,7 @@
 package cloud.hytora.bridge.minecraft.spigot.utils;
 
 import cloud.hytora.common.function.BiSupplier;
-import cloud.hytora.driver.player.ICloudPlayer;
+import cloud.hytora.driver.entity.player.CloudPlayer;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,10 +26,10 @@ public class DummyExecutor implements CommandSender {
     private final String name;
 
     @Setter
-    private ICloudPlayer cloudPlayer;
+    private CloudPlayer cloudPlayer;
 
 
-    public <T> T get(T defValue, BiSupplier<ICloudPlayer, T> get) {
+    public <T> T get(T defValue, BiSupplier<CloudPlayer, T> get) {
         if (cloudPlayer == null) {
             return defValue;
         }

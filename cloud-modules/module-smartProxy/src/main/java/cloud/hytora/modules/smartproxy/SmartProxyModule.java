@@ -5,7 +5,7 @@ import cloud.hytora.document.Document;
 import cloud.hytora.document.wrapped.StorableDocument;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.config.INetworkConfig;
-import cloud.hytora.driver.message.ChannelMessage;
+import cloud.hytora.driver.common.message.base.ChannelMessage;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.controller.AbstractModule;
 import cloud.hytora.driver.module.controller.base.ModuleConfiguration;
@@ -13,16 +13,16 @@ import cloud.hytora.driver.module.controller.base.ModuleCopyType;
 import cloud.hytora.driver.module.controller.base.ModuleEnvironment;
 import cloud.hytora.driver.module.controller.base.ModuleState;
 import cloud.hytora.driver.module.controller.task.ModuleTask;
-import cloud.hytora.driver.services.ICloudService;
-import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.utils.ServiceVisibility;
+import cloud.hytora.driver.entity.services.CloudService;
+import cloud.hytora.driver.entity.services.task.ServiceTask;
+import cloud.hytora.driver.entity.services.utils.ServiceVisibility;
 import cloud.hytora.modules.smartproxy.commands.SmartProxyCommand;
-import cloud.hytora.modules.smartproxy.packet.MinecraftPacket;
-import cloud.hytora.modules.smartproxy.packet.PingPacket;
-import cloud.hytora.modules.smartproxy.proxy.ForwardDownStream;
-import cloud.hytora.modules.smartproxy.proxy.ForwardUpStream;
-import cloud.hytora.modules.smartproxy.server.ProxyNettyServer;
-import cloud.hytora.modules.smartproxy.utils.MinecraftState;
+import cloud.hytora.modules.smartproxy.protocol.packet.MinecraftPacket;
+import cloud.hytora.modules.smartproxy.protocol.packet.PingPacket;
+import cloud.hytora.modules.smartproxy.protocol.proxy.ForwardDownStream;
+import cloud.hytora.modules.smartproxy.protocol.proxy.ForwardUpStream;
+import cloud.hytora.modules.smartproxy.protocol.server.ProxyNettyServer;
+import cloud.hytora.modules.smartproxy.protocol.MinecraftState;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
@@ -115,6 +115,7 @@ public class SmartProxyModule extends AbstractModule {
 
         if (config.isEmpty()) {
             config.set("enabled", true);
+            config.set("oldPort", CloudDriver.getInstance().getConfigManager().getConfig().getProxyStartPort());
             config.set("proxySearchMode", "RANDOM");
             config.save();
         }
@@ -122,18 +123,18 @@ public class SmartProxyModule extends AbstractModule {
         this.enabled = this.getController().getConfig().getBoolean("enabled", true);
         this.proxySearchMode = this.getController().getConfig().getString("proxySearchMode", "RANDOM");
 
-        INetworkConfig networkConfig = CloudDriver.getInstance().getNetworkConfig();
+        INetworkConfig networkConfig = CloudDriver.getInstance().getConfigManager().getConfig();
         if (enabled) {
             if (networkConfig.getProxyStartPort() == 25565) {
-                CloudDriver.getInstance().getLogger().info("§7Default-Proxy-Port was §b25565 §7had to change to §325566 §7in order to make §bSmartProxy §7work§h!");
+                CloudDriver.getInstance().getLogger().info("§7Default-Proxy-Port was %125565 §7had to change to %325566 §7in order to make %1SmartProxy §7work§8!");
                 networkConfig.setProxyStartPort(25566);
             }
 
             MINECRAFT_PACKETS.put(0x00, PingPacket.class);
         } else {
             if (networkConfig.getProxyStartPort() != 25565) {
-                CloudDriver.getInstance().getLogger().info("SmartProxy-System is currently §cdisabled§h! §7Setting Default-Proxy-Port §7back to §b25565§h!");
-                networkConfig.setProxyStartPort(25565);
+                CloudDriver.getInstance().getLogger().info("%1SmartProxy-System is currently §cdisabled§8! §7Setting %2Default-Proxy-Port §7back to §2" + config.getInt("oldPort"));
+                networkConfig.setProxyStartPort(config.getInt("oldPort"));
             }
         }
 
@@ -163,18 +164,19 @@ public class SmartProxyModule extends AbstractModule {
     }
 
     /**
-     * Forwards a ping request to a {@link cloud.hytora.driver.services.ICloudService} and connects the requester to it
+     * Forwards a ping request to a {@link CloudService} and connects the requester to it
      *
      * @param state the login state
      * @param channel the netty channel
      * @param proxy the proxy
      * @param login the login packet as buf
      */
-    public void forwardRequestToNextProxy(Channel channel, ICloudService proxy, ByteBuf login, int state) {
+    public void forwardRequestToNextProxy(Channel channel, CloudService proxy, ByteBuf login, int state) {
         ForwardDownStream downstreamHandler = channel.attr(FORWARDING_DOWN).get() == null ? new ForwardDownStream(channel) : channel.attr(FORWARDING_DOWN).get();
         channel.attr(FORWARDING_DOWN).set(downstreamHandler);
         channel.attr(CONNECTION_STATE).set(MinecraftState.HANDSHAKE);
 
+        System.out.println("Forwarding Request to => " + proxy.getHostName() + ":"  + proxy.getPort());
         new Bootstrap()
                 .group(this.workerGroup)
                 .channel(NioSocketChannel.class)
@@ -209,7 +211,7 @@ public class SmartProxyModule extends AbstractModule {
                                                         .key("PROXY_SET_IP")
                                                         .receivers(proxy)
                                                         .document(
-                                                                Document.newJsonDocument()
+                                                                Document.gson()
                                                                         .set("CLIENT_ADDRESS", channel.remoteAddress().toString())
                                                                         .set("CHANNEL_ADDRESS", channelFuture.channel().localAddress().toString())
                                                         )
@@ -228,7 +230,7 @@ public class SmartProxyModule extends AbstractModule {
     /**
      * The last provided random service
      */
-    private ICloudService lastRandom;
+    private CloudService lastRandom;
 
     /**
      * Tries to find the best free proxy which is not already full
@@ -241,13 +243,13 @@ public class SmartProxyModule extends AbstractModule {
      * @param group the group youre trying to get proxies of
      * @return service if found or null
      */
-    public ICloudService getFreeProxy(IServiceTask group, int state) {
+    public CloudService getFreeProxy(ServiceTask group, int state) {
         if (group.getOnlineServices().size() == 1) {
             return group.getOnlineServices().get(0);
         }
         //Only free proxies
-        ICloudService value = null;
-        List<ICloudService> proxies = group.getOnlineServices()
+        CloudService value = null;
+        List<CloudService> proxies = group.getOnlineServices()
                 .stream().
                 filter(proxy -> proxy.getOnlinePlayers().size() < proxy.getTask().getDefaultMaxPlayers())
                 .filter(proxy -> proxy.getServiceVisibility() == ServiceVisibility.VISIBLE)
@@ -261,7 +263,7 @@ public class SmartProxyModule extends AbstractModule {
                     value = proxies.get(0);
                 } else {
                     for (int i = proxies.size() - 1; i >= 0; i--) {
-                        ICloudService server = proxies.get(i);
+                        CloudService server = proxies.get(i);
                         if (server.getOnlinePlayers().size() < server.getTask().getDefaultMaxPlayers()) {
                             value = server;
                             break;

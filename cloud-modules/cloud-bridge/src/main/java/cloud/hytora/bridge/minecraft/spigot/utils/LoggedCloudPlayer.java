@@ -1,19 +1,21 @@
 package cloud.hytora.bridge.minecraft.spigot.utils;
 
-import cloud.hytora.common.location.impl.CloudEntityLocation;
-import cloud.hytora.common.task.Task;
+import cloud.hytora.common.location.impl.CloudLocation;
 import cloud.hytora.document.Document;
-import cloud.hytora.driver.PublishingType;
-import cloud.hytora.driver.exception.ModuleNeededException;
-import cloud.hytora.driver.exception.PlayerNotOnlineException;
+import cloud.hytora.document.IEntry;
+import cloud.hytora.driver.common.PublishingType;
+import cloud.hytora.driver.common.exception.IncompatibleDriverEnvironmentException;
+import cloud.hytora.driver.common.exception.ModuleNeededException;
+import cloud.hytora.driver.common.exception.PlayerNotOnlineException;
+import cloud.hytora.driver.entity.player.extension.CloudBukkitPlayer;
+import cloud.hytora.driver.entity.player.extension.CloudProxyPlayer;
+import cloud.hytora.driver.module.permission.PermissionGroup;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
-import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.permission.PermissionPlayer;
-import cloud.hytora.driver.player.ICloudPlayer;
-import cloud.hytora.driver.player.PlayerUnsafe;
-import cloud.hytora.driver.player.connection.PlayerConnection;
-import cloud.hytora.driver.player.impl.DefaultPlayerUnsafe;
-import cloud.hytora.driver.services.ICloudService;
+import cloud.hytora.driver.networking.protocol.types.BufferState;
+import cloud.hytora.driver.module.permission.PermissionPlayer;
+import cloud.hytora.driver.entity.player.CloudPlayer;
+import cloud.hytora.driver.entity.player.connection.PlayerConnection;
+import cloud.hytora.driver.entity.services.CloudService;
 import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,9 +25,9 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 @AllArgsConstructor
-public class LoggedCloudPlayer implements ICloudPlayer {
+public class LoggedCloudPlayer implements CloudPlayer {
 
-    private final ICloudPlayer cloudPlayer;
+    private final CloudPlayer cloudPlayer;
     private final Consumer<String> messageHandler;
 
     @Override
@@ -35,7 +37,7 @@ public class LoggedCloudPlayer implements ICloudPlayer {
 
     @NotNull
     @Override
-    public ICloudPlayer getPlayer() {
+    public CloudPlayer getPlayer() {
         return cloudPlayer;
     }
 
@@ -45,23 +47,18 @@ public class LoggedCloudPlayer implements ICloudPlayer {
     }
 
     @Override
-    public Document toDocument() {
-        return cloudPlayer.toDocument();
-    }
-
-    @Override
-    public void applyDocument(Document document) {
-        cloudPlayer.applyDocument(document);
-    }
-
-    @Override
-    public void clone(ICloudPlayer from) {
+    public void clone(CloudPlayer from) {
         cloudPlayer.clone(from);
     }
 
     @Override
     public String getMainIdentity() {
         return cloudPlayer.getMainIdentity();
+    }
+
+    @Override
+    public void handleJsonOperation(BufferState state, Document document) {
+        cloudPlayer.handleJsonOperation(state, document);
     }
 
     @Override
@@ -80,7 +77,7 @@ public class LoggedCloudPlayer implements ICloudPlayer {
     }
 
     @Override
-    public ICloudPlayer asOnlinePlayer() throws PlayerNotOnlineException {
+    public CloudPlayer asOnlinePlayer() throws PlayerNotOnlineException {
         return cloudPlayer.asOnlinePlayer();
     }
 
@@ -104,14 +101,20 @@ public class LoggedCloudPlayer implements ICloudPlayer {
         cloudPlayer.setProperties(properties);
     }
 
+    @Nullable
     @Override
-    public void editProperties(Consumer<Document> properties) {
-        cloudPlayer.editProperties(properties);
+    public IEntry getProperty(String name) {
+        return cloudPlayer.getProperty(name);
     }
 
     @Override
-    public PlayerUnsafe unsafe() {
-        return new DefaultPlayerUnsafe(this);
+    public boolean hasProperty(String name) {
+        return cloudPlayer.hasProperty(name);
+    }
+
+    @Override
+    public void setProperty(@NotNull String name, @Nullable Object value) {
+        cloudPlayer.setProperty(name, value);
     }
 
     @Override
@@ -135,44 +138,34 @@ public class LoggedCloudPlayer implements ICloudPlayer {
     }
 
     @Override
-    public void saveOfflinePlayer() {
-        cloudPlayer.saveOfflinePlayer();
+    public void save() {
+        cloudPlayer.save();
     }
 
     @NotNull
     @Override
-    public ICloudService getProxyServer() {
+    public CloudService getProxyServer() {
         return cloudPlayer.getProxyServer();
     }
 
     @Override
-    public Task<ICloudService> getProxyServerAsync() {
-        return cloudPlayer.getProxyServerAsync();
-    }
-
-    @Override
-    public CloudEntityLocation<Double, Float> getLocation() {
-        return cloudPlayer.getLocation();
+    public boolean isConnected() {
+        return cloudPlayer.isConnected();
     }
 
     @Nullable
     @Override
-    public ICloudService getServer() {
+    public CloudService getServer() {
         return cloudPlayer.getServer();
     }
 
     @Override
-    public Task<ICloudService> getServerAsync() {
-        return cloudPlayer.getServerAsync();
-    }
-
-    @Override
-    public void setProxyServer(@NotNull ICloudService service) {
+    public void setProxyServer(@NotNull CloudService service) {
         cloudPlayer.setProxyServer(service);
     }
 
     @Override
-    public void setServer(ICloudService service) {
+    public void setServer(CloudService service) {
         cloudPlayer.setServer(service);
     }
 
@@ -196,5 +189,25 @@ public class LoggedCloudPlayer implements ICloudPlayer {
     @Override
     public PermissionPlayer asPermissionPlayer() throws ModuleNeededException {
         return cloudPlayer.asPermissionPlayer();
+    }
+
+    @Override
+    public void sendPlainMessage(String message) {
+        cloudPlayer.sendPlainMessage(message);
+    }
+
+    @Override
+    public PermissionGroup getHighestPermissionGroup() {
+        return cloudPlayer.getHighestPermissionGroup();
+    }
+
+    @Override
+    public CloudProxyPlayer asProxyPlayer() throws IncompatibleDriverEnvironmentException {
+        return cloudPlayer.asProxyPlayer();
+    }
+
+    @Override
+    public CloudBukkitPlayer asBukkitPlayer() throws IncompatibleDriverEnvironmentException {
+        return cloudPlayer.asBukkitPlayer();
     }
 }

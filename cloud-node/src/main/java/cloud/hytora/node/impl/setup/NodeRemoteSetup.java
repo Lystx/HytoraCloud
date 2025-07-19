@@ -1,13 +1,26 @@
 package cloud.hytora.node.impl.setup;
 
-import cloud.hytora.driver.command.Console;
-import cloud.hytora.driver.setup.Setup;
-import cloud.hytora.driver.setup.annotations.Question;
-import cloud.hytora.driver.setup.annotations.QuestionTip;
+import cloud.hytora.driver.command.console.Console;
+import cloud.hytora.driver.common.setup.Setup;
+import cloud.hytora.driver.common.setup.annotations.Question;
+import cloud.hytora.driver.common.setup.annotations.QuestionTip;
+import cloud.hytora.driver.database.api.DatabaseType;
 import lombok.Getter;
 
 @Getter
 public class NodeRemoteSetup extends Setup<NodeRemoteSetup> {
+
+    private final String name;
+    private final boolean remote;
+    private final DatabaseType databaseType;
+    private final long memory;
+
+    public NodeRemoteSetup(String name, boolean remote, DatabaseType databaseType, long memory) {
+        this.name = name;
+        this.remote = remote;
+        this.databaseType = databaseType;
+        this.memory = memory;
+    }
 
     @Question(id = 1, question = "What is the host of the Node you want this Node to connect to?")
     private String host;
@@ -19,9 +32,6 @@ public class NodeRemoteSetup extends Setup<NodeRemoteSetup> {
     @QuestionTip("Look in the config.json!")
     private String authKey;
 
-    public NodeRemoteSetup(Console console) {
-        super();
-    }
 
     @Override
     public boolean isCancellable() {

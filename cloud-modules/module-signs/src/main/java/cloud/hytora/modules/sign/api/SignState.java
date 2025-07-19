@@ -1,8 +1,8 @@
 package cloud.hytora.modules.sign.api;
 
-import cloud.hytora.driver.services.ICloudService;
-import cloud.hytora.driver.services.utils.ServiceState;
-import cloud.hytora.driver.services.utils.ServiceVisibility;
+import cloud.hytora.driver.entity.services.CloudService;
+import cloud.hytora.driver.entity.services.utils.ServiceState;
+import cloud.hytora.driver.entity.services.utils.ServiceVisibility;
 
 public enum SignState {
 
@@ -17,7 +17,7 @@ public enum SignState {
     MAINTENANCE;
 
 
-    public static SignState ofServer(ICloudService server) {
+    public static SignState ofServer(CloudService server) {
         if (server.getTask().isMaintenance()) {
             return MAINTENANCE;
         } else if (server.getOnlinePlayerCount() >= server.getMaxPlayers()) {

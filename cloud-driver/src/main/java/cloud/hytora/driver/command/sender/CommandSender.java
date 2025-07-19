@@ -1,7 +1,8 @@
 package cloud.hytora.driver.command.sender;
 
 import cloud.hytora.common.DriverUtility;
-import cloud.hytora.common.misc.StringUtils;
+import cloud.hytora.driver.command.console.Console;
+import cloud.hytora.driver.entity.player.CloudPlayer;
 
 import javax.annotation.Nonnull;
 
@@ -20,15 +21,13 @@ import javax.annotation.Nonnull;
  */
 public interface CommandSender {
 
-	default void forceMessage(@Nonnull String message) {
-
-	}
+	default void forceMessage(@Nonnull String message) {}
 
 	/**
 	 * Sends a message to this CommandSender
 	 *
-	 * IF {@link cloud.hytora.driver.command.Console} -> Displays it in consolöe
-	 * If {@link cloud.hytora.driver.player.ICloudPlayer} -> Sends packet to send message
+	 * IF {@link Console} -> Displays it in consolöe
+	 * If {@link CloudPlayer} -> Sends packet to send message
 	 *
 	 * @param message the message to display
 	 */

@@ -1,10 +1,8 @@
 package cloud.hytora.node.impl.database;
 
 import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.node.NodeDriver;
 
 
 import cloud.hytora.driver.database.IJsonStorage;
@@ -30,7 +28,7 @@ public class DefaultJsonStorage implements IJsonStorage {
     
     private File checkCollection(String collection) {
 
-        File collectionFolder = new File(NodeDriver.STORAGE_FOLDER, collection + "/");
+        File collectionFolder = new File(CloudDriver.Constants.STORAGE_FOLDER, collection + "/");
         try {
 
             if (CloudDriver.getInstance().getEnvironment() == CloudDriver.Environment.NODE && !CloudDriver.getInstance().getNodeManager().isHeadNode()) {
@@ -83,11 +81,7 @@ public class DefaultJsonStorage implements IJsonStorage {
         if (!entryFile.exists()) {
             return null;
         }
-        try {
-            return DocumentFactory.newJsonDocument(entryFile);
-        } catch (IOException e) {
-            return null;
-        }
+        return Document.json(entryFile);
     }
 
     @Override
@@ -104,7 +98,7 @@ public class DefaultJsonStorage implements IJsonStorage {
     @Override
     public Collection<Document> documents(String collection) {
         File[] files = this.checkCollection(collection).listFiles();
-        return Arrays.stream(files == null ? new File[0] : files).map(DocumentFactory::newJsonDocumentUnchecked).collect(Collectors.toList());
+        return Arrays.stream(files == null ? new File[0] : files).map(Document::jsonUnchecked).collect(Collectors.toList());
     }
 
     @Override
@@ -118,7 +112,7 @@ public class DefaultJsonStorage implements IJsonStorage {
         Map<String, Document> map = new HashMap<>();
         for (File file : (files == null ? new File[0] : files)) {
             String key = file.getName().split(fileExtension)[0];
-            Document document = DocumentFactory.newJsonDocumentUnchecked(file);
+            Document document = Document.jsonUnchecked(file);
             if (predicate.test(key, document)) {
                 map.put(key, document);
             }

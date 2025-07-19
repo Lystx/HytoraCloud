@@ -1,27 +1,31 @@
 package cloud.hytora.node.service.helper;
 
+import cloud.hytora.common.DriverUtility;
+import cloud.hytora.common.collection.pair.Tuple;
 import cloud.hytora.common.logging.LogLevel;
+import cloud.hytora.common.progressbar.HytoraProgressBar;
+import cloud.hytora.common.progressbar.ProgressBarStyle;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.HytoraCloudConstants;
-import cloud.hytora.driver.console.Screen;
-import cloud.hytora.driver.console.ScreenManager;
+import cloud.hytora.driver.command.console.screen.Screen;
+import cloud.hytora.driver.command.console.screen.ScreenManager;
+import cloud.hytora.driver.common.PublishingType;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.controller.base.ModuleConfig;
 import cloud.hytora.driver.module.controller.base.ModuleCopyType;
-import cloud.hytora.driver.services.impl.UniversalCloudServer;
-import cloud.hytora.driver.services.task.TaskDownloadEntry;
-import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.template.ServiceTemplate;
-import cloud.hytora.driver.services.template.TemplateStorage;
-import cloud.hytora.driver.services.ICloudService;
-import cloud.hytora.driver.services.utils.RemoteIdentity;
-import cloud.hytora.driver.services.utils.ServiceProcessType;
-import cloud.hytora.driver.services.utils.ServiceState;
-import cloud.hytora.driver.services.utils.version.ServiceVersion;
-import cloud.hytora.driver.services.utils.version.VersionFile;
-import cloud.hytora.driver.services.utils.version.VersionType;
-import cloud.hytora.node.impl.config.MainConfiguration;
+import cloud.hytora.driver.entity.services.impl.UniversalCloudServer;
+import cloud.hytora.driver.entity.services.task.TaskDownloadEntry;
+import cloud.hytora.driver.entity.services.task.ServiceTask;
+import cloud.hytora.driver.entity.services.template.ServiceTemplate;
+import cloud.hytora.driver.entity.services.template.TemplateStorage;
+import cloud.hytora.driver.entity.services.CloudService;
+import cloud.hytora.driver.entity.services.utils.RemoteIdentity;
+import cloud.hytora.driver.entity.services.utils.ServiceProcessType;
+import cloud.hytora.driver.entity.services.utils.ServiceState;
+import cloud.hytora.driver.entity.services.utils.version.ServiceVersion;
+import cloud.hytora.driver.entity.services.utils.version.VersionFile;
+import cloud.hytora.driver.entity.services.utils.version.VersionType;
+import cloud.hytora.driver.config.def.UniversalNetworkConfig;
 import cloud.hytora.node.NodeDriver;
 
 
@@ -43,11 +47,12 @@ import java.util.jar.JarInputStream;
 public class CloudServerProcessWorker {
 
     @SneakyThrows
-    public Task<ICloudService> processService(ICloudService service) {
-        Task<ICloudService> task = Task.empty(ICloudService.class).denyNull();
+    public Task<CloudService> processService(CloudService service) {
+        Task<CloudService> task = Task.empty(CloudService.class).denyNull();
 
 
         service.setServiceState(ServiceState.STARTING);
+        service.update(PublishingType.GLOBAL);
 
         // add statistic to service
         NodeDriver.getInstance().getExecutor().registerStats(service);
@@ -55,14 +60,17 @@ public class CloudServerProcessWorker {
         downloadServiceVersion(service.getTask().getVersion());
 
         // create server dir
-        File parent = (service.getTask().getTaskGroup().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
-        File serverDir = new File(parent, service.getName() + "@" + service.getUniqueId() + "/");
+        File parent = (service.getTask().getTaskGroup().getShutdownBehaviour().isStatic() ? CloudDriver.Constants.SERVICE_DIR_STATIC : CloudDriver.Constants.SERVICE_DIR_DYNAMIC);
+
+
+        File serverDir = CloudDriver.getInstance().getServerDirectoryFormatter().supply(Tuple.of(parent, service));
+        FileUtils.forceMkdirParent(serverDir);
 
         FileUtils.forceMkdir(serverDir);
 
         // load all current task templates
-        IServiceTask serviceTask = service.getTask();
-        ServiceProcessType serviceProcessType = MainConfiguration.getInstance().getServiceProcessType();
+        ServiceTask serviceTask = service.getTask();
+        ServiceProcessType serviceProcessType = UniversalNetworkConfig.getInstance().getServiceProcessType();
 
         //all templates for this service
         Collection<ServiceTemplate> templates = serviceTask.getTaskGroup().getTemplates(); //parent templates
@@ -76,14 +84,14 @@ public class CloudServerProcessWorker {
         }
 
         String jar = service.getTask().getVersion().getJar();
-        FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, jar), new File(serverDir, jar));
+        FileUtils.copyFile(new File(CloudDriver.Constants.STORAGE_VERSIONS_FOLDER, jar), new File(serverDir, jar));
 
         // copy plugin
-        FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER,  HytoraCloudConstants.BRIDGE_FILE_NAME), new File(serverDir, "plugins/"  + HytoraCloudConstants.BRIDGE_FILE_NAME));
+        FileUtils.copyFile(new File(CloudDriver.Constants.STORAGE_VERSIONS_FOLDER,  CloudDriver.Constants.BRIDGE_FILE_NAME), new File(serverDir, "plugins/"  + CloudDriver.Constants.BRIDGE_FILE_NAME));
 
         if (serviceProcessType == ServiceProcessType.WRAPPER) {
             //copy remote file
-            FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, HytoraCloudConstants.REMOTE_FILE_NAME), new File(serverDir, HytoraCloudConstants.REMOTE_FILE_NAME));
+            FileUtils.copyFile(new File(CloudDriver.Constants.STORAGE_VERSIONS_FOLDER, CloudDriver.Constants.REMOTE_FILE_NAME), new File(serverDir, CloudDriver.Constants.REMOTE_FILE_NAME));
         }
 
         // write property for identify service
@@ -91,7 +99,7 @@ public class CloudServerProcessWorker {
                 NodeDriver.getInstance().getNode().getConfig().getAuthKey(),
                 service.getRunningNodeName(),
                 service.getTask().getVersion().getType(),
-                MainConfiguration.getInstance().getServiceProcessType(),
+                UniversalNetworkConfig.getInstance().getServiceProcessType(),
                 CloudDriver.getInstance().getLogger().getMinLevel(),
                 NodeDriver.getInstance().getExecutor().getHostName(),
                 service.getName(),
@@ -122,8 +130,15 @@ public class CloudServerProcessWorker {
             versionFile.applyFile(service, file);
         }
 
-        File folder = new File(parent, service.getName() + "@" + service.getUniqueId() + "/");
 
+        if (service.getDefaultWorld() != null && !service.getDefaultWorld().equalsIgnoreCase("world")) {
+            FileUtils.deleteDirectory(new File(serverDir, "world"));
+            String defaultWorld = service.getDefaultWorld();
+            File file = new File(CloudDriver.Constants.TEMPLATES_DIR, defaultWorld);
+            FileUtils.copyFile(file, new File(serverDir, "world"));
+        }
+
+        File folder = CloudDriver.getInstance().getServerDirectoryFormatter().supply(Tuple.of(parent, service));
 
         ScreenManager screenManager = CloudDriver.getInstance().getProvider(ScreenManager.class);
 
@@ -133,7 +148,7 @@ public class CloudServerProcessWorker {
                 .redirectOutput(new LogOutputStream() {
                     @Override
                     protected void processLine(String line) {
-                        Screen screenByNameOrNull = screenManager.getScreenByNameOrNull(service.getName());
+                        Screen screenByNameOrNull = screenManager.getCachedScreen(service.getName());
                         screenByNameOrNull.writeLine(line);
 
                     }
@@ -145,9 +160,7 @@ public class CloudServerProcessWorker {
         UniversalCloudServer serviceInfo = (UniversalCloudServer)service;
         serviceInfo.setProcess(process);
         serviceInfo.setWorkingDirectory(folder);
-
-
-
+        service.update(PublishingType.INTERNAL);
 
         task.setResult(serviceInfo);
 
@@ -172,24 +185,24 @@ public class CloudServerProcessWorker {
         }
     }
 
-    private String[] args(ICloudService service) throws IOException {
+    private String[] args(CloudService service) throws IOException {
 
-        File parent = (service.getTask().getTaskGroup().getShutdownBehaviour().isStatic() ? NodeDriver.SERVICE_DIR_STATIC : NodeDriver.SERVICE_DIR_DYNAMIC);
-        File folder = new File(parent, service.getName() + "@" + service.getUniqueId() + "/");
-
-        Path remoteFile1 = new File(NodeDriver.STORAGE_VERSIONS_FOLDER,  HytoraCloudConstants.REMOTE_FILE_NAME).toPath();
-        FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, HytoraCloudConstants.REMOTE_FILE_NAME), new File(folder, HytoraCloudConstants.REMOTE_FILE_NAME));
+        File parent = (service.getTask().getTaskGroup().getShutdownBehaviour().isStatic() ? CloudDriver.Constants.SERVICE_DIR_STATIC : CloudDriver.Constants.SERVICE_DIR_DYNAMIC);
+        File folder = CloudDriver.getInstance().getServerDirectoryFormatter().supply(Tuple.of(parent, service));
+        Path remoteFile1 = new File(CloudDriver.Constants.STORAGE_VERSIONS_FOLDER,  CloudDriver.Constants.REMOTE_FILE_NAME).toPath();
+        FileUtils.copyFile(new File(CloudDriver.Constants.STORAGE_VERSIONS_FOLDER, CloudDriver.Constants.REMOTE_FILE_NAME), new File(folder, CloudDriver.Constants.REMOTE_FILE_NAME));
         File applicationFile = new File(folder, service.getTask().getVersion().getJar());
 
-        Path remoteFile  = new File(folder, HytoraCloudConstants.REMOTE_FILE_NAME).toPath();
-        IServiceTask task = service.getTask();
+        Path remoteFile  = new File(folder, CloudDriver.Constants.REMOTE_FILE_NAME).toPath();
+        ServiceTask task = service.getTask();
         int javaVersion = task.getJavaVersion();
-        ServiceProcessType serviceProcessType = MainConfiguration.getInstance().getServiceProcessType();
+        ServiceProcessType serviceProcessType = UniversalNetworkConfig.getInstance().getServiceProcessType();
 
         List<String> arguments = new ArrayList<>(Collections.singletonList("java"));
 
         if (javaVersion != -1) {
-            MainConfiguration.getInstance().getJavaVersions().stream().filter(jv -> jv.getId() == javaVersion).findFirst().ifPresent(version -> arguments.add(version.getPath()));
+            // TODO: 16.07.2025 multi java -> inspiration look at cloudnet 
+            UniversalNetworkConfig.getInstance().getJavaVersions().stream().filter(jv -> jv.getId() == javaVersion).findFirst().ifPresent(version -> arguments.add(version.getPath()));
         }
 
         //adding pre defined arguments
@@ -248,16 +261,19 @@ public class CloudServerProcessWorker {
     }
 
 
-    private void downloadServiceVersion(ServiceVersion version) {
-        File file = new File(NodeDriver.STORAGE_VERSIONS_FOLDER, version.getJar());
+    private Task<Boolean> downloadServiceVersion(ServiceVersion version) {
+        File file = new File(CloudDriver.Constants.STORAGE_VERSIONS_FOLDER, version.getJar());
 
         if (file.exists()) {
-            return;
+            return Task.build(true);
         }
 
-        CloudDriver.getInstance().getLogger().info("§6=> §7Requiring to download §b" + version.getJar() + "§8!");
+        CloudDriver.getInstance().getLogger().info("§6=> §7Requiring to download %1" + version.getJar() + "§8!");
 
         file.getParentFile().mkdirs();
+
+
+        Task<Boolean> task = Task.empty();
 
         try {
             String url = version.getUrl();
@@ -273,15 +289,17 @@ public class CloudServerProcessWorker {
                 process.destroyForcibly();
                 bufferedReader.close();
                 inputStreamReader.close();
-                FileUtils.copyFile(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "cache/patched_" + version.getVersion() + ".jar"), file);
-                FileUtils.deleteDirectory(new File(NodeDriver.STORAGE_VERSIONS_FOLDER, "cache/"));
+                FileUtils.copyFile(new File(CloudDriver.Constants.STORAGE_VERSIONS_FOLDER, "cache/patched_" + version.getVersion() + ".jar"), file);
+                FileUtils.deleteDirectory(new File(CloudDriver.Constants.STORAGE_VERSIONS_FOLDER, "cache/"));
             }
         } catch (IOException e) {
             e.printStackTrace();
-            CloudDriver.getInstance().getLogger().error("§cFailed to download version§7... (§3" + version.getTitle() + "§7)");
-            return;
+            task.setFailure(e);
+            CloudDriver.getInstance().getLogger().error("§cFailed to download version§7... (%2" + version.getTitle() + "§7)");
         }
-        CloudDriver.getInstance().getLogger().info("§a=> §7Downloaded §b" + version.getJar() + "§8!");
+        task.setResult(true);
+        CloudDriver.getInstance().getLogger().info("§a=> §7Downloaded %1" + version.getJar() + "§8!");
+        return task;
     }
 
 

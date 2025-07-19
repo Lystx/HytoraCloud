@@ -2,7 +2,7 @@ package cloud.hytora.bridge.proxy.bungee.utils;
 
 import cloud.hytora.bridge.proxy.bungee.BungeeBootstrap;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.services.ICloudService;
+import cloud.hytora.driver.entity.services.CloudService;
 import lombok.AllArgsConstructor;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.ReconnectHandler;
@@ -26,12 +26,15 @@ public class CloudReconnectHandler implements ReconnectHandler {
 
     @Override
     public ServerInfo getServer(ProxiedPlayer player) {
-        ICloudService fallback = CloudDriver
+        if (bungeeBootstrap.getFirstJoinServer(player.getUniqueId()) != null) {
+            return ProxyServer.getInstance().getServerInfo(bungeeBootstrap.getFirstJoinServer(player.getUniqueId()).getName());
+        }
+        CloudService fallback = CloudDriver
                 .getInstance()
                 .getServiceManager()
                 .getFallbackAsService().orElse(null);
         if (fallback == null) { //what if somehow no fallback has been found? big mistake! we shouldn't allow
-            player.disconnect("§cError 3825");  //players like that on the network!
+            player.disconnect("§cNo suitable fallback found");  //players like that on the network!
             return null;
 
         }

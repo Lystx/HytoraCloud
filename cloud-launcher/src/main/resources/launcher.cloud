@@ -16,7 +16,7 @@ if ($cloud.hytora.launcher.devmode$) -> {
     log INFO "Developer-mode is activated!"
     log INFO "=> That means that the player 'Lystx' has every permission for developing purposes!"
 } else -> {
-    log INFO "Developer-mode is not activated!"
+    log DEBUG "Developer-mode is deactivated"
 }
 
 run includeRepositories();
@@ -25,7 +25,7 @@ run includeDependencies();
 
 #Including repositories
 Task includeRepositories() -> {
-    log INFO "Including Repositories"
+    log DEBUG "Including Repositories"
     repo ossrh https://oss.sonatype.org/content/repositories/snapshots
     repo mvn https://repo1.maven.org/maven2
 
@@ -34,7 +34,7 @@ Task includeRepositories() -> {
 #Including dependencies
 Task includeDependencies() -> {
 
-    log INFO "Including Dependencies!"
+    log DEBUG "Including Dependencies!"
     dependency org.fusesource.jansi jansi 2.4.0
     dependency me.tongfei progressbar 0.5.5
     dependency mysql mysql-connector-java 8.0.27

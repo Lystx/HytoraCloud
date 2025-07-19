@@ -25,16 +25,22 @@ public abstract class HandledLogger extends Logger {
 
 	@Override
 	public void log(@Nonnull LogLevel level, @Nullable String message, @Nonnull Object... args) {
-		if (!level.isEnabled(this.level)) return;
-		if (translateColors && message != null) {
-			message = ConsoleColor.toColoredString('§', message);
-			message = ConsoleColor.toColoredString('&', message);
-			translateColors = false;
-		}
 		Throwable exception = null;
 		for (Object arg : args) {
 			if (arg instanceof Throwable)
 				exception = (Throwable) arg;
+		}
+		if (translateColors && message != null) {
+			message = ConsoleColor.toColoredString('§', message);
+			message = ConsoleColor.toColoredString('&', message);
+			message = Logger.formatMessage(message);
+			translateColors = false;
+		}
+		LogEntry entry = new LogEntry(Instant.now(), Thread.currentThread().getName(), StringUtils.formatMessage(message, args), level, exception);
+		cacheEntry(entry);
+
+		if (!level.isEnabled(this.level)) {
+			return;
 		}
 		log0(new LogEntry(Instant.now(), Thread.currentThread().getName(), StringUtils.formatMessage(message, args), level, exception));
 	}
@@ -54,6 +60,9 @@ public abstract class HandledLogger extends Logger {
 	protected abstract void log0(@Nonnull LogEntry entry);
 
 	protected void logNow(@Nonnull LogEntry entry) {
+		if (entry.getLevel() == LogLevel.ERROR && entry.getMessage().startsWith("log4j")) {
+			return;
+		}
 		for (LogHandler handler : handlers) {
 			try {
 				handler.handle(entry);

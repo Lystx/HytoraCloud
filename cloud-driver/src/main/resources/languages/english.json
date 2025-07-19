@@ -1,0 +1,113 @@
+{
+  "name": "english",
+  "nativeName": "english",
+  "author": "Lystx",
+  "translations": {
+    "node": {
+      "startup.header.version": "%1Version §7: {}",
+      "startup.header.developer": "%1Developer(s) §7: {}",
+      "startup.header.classloader": "%1ClassLoader §7: {}",
+      "startup.message.boot": "§7Booting up %2Networking §7and %2Database§8...",
+      "startup.message.folder.create": "Creating needed folders...",
+      "startup.message.files.copy": "Copying files...",
+      "startup.message.command.register": "Registering Commands & ArgumentParsers...",
+      "startup.message.packet.register": "Registering Packets & Handlers...",
+      "startup.message.packet.register.end": "§7Registered §c{} §7Packets.",
+      "startup.message.headnode": "§7This Node is a HeadNode §7and boots up the Cluster...",
+      "startup.message.modules.loaded": "§7Loaded and enabled %2{} CloudModules§8: %1{}",
+      "startup.message.end.line.one": "This §aNode §fhas successfully §abooted up §fand is now ready for personal use!",
+      "startup.message.end.line.two": "§8» §7Thanks for using %1HytoraCloud§8!",
+
+      "setup.copying.files": "Copying §a{} §fand §a{} §fto §a{}§f...",
+      "setup.created.default.task": "§7Created default §6Proxy §7and §aLobby §fServiceTasks§8!",
+      "setup.completed": [
+        "§8",
+        "§7You §acompleted §7the NodeSetup§8!",
+        "§cPlease reboot the Node now to apply all changes!",
+        "§8"
+      ],
+      
+      "lowmemory.warn.other": "§cThe Process §e{} §cis running low on memory! You should check on it!",
+      "lowmemory.warn.self": [
+        "§8",
+        "§8",
+        "§8<======§8[§4Out of Memory§8]§8======>",
+        " §8=> §cYour §eCloudSystem §cis almost §eout of memory§c.",
+        "    §8=> §cCPU§8: §e{} §8| §cLeft memory§8: §e{}",
+        " §8=> §cThe §ecreation §cof new §eThreads §cis now §edisabled §cand everything is running on the §emain-thread",
+        " §8=> §cIf your §eoperating §csystem can't handle §eone single Thread§c, please §eshut down §cthe cloud and §erestart it§c.",
+        "§8<======§8[§4Out of Memory§8]§8======>",
+        "§8",
+        "§8"
+      ],
+      
+      "client.connection.opened": "Networking was successfully booted up and is ready to accept connections!",
+      "client.node.connect.error.already.connected": "§8'§c{}§8' §ctried to connect to this Node, but it's already connected",
+      "client.node.connect.error.same.name": "§8'§c{}§8' §ctried to connect to this Node with the same name as this Node",
+      "client.node.connect.error.wrong.key": "§8'§c{}§8' §ctried to connect to this Node but provided a wrong authKey",
+      "client.unknown.disconnect": "§a==> Channel §e{} - {} tried to disconnect but no matching Service was found!",
+
+      "shutdown.start": "§7Trying to terminate the §cCloudsystem§8...",
+      "shutdown.headnode.not.possible": [
+        "§8",
+        "§eThis Node is the §cHeadNode §eright now and it's not possible for HeadNodes to shutdown because the migration of SubNodes to HeadNodes is not finished yet!",
+        "Make sure to shutdown every other Node first and then shutdown this Node!",
+        "§8"
+      ],
+      "shutdown.message.players": "Disconnecting Players...",
+      "shutdown.message.modules": "Disabling Modules...",
+      "shutdown.message.web": "Stopping WebServer...",
+      "shutdown.message.services": "Stopping CloudServices...",
+      "shutdown.message.database": "Disconnecting database...",
+      "shutdown.message.providers": "Shutting down providers...",
+      "shutdown.message.files": "Clearing up files...",
+      "shutdown.message.success": "§aSuccessfully exited the CloudSystem§8!"
+    },
+    "service": {
+      "notify.unregister": "§8'§c{server.name}§8' §7has been stopped§8! §8| %1Uptime§8: §f{server.uptime}",
+      "notify.ready": "§8'§a{server.name}§8' §7is now ready to use§8! §8| §aBootup§8: §f{bootup.time} ms",
+      "notify.register": "§8'%1{server.node}§8' §7queued %2{server.name} §8| %2Port %1{server.port} §8| %2MaxPlayer %1{server.capacity} §8| %2Version %1{task.version} §8| %2State {server.state} §8| %2ShutdownBehaviour %1{server.type}"
+    },
+    "servicetask": {
+      "none.created": [
+        "There are no ServiceTasks loaded!",
+        "Maybe you want to create some?"
+      ],
+      "loaded.groups": "§7Loaded following TaskGroups: %1{}",
+      "loaded.tasks": "§7Loaded following ServiceTasks: %1{}"
+    },
+    "remote": {
+      "startup.message.slave": "§7This Node is a Remote §7and connects to the HeadNode...",
+      "startup.message.slave.success": "§7Remote has §asuccessfully §7connected to §8'%1{}§8'",
+      
+      "client.demand.driver.cache": "§7Remote demands §aDriverCache §7from %2HeadNode§8...",
+      "client.demand.driver.files": "§7Remote demands §aVersion-Files §7from %2HeadNode§8...",
+      "client.transfer.driver.files": "§7Transferring %2{} §7files from %1HeadNode§8...",
+      "client.received.driver.cache": "§aSuccessfully §7received %2Cache §7from %1HeadNode§8!",
+      "client.received.driver.files": "§7CloudSystem has §asuccessfully §7received all %2Files §7from %1HeadNode§8!",
+      
+      "client.authentication.changed": "§7The %2RemoteClient§8'%1s §7authentication has §achanged§8.",
+      "client.connection.established": "§aEstablished Connection to HeadNode",
+      "client.connection.success": "§7Successfully connected to %2HeadNode §7at %1{}",
+      "client.connection.closed": "§cDisconnected from HeadNode.",
+      "client.connection.failed": [
+        "Remote could not connect to §e{}",
+        "Trying again in 10 seconds..."
+      ]
+    },
+    "database": {
+      "connect.success.local": "§7Database has connected §asuccessfully§8!",
+      "connect.success.online": "§7Database has connected §asuccessfully §8[§aHost§8: §7{} §aPort§8: §7{} §aDatabase§8: §7{}§8]",
+      "connect.failed": "§cCouldn't connect to database of type §e{}"
+    },
+    "global": {
+      "error.prefix": "Error§8: §e{}",
+      "logger.changed.level": "Set LogLevel to {}",
+      "application.context.load.start": "Loading ApplicationContext...",
+      "application.context.load.success": "Successfully loaded ApplicationContext!"
+    },
+    "module": {
+      "loaded": "§aLoaded module §e{}§8..."
+    }
+  }
+}

@@ -54,6 +54,26 @@ public final class CollectionUtils {
 		return builder.toString();
 	}
 
+	public static <T> List<T> pagedList(List<T> input, int objectsPerPage, int currentPage) {
+		Map<Integer, List<T>> pages = new LinkedHashMap<>();
+		int pageIndex = 0;
+		for (int i = 0; i < input.size(); i += objectsPerPage) {
+			pages.put(pageIndex, input.subList(Math.min(input.size(), i), Math.min(input.size(), i + objectsPerPage)));
+			pageIndex++;
+		}
+		return pages.getOrDefault(currentPage, new ArrayList<>());
+	}
+	public static <T> PagedList<T> paged(List<T> input, int objectsPerPage, int currentPage) {
+		Map<Integer, List<T>> pages = new LinkedHashMap<>();
+		int pageIndex = 0;
+		for (int i = 0; i < input.size(); i += objectsPerPage) {
+			pages.put(pageIndex, input.subList(Math.min(input.size(), i), Math.min(input.size(), i + objectsPerPage)));
+			pageIndex++;
+		}
+		PagedList<T> paged = new PagedList<>(currentPage,pages.size());
+		paged.addAll(pages.getOrDefault(currentPage, new ArrayList<>()));
+		return paged;
+	}
 	@SafeVarargs
 	public static <T> Map<T, T> mapOf(T... keysAndValues) {
 		Map<T, T> map = new HashMap<>();
@@ -62,6 +82,17 @@ public final class CollectionUtils {
 			throw new IllegalArgumentException("Cannot create document of " + keysAndValues.length + " arguments");
 		for (int i = 0; i < keysAndValues.length; i += 2) {
 			map.put(keysAndValues[i], keysAndValues[i + 1]);
+		}
+
+		return map;
+	}
+
+	@SafeVarargs
+	public static <K, V> Map<K, V> mapOf(K[] keys, V... values) {
+		Map<K, V> map = new HashMap<>();
+
+		for (int i = 0; i < keys.length; i++) {
+			map.put(keys[i], values[i]);
 		}
 
 		return map;

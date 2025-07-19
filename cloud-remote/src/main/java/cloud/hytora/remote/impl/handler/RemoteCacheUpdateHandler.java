@@ -1,22 +1,16 @@
 package cloud.hytora.remote.impl.handler;
 
-import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
+import cloud.hytora.driver.networking.packets.cache.PacketDriverCacheUpdate;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
-import cloud.hytora.driver.node.INode;
-import cloud.hytora.driver.player.ICloudPlayer;
-import cloud.hytora.driver.services.ICloudService;
-import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.task.bundle.TaskGroup;
+import cloud.hytora.driver.entity.services.CloudService;
 import cloud.hytora.remote.Remote;
 import cloud.hytora.remote.adapter.proxy.RemoteProxyAdapter;
 
-import java.util.Collection;
-
-public class RemoteCacheUpdateHandler implements PacketHandler<DriverUpdatePacket> {
+public class RemoteCacheUpdateHandler implements PacketHandler<PacketDriverCacheUpdate> {
 
     @Override
-    public void handle(PacketChannel wrapper, DriverUpdatePacket packet) {
+    public void handle(PacketChannel channel, PacketDriverCacheUpdate packet) {
 
 
         RemoteProxyAdapter proxy = Remote.getInstance().getProxyAdapterOrNull();
@@ -26,7 +20,7 @@ public class RemoteCacheUpdateHandler implements PacketHandler<DriverUpdatePacke
         }
 
         proxy.clearServices();
-        for (ICloudService allCachedService : packet.getAllCachedServices()) {
+        for (CloudService allCachedService : packet.getAllCachedServices()) {
             proxy.registerService(allCachedService);
         }
 

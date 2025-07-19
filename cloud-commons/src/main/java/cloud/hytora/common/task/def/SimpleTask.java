@@ -3,11 +3,12 @@ package cloud.hytora.common.task.def;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.common.task.WrapperListener;
-import cloud.hytora.common.task.exception.ValueHoldsNoObjectException;
-import cloud.hytora.common.task.exception.ValueImmutableException;
-import cloud.hytora.common.task.exception.ValueTimedOutException;
+import cloud.hytora.common.task.exception.TaskHoldsNoValueException;
+import cloud.hytora.common.task.exception.TaskImmutableException;
+import cloud.hytora.common.task.exception.TaskTimedOutException;
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -91,7 +92,7 @@ public class SimpleTask<T> implements Task<T> {
     }
 
     @Override
-    public <V> V as(Class<? extends V> wrapperClass) throws ValueHoldsNoObjectException {
+    public <V> V as(Class<? extends V> wrapperClass) throws TaskHoldsNoValueException {
         V t = (V) get();
         if (t != null && wrapperClass.isAssignableFrom(t.getClass())) {
             return wrapperClass.cast(t);
@@ -122,12 +123,12 @@ public class SimpleTask<T> implements Task<T> {
     }
 
     @Override
-    public Task<T> setResult(T newValue) throws ValueImmutableException {
+    public Task<T> setResult(T newValue) throws TaskImmutableException {
         if (newValue == null && this.denyNull) {
-            throw new ValueHoldsNoObjectException(this);
+            throw new TaskHoldsNoValueException(this);
         }
         if (this.immutable && this.heldValue == null) {
-            throw new ValueImmutableException(this);
+            throw new TaskImmutableException(this);
         }
         this.heldValue = newValue;
         this.done = true;
@@ -262,10 +263,15 @@ public class SimpleTask<T> implements Task<T> {
         return this.isNull() ? t : this.heldValue;
     }
 
+    @Override
+    public T get(long timeout, @NotNull TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+        return timeOut(unit, (int) timeout).syncUninterruptedly().get();
+    }
 
     private TimeUnit timeOutUnit = TimeUnit.DAYS;
     private int timeOutValue = 365;
     private T fallbackValue = null;
+    private Supplier<Throwable> timeOutError;
 
 
     @Override
@@ -276,6 +282,11 @@ public class SimpleTask<T> implements Task<T> {
         return this;
     }
 
+    @Override
+    public Task<T> throwOnTimeOut(Supplier<Throwable> error) {
+        this.timeOutError = error;
+        return this;
+    }
 
     @Override
     public Task<T> syncUninterruptedly() {
@@ -287,6 +298,13 @@ public class SimpleTask<T> implements Task<T> {
             @Override
             public void run() {
                 releaseLocks();
+                if (timeOutError != null && !done) {
+                    try {
+                        throw timeOutError.get();
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }, timeOutUnit.toMillis(timeOutValue));
 
@@ -303,8 +321,8 @@ public class SimpleTask<T> implements Task<T> {
 
         try {
             return this;
-        } catch (ValueHoldsNoObjectException e) {
-            throw new ValueTimedOutException(this);
+        } catch (TaskHoldsNoValueException e) {
+            throw new TaskTimedOutException(this);
         }
     }
 
@@ -313,7 +331,7 @@ public class SimpleTask<T> implements Task<T> {
         return this.registerListener(v -> {
             try {
                 listener.accept(this.get());
-            } catch (ValueHoldsNoObjectException e) {
+            } catch (TaskHoldsNoValueException e) {
                 listener.accept(null);
             }
         });
@@ -414,7 +432,7 @@ public class SimpleTask<T> implements Task<T> {
 
                 try {
                     setResult(mapper.apply(result.get()));
-                } catch (ValueHoldsNoObjectException e) {
+                } catch (TaskHoldsNoValueException e) {
                     setResult(null);
                 }
             }
@@ -455,9 +473,9 @@ public class SimpleTask<T> implements Task<T> {
     }
 
     @Override
-    public T get() throws ValueHoldsNoObjectException {
+    public T get() throws TaskHoldsNoValueException {
         if (this.isNull() && this.denyNull) {
-            throw new ValueHoldsNoObjectException(this);
+            throw new TaskHoldsNoValueException(this);
         }
         return this.heldValue;
     }

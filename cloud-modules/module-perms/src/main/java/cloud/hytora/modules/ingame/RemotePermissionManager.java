@@ -2,13 +2,14 @@ package cloud.hytora.modules.ingame;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.networking.PacketProvider;
-import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
-import cloud.hytora.driver.networking.protocol.packets.IPacket;
+import cloud.hytora.driver.common.message.IMessageChannel;
+import cloud.hytora.driver.networking.packets.PacketRegistry;
+import cloud.hytora.driver.networking.packets.response.BufferedResponse;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
-import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
-import cloud.hytora.driver.permission.PermissionGroup;
-import cloud.hytora.driver.permission.PermissionPlayer;
+import cloud.hytora.driver.networking.query.Query;
+import cloud.hytora.driver.networking.query.QueryResponse;
+import cloud.hytora.driver.module.permission.PermissionGroup;
+import cloud.hytora.driver.module.permission.PermissionPlayer;
 import cloud.hytora.modules.DefaultPermissionManager;
 import cloud.hytora.modules.global.impl.DefaultPermissionPlayer;
 import cloud.hytora.modules.global.packets.*;
@@ -17,15 +18,16 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
 @Getter
-public class RemotePermissionManager extends DefaultPermissionManager{
+public class RemotePermissionManager extends DefaultPermissionManager {
 
     private final List<PermissionGroup> allCachedPermissionGroups;
     private final List<PermissionPlayer> allCachedPermissionPlayers;
+
+    private final IMessageChannel<>
 
     public RemotePermissionManager() {
         super();
@@ -33,36 +35,46 @@ public class RemotePermissionManager extends DefaultPermissionManager{
         this.allCachedPermissionPlayers = new ArrayList<>();
 
         //registering packets
-        PacketProvider.autoRegister(PermsGroupPacket.class);
-        PacketProvider.autoRegister(PermsPlayerRequestPacket.class);
-        PacketProvider.autoRegister(PermsPlayerUpdatePacket.class);
+        PacketRegistry.autoRegister(PermsGroupPacket.class);
+        PacketRegistry.autoRegister(PermsPlayerRequestPacket.class);
+        PacketRegistry.autoRegister(PermsPlayerUpdatePacket.class);
+        PacketRegistry.autoRegister(PermsCacheUpdatePacket.class);
 
         //registering handler
-        /*CloudDriver.getInstance().getExecutor().registerPacketHandler((PacketHandler<PermsGroupUpdatePacket>) (wrapper, packet) -> {
-
+        CloudDriver.getInstance().getExecutor().registerPacketHandler((PacketHandler<PermsGroupPacket>) (wrapper, packet) -> {
             PermissionGroup permissionGroups = packet.getGroup();
+            switch (packet.getPayLoad()) {
+                case UPDATE:
 
-            allCachedPermissionGroups.removeIf(g -> g.getName().equalsIgnoreCase(permissionGroups.getName()));
-            allCachedPermissionGroups.add(permissionGroups);
-        });*/
+                    allCachedPermissionGroups.removeIf(g -> g.getName().equalsIgnoreCase(permissionGroups.getName()));
+                    allCachedPermissionGroups.add(permissionGroups);
+                    break;
+                case CREATE:
+                    allCachedPermissionGroups.add(permissionGroups);
+                    break;
+                case REMOVE:
+                    allCachedPermissionGroups.removeIf(g -> g.getName().equalsIgnoreCase(permissionGroups.getName()));
+                    break;
+            }
+        });
         CloudDriver.getInstance().getExecutor().registerPacketHandler(new RemotePlayerUpdatePacketHandler(this));
     }
 
     @Nullable
     @Override
-    public PermissionGroup getPermissionGroupByNameOrNull(@NotNull String name) {
+    public PermissionGroup getPermissionGroup(@NotNull String name) {
         return this.allCachedPermissionGroups.stream().filter(g -> g.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
     }
 
     @NotNull
     @Override
-    public Task<PermissionGroup> getPermissionGroup(@NotNull String name) {
-        return Task.callAsync(() -> getPermissionGroupByNameOrNull(name));
+    public Task<PermissionGroup> getPermissionGroupAsync(@NotNull String name) {
+        return Task.callAsync(() -> getPermissionGroup(name));
     }
 
     @Override
     public void updatePermissionGroup(PermissionGroup group) {
-        PermissionGroup oldGroup = this.getPermissionGroupByNameOrNull(group.getName());
+        PermissionGroup oldGroup = this.getPermissionGroup(group.getName());
         if (oldGroup == null) {
             this.allCachedPermissionGroups.add(group);
         } else {
@@ -92,68 +104,60 @@ public class RemotePermissionManager extends DefaultPermissionManager{
 
     @Nullable
     @Override
-    public PermissionPlayer getPlayerByUniqueIdOrNull(@NotNull UUID uniqueId) {
-        return this.allCachedPermissionPlayers.stream().filter(p -> p.getUniqueId().equals(uniqueId)).findFirst().orElseGet(() -> {
-            return new PermsPlayerRequestPacket(null, uniqueId).awaitResponse().syncUninterruptedly().get().buffer().readObject(DefaultPermissionPlayer.class);
-        });
+    public PermissionPlayer getPermissionPlayer(@NotNull UUID uniqueId) {
+        return this.allCachedPermissionPlayers
+                .stream()
+                .filter(p -> p.getUniqueId().equals(uniqueId))
+                .findFirst()
+                .orElseGet(() -> {
+                    BufferedResponse response = new PermsPlayerRequestPacket(null, uniqueId)
+                            .sendQuery()
+                            .execute()
+                            .syncUninterruptedly()
+                            .get();
+                    DefaultPermissionPlayer permissionPlayer = response
+                            .buffer().readObject(DefaultPermissionPlayer.class);
+                    addToCache(permissionPlayer);
+                    return permissionPlayer;
+                });
     }
 
     @Override
     public boolean hasEntry(UUID uniqueId) {
-        return false; // TODO: 16.04.2025 query packet and response
+        QueryResponse response = Query.get().createRequest(CloudDriver.Constants.QUERY_CHANNEL_PLAYER)
+                .setKey("perms_has_entry")
+                .setBuffer(buffer -> buffer.writeUniqueId(uniqueId))
+                .syncUninterruptedlyAndExecute();
+        return response.getState().toBoolean();
     }
 
     @Nullable
     @Override
-    public PermissionPlayer getPlayerByNameOrNull(@NotNull String name) {
-        return this.allCachedPermissionPlayers.stream().filter(p -> p.getName().equalsIgnoreCase(name)).findFirst().orElseGet(() -> {
-            return new PermsPlayerRequestPacket(name, null).awaitResponse().syncUninterruptedly().get().buffer().readObject(DefaultPermissionPlayer.class);
-        });
+    public PermissionPlayer getPermissionPlayer(@NotNull String name) {
+        return this.allCachedPermissionPlayers
+                .stream()
+                .filter(p -> p.getName().equalsIgnoreCase(name))
+                .findFirst()
+                .orElseGet(() -> {
+                    BufferedResponse response = new PermsPlayerRequestPacket(name, null)
+                            .sendQuery()
+                            .execute()
+                            .syncUninterruptedly()
+                            .get();
+                    DefaultPermissionPlayer permissionPlayer = response
+                            .buffer().readObject(DefaultPermissionPlayer.class);
+                    addToCache(permissionPlayer);
+                    return permissionPlayer;
+                });
     }
 
-    @Override
-    public Task<PermissionPlayer> getPlayerAsyncByUniqueId(UUID uniqueId) {
-        Task<PermissionPlayer> task = Task.empty();
-
-        PermissionPlayer player = this.allCachedPermissionPlayers.stream().filter(p -> p.getUniqueId().equals(uniqueId)).findFirst().orElse(null);
-        if (player == null) {
-            PermsPlayerRequestPacket packet = new PermsPlayerRequestPacket(null, uniqueId);
-            packet.awaitResponse().onTaskSucess(bufferedResponse -> {
-                DefaultPermissionPlayer defaultPermissionPlayer = bufferedResponse.buffer().readObject(DefaultPermissionPlayer.class);
-                task.setResult(defaultPermissionPlayer);
-                addToCache(defaultPermissionPlayer);
-            });
-        } else {
-            task.setResult(player);
-        }
-        return task;
-    }
-
-    @Override
-    public Task<PermissionPlayer> getPlayerAsyncByName(String name) {
-        Task<PermissionPlayer> task = Task.empty();
-
-        PermissionPlayer player = this.allCachedPermissionPlayers.stream().filter(p -> p.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
-        if (player == null) {
-            PermsPlayerRequestPacket packet = new PermsPlayerRequestPacket(name, null);
-            packet.awaitResponse().onTaskSucess(bufferedResponse -> {
-                DefaultPermissionPlayer defaultPermissionPlayer = bufferedResponse.buffer().readObject(DefaultPermissionPlayer.class);
-                task.setResult(defaultPermissionPlayer);
-                addToCache(defaultPermissionPlayer);
-            });
-        } else {
-            task.setResult(player);
-        }
-        return task;
-    }
 
     @Override
     public void updatePermissionPlayer(PermissionPlayer player) {
         addToCache(player);
-        PermsUpdatePlayerPacket packet = new PermsUpdatePlayerPacket(player);
-        packet.publish();
-        //AbstractPacket packet = new PermsPlayerUpdatePacket(player);
-        //CloudDriver.getInstance().getExecutor().sendPacket(packet);
+
+        PermsPlayerUpdatePacket packet = new PermsPlayerUpdatePacket(player);
+        CloudDriver.getInstance().getExecutor().sendPacket(packet);
     }
 
     @Override
@@ -163,14 +167,14 @@ public class RemotePermissionManager extends DefaultPermissionManager{
 
         this.allCachedPermissionPlayers.add(player);
 
+        // TODO: 08.05.2025 check for more efficent method
         CloudDriver.getInstance().getPlayerManager().getOfflinePlayer(player.getUniqueId())
                 .onTaskSucess(offlinePlayer -> {
-                    if (offlinePlayer.getProperties().has("module_perms_highest_group")) {
+                    if (offlinePlayer.hasProperty("module_perms_highest_group")) {
                         return;
                     }
-                    offlinePlayer.editProperties(properties -> {
-                        properties.set("module_perms_highest_group", player.getHighestGroup().getName());
-                    });
+                    offlinePlayer.setProperty("module_perms_highest_group", player.getHighestGroup().getName());
+                    offlinePlayer.save();
                 });
     }
 

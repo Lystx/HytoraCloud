@@ -29,6 +29,29 @@ public class Util {
     private static ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(4, new NamedThreadFactory("Scheduler"));
 
 
+
+    public static boolean isAnyNull(Object... objects) {
+        for (Object object : objects) {
+            if (object == null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public static boolean isAllNull(Object... objects) {
+        int nullCount = 0;
+        for (Object object : objects) {
+            if (object == null) {
+                nullCount++;
+            }
+        }
+        return (nullCount >= objects.length);
+    }
+
+
+
     /**
      * Public Method that tries to execute a given {@link Runnable} if a provided {@link Supplier} returns {@code true} <br>
      * or until the provided timeout in milliseconds has expired from the start of the operation

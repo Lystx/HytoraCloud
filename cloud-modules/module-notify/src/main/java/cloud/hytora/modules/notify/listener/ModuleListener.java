@@ -1,13 +1,13 @@
 package cloud.hytora.modules.notify.listener;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.event.EventListener;
-import cloud.hytora.driver.event.defaults.server.ServiceReadyEvent;
-import cloud.hytora.driver.event.defaults.server.ServiceRegisterEvent;
-import cloud.hytora.driver.event.defaults.server.ServiceUnregisterEvent;
-import cloud.hytora.driver.player.ICloudPlayer;
-import cloud.hytora.driver.player.executor.PlayerExecutor;
-import cloud.hytora.driver.services.ICloudService;
+import cloud.hytora.driver.event.listener.EventListener;
+import cloud.hytora.driver.event.defaults.server.CloudEventServiceReady;
+import cloud.hytora.driver.event.defaults.server.CloudEventServiceRegistered;
+import cloud.hytora.driver.event.defaults.server.CloudEventServiceUnregistered;
+import cloud.hytora.driver.entity.player.CloudPlayer;
+
+import cloud.hytora.driver.entity.services.CloudService;
 import cloud.hytora.modules.notify.NotifyModule;
 import cloud.hytora.modules.notify.NotifyState;
 import cloud.hytora.modules.notify.config.NotifyConfiguration;
@@ -15,16 +15,16 @@ import cloud.hytora.modules.notify.config.NotifyConfiguration;
 public class ModuleListener {
 
     @EventListener
-    public void handleAdd(ServiceRegisterEvent event) {
-        ICloudService cloudServer = event.getCloudServer();
+    public void handleAdd(CloudEventServiceRegistered event) {
+        CloudService cloudServer = event.getCloudServer();
 
         this.notifyNetwork(NotifyState.START, cloudServer);
     }
 
 
     @EventListener
-    public void handleRemove(ServiceUnregisterEvent event) {
-        ICloudService cloudServer = event.getCloudServer();
+    public void handleRemove(CloudEventServiceUnregistered event) {
+        CloudService cloudServer = event.getCloudServer();
         if (cloudServer == null) {
             return;
         }
@@ -32,8 +32,8 @@ public class ModuleListener {
     }
 
     @EventListener
-    public void handleReady(ServiceReadyEvent event) {
-        ICloudService cloudServer = event.getCloudServer();
+    public void handleReady(CloudEventServiceReady event) {
+        CloudService cloudServer = event.getCloudServer();
         if (cloudServer == null) {
             return;
         }
@@ -47,7 +47,7 @@ public class ModuleListener {
      * @param state       the state of message (0 = start, 1 = stop, 2 = ready)
      * @param cloudService the server to get info about
      */
-    public void notifyNetwork(NotifyState state, ICloudService cloudService) {
+    public void notifyNetwork(NotifyState state, CloudService cloudService) {
         NotifyConfiguration config = NotifyModule.getInstance().getConfiguration();
 
         //if module is disabled just ignore execution
@@ -79,27 +79,16 @@ public class ModuleListener {
 
 
         //iterating through all players
-        for (ICloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
+        for (CloudPlayer player : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
             if (!config.getEnabledNotifications().contains(player.getUniqueId())) {
                 continue; //player has disabled messages or is not empowered to receive some
             }
             if (!player.hasPermission("cloud.modules.notify.command.use")) {
                 continue;
             }
-            PlayerExecutor executor = PlayerExecutor.forPlayer(player);
-
             //sending message to player
-            executor.sendMessage(message.replace("%prefix%", config.getMessages().getPrefix()));
+            player.asProxyPlayer().sendMessage(message.replace("%prefix%", CloudDriver.getInstance().getConfigManager().getConfig().getMessages().getPrefix()));
         }
 
-        if (config.isDisplayInConsole()) {
-            if (config.isDisplayPrefixInConsole()) {
-                message = message.replace("%prefix%", config.getMessages().getPrefix());
-            } else {
-                message = message.replace("%prefix%", "");
-            }
-            message = message.trim();
-            CloudDriver.getInstance().getLogger().info(message);
-        }
     }
 }

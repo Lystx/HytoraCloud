@@ -1,7 +1,7 @@
 package cloud.hytora.modules.ingame.spigot;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.permission.PermissionManager;
+import cloud.hytora.driver.module.permission.PermissionManager;
 import cloud.hytora.modules.ingame.RemotePermissionManager;
 import cloud.hytora.modules.ingame.spigot.listener.BukkitCloudPermsListener;
 import org.bukkit.Bukkit;

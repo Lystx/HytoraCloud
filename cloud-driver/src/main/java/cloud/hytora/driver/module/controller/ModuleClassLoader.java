@@ -1,8 +1,7 @@
 package cloud.hytora.driver.module.controller;
 
 import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
-import cloud.hytora.driver.module.IModule;
+import cloud.hytora.driver.module.ModuleInfo;
 import lombok.SneakyThrows;
 
 import javax.annotation.Nonnull;
@@ -28,7 +27,7 @@ public class ModuleClassLoader extends URLClassLoader {
 
 	private final File jarFile;
 
-	private IModule module;
+	private ModuleInfo module;
 
 	public ModuleClassLoader(@Nonnull URL[] jarFileUrl, @Nonnull ClassLoader parent, File jarFile) {
 		super(jarFileUrl);
@@ -98,7 +97,7 @@ public class ModuleClassLoader extends URLClassLoader {
 		if (jsonInput == null) {
 			return null;
 		}
-		return DocumentFactory.newJsonDocument(jsonInput);
+		return Document.gson(jsonInput);
 	}
 
 	@SneakyThrows
@@ -128,12 +127,12 @@ public class ModuleClassLoader extends URLClassLoader {
 		return null;
 	}
 
-	public void setModule(@Nonnull IModule module) {
+	public void setModule(@Nonnull ModuleInfo module) {
 		this.module = module;
 	}
 
 	@Nonnull
-	public IModule getModule() {
+	public ModuleInfo getModule() {
 		return module;
 	}
 }

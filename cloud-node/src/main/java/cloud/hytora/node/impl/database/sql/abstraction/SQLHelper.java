@@ -1,6 +1,5 @@
 package cloud.hytora.node.impl.database.sql.abstraction;
 
-import cloud.hytora.common.misc.GsonUtils;
 import cloud.hytora.document.JsonEntity;
 import cloud.hytora.document.gson.GsonDocument;
 import cloud.hytora.document.gson.GsonHelper;
@@ -30,8 +29,8 @@ public final class SQLHelper {
 		if (object instanceof Enum<?>)      return ((Enum<?>)object).name();
 		if (object instanceof JsonEntity)         return ((JsonEntity)object).asRawJsonString();
 		if (object instanceof Map)          return new GsonDocument((Map<String, Object>) object).asRawJsonString();
-		if (object instanceof Iterable)     return GsonUtils.convertIterableToJsonArray(GsonHelper.DEFAULT_GSON, (Iterable<?>) object).toString();
-		if (object.getClass().isArray())    return GsonUtils.convertArrayToJsonArray(GsonHelper.DEFAULT_GSON, object).toString();
+		if (object instanceof Iterable)     return GsonHelper.convertIterableToJsonArray(GsonHelper.DEFAULT_GSON, (Iterable<?>) object).toString();
+		if (object.getClass().isArray())    return GsonHelper.convertArrayToJsonArray(GsonHelper.DEFAULT_GSON, object).toString();
 		return object.toString();
 	}
 

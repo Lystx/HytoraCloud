@@ -2,12 +2,12 @@ package cloud.hytora.node.impl.setup;
 
 import cloud.hytora.common.function.BiSupplier;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.command.Console;
-import cloud.hytora.driver.services.utils.version.ServiceVersion;
-import cloud.hytora.driver.setup.Setup;
-import cloud.hytora.driver.setup.annotations.*;
-import cloud.hytora.driver.setup.suggesters.BooleanSuggester;
-import cloud.hytora.driver.setup.suggesters.EnumSuggester;
+import cloud.hytora.driver.common.setup.annotations.*;
+import cloud.hytora.driver.command.console.Console;
+import cloud.hytora.driver.entity.services.utils.version.ServiceVersion;
+import cloud.hytora.driver.common.setup.Setup;
+import cloud.hytora.driver.common.setup.suggesters.BooleanSuggester;
+import cloud.hytora.driver.common.setup.suggesters.EnumSuggester;
 import lombok.Getter;
 
 @Getter
@@ -45,36 +45,40 @@ public class TaskSetup extends Setup<TaskSetup> {
     @QuestionTip("Minimum = 1")
     private int minServers;
 
-    @Question(id = 9, question = "On which Node(s) should this task be able to run?")
+    @Question(id = 9, question = "How many percent of players have to be online for a new server to start?")
+    @QuestionTip("If maxPlayers = 100 and percent is 75% => at 75 players a new server starts")
+    private int percentForNewServer;
+
+    @Question(id = 10, question = "On which Node(s) should this task be able to run?")
     @QuestionTip("Separate multiple Nodes with a \",\"")
     private String node;
 
-    @Question(id = 10, question = "Which TemplateStorage should Services of this task use?")
+    @Question(id = 11, question = "Which TemplateStorage should Services of this task use?")
     @QuestionTip("Default is 'local'")
     private String templateStorage;
 
-    @Question(id = 11, question = "Should this group be in maintenance?")
+    @Question(id = 12, question = "Should this group be in maintenance?")
     @AnswerCompleter(BooleanSuggester.class)
     private boolean maintenance;
 
-    @Question(id = 12, question = "What JavaVersion should this task use?")
+    @Question(id = 13, question = "What JavaVersion should this task use?")
     @QuestionTip("Use '-1' for default java on virtual machine")
     @SuggestedAnswer("-1")
     private int javaVersion;
 
-    @Question(id = 13, question = "What is the startOrder of this task?")
+    @Question(id = 14, question = "What is the startOrder of this task?")
     @QuestionTip("The lower the startOrder the higher it will be ranked in selection of service starting")
     private int startOrder;
 
-    @Question(id = 14, question = "Is this group a Fallback?")
+    @Question(id = 15, question = "Is this group a Fallback?")
     @ExitAfterInput("false")
     @AnswerCompleter(BooleanSuggester.class)
     private boolean fallback;
 
-    @Question(id = 15, question = "Whats the priority of this fallback?")
+    @Question(id = 16, question = "Whats the priority of this fallback?")
     private int fallbackPriority;
 
-    @Question(id = 16, question = "Whats the permission players need to access this fallback?")
+    @Question(id = 17, question = "Whats the permission players need to access this fallback?")
     @QuestionTip("Use 'none' for no permission")
     @SuggestedAnswer("none")
     private String fallbackPermission;

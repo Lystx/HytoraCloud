@@ -1,9 +1,9 @@
 package cloud.hytora.bridge.proxy.bungee.listener;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.component.style.ComponentColor;
-import cloud.hytora.driver.services.ICloudService;
-import cloud.hytora.driver.services.ServicePingProperties;
+import cloud.hytora.driver.common.component.style.ComponentColor;
+import cloud.hytora.driver.entity.services.CloudService;
+import cloud.hytora.driver.entity.services.ServicePing;
 import cloud.hytora.remote.Remote;
 import net.md_5.bungee.api.Favicon;
 import net.md_5.bungee.api.ServerPing;
@@ -22,13 +22,13 @@ public class ProxyPingListener implements Listener {
     public void handle(ProxyPingEvent event) {
         ServerPing response = event.getResponse();
 
-        ICloudService ICloudServer = Remote.getInstance().thisService();
-        ServicePingProperties pingProperties = ICloudServer.getPingProperties();
+        CloudService cloudService = Remote.getInstance().thisService();
+        ServicePing pingProperties = cloudService.getPingProperties();
 
         int maxPlayers, onlinePlayers;
         if (pingProperties.isUsePlayerPropertiesOfService()) {
-            maxPlayers = ICloudServer.getMaxPlayers();
-            onlinePlayers = pingProperties.isCombineAllProxiesIfProxyService() ? CloudDriver.getInstance().getPlayerManager().getCloudPlayerOnlineAmount() : ICloudServer.getOnlinePlayerCount();
+            maxPlayers = cloudService.getMaxPlayers();
+            onlinePlayers = pingProperties.isCombineAllProxiesIfProxyService() ? CloudDriver.getInstance().getPlayerManager().getCloudPlayerOnlineAmount() : cloudService.getOnlinePlayerCount();
         } else {
             maxPlayers = pingProperties.getCustomMaxPlayers();
             onlinePlayers = pingProperties.getCustomOnlinePlayers();

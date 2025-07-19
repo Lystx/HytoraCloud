@@ -10,6 +10,7 @@ import java.util.Arrays;
 @AllArgsConstructor
 public enum LogLevel {
 
+    ALL(-999999, false),
     NULL(-1, false),
     TRACE(0, ConsoleColor.YELLOW),
     DEBUG(2, ConsoleColor.YELLOW),

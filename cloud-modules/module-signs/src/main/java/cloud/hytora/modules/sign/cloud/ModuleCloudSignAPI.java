@@ -1,9 +1,9 @@
 package cloud.hytora.modules.sign.cloud;
 
 import cloud.hytora.common.logging.Logger;
-import cloud.hytora.document.DocumentFactory;
-import cloud.hytora.driver.message.ChannelMessage;
-import cloud.hytora.driver.module.IModule;
+import cloud.hytora.document.Document;
+import cloud.hytora.driver.common.message.base.ChannelMessage;
+import cloud.hytora.driver.module.ModuleInfo;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.modules.sign.api.CloudSignAPI;
 import cloud.hytora.modules.sign.api.ICloudSignManager;
@@ -18,12 +18,12 @@ public class ModuleCloudSignAPI extends CloudSignAPI {
 
     private final ICloudSignManager signManager;
 
-    public ModuleCloudSignAPI(IModule module) {
+    public ModuleCloudSignAPI(ModuleInfo module) {
         super();
 
         this.signManager = new ModuleCloudSignManager(module.getController().getDataFolder());
         this.signManager.loadCloudSignsAsync().onTaskSucess(cloudSigns -> {
-            Logger.constantInstance().info("Signs-Module loaded {} Cloudsigns!", cloudSigns.size());
+            Logger.constantInstance().info("The %1LobbySignSelectorModule §7loaded %2{} CloudSigns§8!", cloudSigns.size());
         });
     }
 
@@ -32,7 +32,7 @@ public class ModuleCloudSignAPI extends CloudSignAPI {
         this.performProtocolAction(
                 SignProtocolType.SYNC_CONFIG,
                 buf -> buf.writeDocument(
-                        DocumentFactory.newJsonDocument(
+                        Document.gson(
                                 this.getSignConfiguration()
                         )
                 )

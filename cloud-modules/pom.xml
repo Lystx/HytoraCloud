@@ -20,6 +20,7 @@
         <module>module-perms</module>
         <module>module-smartProxy</module>
         <module>module-hubcommand</module>
+        <module>module-dashboard</module>
     </modules>
 
     <properties>

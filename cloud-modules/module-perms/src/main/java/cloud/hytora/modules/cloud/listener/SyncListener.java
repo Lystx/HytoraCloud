@@ -1,32 +1,37 @@
 package cloud.hytora.modules.cloud.listener;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.event.EventListener;
-import cloud.hytora.driver.event.defaults.player.CloudPlayerChangeServerEvent;
-import cloud.hytora.driver.event.defaults.player.CloudPlayerLoginEvent;
-import cloud.hytora.driver.event.defaults.server.ServiceClusterConnectEvent;
-import cloud.hytora.driver.permission.PermissionGroup;
-import cloud.hytora.driver.permission.PermissionManager;
-import cloud.hytora.driver.permission.PermissionPlayer;
-import cloud.hytora.driver.player.ICloudPlayer;
-import cloud.hytora.driver.services.ICloudService;
+import cloud.hytora.driver.entity.player.connection.PlayerConnection;
+import cloud.hytora.driver.event.defaults.player.CloudEventPlayerLogin;
+import cloud.hytora.driver.event.defaults.server.CloudEventServiceReady;
+import cloud.hytora.driver.event.listener.EventListener;
+import cloud.hytora.driver.event.defaults.player.CloudEventPlayerChangeServer;
+import cloud.hytora.driver.event.defaults.player.CloudEventPlayerLoginSuccess;
+import cloud.hytora.driver.event.defaults.server.CloudEventServiceConnect;
+import cloud.hytora.driver.module.permission.PermissionGroup;
+import cloud.hytora.driver.module.permission.PermissionManager;
+import cloud.hytora.driver.module.permission.PermissionPlayer;
+import cloud.hytora.driver.entity.player.CloudPlayer;
+import cloud.hytora.driver.entity.services.CloudService;
 import cloud.hytora.modules.cloud.ModulePermissionManager;
 import cloud.hytora.modules.global.impl.DefaultPermissionPlayer;
 import cloud.hytora.modules.global.packets.PermsCacheUpdatePacket;
-import cloud.hytora.modules.global.packets.PermsUpdatePlayerPacket;
+import cloud.hytora.modules.global.packets.PermsPlayerUpdatePacket;
+
+import java.util.UUID;
 
 public class SyncListener {
 
     @EventListener
-    public void handle(CloudPlayerLoginEvent event) {
+    public void handle(CloudEventPlayerLoginSuccess event) {
 
-        ICloudPlayer cloudPlayer = event.getCloudPlayer();
+        CloudPlayer cloudPlayer = event.getCloudPlayer();
         PermissionManager permissionManager = CloudDriver.getInstance().getProvider(PermissionManager.class);
-        PermissionPlayer permissionPlayer = permissionManager.getPlayerByUniqueIdOrNull(cloudPlayer.getUniqueId());
+        PermissionPlayer permissionPlayer = permissionManager.getPermissionPlayer(cloudPlayer.getUniqueId());
 
         if (permissionPlayer == null) {
             if (permissionManager.hasEntry(cloudPlayer.getUniqueId())) {
-                cloudPlayer.executor().disconnect("§cPermsModule: LoginEvent error -> PermsPlayer not found before login!");
+                cloudPlayer.asProxyPlayer().disconnect("§cPermsModule: LoginEvent error -> PermsPlayer not found before login!");
             } else {
                 permissionPlayer = new DefaultPermissionPlayer(cloudPlayer.getName(), cloudPlayer.getUniqueId());
 
@@ -57,12 +62,12 @@ public class SyncListener {
     }
 
     @EventListener
-    public void handle(ServiceClusterConnectEvent event) {
-        ICloudService cloudServer = event.getCloudService();
+    public void handle(CloudEventServiceReady event) {
+        CloudService cloudServer = event.getCloudServer();
 
         //updating cache of service
 
-        cloudServer.sendDocument(
+        cloudServer.sendPacket(
                 new PermsCacheUpdatePacket(
                         CloudDriver.getInstance()
                                 
@@ -73,15 +78,25 @@ public class SyncListener {
 
     }
 
+    @EventListener
+    public void handle(CloudEventPlayerLogin event) {
+        PlayerConnection connection = event.getConnection();
+        UUID playerId = connection.getConnectionId();
+
+        CloudService firstJoinServer = event.getFirstJoinServer();
+
+        firstJoinServer.sendPacket(new PermsPlayerUpdatePacket(CloudDriver.getInstance().getProvider(PermissionManager.class).getPermissionPlayer(playerId)));
+    }
+
 
     @EventListener
-    public void handle(CloudPlayerChangeServerEvent event) {
-        ICloudService server = event.getServer();
-        ICloudPlayer player = event.getPlayer();
+    public void handle(CloudEventPlayerChangeServer event) {
+        CloudService server = event.getServer();
+        CloudPlayer player = event.getPlayer();
 
         //sending player update to changed server and proxy
-        server.sendDocument(new PermsUpdatePlayerPacket(player.asPermissionPlayer()));
-        player.getProxyServer().sendDocument(new PermsUpdatePlayerPacket(player.asPermissionPlayer()));
+        server.sendPacket(new PermsPlayerUpdatePacket(player.asPermissionPlayer()));
+        player.getProxyServer().sendPacket(new PermsPlayerUpdatePacket(player.asPermissionPlayer()));
 
     }
 }

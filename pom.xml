@@ -41,8 +41,6 @@
         <module>cloud-commons</module>
         <module>cloud-modules</module>
         <module>cloud-launcher</module>
-        <module>cloud-script</module>
-        <module>cloud-interface</module>
     </modules>
 
     <dependencies>

@@ -1,6 +1,7 @@
 package cloud.hytora.driver.command.annotation.data;
 
 import cloud.hytora.driver.command.CommandScope;
+import cloud.hytora.driver.command.annotation.Command;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -23,6 +24,7 @@ public class RegisteredCommand {
 	private final List<RegisteredCommandArgument> arguments;
 	private final Method method;
 	private final Object instance;
+	private final boolean hideAutoHelp;
 
 	public String getPath() {
 		return path + ((syntax == null || syntax.trim().isEmpty()) ? "" : " " + syntax);

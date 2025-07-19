@@ -2,7 +2,6 @@ package cloud.hytora.document.bson;
 
 import cloud.hytora.document.Bundle;
 import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.IEntry;
 import org.bson.BsonNull;
 import org.bson.BsonValue;
@@ -167,12 +166,12 @@ public class BsonEntry implements IEntry {
 		if (classOfT.isInstance(value))
 			return classOfT.cast(value);
 
-		return DocumentFactory.newJsonEntry(value).toInstance(classOfT);
+		return IEntry.newJsonEntry(value).toInstance(classOfT);
 	}
 
 	@Override
 	public <T> T toInstance(@NotNull Type typeOf) {
-		return DocumentFactory.newJsonEntry(value).toInstance(typeOf);
+		return IEntry.newJsonEntry(value).toInstance(typeOf);
 	}
 
 	@Nonnull

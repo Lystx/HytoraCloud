@@ -3,20 +3,18 @@ package cloud.hytora.modules.global.impl;
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
-import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.permission.Permission;
-import cloud.hytora.driver.permission.PermissionGroup;
-import cloud.hytora.driver.permission.PermissionManager;
-import cloud.hytora.driver.services.task.IServiceTask;
+import cloud.hytora.driver.networking.protocol.types.BufferState;
+import cloud.hytora.driver.module.permission.Permission;
+import cloud.hytora.driver.module.permission.PermissionGroup;
+import cloud.hytora.driver.module.permission.PermissionManager;
+import cloud.hytora.driver.entity.services.task.ServiceTask;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -33,11 +31,6 @@ public class DefaultPermissionGroup implements PermissionGroup {
      * The chat color of this group
      */
     private String chatColor;
-
-    /**
-     * THe prefix infront of a name
-     */
-    private String namePrefix;
 
     /**
      * The general prefix
@@ -79,17 +72,32 @@ public class DefaultPermissionGroup implements PermissionGroup {
         this.taskPermissions = new ConcurrentHashMap<>();
     }
 
-    public DefaultPermissionGroup(String name, String chatColor, String namePrefix, String prefix, String suffix, int sortId, boolean defaultGroup, Collection<String> inheritedGroups, Map<String, Long> permissions) {
+    public DefaultPermissionGroup(String name, String chatColor, String prefix, String suffix, int sortId, boolean defaultGroup, Collection<String> inheritedGroups, Map<String, Long> permissions) {
         this();
         this.name = name;
         this.chatColor = chatColor;
-        this.namePrefix = namePrefix;
         this.prefix = prefix;
         this.suffix = suffix;
         this.sortId = sortId;
         this.defaultGroup = defaultGroup;
         this.inheritedGroups = inheritedGroups;
         this.permissions = permissions;
+    }
+
+    public @NotNull String getChatColor() {
+        return chatColor.replace("&", "§");
+    }
+
+    public @NotNull String getPrefix() {
+        return prefix.replace("&", "§");
+    }
+
+    public @NotNull String getName() {
+        return name.replace("&", "§");
+    }
+
+    public @NotNull String getSuffix() {
+        return suffix.replace("&", "§");
     }
 
     @Override
@@ -99,7 +107,6 @@ public class DefaultPermissionGroup implements PermissionGroup {
             case WRITE:
                 buf.writeString(name);
                 buf.writeString(chatColor);
-                buf.writeString(namePrefix);
                 buf.writeString(prefix);
                 buf.writeString(suffix);
                 buf.writeInt(sortId);
@@ -113,7 +120,6 @@ public class DefaultPermissionGroup implements PermissionGroup {
             case READ:
                 name = buf.readString();
                 chatColor = buf.readString();
-                namePrefix = buf.readString();
                 prefix = buf.readString();
                 suffix = buf.readString();
                 sortId = buf.readInt();
@@ -130,15 +136,15 @@ public class DefaultPermissionGroup implements PermissionGroup {
     }
 
     @Override
-    public void setTaskPermissions(Map<IServiceTask, Collection<String>> taskPermissions) {
-        for (Map.Entry<IServiceTask, Collection<String>> e : taskPermissions.entrySet()) {
+    public void setTaskPermissions(Map<ServiceTask, Collection<String>> taskPermissions) {
+        for (Map.Entry<ServiceTask, Collection<String>> e : taskPermissions.entrySet()) {
             this.taskPermissions.put(e.getKey().getName(), e.getValue());
         }
     }
 
     @Override
-    public Map<IServiceTask, Collection<String>> getTaskPermissions() {
-        Map<IServiceTask, Collection<String>> taskPermissions = new ConcurrentHashMap<>();
+    public Map<ServiceTask, Collection<String>> getTaskPermissions() {
+        Map<ServiceTask, Collection<String>> taskPermissions = new ConcurrentHashMap<>();
         for (Map.Entry<String, Collection<String>> e : this.taskPermissions.entrySet()) {
             taskPermissions.put(CloudDriver.getInstance().getServiceTaskManager().getCachedServiceTask(e.getKey()), e.getValue());
         }
@@ -161,7 +167,7 @@ public class DefaultPermissionGroup implements PermissionGroup {
     }
 
     @Override
-    public void addTaskPermission(IServiceTask task, String permission) {
+    public void addTaskPermission(ServiceTask task, String permission) {
         Collection<String> taskPermissions = this.getTaskPermissions(task.getName());
         if (!taskPermissions.contains(permission)) {
             taskPermissions.add(permission);
@@ -170,7 +176,7 @@ public class DefaultPermissionGroup implements PermissionGroup {
     }
 
     @Override
-    public void removeTaskPermission(IServiceTask task, String permission) {
+    public void removeTaskPermission(ServiceTask task, String permission) {
 
         Collection<String> taskPermissions = this.getTaskPermissions(task.getName());
         taskPermissions.remove(permission);
@@ -255,7 +261,7 @@ public class DefaultPermissionGroup implements PermissionGroup {
             return true;
         } else {
             for (String groupName : getInheritedGroups()) {
-                PermissionGroup group = CloudDriver.getInstance().getProvider(PermissionManager.class).getPermissionGroupByNameOrNull(groupName);
+                PermissionGroup group = CloudDriver.getInstance().getProvider(PermissionManager.class).getPermissionGroup(groupName);
                 if (group == null) {
                     continue;
                 }
@@ -283,6 +289,16 @@ public class DefaultPermissionGroup implements PermissionGroup {
     @Override
     public void removeInheritedGroup(@NotNull String group) {
         this.inheritedGroups.remove(group);
+    }
+
+
+    @Override
+    @Nonnull
+    public Collection<PermissionGroup> findInheritedGroups() {
+        return Collections.unmodifiableCollection(
+                getInheritedGroups().stream()
+                        .map(CloudDriver.getInstance().getProvider(PermissionManager.class)::getPermissionGroup).collect(Collectors.toList())
+        );
     }
 
     @Override

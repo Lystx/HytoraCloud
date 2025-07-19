@@ -4,6 +4,7 @@ import cloud.hytora.common.collection.WrappedException;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.document.empty.EmptyBundle;
 import cloud.hytora.document.gson.GsonBundle;
+import cloud.hytora.document.json.JsonBundle;
 import cloud.hytora.document.wrapped.StorableBundle;
 import cloud.hytora.document.wrapped.WrappedBundle;
 
@@ -36,20 +37,56 @@ public interface Bundle extends JsonEntity, Iterable<IEntry> {
 
 	@Nonnull
 	@CheckReturnValue
-	public static Bundle newJsonBundle() {
+	public static Bundle newGsonBundle() {
 		return new GsonBundle();
 	}
 
 	@Nonnull
 	@CheckReturnValue
-	public static Bundle newJsonBundle(int initialSize) {
+	public static Bundle newGsonBundle(int initialSize) {
 		return new GsonBundle(initialSize);
 	}
 
 	@Nonnull
 	@CheckReturnValue
-	public static Bundle newJsonBundle(@Nonnull String json) {
+	public static Bundle newGsonBundle(@Nonnull String json) {
 		return new GsonBundle(json);
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newGsonBundle(@Nonnull Object... values) {
+		return newGsonBundle().addAll(values);
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newGsonBundle(@Nonnull Iterable<?> values) {
+		return newGsonBundle().addAll(values);
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newGsonBundle(@Nonnull Reader reader) {
+		return new GsonBundle(reader);
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newJsonBundle() {
+		return new JsonBundle();
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newJsonBundle(int initialSize) {
+		return new JsonBundle(initialSize);
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newJsonBundle(@Nonnull String json) {
+		return new JsonBundle(json);
 	}
 
 	@Nonnull
@@ -67,7 +104,7 @@ public interface Bundle extends JsonEntity, Iterable<IEntry> {
 	@Nonnull
 	@CheckReturnValue
 	public static Bundle newJsonBundle(@Nonnull Reader reader) {
-		return new GsonBundle(reader);
+		return new JsonBundle(reader);
 	}
 
 	@Nonnull
@@ -78,7 +115,7 @@ public interface Bundle extends JsonEntity, Iterable<IEntry> {
 
 	@Nonnull
 	@CheckReturnValue
-	public static Bundle newJsonBundle(@Nonnull Path file) throws IOException {
+	public static Bundle newGsonBundle(@Nonnull Path file) throws IOException {
 		if (Files.exists(file))
 			return new GsonBundle(FileUtils.newBufferedReader(file));
 		return new GsonBundle();
@@ -86,10 +123,46 @@ public interface Bundle extends JsonEntity, Iterable<IEntry> {
 
 	@Nonnull
 	@CheckReturnValue
-	public static Bundle newJsonBundle(@Nonnull File file) throws IOException {
+	public static Bundle newGsonBundle(@Nonnull File file) throws IOException {
 		if (file.exists())
 			return new GsonBundle(FileUtils.newBufferedReader(file));
 		return new GsonBundle();
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newGsonBundleUnchecked(@Nonnull Path file) {
+		try {
+			return newGsonBundle(file);
+		} catch (Exception ex) {
+			throw new WrappedException(ex);
+		}
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newGsonBundleUnchecked(@Nonnull File file) {
+		try {
+			return newGsonBundle(file);
+		} catch (Exception ex) {
+			throw new WrappedException(ex);
+		}
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newJsonBundle(@Nonnull Path file) throws IOException {
+		if (Files.exists(file))
+			return new JsonBundle(FileUtils.newBufferedReader(file));
+		return new JsonBundle();
+	}
+
+	@Nonnull
+	@CheckReturnValue
+	public static Bundle newJsonBundle(@Nonnull File file) throws IOException {
+		if (file.exists())
+			return new JsonBundle(FileUtils.newBufferedReader(file));
+		return new JsonBundle();
 	}
 
 	@Nonnull
@@ -111,7 +184,6 @@ public interface Bundle extends JsonEntity, Iterable<IEntry> {
 			throw new WrappedException(ex);
 		}
 	}
-
 	@Nonnull
 	@CheckReturnValue
 	public static StorableBundle newStorableBundle(@Nonnull Bundle bundle, @Nonnull Path file) {
@@ -173,7 +245,7 @@ public interface Bundle extends JsonEntity, Iterable<IEntry> {
 	@Nonnull
 	@CheckReturnValue
 	public static StorableBundle newStorableJsonBundle(@Nonnull Path file) throws IOException {
-		return newStorableBundle(newJsonBundle(file), file);
+		return newStorableBundle(newGsonBundle(file), file);
 	}
 
 	@Nonnull
@@ -404,11 +476,6 @@ public interface Bundle extends JsonEntity, Iterable<IEntry> {
 
 	@Nonnull
 	Bundle markUneditable();
-
-	@Nonnull
-	default Bundle referenceUneditable() {
-		return DocumentFactory.newWrappedBundle(this, false);
-	}
 
 
 	void forEachEntry(@Nonnull Consumer<? super IEntry> action);

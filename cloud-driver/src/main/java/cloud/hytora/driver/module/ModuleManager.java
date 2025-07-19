@@ -9,6 +9,8 @@ public interface ModuleManager {
 
 	void resolveModules();
 
+	ModuleController resolveModule(Path path);
+
 	void loadModules();
 
 	void enableModules();

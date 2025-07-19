@@ -315,12 +315,6 @@ public interface WrappedDocument extends Document {
 
 	@Nonnull
 	@Override
-	default Document referenceUneditable() {
-		return getTargetDocument().referenceUneditable();
-	}
-
-	@Nonnull
-	@Override
 	default Document set(@Nonnull String path, @Nullable Object value) {
 		return getTargetDocument().set(path, value);
 	}

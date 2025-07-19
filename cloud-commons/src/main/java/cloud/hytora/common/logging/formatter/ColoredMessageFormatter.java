@@ -2,6 +2,7 @@ package cloud.hytora.common.logging.formatter;
 
 import cloud.hytora.common.logging.ConsoleColor;
 import cloud.hytora.common.logging.LogLevel;
+import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.logging.handler.LogHandler;
 
@@ -16,7 +17,8 @@ public final class ColoredMessageFormatter {
 	@Nonnull
 	public static String format(@Nonnull LogEntry entry) {
 		if (entry.getLevel() == LogLevel.NULL) {
-			return ConsoleColor.toColoredString('§', entry.getMessage());
+
+			return ConsoleColor.toColoredString('§', Logger.formatMessage(entry.getMessage()));
 		}
 		StringBuilder builder = new StringBuilder()
 			.append(ConsoleColor.DARK_GRAY)
@@ -35,7 +37,7 @@ public final class ColoredMessageFormatter {
 
 		SpacePadder.padRight(builder, entry.getLevel().getName() + ConsoleColor.DARK_GRAY + ":", 10 + ConsoleColor.DARK_GRAY.toString().length());
 		builder.append(entry.getLevel().isHighlighted() ? (entry.getLevel().getHighlightColor() != null ? entry.getLevel().getHighlightColor() : ConsoleColor.YELLOW) : ConsoleColor.DEFAULT)
-			.append(ConsoleColor.toColoredString('§', entry.getMessage()));
+			.append(ConsoleColor.toColoredString('§', Logger.formatMessage(entry.getMessage())));
 
 		if (entry.getException() != null) {
 			StringWriter writer = new StringWriter();

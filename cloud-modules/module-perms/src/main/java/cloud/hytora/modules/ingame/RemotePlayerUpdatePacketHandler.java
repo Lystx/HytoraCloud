@@ -2,7 +2,7 @@ package cloud.hytora.modules.ingame;
 
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
-import cloud.hytora.driver.permission.PermissionPlayer;
+import cloud.hytora.driver.module.permission.PermissionPlayer;
 import cloud.hytora.modules.global.packets.PermsPlayerUpdatePacket;
 import lombok.AllArgsConstructor;
 
@@ -12,7 +12,7 @@ public class RemotePlayerUpdatePacketHandler implements PacketHandler<PermsPlaye
     private final RemotePermissionManager permissionManager;
 
     @Override
-    public void handle(PacketChannel wrapper, PermsPlayerUpdatePacket packet) {
+    public void handle(PacketChannel channel, PermsPlayerUpdatePacket packet) {
         PermissionPlayer player = packet.getPlayer();
         permissionManager.addToCache(player);
     }

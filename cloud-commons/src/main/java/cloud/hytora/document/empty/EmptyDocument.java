@@ -4,6 +4,7 @@ import cloud.hytora.document.Bundle;
 import cloud.hytora.document.Document;
 import cloud.hytora.document.DocumentWrapper;
 import cloud.hytora.document.IEntry;
+import cloud.hytora.simplejson.api.Json;
 import com.google.gson.Gson;
 
 import javax.annotation.Nonnull;
@@ -43,12 +44,17 @@ public class EmptyDocument implements Document {
 	}
 
 	@Override
-	public DocumentWrapper<org.bson.Document> asBsonDocument() {
+	public DocumentWrapper<org.bson.Document> asBson() {
 		return null;
 	}
 
 	@Override
-	public DocumentWrapper<Gson> asGsonDocument() {
+	public DocumentWrapper<Gson> asGson() {
+		return null;
+	}
+
+	@Override
+	public DocumentWrapper<Json> asJson() {
 		return null;
 	}
 

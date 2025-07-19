@@ -9,5 +9,7 @@ public interface ProgressPrinter {
      */
     void print(String progress);
 
+    default void newLine() {}
+
     void flush(String progress);
 }

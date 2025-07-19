@@ -2,14 +2,15 @@ package cloud.hytora.driver.event.defaults;
 
 import cloud.hytora.common.collection.ClassWalker;
 import cloud.hytora.common.misc.ReflectionUtils;
-import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.PublishingType;
-import cloud.hytora.driver.event.EventListener;
+import cloud.hytora.driver.common.PublishingType;
+import cloud.hytora.driver.event.listener.EventListener;
 import cloud.hytora.driver.event.*;
-import cloud.hytora.driver.event.defaults.driver.DriverLogEvent;
-import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
-import cloud.hytora.driver.networking.packets.DriverCallEventPacket;
+import cloud.hytora.driver.event.defaults.driver.CloudEventDriverLog;
+import cloud.hytora.driver.event.listener.DestructiveListener;
+import cloud.hytora.driver.event.listener.RegisteredListener;
+import cloud.hytora.driver.networking.HandlingNetworkExecutor;
+import cloud.hytora.driver.networking.packets.other.PacketCallEvent;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -23,12 +24,12 @@ import java.util.function.Consumer;
 
 public class DefaultEventManager implements EventManager {
 
-    private final Map<Class<? extends CloudEvent>, List<RegisteredListener>> listeners = new LinkedHashMap<>();
+    private final Map<Class<? extends LocalEvent>, List<RegisteredListener>> listeners = new LinkedHashMap<>();
 
     @Nonnull
     @Override
     public EventManager removeListener(@Nonnull RegisteredListener listener) {
-        for (Class<? extends CloudEvent> aClass : listeners.keySet()) {
+        for (Class<? extends LocalEvent> aClass : listeners.keySet()) {
             List<RegisteredListener> registeredListeners = new ArrayList<>(listeners.get(aClass));
             registeredListeners.removeIf(current -> current == listener);
             listeners.put(aClass, registeredListeners);
@@ -67,7 +68,7 @@ public class DefaultEventManager implements EventManager {
             }
 
             Class<?> parameterType = method.getParameterTypes()[0];
-            if (!CloudEvent.class.isAssignableFrom(parameterType)) {
+            if (!LocalEvent.class.isAssignableFrom(parameterType)) {
                 throw new IllegalArgumentException(String.format(
                         "Parameter type %s of listener method %s:%s is not an event",
                         parameterType.getName(),
@@ -77,7 +78,7 @@ public class DefaultEventManager implements EventManager {
             }
 
             EventListener annotation = method.getAnnotation(EventListener.class);
-            addListener(new DefaultRegisteredListener(listener, method, parameterType.asSubclass(CloudEvent.class), annotation.order(), annotation.ignoreCancelled()));
+            addListener(new DefaultRegisteredListener(listener, method, parameterType.asSubclass(LocalEvent.class), annotation.order(), annotation.ignoreCancelled()));
         }
 
         return this;
@@ -92,7 +93,7 @@ public class DefaultEventManager implements EventManager {
 
     @NotNull
     @Override
-    public <E extends CloudEvent> RegisteredListener registerHandler(@NotNull Class<E> eventClass, @NotNull Consumer<E> handler) {
+    public <E extends LocalEvent> RegisteredListener registerHandler(@NotNull Class<E> eventClass, @NotNull Consumer<E> handler) {
         RegisteredListener listener = new ActionRegisteredListener<>(eventClass, (registeredListener, e) -> handler.accept(e));
         this.addListener(listener);
         return listener;
@@ -100,7 +101,7 @@ public class DefaultEventManager implements EventManager {
 
     @NotNull
     @Override
-    public <E extends CloudEvent> DestructiveListener registerSelfDestructiveHandler(@NotNull Class<E> eventClass, @NotNull Consumer<E> handler) {
+    public <E extends LocalEvent> DestructiveListener registerSelfDestructiveHandler(@NotNull Class<E> eventClass, @NotNull Consumer<E> handler) {
         DestructiveListener listener = new DefaultDestructiveListener<E>(eventClass, (l, e) -> {
             handler.accept(e);
             removeListener(l);
@@ -111,7 +112,7 @@ public class DefaultEventManager implements EventManager {
 
 
     @Override
-    public <E extends CloudEvent> void registerDestructiveHandler(@NotNull Class<E> eventClass, @NotNull BiConsumer<E, DestructiveListener> handler) {
+    public <E extends LocalEvent> void registerDestructiveHandler(@NotNull Class<E> eventClass, @NotNull BiConsumer<E, DestructiveListener> handler) {
         DestructiveListener listener = new DefaultDestructiveListener<E>(eventClass, (l, e) -> {
             handler.accept(e, l);
         }, this::removeListener);
@@ -122,7 +123,7 @@ public class DefaultEventManager implements EventManager {
     @Nonnull
     @Override
     public EventManager unregisterListener(@Nonnull Class<?> listenerClass) {
-        for (Class<? extends CloudEvent> aClass : listeners.keySet()) {
+        for (Class<? extends LocalEvent> aClass : listeners.keySet()) {
             List<RegisteredListener> registeredListeners = new ArrayList<>(listeners.get(aClass));
             registeredListeners.removeIf(current -> current.getHolder().getClass() == listenerClass);
             listeners.put(aClass, registeredListeners);
@@ -133,7 +134,7 @@ public class DefaultEventManager implements EventManager {
     @Nonnull
     @Override
     public EventManager unregisterListeners(@Nonnull ClassLoader loader) {
-        for (Class<? extends CloudEvent> aClass : listeners.keySet()) {
+        for (Class<? extends LocalEvent> aClass : listeners.keySet()) {
             List<RegisteredListener> registeredListeners = new CopyOnWriteArrayList<>(listeners.get(aClass));
             registeredListeners.removeIf(listener -> listener != null && listener.getHolder() != null && loader != null && listener.getHolder().getClass().getClassLoader().equals(loader));
             listeners.put(aClass, registeredListeners);
@@ -150,13 +151,13 @@ public class DefaultEventManager implements EventManager {
 
     @NotNull
     @Override
-    public <E extends CloudEvent> E callEvent(@NotNull E event, PublishingType... type) {
+    public <E extends LocalEvent> E callEvent(@NotNull E event, PublishingType... type) {
         PublishingType publishingType = PublishingType.get(type, PublishingType.INTERNAL);
 
         switch (publishingType) {
             case INTERNAL:
 
-                if (!(event instanceof DriverLogEvent)) {
+                if (!(event instanceof CloudEventDriverLog)) {
                     CloudDriver.getInstance().getLogger().trace("Calling event {} | {}", event.getClass().getSimpleName(), event);
                 }
 
@@ -185,10 +186,10 @@ public class DefaultEventManager implements EventManager {
                 }
                 break;
             case PROTOCOL:
-                if (event instanceof ProtocolTansferableEvent) {
-                    ProtocolTansferableEvent pEvent = (ProtocolTansferableEvent) event;
-                    AdvancedNetworkExecutor executor = CloudDriver.getInstance().getExecutor();
-                    executor.sendPacket(new DriverCallEventPacket(pEvent));
+                if (event instanceof NetworkEvent) {
+                    NetworkEvent pEvent = (NetworkEvent) event;
+                    HandlingNetworkExecutor executor = CloudDriver.getInstance().getExecutor();
+                    executor.sendPacket(new PacketCallEvent(pEvent));
                 }
                 break;
 

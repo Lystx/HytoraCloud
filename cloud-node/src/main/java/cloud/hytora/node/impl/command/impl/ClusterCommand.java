@@ -1,21 +1,21 @@
 package cloud.hytora.node.impl.command.impl;
 
-import cloud.hytora.context.annotations.ApplicationParticipant;
+
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.node.INode;
+import cloud.hytora.driver.entity.node.INode;
 import cloud.hytora.node.NodeDriver;
 
 @Command(
         value = {"cluster", "cl"},
-        permission = "cloud.command.use",
+        permission = "cloud.hytora.command.use",
         executionScope = CommandScope.CONSOLE_AND_INGAME,
         description = "Manages the Cluster"
 )
 @Command.AutoHelp
-@ApplicationParticipant
+
 public class ClusterCommand {
 
     @Command(value = "shutdown", description = "Shuts down the whole cluster")

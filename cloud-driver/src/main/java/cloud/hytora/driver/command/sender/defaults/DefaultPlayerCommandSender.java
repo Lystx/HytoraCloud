@@ -1,8 +1,8 @@
 package cloud.hytora.driver.command.sender.defaults;
 
-import cloud.hytora.driver.player.ICloudPlayer;
+import cloud.hytora.driver.entity.player.CloudPlayer;
 import cloud.hytora.driver.command.sender.PlayerCommandSender;
-import cloud.hytora.driver.player.executor.PlayerExecutor;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -16,11 +16,11 @@ public class DefaultPlayerCommandSender implements PlayerCommandSender {
 	/**
 	 * the provided player for this sender
 	 */
-	private final ICloudPlayer player;
+	private final CloudPlayer player;
 
 	@Override
 	public void sendMessage(@Nonnull String message) {
-		PlayerExecutor.forPlayer(player).sendMessage(message);
+		player.sendMessage(message);
 	}
 
 

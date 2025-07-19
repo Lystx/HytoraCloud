@@ -1,29 +1,27 @@
 package cloud.hytora.node.impl.command.impl;
 
-import cloud.hytora.context.annotations.ApplicationParticipant;
+import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.annotation.Command;
 import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.player.ICloudPlayer;
-import cloud.hytora.driver.services.ICloudService;
+import cloud.hytora.driver.common.message.base.ChannelMessage;
+import cloud.hytora.driver.common.message.IMessageChannel;
+import cloud.hytora.driver.common.message.MessageListener;
+import cloud.hytora.driver.entity.services.fallback.SimpleFallback;
+import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 
 @Command(
         value = "debug",
         description = "Dev Command"
 )
-@ApplicationParticipant
+
 public class DebugCommand {
+
 
     @Command.Root
     public void executeDebug(CommandSender sender) {
-        for (ICloudPlayer allCachedCloudPlayer : CloudDriver.getInstance().getPlayerManager().getAllCachedCloudPlayers()) {
-            if (allCachedCloudPlayer.isOnline()) {
-                ICloudService server = allCachedCloudPlayer.getServer();
 
-                server.updateNametags();
-                return;
-            }
-        }
 
+        System.out.println("Debug executed");
     }
 }

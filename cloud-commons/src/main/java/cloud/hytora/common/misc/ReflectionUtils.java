@@ -21,6 +21,18 @@ public final class ReflectionUtils {
 
 	private ReflectionUtils() {}
 
+	@SafeVarargs
+	public static <T> T[] toArray(List<T> list, Class<T>... backUpClass) {
+		if (list.isEmpty()) {
+			return (T[]) Array.newInstance(backUpClass[0], 0);
+		}
+		T[] toR = (T[]) java.lang.reflect.Array.newInstance(list.get(0)
+				.getClass(), list.size());
+		for (int i = 0; i < list.size(); i++) {
+			toR[i] = list.get(i);
+		}
+		return toR;
+	}
 
 	/**
 	 * Clears the console screen
@@ -103,6 +115,44 @@ public final class ReflectionUtils {
 	}
 
 
+	/**
+	 * Loads all subclasses (extended classes)
+	 * of another class
+	 *
+	 * @param clazz the start-class
+	 * @return set of classes
+	 */
+	public static List<Class<?>> loadAllSubClasses(Class<?> clazz) {
+		List<Class<?>> res = new ArrayList<>();
+
+
+		do {
+			res.add(clazz);
+
+			// First, add all the interfaces implemented by this class
+			Class<?>[] interfaces = clazz.getInterfaces();
+			if (interfaces.length > 0) {
+				res.addAll(Arrays.asList(interfaces));
+
+				for (Class<?> interfaze : interfaces) {
+					res.addAll(loadAllSubClasses(interfaze));
+				}
+			}
+
+			// Add the super class
+			Class<?> superClass = clazz.getSuperclass();
+
+			// Interfaces does not have java,lang.Object as superclass, they have null, so break the cycle and return
+			if (superClass == null) {
+				break;
+			}
+
+			// Now inspect the superclass
+			clazz = superClass;
+		} while (!"java.lang.Object".equals(clazz.getCanonicalName()));
+
+		return res;
+	}
 
 	/**
 	 * Creates an Object from scratch
@@ -111,6 +161,9 @@ public final class ReflectionUtils {
 	 */
 	public static <T> T createEmpty(Class<T> tClass) {
 
+		if (tClass.isEnum()) {
+			return tClass.getEnumConstants()[0];
+		}
 		try {
 			return tClass.newInstance();
 		} catch (InstantiationException | IllegalAccessException e) {
@@ -334,4 +387,21 @@ public final class ReflectionUtils {
 		return input.equalsIgnoreCase(String.valueOf(value));
 	}
 
+	public static Field findFieldForClass(Object instance, Class<?> type) {
+		for (Field field : instance.getClass().getDeclaredFields()) {
+			if (field.getType() == type) {
+				field.setAccessible(true);
+				return field;
+			}
+		}
+		return null;
+	}
+
+	public static Field findFieldForClassAndSet(Object instance, Class<?> type, Object value) throws ReflectiveOperationException {
+		Field field = findFieldForClass(instance, type);
+		if (field == null)
+			return null;
+		field.set(instance, value);
+		return field;
+	}
 }

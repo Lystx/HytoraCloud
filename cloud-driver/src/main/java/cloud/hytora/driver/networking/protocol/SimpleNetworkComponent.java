@@ -3,8 +3,8 @@ package cloud.hytora.driver.networking.protocol;
 import cloud.hytora.common.DriverUtility;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
-import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.networking.protocol.packets.ConnectionType;
+import cloud.hytora.driver.networking.protocol.types.BufferState;
+import cloud.hytora.driver.networking.protocol.types.ConnectionType;
 import cloud.hytora.driver.networking.NetworkComponent;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -50,5 +50,11 @@ public class SimpleNetworkComponent extends DriverUtility implements NetworkComp
     @Override
     public void log(String message, Object... args) {
         CloudDriver.getInstance().logToExecutor(this, message, args);
+    }
+
+
+    @Override
+    public boolean matches(NetworkComponent component) {
+        return getName().equalsIgnoreCase(component.getName()) && (getType() == component.getType() || getType() == ConnectionType.UNKNOWN);
     }
 }

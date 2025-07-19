@@ -3,7 +3,7 @@ package cloud.hytora.driver.command.completer.impl;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.completer.CommandCompleter;
 import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.services.task.IServiceTask;
+import cloud.hytora.driver.entity.services.task.ServiceTask;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -14,6 +14,6 @@ public class TaskCompleter implements CommandCompleter {
     @NotNull
     @Override
     public Collection<String> complete(@NotNull CommandSender sender, @NotNull String argument) {
-        return CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks().stream().map(IServiceTask::getName).collect(Collectors.toList());
+        return CloudDriver.getInstance().getServiceTaskManager().getAllCachedTasks().stream().map(ServiceTask::getName).collect(Collectors.toList());
     }
 }

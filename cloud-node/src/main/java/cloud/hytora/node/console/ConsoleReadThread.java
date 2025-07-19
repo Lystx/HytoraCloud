@@ -22,6 +22,7 @@ public class ConsoleReadThread extends Thread {
 		this.console = console;
 	}
 
+
 	@Override
 	public void run() {
 		String line;

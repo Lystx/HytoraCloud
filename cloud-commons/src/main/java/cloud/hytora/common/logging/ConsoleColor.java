@@ -35,6 +35,8 @@ public enum ConsoleColor {
 		this.ansiCode = ansiCode;
 	}
 
+
+
 	@Nonnull
 	public static String toColoredString(char triggerChar, @Nonnull String text) {
 		for (ConsoleColor color : values()) {

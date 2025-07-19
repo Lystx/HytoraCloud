@@ -1,10 +1,10 @@
 package cloud.hytora.driver.database;
 
 import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
-import cloud.hytora.driver.common.Documentable;
-import cloud.hytora.driver.common.IdentityObject;
+import cloud.hytora.driver.common.objects.CloudJsonEntity;
+import cloud.hytora.driver.common.objects.Identifiable;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
+import cloud.hytora.driver.networking.protocol.types.BufferState;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -32,33 +32,36 @@ public class LocalStorageSection<T extends IBufferObject> {
 
     public void insert(String key, T value) {
         Document document;
-        if (value instanceof Documentable) {
-            Documentable<?> documentable = (Documentable<?>) value;
-            document = documentable.toDocument();
+        if (value instanceof CloudJsonEntity) {
+            CloudJsonEntity documentable = (CloudJsonEntity) value;
+            document = Document.gson();
+            documentable.handleJsonOperation(BufferState.WRITE, document);
         } else {
-            document = DocumentFactory.newJsonDocument(value);
+            document = Document.json(value);
         }
         storage.insert(collectionName, key, document);
     }
 
-    public <E extends IdentityObject> void insert(E value) {
+    public <E extends Identifiable> void insert(E value) {
         Document document;
-        if (value instanceof Documentable) {
-            Documentable<?> documentable = (Documentable<?>) value;
-            document = documentable.toDocument();
+        if (value instanceof CloudJsonEntity) {
+            CloudJsonEntity documentable = (CloudJsonEntity) value;
+            document = Document.gson();
+            documentable.handleJsonOperation(BufferState.WRITE, document);
         } else {
-            document = DocumentFactory.newJsonDocument(value);
+            document = Document.json(value);
         }
         storage.insert(collectionName, value.getMainIdentity(), document);
     }
 
     public void update(String key, T value) {
         Document document;
-        if (value instanceof Documentable) {
-            Documentable<?> documentable = (Documentable<?>) value;
-            document = documentable.toDocument();
+        if (value instanceof CloudJsonEntity) {
+            CloudJsonEntity documentable = (CloudJsonEntity) value;
+            document = Document.gson();
+            documentable.handleJsonOperation(BufferState.WRITE, document);
         } else {
-            document = DocumentFactory.newJsonDocument(value);
+            document = Document.json(value);
         }
         this.storage.update(collectionName, key, document);
     }
@@ -71,7 +74,7 @@ public class LocalStorageSection<T extends IBufferObject> {
         }
     }
 
-    public <E extends IdentityObject> void upsert(E value) {
+    public <E extends Identifiable> void upsert(E value) {
         this.upsert(value.getMainIdentity(), (T) value);
     }
 
@@ -84,10 +87,10 @@ public class LocalStorageSection<T extends IBufferObject> {
         Document document = storage.byId(collectionName, key);
         if (document != null) {
 
-            if (Documentable.class.isAssignableFrom(typeClass) || typeClass.isAssignableFrom(Documentable.class)) {
+            if (CloudJsonEntity.class.isAssignableFrom(typeClass) || typeClass.isAssignableFrom(CloudJsonEntity.class)) {
                 try {
-                    Documentable<T> t = (Documentable<T>) typeClass.newInstance();
-                    t.applyDocument(document);
+                    CloudJsonEntity t = (CloudJsonEntity) typeClass.newInstance();
+                    t.handleJsonOperation(BufferState.READ, document);
                     return (T) t;
                 } catch (InstantiationException | IllegalAccessException e) {
                     e.printStackTrace();
@@ -102,10 +105,10 @@ public class LocalStorageSection<T extends IBufferObject> {
     public T findByMatch(String key, Object value) {
         Document document = storage.filter(collectionName, key, value).stream().findFirst().orElse(null);
         if (document != null) {
-            if (Documentable.class.isAssignableFrom(typeClass) || typeClass.isAssignableFrom(Documentable.class)) {
+            if (CloudJsonEntity.class.isAssignableFrom(typeClass) || typeClass.isAssignableFrom(CloudJsonEntity.class)) {
                 try {
-                    Documentable<T> t = (Documentable<T>) typeClass.newInstance();
-                    t.applyDocument(document);
+                    CloudJsonEntity t = (CloudJsonEntity) typeClass.newInstance();
+                    t.handleJsonOperation(BufferState.READ, document);
                     return (T) t;
                 } catch (InstantiationException | IllegalAccessException e) {
                     e.printStackTrace();

@@ -4,13 +4,13 @@ import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
 import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.permission.Permission;
-import cloud.hytora.driver.permission.PermissionGroup;
-import cloud.hytora.driver.permission.PermissionManager;
-import cloud.hytora.driver.permission.PermissionPlayer;
-import cloud.hytora.driver.player.CloudOfflinePlayer;
-import cloud.hytora.driver.services.ICloudService;
-import cloud.hytora.driver.services.task.IServiceTask;
+import cloud.hytora.driver.module.permission.Permission;
+import cloud.hytora.driver.module.permission.PermissionGroup;
+import cloud.hytora.driver.module.permission.PermissionManager;
+import cloud.hytora.driver.module.permission.PermissionPlayer;
+import cloud.hytora.driver.entity.player.CloudOfflinePlayer;
+import cloud.hytora.driver.entity.services.CloudService;
+import cloud.hytora.driver.entity.services.task.ServiceTask;
 import cloud.hytora.modules.cloud.setup.GroupSetup;
 import cloud.hytora.modules.global.impl.DefaultPermissionPlayer;
 import cloud.hytora.modules.global.packets.PermsCacheUpdatePacket;
@@ -40,16 +40,16 @@ public class PermsCommand {
 
         sender.sendMessage("§8");
         sender.sendMessage("Player information:");
-        sender.sendMessage("§bName: §7" + player.getName() + " §8[§3" + player.getUniqueId() + "§8]");
-        sender.sendMessage("§bHighest Group: §7" + (player.getHighestGroup() == null ? "none" : player.getHighestGroup().getName()));
-        sender.sendMessage("§bAll Groups: §7" + player.getPermissionGroups().stream().map(PermissionGroup::getName).collect(Collectors.joining(", ")));
-        sender.sendMessage("§bPermissions: §7" + player.getPermissions().size());
+        sender.sendMessage("%1Name: §7" + player.getName() + " §8[%2" + player.getUniqueId() + "§8]");
+        sender.sendMessage("%1Highest Group: §7" + (player.getHighestGroup() == null ? "none" : player.getHighestGroup().getName()));
+        sender.sendMessage("%1All Groups: §7" + player.getPermissionGroups().stream().map(PermissionGroup::getName).collect(Collectors.joining(", ")));
+        sender.sendMessage("%1Permissions: §7" + player.getPermissions().size());
         sender.sendMessage("§8");
     }
 
     @Command("debug")
     @Command.Syntax("<server>")
-    public void onDebug(CommandSender sender, @Command.Argument("server") ICloudService service) {
+    public void onDebug(CommandSender sender, @Command.Argument("server") CloudService service) {
 
         if (service == null) {
             sender.sendMessage("§cThere is no such service online!");
@@ -57,10 +57,10 @@ public class PermsCommand {
         }
 
 
-        service.sendDocument(
+        service.sendPacket(
                 new PermsCacheUpdatePacket(
                         CloudDriver.getInstance()
-                                
+
                                 .getProvider(PermissionManager.class)
                                 .getAllCachedPermissionGroups()
                 )
@@ -222,9 +222,9 @@ public class PermsCommand {
     }
 
 
-    @Command(value = "user", description = "Adds the provided permission for a given task to a player" )
+    @Command(value = "user", description = "Adds the provided permission for a given task to a player")
     @Command.Syntax("<player> perms addTask <taskName> <permission>")
-    public void onPlayerTaskPermissionAdd(CommandSender sender, @Command.Argument("player") PermissionPlayer player, @Command.Argument("taskName") IServiceTask task, @Command.Argument("permission") String permission) {
+    public void onPlayerTaskPermissionAdd(CommandSender sender, @Command.Argument("player") PermissionPlayer player, @Command.Argument("taskName") ServiceTask task, @Command.Argument("permission") String permission) {
 
         if (player == null) {
             sender.sendMessage("§cThe player has to have at least joined the network yet!");
@@ -252,7 +252,7 @@ public class PermsCommand {
 
     @Command(value = "user", description = "Removes the provided permission for a given task from a player")
     @Command.Syntax("<player> perms removeTask <taskName> <permission>")
-    public void onPlayerTaskPermissionRemove(CommandSender sender, @Command.Argument("player") PermissionPlayer player, @Command.Argument("taskName") IServiceTask task, @Command.Argument("permission") String permission) {
+    public void onPlayerTaskPermissionRemove(CommandSender sender, @Command.Argument("player") PermissionPlayer player, @Command.Argument("taskName") ServiceTask task, @Command.Argument("permission") String permission) {
 
         if (player == null) {
             sender.sendMessage("§cThe player has to have at least joined the network yet!");
@@ -323,15 +323,14 @@ public class PermsCommand {
 
         sender.sendMessage("§8");
         sender.sendMessage("Group information:");
-        sender.sendMessage("§bName: §7" + group.getName());
-        sender.sendMessage("§bSortId: §7" + group.getSortId());
-        sender.sendMessage("§bDefaultGroup: §7" + group.isDefaultGroup());
-        sender.sendMessage("§bChatColor: §7" + group.getChatColor());
-        sender.sendMessage("§bNamePrefix: §7" + group.getNamePrefix());
-        sender.sendMessage("§bPrefix: §7" + group.getPrefix());
-        sender.sendMessage("§bSuffix: §7" + group.getSuffix());
-        sender.sendMessage("§bInherited Groups: §7" + String.join(", ", group.getInheritedGroups()));
-        sender.sendMessage("§bPermissions: §7" + group.getPermissions().size());
+        sender.sendMessage("%1Name: §7" + group.getName());
+        sender.sendMessage("%1SortId: §7" + group.getSortId());
+        sender.sendMessage("%1DefaultGroup: §7" + group.isDefaultGroup());
+        sender.sendMessage("%1ChatColor: §7" + group.getChatColor());
+        sender.sendMessage("%1Prefix: §7" + group.getPrefix());
+        sender.sendMessage("%1Suffix: §7" + group.getSuffix());
+        sender.sendMessage("%1Inherited Groups: §7" + String.join(", ", group.getInheritedGroups()));
+        sender.sendMessage("%1Permissions: §7" + group.getPermissions().size());
         sender.sendMessage("§8");
     }
 
@@ -436,7 +435,7 @@ public class PermsCommand {
 
     @Command(value = "group", description = "Adds the provided permission for a given task to a group")
     @Command.Syntax("<group> perms addTask <taskName> <permission>")
-    public void onGroupTaskPermissionAdd(CommandSender sender, @Command.Argument("group") PermissionGroup group, @Command.Argument("taskName") IServiceTask task, @Command.Argument("permission") String permission) {
+    public void onGroupTaskPermissionAdd(CommandSender sender, @Command.Argument("group") PermissionGroup group, @Command.Argument("taskName") ServiceTask task, @Command.Argument("permission") String permission) {
 
         if (group == null) {
             sender.sendMessage("§cThere is no such group in the module database registered");
@@ -460,7 +459,7 @@ public class PermsCommand {
 
     @Command(value = "group", description = "Removes the provided permission for a given task from a group")
     @Command.Syntax("<group> perms removeTask <taskName> <permission>")
-    public void onGroupTaskPermissionRemove(CommandSender sender, @Command.Argument("group") PermissionGroup group, @Command.Argument("taskName") IServiceTask task, @Command.Argument("permission") String permission) {
+    public void onGroupTaskPermissionRemove(CommandSender sender, @Command.Argument("group") PermissionGroup group, @Command.Argument("taskName") ServiceTask task, @Command.Argument("permission") String permission) {
 
         if (group == null) {
             sender.sendMessage("§cThere is no such group in the module database registered");
@@ -536,5 +535,4 @@ public class PermsCommand {
         group.update();
         sender.sendMessage("Successfully removed permission {} from group {}!", permission, group.getName());
     }
-
 }

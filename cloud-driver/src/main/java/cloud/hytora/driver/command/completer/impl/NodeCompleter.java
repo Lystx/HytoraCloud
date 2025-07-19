@@ -3,7 +3,7 @@ package cloud.hytora.driver.command.completer.impl;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.completer.CommandCompleter;
 import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.node.INode;
+import cloud.hytora.driver.entity.node.INode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;

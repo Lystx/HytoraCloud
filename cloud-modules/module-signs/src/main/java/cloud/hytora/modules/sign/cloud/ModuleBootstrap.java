@@ -2,6 +2,8 @@ package cloud.hytora.modules.sign.cloud;
 
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.common.message.base.ChannelMessage;
+import cloud.hytora.driver.common.message.IMessageChannel;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.controller.AbstractModule;
 import cloud.hytora.driver.module.controller.base.ModuleConfiguration;
@@ -28,6 +30,8 @@ import cloud.hytora.modules.sign.cloud.listener.ModuleServiceReadyListener;
 )
 public class ModuleBootstrap extends AbstractModule {
 
+    private IMessageChannel<ChannelMessage> signChannel;
+
     public ModuleBootstrap(ModuleController controller) {
         super(controller);
     }
@@ -52,12 +56,9 @@ public class ModuleBootstrap extends AbstractModule {
     @ModuleTask(id = 2, state = ModuleState.ENABLED)
     @ScheduledModuleTask(sync = false, delay = 100)
     public void enable() {
-        CloudDriver.getInstance()
-                .getChannelMessenger()
-                .registerChannel(
-                        CloudSignAPI.CHANNEL_NAME,
-                        new ModuleMessageHandler()
-                );
+
+        this.signChannel = CloudDriver.getInstance().getChannelMessenger().registerChannel(ChannelMessage.class, CloudSignAPI.CHANNEL_NAME);
+        this.signChannel.registerListener(new ModuleMessageHandler());
 
         CloudDriver.getInstance().getEventManager().registerListener(new ModuleServiceReadyListener());
         CloudDriver.getInstance().getCommandManager().registerCommand(new ModuleCloudSignCommand());
@@ -71,8 +72,8 @@ public class ModuleBootstrap extends AbstractModule {
 
     @ModuleTask(id = 3, state = ModuleState.DISABLED)
     public void disable() {
+        this.signChannel.unregister();
         CloudDriver.getInstance().getCommandManager().unregisterCommand(ModuleCloudSignCommand.class);
-        CloudDriver.getInstance().getChannelMessenger().unregisterChannel(CloudSignAPI.CHANNEL_NAME);
     }
 
 }

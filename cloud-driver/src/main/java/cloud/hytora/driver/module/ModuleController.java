@@ -19,7 +19,7 @@ public interface ModuleController extends IBufferObject {
 	boolean isInitialized();
 
 	@Nonnull
-    IModule getModule();
+	ModuleInfo getModule();
 
 	void loadModule();
 

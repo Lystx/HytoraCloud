@@ -1,5 +1,6 @@
 package cloud.hytora.document.gson.adapter;
 
+import cloud.hytora.document.gson.GsonHelper;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -7,7 +8,6 @@ import com.google.gson.internal.bind.TypeAdapters;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import cloud.hytora.common.misc.BukkitReflectionSerializationUtils;
-import cloud.hytora.common.misc.GsonUtils;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -27,7 +27,7 @@ public class BukkitReflectionSerializableTypeAdapter implements GsonTypeAdapter<
 
 		JsonObject json = new JsonObject();
 		json.addProperty(KEY, BukkitReflectionSerializationUtils.getSerializationName(object.getClass()));
-		GsonUtils.setDocumentProperties(gson, json, map);
+		GsonHelper.setDocumentProperties(gson, json, map);
 		TypeAdapters.JSON_ELEMENT.write(writer, json);
 
 	}
@@ -47,7 +47,7 @@ public class BukkitReflectionSerializableTypeAdapter implements GsonTypeAdapter<
 		} catch (ClassNotFoundException | NullPointerException ex) {
 		}
 
-		Map<String, Object> map = GsonUtils.convertJsonObjectToMap(json);
+		Map<String, Object> map = GsonHelper.convertJsonObjectToMap(json);
 		return BukkitReflectionSerializationUtils.deserializeObject(map, clazz);
 
 	}

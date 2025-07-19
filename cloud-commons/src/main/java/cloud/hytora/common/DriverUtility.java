@@ -3,6 +3,8 @@ package cloud.hytora.common;
 import cloud.hytora.common.collection.NamedThreadFactory;
 import cloud.hytora.common.collection.WrappedException;
 import cloud.hytora.common.function.ExceptionallyRunnable;
+import cloud.hytora.common.logging.ConsoleColor;
+import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.progressbar.ProgressBar;
 import cloud.hytora.common.progressbar.ProgressBarStyle;
 import cloud.hytora.common.scheduler.Scheduler;
@@ -31,13 +33,34 @@ import java.util.function.Supplier;
 
 public class DriverUtility {
 
+
+    public static boolean IS_BUNGEECORD = false;
+
     @SuppressWarnings("unchecked")
     public static <T> T cast(Object object) {
         return (T) object;
     }
 
 
-    public static Task<Path> downloadVersion(String urlStr, Path location, ProgressBar pb) {
+    public static void printColored(String key, String input) {
+        input = "§8[%1HytoraCloud§8#%2" + key + "§8] §7" + input;
+        input = Logger.formatMessage(input);
+        if (IS_BUNGEECORD) {
+            System.out.println(ConsoleColor.toUncoloredString('§', input));
+            return;
+        }
+        System.out.println(ConsoleColor.toColoredString('§', input));
+    }
+
+    public static <T> T get(Boolean condition, T trueValue, T falseValue) {
+        return condition ? trueValue : falseValue;
+    }
+
+    public static <T> T get(Boolean condition, Supplier<T> trueValue, Supplier<T> falseValue) {
+        return condition ? trueValue.get() : falseValue.get();
+    }
+
+    public static Task<Path> downloadVersion(String urlStr, Path location, ProgressBar pb, String msg) {
         Task<Path> task = Task.empty();
 
         Task.runAsync(() -> {
@@ -62,7 +85,7 @@ public class DriverUtility {
                 }
                 outputStream.close();
                 inputStream.close();
-                pb.close("");
+                pb.close(msg);
                 task.setResult(location);
             } catch (Exception e) {
                 task.setFailure(e);

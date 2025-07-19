@@ -1,38 +1,54 @@
 package cloud.hytora.modules;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.permission.*;
+import cloud.hytora.driver.entity.player.PlayerFullJoinExecutor;
+import cloud.hytora.driver.module.permission.*;
+import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
+import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
+import cloud.hytora.modules.cloud.handler.GroupPacketHandler;
 import cloud.hytora.modules.global.impl.DefaultPermission;
 import cloud.hytora.modules.global.impl.DefaultPermissionGroup;
 import cloud.hytora.modules.global.impl.DefaultPermissionPlayer;
 import cloud.hytora.modules.global.packets.PermsCacheUpdatePacket;
-import cloud.hytora.modules.global.packets.PermsGroupUpdatePacket;
-import cloud.hytora.modules.global.packets.PermsUpdatePlayerPacket;
+import cloud.hytora.modules.global.packets.PermsPlayerUpdatePacket;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 public abstract class DefaultPermissionManager implements PermissionManager {
 
     public DefaultPermissionManager() {
         CloudDriver.getInstance().setProvider(PermissionChecker.class, this);
 
-        CloudDriver.getInstance().getChannelMessenger().registerPacketChannel("cloud_module_perms", (Consumer<PermsCacheUpdatePacket>) packet -> {
-            CloudDriver.getInstance().getLogger().debug("====> [Packet] Updated whole cache! [" + packet.getPermissionGroups().size() + "]");
+        CloudDriver.getInstance()
+
+                .setProvider(PlayerFullJoinExecutor.Checker.class, (t1, t2) -> {
+                    PermissionPlayer player_A = t1.asPermissionPlayer();
+                    PermissionPlayer player_B = t2.asPermissionPlayer();
+
+                    PermissionGroup highestGroup_A = player_A.getHighestGroup();
+                    PermissionGroup highestGroup_B = player_B.getHighestGroup();
+
+                    if (highestGroup_A.getSortId() < highestGroup_B.getSortId()) {
+                        return t1;
+                    } else {
+                        return t2;
+                    }
+                });
+        CloudDriver.getInstance().getExecutor().registerPacketHandler((PacketHandler<PermsCacheUpdatePacket>) (wrapper, packet) -> {
+            PacketBuffer buffer = packet.buffer();
             getAllCachedPermissionGroups().clear();
-            getAllCachedPermissionGroups().addAll(packet.getPermissionGroups());
-        });
-        CloudDriver.getInstance().getChannelMessenger().registerPacketChannel("cloud_module_perms", (Consumer<PermsGroupUpdatePacket>) packet -> {
-            getAllCachedPermissionGroups().removeIf(g -> g.getName().equalsIgnoreCase(packet.getGroup().getName()));
-            getAllCachedPermissionGroups().add(packet.getGroup());
-            CloudDriver.getInstance().getLogger().debug("====> [Packet] Cached Group '" + packet.getGroup().getName() + "' !");
-            CloudDriver.getInstance().getLogger().debug("=====> Now cache in total: " + CloudDriver.getInstance().getProvider(PermissionManager.class).getAllCachedPermissionGroups().size());
+            Collection<PermissionGroup> cachedPermissionGroups = buffer.readWrapperObjectCollection(DefaultPermissionGroup.class);
+            getAllCachedPermissionGroups().addAll(cachedPermissionGroups);
+
+            CloudDriver.getInstance().getLogger().info("====> [Packet] Updated whole cache! [" + cachedPermissionGroups.size() + "]");
 
         });
-        CloudDriver.getInstance().getChannelMessenger().registerPacketChannel("cloud_module_perms", (Consumer<PermsUpdatePlayerPacket>) packet -> {
+        CloudDriver.getInstance().getExecutor().registerPacketHandler(new GroupPacketHandler());
+        CloudDriver.getInstance().getExecutor().registerPacketHandler((PacketHandler<PermsPlayerUpdatePacket>) (wrapper, packet) -> {
             addToCache(packet.getPlayer());
 
             /*if (CloudDriver.getInstance().getEnvironment() == DriverEnvironment.NODE) {
@@ -44,11 +60,12 @@ public abstract class DefaultPermissionManager implements PermissionManager {
             CloudDriver.getInstance().getLogger().debug("====> [Packet] Cached Player '" + packet.getPlayer().getName() + "' !");
             CloudDriver.getInstance().getLogger().debug("=====> Now cache in total: " + CloudDriver.getInstance().getProvider(PermissionManager.class).getAllCachedPermissionPlayers().size());
         });
+
     }
 
     @Override
     public boolean hasPermission(UUID playerUniqueId, String permission) {
-        PermissionPlayer p = getPlayerByUniqueIdOrNull(playerUniqueId);
+        PermissionPlayer p = getPermissionPlayer(playerUniqueId);
         if (p == null) {
             return false;
         }
@@ -64,11 +81,11 @@ public abstract class DefaultPermissionManager implements PermissionManager {
     }
 
     @Override
-    public PermissionPlayer createPlayer(String name, UUID uniqueId) {
+    public @NotNull PermissionPlayer createPlayer(String name, UUID uniqueId) {
         DefaultPermissionPlayer permissionPlayer = new DefaultPermissionPlayer(name, uniqueId);
 
         for (PermissionGroup allCachedPermissionGroup : this.getAllCachedPermissionGroups()) {
-            if  (allCachedPermissionGroup.isDefaultGroup()) {
+            if (allCachedPermissionGroup.isDefaultGroup()) {
                 permissionPlayer.addPermissionGroup(allCachedPermissionGroup);
             }
         }
@@ -78,6 +95,6 @@ public abstract class DefaultPermissionManager implements PermissionManager {
     @NotNull
     @Override
     public PermissionGroup createPermissionGroup(@NotNull String name) {
-        return new DefaultPermissionGroup(name, "", "", "", "", 1, false, new ArrayList<>(), new HashMap<>());
+        return new DefaultPermissionGroup(name, "", "", "", 1, false, new ArrayList<>(), new HashMap<>());
     }
 }

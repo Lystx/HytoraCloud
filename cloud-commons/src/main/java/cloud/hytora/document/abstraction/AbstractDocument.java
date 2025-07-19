@@ -1,11 +1,12 @@
 package cloud.hytora.document.abstraction;
 
 import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.DocumentWrapper;
 import cloud.hytora.document.bson.BsonDocument;
 import cloud.hytora.document.gson.GsonDocument;
 import cloud.hytora.document.IEntry;
+import cloud.hytora.document.json.JsonDocument;
+import cloud.hytora.simplejson.api.Json;
 import com.google.gson.Gson;
 
 import javax.annotation.Nonnull;
@@ -75,7 +76,7 @@ public abstract class AbstractDocument implements Document {
 	@Override
 	public Document set(@Nonnull Object values) {
 		if (!canEdit()) throw new IllegalStateException("Cannot be edited");
-		DocumentFactory.newJsonDocument(values).forEach(this::set0);
+		Document.gson(values).forEach(this::set0);
 		return this;
 	}
 
@@ -102,7 +103,7 @@ public abstract class AbstractDocument implements Document {
 	protected abstract void clear0();
 
 	@Override
-	public DocumentWrapper<org.bson.Document> asBsonDocument() {
+	public DocumentWrapper<org.bson.Document> asBson() {
 		if (this instanceof BsonDocument) {
 			return (DocumentWrapper<org.bson.Document>) this;
 		}
@@ -110,7 +111,16 @@ public abstract class AbstractDocument implements Document {
 	}
 
 	@Override
-	public DocumentWrapper<Gson> asGsonDocument() {
+	public DocumentWrapper<Json> asJson() {
+
+		if (this instanceof JsonDocument) {
+			return (DocumentWrapper<Json>) this;
+		}
+		return null;
+	}
+
+	@Override
+	public DocumentWrapper<Gson> asGson() {
 		if (this instanceof GsonDocument) {
 			return (DocumentWrapper<Gson>) this;
 		}

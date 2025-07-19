@@ -1,6 +1,6 @@
 package cloud.hytora.node.impl.command.impl;
 
-import cloud.hytora.context.annotations.ApplicationParticipant;
+
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.CommandScope;
 import cloud.hytora.driver.command.annotation.*;
@@ -15,12 +15,12 @@ import java.util.stream.Collectors;
 
 @Command(
         value = {"help", "?"},
-        permission = "cloud.command.use",
+        permission = "cloud.hytora.command.use",
         executionScope = CommandScope.CONSOLE_AND_INGAME,
         description = "Shows this men"
 
 )
-@ApplicationParticipant
+
 public class HelpCommand {
 
     @Command.Root
@@ -28,10 +28,13 @@ public class HelpCommand {
         sender.sendMessage("§8");
         sender.sendMessage("§7Commands§8:");
 
-        java.util.List<String> duplicates = new ArrayList<String>();
+        List<String> duplicates = new ArrayList<>();
 
         for (RegisteredCommand command : CloudDriver.getInstance().getCommandManager().getCommands().stream().sorted(Comparator.comparing(RegisteredCommand::getPath)).collect(Collectors.toList())) {
             if (!command.getScope().covers(sender)) {
+                continue;
+            }
+            if (command.getScope() == CommandScope.INGAME_HOSTED_ON_CLOUD_SIDE) {
                 continue;
             }
             if (duplicates.stream().anyMatch(s -> Arrays.asList(command.getNames()).contains(s))) {
@@ -41,7 +44,7 @@ public class HelpCommand {
 
             List<String> aliases = new ArrayList<>(Arrays.asList(command.getNames()));
             aliases.remove(0); //removing main command trigger
-            sender.sendMessage("§b" + command.getNames()[0] + "§8(§b"+ String.join("§7, " + "§b", (aliases.isEmpty() ? "§c/" : aliases.toString()).replace("[", "").replace("]", "") + "§8) × §f" + (command.getDescription().trim().isEmpty() ? command.getMainDescription() : "No Description")));
+            sender.sendMessage("  §8» %1" + command.getNames()[0] + "§8(%2"+ String.join("§7, " + "%2", (aliases.isEmpty() ? "§c/" : aliases.toString()).replace("[", "").replace("]", "") + "§8) × §f" + (!command.getMainDescription().trim().isEmpty() ? command.getMainDescription() : "No Description")));
         }
         sender.sendMessage("§8");
     }

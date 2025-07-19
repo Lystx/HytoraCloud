@@ -23,7 +23,7 @@ public interface ExecutedQuery extends Iterable<Document> {
 	@Nonnull
 	@CheckReturnValue
 	default Document firstOrEmpty() {
-		return first().orElse(Document.emptyDocument());
+		return first().orElse(Document.empty());
 	}
 
 	@Nonnull
@@ -33,7 +33,7 @@ public interface ExecutedQuery extends Iterable<Document> {
 	@Nonnull
 	@CheckReturnValue
 	default Document getOrEmpty(int index) {
-		return get(index).orElse(Document.emptyDocument());
+		return get(index).orElse(Document.empty());
 	}
 
 	@Nonnull

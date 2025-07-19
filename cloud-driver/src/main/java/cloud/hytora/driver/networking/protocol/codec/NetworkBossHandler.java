@@ -1,12 +1,12 @@
 package cloud.hytora.driver.networking.protocol.codec;
 
-import cloud.hytora.driver.networking.protocol.packets.ConnectionState;
+import cloud.hytora.driver.networking.protocol.types.ConnectionState;
 import cloud.hytora.driver.networking.protocol.packets.AbstractPacket;
 import cloud.hytora.driver.networking.protocol.wrapped.SimplePacketChannel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.Getter;
-import cloud.hytora.driver.networking.AbstractNetworkComponent;
+import cloud.hytora.driver.networking.AbstractHandlingNetworkExecutor;
 
 import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
@@ -17,14 +17,14 @@ public class NetworkBossHandler extends SimpleChannelInboundHandler<AbstractPack
     /**
      * The parent participant for this handler
      */
-    private final AbstractNetworkComponent<?> component;
+    private final AbstractHandlingNetworkExecutor<?> component;
 
     /**
      * The context of this handler
      */
     protected final SimplePacketChannel packetChannel;
 
-    public NetworkBossHandler(AbstractNetworkComponent<?> component) {
+    public NetworkBossHandler(AbstractHandlingNetworkExecutor<?> component) {
         this.component = component;
 
         this.packetChannel = new SimplePacketChannel();

@@ -1,6 +1,5 @@
 package cloud.hytora.modules.sign.api;
 
-import cloud.hytora.driver.message.ChannelMessage;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
 import cloud.hytora.modules.sign.api.config.SignConfiguration;
 import cloud.hytora.modules.sign.api.protocol.SignProtocolType;
@@ -29,6 +28,7 @@ public abstract class CloudSignAPI {
      */
     private SignConfiguration signConfiguration;
 
+
     /**
      * Constructs a new instance
      * and sets the config to a default value in case
@@ -39,6 +39,7 @@ public abstract class CloudSignAPI {
 
         this.signConfiguration = new SignConfiguration(); //create default as fallback
     }
+
 
     /**
      * publishes the {@link SignConfiguration} to the other side

@@ -1,9 +1,8 @@
 package cloud.hytora.modules.cloud.setup;
 
-import cloud.hytora.driver.command.Console;
-import cloud.hytora.driver.setup.Setup;
-import cloud.hytora.driver.setup.annotations.Question;
-import cloud.hytora.driver.setup.annotations.QuestionTip;
+import cloud.hytora.driver.common.setup.Setup;
+import cloud.hytora.driver.common.setup.annotations.Question;
+import cloud.hytora.driver.common.setup.annotations.QuestionTip;
 import lombok.Getter;
 
 @Getter

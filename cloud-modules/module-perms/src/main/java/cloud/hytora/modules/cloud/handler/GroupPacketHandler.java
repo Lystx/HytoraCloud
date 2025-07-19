@@ -3,13 +3,13 @@ package cloud.hytora.modules.cloud.handler;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.networking.protocol.packets.PacketHandler;
 import cloud.hytora.driver.networking.protocol.wrapped.PacketChannel;
-import cloud.hytora.driver.permission.PermissionManager;
+import cloud.hytora.driver.module.permission.PermissionManager;
 import cloud.hytora.modules.global.packets.PermsGroupPacket;
 
 public class GroupPacketHandler implements PacketHandler<PermsGroupPacket> {
 
     @Override
-    public void handle(PacketChannel wrapper, PermsGroupPacket packet) {
+    public void handle(PacketChannel channel, PermsGroupPacket packet) {
         PermissionManager permissionManager = CloudDriver.getInstance().getProvider(PermissionManager.class);
         switch (packet.getPayLoad()) {
             case CREATE:

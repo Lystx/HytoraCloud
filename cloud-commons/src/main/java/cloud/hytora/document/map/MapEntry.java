@@ -4,7 +4,6 @@ package cloud.hytora.document.map;
 import cloud.hytora.document.gson.GsonHelper;
 import cloud.hytora.document.Bundle;
 import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.IEntry;
 import org.jetbrains.annotations.NotNull;
 
@@ -132,7 +131,7 @@ public class MapEntry implements IEntry {
 		if (isBundle()) throw new IllegalStateException("Not a bundle");
 		if (value instanceof Collection) value = new MapBundle((Collection<?>) value);
 		if (value instanceof Bundle) return (Bundle) value;
-		return (Bundle) (value = DocumentFactory.newJsonBundle(value));
+		return (Bundle) (value = Bundle.newGsonBundle(value));
 	}
 
 	@Override
@@ -196,12 +195,12 @@ public class MapEntry implements IEntry {
 		if (classOfT.isInstance(value)) {
 			return classOfT.cast(value);
 		}
-		return DocumentFactory.newJsonEntry(value).toInstance(classOfT);
+		return IEntry.newJsonEntry(value).toInstance(classOfT);
 	}
 
 	@Override
 	public <T> T toInstance(@NotNull Type typeOf) {
-		return DocumentFactory.newJsonEntry(value).toInstance(typeOf);
+		return IEntry.newJsonEntry(value).toInstance(typeOf);
 	}
 
 	@Nonnull

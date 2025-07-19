@@ -24,6 +24,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import static cloud.hytora.driver.command.CommandScope.CONSOLE_AND_INGAME;
+import static cloud.hytora.driver.command.CommandScope.INGAME_HOSTED_ON_CLOUD_SIDE;
+
 
 public abstract class DefaultCommandManager implements CommandManager {
 
@@ -38,12 +41,15 @@ public abstract class DefaultCommandManager implements CommandManager {
     @Setter
     private boolean active;
 
+    private Collection<DriverCommandInfo> registeredCommands;
+
 
     /**
      * Registering default {@link ArgumentParser}
      */
     public DefaultCommandManager() {
         this.active = false;
+        this.registeredCommands = new ArrayList<>();
         this.registerParser(int.class, Integer::parseInt);
         this.registerParser(double.class, Double::parseDouble);
         this.registerParser(long.class, Long::parseLong);
@@ -69,6 +75,7 @@ public abstract class DefaultCommandManager implements CommandManager {
     public void registerCommand(@Nonnull Object command) {
         Command commandAnnotation = command.getClass().getAnnotation(Command.class);
         Command.AutoHelp autoHelp = command.getClass().getAnnotation(Command.AutoHelp.class);
+        Command.HideAutoHelp hideAutoHelp = command.getClass().getAnnotation(Command.HideAutoHelp.class);
 
         if (autoHelp != null) {
             RegisteredCommand registeredCommand = new RegisteredCommand(
@@ -82,7 +89,8 @@ public abstract class DefaultCommandManager implements CommandManager {
                     commandAnnotation.executionScope(),
                     new ArrayList<>(),
                     null,
-                    command
+                    command,
+                    hideAutoHelp != null
             );
             commands.add(registeredCommand);
         }
@@ -91,6 +99,7 @@ public abstract class DefaultCommandManager implements CommandManager {
             Command pathAnnotation = method.getAnnotation(Command.class);
             Command.Syntax syntaxAnnotation = method.getAnnotation(Command.Syntax.class);
             Command.Root rootAnnotation = method.getAnnotation(Command.Root.class);
+            Command.HideAutoHelp hide = method.getAnnotation(Command.HideAutoHelp.class);
 
             List<RegisteredCommandArgument> arguments = new ArrayList<>();
             for (Parameter parameter : method.getParameters()) {
@@ -108,12 +117,13 @@ public abstract class DefaultCommandManager implements CommandManager {
                         "",
                         new String[0],
                         commandAnnotation.permission(),
-                        commandAnnotation.description(),
+                        pathAnnotation == null ? commandAnnotation.description() : pathAnnotation.description(),
                         commandAnnotation.description(),
                         commandAnnotation.executionScope(),
                         new ArrayList<>(),
                         method,
-                        command
+                        command,
+                        hide != null
 
                 );
 
@@ -127,12 +137,13 @@ public abstract class DefaultCommandManager implements CommandManager {
                         syntaxAnnotation == null ? "" : syntaxAnnotation.value(),
                         pathAnnotation == null ? new String[0] : pathAnnotation.value(),
                         commandAnnotation.permission(),
-                        commandAnnotation.description(),
+                        pathAnnotation == null ? commandAnnotation.description() : pathAnnotation.description(),
                         commandAnnotation.description(),
                         commandAnnotation.executionScope(),
                         arguments,
                         method,
-                        command
+                        command,
+                        hide != null
                 );
                 commands.add(registeredCommand);
 
@@ -172,17 +183,33 @@ public abstract class DefaultCommandManager implements CommandManager {
 
     protected abstract void handleCommandChange();
 
-    public void updateIngameCommands() {
+
+    @Override
+    public void setRegisteredCommands(Collection<DriverCommandInfo> commands) {
+        this.registeredCommands = commands;
+    }
+
+    public Collection<DriverCommandInfo> getRegisteredCommands() {
+
         Set<DriverCommandInfo> ingameCommands = new HashSet<>();
         for (RegisteredCommand command : commands) {
             if (command.getScope().isIngame()) {
                 for (String name : command.getNames()) {
-                    ingameCommands.add(new DriverCommandInfo((command.getScope() == cloud.hytora.driver.command.CommandScope.CONSOLE_AND_INGAME ? "cloud " : "") + name, command.getPermission(), command.getScope()));
+                    ingameCommands.add(new DriverCommandInfo((command.getScope() == INGAME_HOSTED_ON_CLOUD_SIDE ? "" : "cloud ") + name, command.getPermission(), command.getScope()));
                 }
             }
         }
+        return ingameCommands;
+    }
 
-        CloudDriver.getInstance().getStorage().set("ingameCommands", ingameCommands).update();
+    public Collection<DriverCommandInfo> getCachedRegisteredCommands() {
+        return registeredCommands;
+    }
+
+    public Collection<DriverCommandInfo> getAllCommands() {
+        Collection<DriverCommandInfo> commands = this.getCachedRegisteredCommands();
+        commands.addAll(getRegisteredCommands());
+        return commands;
     }
 
     @Nonnull
@@ -295,9 +322,9 @@ public abstract class DefaultCommandManager implements CommandManager {
     }
 
     @Override
-    public void executeCommand(@Nonnull CommandSender sender, @Nonnull String input) {
-
-        if (!this.isActive()) {
+    public void executeCommand(@Nonnull CommandSender sender, @Nonnull String input, boolean... ignoreInputHandlers) {
+        boolean followHandler = (ignoreInputHandlers.length == 0);
+        if (!this.isActive() && followHandler) {
             if (this.handler != null) {
                 handler.accept(sender, input);
             }
@@ -351,7 +378,7 @@ public abstract class DefaultCommandManager implements CommandManager {
                     if (dynamicArg) {
                         RegisteredCommandArgument argument = command.getArgument(currentPathArg.replace("<", "").replace(">", ""));
                         if (args.length <= a + argument.getWords()) {
-                            if (argument.isOptional()) continue command;
+                            if (argument.isOptional()) continue command; // TODO: 25.02.2022 check
                         }
                         String[] valueArray = Arrays.copyOfRange(args, a, a + argument.getWords());
                         String value = StringUtils.getArrayAsString(valueArray, " ");
@@ -367,7 +394,7 @@ public abstract class DefaultCommandManager implements CommandManager {
                                     return;
                                 }
                             } else {
-                                argumentValues.put(argument.getName(), value);
+                                argumentValues.put(argument.getName(), value.toString());
                             }
                         } else {
                             argumentValues.put(argument.getName(), value);
@@ -393,8 +420,15 @@ public abstract class DefaultCommandManager implements CommandManager {
             }
 
         }
+        sender.sendMessage("§cType '§ehelp§c' to see all executable commands!");
+    }
 
-        sender.sendMessage("§cType 'help' to see all executable commands!");
+
+    private String replaceEdges(String input, boolean optional) {
+        if (optional) {
+            return input.replace("[", "").replace("]", "");
+        }
+        return input.replace("<", "").replace(">", "");
     }
 
     protected void execute(@Nonnull RegisteredCommand command, @Nonnull CommandSender sender, @Nonnull Map<String, Object> argumentValues) {
@@ -421,7 +455,7 @@ public abstract class DefaultCommandManager implements CommandManager {
                 Command annotation = command.getInstance().getClass().getAnnotation(Command.class);
 
                 sender.sendMessage("§8");
-                sender.sendMessage("Help for Command '" + annotation.value()[0] + "':");
+                sender.sendMessage("Help for Command §8'%2" + annotation.value()[0] + "§8':");
                 List<RegisteredCommand> registeredCommands = CloudDriver.getInstance()
                         .getCommandManager().getCommands()
                         .stream()
@@ -443,10 +477,10 @@ public abstract class DefaultCommandManager implements CommandManager {
                     }
                 });
                 for (RegisteredCommand registeredCommand : registeredCommands) {
-                    if (registeredCommand.getPath().trim().isEmpty() || !registeredCommand.getScope().covers(sender)) {
+                    if (registeredCommand.getPath().trim().isEmpty() || !registeredCommand.getScope().covers(sender) || registeredCommand.isHideAutoHelp()) {
                         continue;
                     }
-                    sender.sendMessage("§b" + registeredCommand.getNames()[0] + " " + registeredCommand.getPath() + " | §7" + (registeredCommand.getDescription().trim().isEmpty() ? registeredCommand.getMainDescription() : registeredCommand.getDescription()));
+                    sender.sendMessage("  §8» %1" + registeredCommand.getNames()[0] + " " + registeredCommand.getPath() + " §7| §7" + (registeredCommand.getDescription()));
                 }
                 sender.sendMessage("§8");
                 return;

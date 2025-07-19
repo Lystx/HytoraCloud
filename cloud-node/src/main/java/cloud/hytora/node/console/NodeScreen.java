@@ -2,9 +2,9 @@ package cloud.hytora.node.console;
 
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.driver.command.sender.CommandSender;
-import cloud.hytora.driver.console.Screen;
-import cloud.hytora.driver.console.ScreenManager;
-import cloud.hytora.driver.console.TabCompleter;
+import cloud.hytora.driver.command.console.screen.Screen;
+import cloud.hytora.driver.command.console.screen.ScreenManager;
+import cloud.hytora.driver.command.console.TabCompleter;
 import cloud.hytora.node.NodeDriver;
 import lombok.Getter;
 import lombok.Setter;

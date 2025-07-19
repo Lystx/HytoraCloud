@@ -3,8 +3,8 @@ package cloud.hytora.dependency;
 import cloud.hytora.IdentifiableClassLoader;
 import cloud.hytora.Launcher;
 import cloud.hytora.common.DriverUtility;
-import cloud.hytora.context.annotations.ApplicationParticipant;
-import cloud.hytora.context.annotations.CacheContext;
+import lombok.AllArgsConstructor;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,13 +14,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import static java.awt.SystemColor.info;
 
-@ApplicationParticipant
+@AllArgsConstructor
 public class DependencyLoader {
 
 
-    @CacheContext
     private Launcher launcher;
 
 
@@ -34,7 +32,7 @@ public class DependencyLoader {
                 this.installLibrary(this.launcher.getRepositories().get(dependency.getRepository()).getUrl(), dependency, path);
 
                 dependencyResources.add(path.toUri().toURL());
-                launcher.getLogger().info("Loaded Dependency[group={}, artifact={}, version={}, repo={}]", dependency.getGroup(), dependency.getName(), dependency.getVersion(), dependency.getRepository());
+                launcher.getLogger().debug("     §8=> §aSuccessfully downloaded§8!", dependency.getGroup(), dependency.getName(), dependency.getVersion(), dependency.getRepository());
                 ClassLoader ccl = Thread.currentThread().getContextClassLoader();
                 if (ccl instanceof IdentifiableClassLoader) {
                     IdentifiableClassLoader custom = (IdentifiableClassLoader)ccl;
@@ -57,7 +55,7 @@ public class DependencyLoader {
                     + dependency.getVersion() + ""
                     + ".jar";
 
-            launcher.getLogger().info("Installing dependency {} from repository {}...", dependencyName, dependency.getRepository());
+            launcher.getLogger().info("  §8=> §7Installing §8[§edependency§8=§e{}§8, §erepo§8=§e{}§8]", dependencyName, dependency.getRepository());
 
             try (InputStream inputStream = DriverUtility.readInputStreamFromURL(repositoryURL + "/" + dependency.toPath().toString().replace(File.separatorChar, '/'))) {
                 Files.copy(inputStream, path);

@@ -13,7 +13,9 @@ import javax.annotation.Nonnull;
  * A {@link CommandScope} defines where a certain {@link cloud.hytora.driver.command.annotation.Command}
  * is allowed to be executed or where a command is hosted
  *
- *
+ * @since DEV-1.0
+ * @author Lystx
+ * @version SNAPSHOT-1.5
  */
 @AllArgsConstructor
 @Getter
@@ -40,6 +42,16 @@ public enum CommandScope {
 	 * (Not executable from console)
 	 */
 	INGAME_HOSTED_ON_CLOUD_SIDE,
+
+	/**
+	 * self-explained
+	 */
+	INGAME_SPIGOT,
+
+	/**
+	 * self-explained
+	 */
+	INGAME_PROXY,
 
 	/**
 	 * This command is only executable from ingame

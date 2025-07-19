@@ -4,11 +4,14 @@ import cloud.hytora.common.task.Task;
 
 
 import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.config.IDatabaseConfig;
+import cloud.hytora.driver.database.api.DatabaseType;
 import cloud.hytora.driver.database.LocalStorage;
 import cloud.hytora.driver.database.IDatabaseManager;
 import cloud.hytora.driver.database.api.Database;
 import cloud.hytora.driver.database.api.impl.DatabaseConfig;
 import cloud.hytora.driver.database.api.action.SQLColumn;
+import cloud.hytora.driver.language.Translation;
 import cloud.hytora.node.NodeDriver;
 import cloud.hytora.node.impl.database.DefaultJsonStorage;
 import cloud.hytora.node.impl.database.mongo.MongoDBDatabase;
@@ -25,7 +28,7 @@ public class DefaultDatabaseManager implements IDatabaseManager {
     private final Database database;
     private final LocalStorage localStorage;
 
-    public DefaultDatabaseManager(DatabaseType type, DatabaseConfiguration config) {
+    public DefaultDatabaseManager(DatabaseType type, IDatabaseConfig config) {
         DatabaseConfig configuration = new DatabaseConfig(
                 config.getHost(),
                 config.getDatabase(),
@@ -43,16 +46,20 @@ public class DefaultDatabaseManager implements IDatabaseManager {
         /*} else if (type == DatabaseType.FILE) {
             //this.internalDatabase = new DatabaseFile(configuration);*/
         } else  {
-            configuration.setFile(new File(NodeDriver.DATABASE_FOLDER, "cloud_network_database.db"));
+            configuration.setFile(new File(CloudDriver.Constants.DATABASE_FOLDER, "cloud_network_database.db"));
             this.database = new SQLiteDatabase(configuration);
         }
         //database cannot be null
         try {
             this.database.connect();
-            CloudDriver.getInstance().getLogger().info("§7Database has connected §asuccessfully §8[§aHost§8: §7{} §aPort§8: §7{} §aDatabase§8: §7{}§8]", database.getConfig().getHost(), database.getConfig().getPort(), database.getConfig().getDatabase());
+            if (database.getConfig().getHost() != null) {
+                CloudDriver.getInstance().getLogger().info(Translation.of("database.connect.success.online"), database.getConfig().getHost(), database.getConfig().getPort(), database.getConfig().getDatabase());
+            } else {
+                CloudDriver.getInstance().getLogger().info(Translation.of("database.connect.success.local"), database.getConfig().getHost(), database.getConfig().getPort(), database.getConfig().getDatabase());
+            }
             this.setupTables();
         } catch (Exception e) {
-            CloudDriver.getInstance().getLogger().error("§cCouldn't connect to database of type §e{}", config.getType());
+            CloudDriver.getInstance().getLogger().error(Translation.of("database.connect.failed"), config.getType());
             e.printStackTrace();
         }
 

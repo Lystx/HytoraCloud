@@ -2,11 +2,11 @@ package cloud.hytora.modules.sign.spigot.manager;
 
 import cloud.hytora.common.task.Task;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.services.ICloudService;
-import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.utils.ServiceState;
-import cloud.hytora.driver.services.utils.ServiceVisibility;
-import cloud.hytora.driver.services.utils.SpecificDriverEnvironment;
+import cloud.hytora.driver.entity.services.CloudService;
+import cloud.hytora.driver.entity.services.task.ServiceTask;
+import cloud.hytora.driver.entity.services.utils.ServiceState;
+import cloud.hytora.driver.entity.services.utils.ServiceVisibility;
+import cloud.hytora.driver.entity.services.utils.SpecificDriverEnvironment;
 import cloud.hytora.modules.sign.api.ICloudSign;
 import cloud.hytora.modules.sign.api.SignState;
 import cloud.hytora.modules.sign.api.def.UniversalCloudSign;
@@ -62,6 +62,7 @@ public class BukkitCloudSignUpdater implements Runnable {
      */
     @Override
     public void run() {
+        // TODO: 17.07.2025 sort signs so that online services are displayed first then loading servers and then offline servers 
         long repeat = CloudSignAPI.getInstance().getSignConfiguration().getLoadingLayout().getRepeatingTick();
         if (animationScheduler != 0) {
             Bukkit.getScheduler().cancelTask(this.animationScheduler);
@@ -73,7 +74,7 @@ public class BukkitCloudSignUpdater implements Runnable {
 
                 freeSigns.clear();
                 serviceMap.clear();
-                List<ICloudService> servers = CloudDriver.getInstance()
+                List<CloudService> servers = CloudDriver.getInstance()
                         .getServiceManager()
                         .getAllServicesByEnvironment(SpecificDriverEnvironment.MINECRAFT)
                         .stream()
@@ -87,15 +88,20 @@ public class BukkitCloudSignUpdater implements Runnable {
                         ).collect(Collectors.toList());
 
                 if (!servers.isEmpty()) {
-                    for (ICloudService service : servers) {
+                    for (CloudService service : servers) {
                         if (!service.getServiceVisibility().equals(ServiceVisibility.INVISIBLE) && !service.getServiceState().equals(ServiceState.STOPPING)) {
                             update(service);
+                        } else {
+                            this.updateOffline(service.getTask(), true); // TODO: 17.07.2025 check was it really that simple to fix? 
                         }
                     }
                 } else {
                     Collection<String> duplicateTasks = new ArrayList<>();
                     for (ICloudSign cloudSign : CloudSignAPI.getInstance().getSignManager().getAllCachedCloudSigns()) {
-                        IServiceTask task = cloudSign.findTask();
+                        ServiceTask task = cloudSign.findTask();
+                        if (task == null) {
+                            continue; //probably old sign from now deleted task .... ignoring
+                        }
                         if (duplicateTasks.contains(task.getName())) {
                             continue;
                         }
@@ -133,7 +139,7 @@ public class BukkitCloudSignUpdater implements Runnable {
                     }
                     Location location = new Location(world, sign.getLocation().getX(), sign.getLocation().getY(), sign.getLocation().getZ());
                     for (Entity entity : location.getWorld().getNearbyEntities(location, distance, distance, distance)) {
-                        if (entity instanceof Player && !entity.hasPermission(knockBackConfig.getByPassPermission()) && location.getBlock().getState() instanceof Sign) {
+                        if (entity instanceof Player && /*!entity.hasPermission(knockBackConfig.getByPassPermission()) &&*/ location.getBlock().getState() instanceof Sign) {
                             entity.setVelocity(new org.bukkit.util.Vector(entity.getLocation().getX() - location.getX(), entity.getLocation().getY() - location.getY(), entity.getLocation().getZ() - location.getZ()).normalize().multiply(strength).setY(0.2D));
                         }
                     }
@@ -143,7 +149,7 @@ public class BukkitCloudSignUpdater implements Runnable {
     }
 
 
-    private void updateOffline(IServiceTask task, boolean temp) {
+    private void updateOffline(ServiceTask task, boolean temp) {
         if (temp) {
             this.freeSigns.put(task.getName(), new ConcurrentHashMap<>());
         }
@@ -187,7 +193,7 @@ public class BukkitCloudSignUpdater implements Runnable {
 
     }
 
-    public void update(ICloudService current) {
+    public void update(CloudService current) {
         if (current.getTask().getTaskGroup().getEnvironment().equals(SpecificDriverEnvironment.PROXY)) {
             return;
         }
@@ -258,7 +264,7 @@ public class BukkitCloudSignUpdater implements Runnable {
             Collection<ICloudSign> offlineSigns = new ArrayList<>();
             for (Integer count : allSigns) {
                 ICloudSign sign = new BukkitCloudSignGroup(name, CloudSignAPI.getInstance().getSignManager().getAllCachedCloudSigns()).getCloudSigns().get(count);
-                ICloudService s = CloudDriver.getInstance().getServiceManager().getCachedCloudService(sign.getTaskName() + "-" + count);
+                CloudService s = CloudDriver.getInstance().getServiceManager().getCachedCloudService(sign.getTaskName() + "-" + count);
                 if (s == null || s.getServiceVisibility().equals(ServiceVisibility.INVISIBLE) || s.getServiceState().equals(ServiceState.STOPPING) || s.getName().equalsIgnoreCase(CloudDriver.getInstance().getServiceManager().thisService().getName())) {
                     offlineSigns.add(sign);
                 }
@@ -270,12 +276,12 @@ public class BukkitCloudSignUpdater implements Runnable {
 
     /**
      * Updates a Bukkit sign and the block behind it to
-     * a given {@link SignLayout} depending on the {@link ServiceState} of the {@link ICloudService}
+     * a given {@link SignLayout} depending on the {@link ServiceState} of the {@link CloudService}
      *
      * @param sign    the sign
      * @param service the service
      */
-    public void updateBukkitSign(Sign sign, ICloudService service, IServiceTask task) {
+    public void updateBukkitSign(Sign sign, CloudService service, ServiceTask task) {
 
         SignAnimation signAnimation;
         SignState signState;

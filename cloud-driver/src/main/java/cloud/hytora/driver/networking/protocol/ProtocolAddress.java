@@ -1,11 +1,12 @@
 package cloud.hytora.driver.networking.protocol;
 
 import cloud.hytora.document.gson.adapter.ExcludeIfNull;
-import cloud.hytora.document.gson.adapter.ExcludeJsonField;
-import cloud.hytora.driver.exception.CloudException;
+import cloud.hytora.driver.common.exception.HytoraCloudException;
 import cloud.hytora.driver.networking.protocol.codec.buf.IBufferObject;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
-import cloud.hytora.driver.networking.protocol.packets.BufferState;
+import cloud.hytora.driver.networking.protocol.types.BufferState;
+import cloud.hytora.simplejson.api.annotation.JsonExcludeField;
+import cloud.hytora.simplejson.api.annotation.JsonExcludeIfNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,10 +23,24 @@ import java.net.InetSocketAddress;
 @Setter
 public class ProtocolAddress implements IBufferObject {
 
+    /**
+     * The host-address of this address
+     */
     private String host;
+
+    /**
+     * the port of this address
+     */
     private int port;
 
+    /**
+     * The authKey provided if used
+     * as a way to connect two nodes
+     * with eachOther then we will
+     * pass on the authKey in the address
+     */
     @ExcludeIfNull
+    @JsonExcludeIfNull
     private String authKey;
 
     public ProtocolAddress(String host, int port) {
@@ -63,7 +78,11 @@ public class ProtocolAddress implements IBufferObject {
         }
     }
 
-    public static ProtocolAddress fromString(String input) throws Exception {
+    public static ProtocolAddress fromSocketAddress(InetSocketAddress address) {
+        return new ProtocolAddress(address.getAddress().getHostAddress(), address.getPort());
+    }
+
+    public static ProtocolAddress fromString(String input) {
         if (input.contains(":")) {
             String[] data = input.split(":");
             String host = data[0];
@@ -74,27 +93,16 @@ public class ProtocolAddress implements IBufferObject {
 
                 return new ProtocolAddress(host, port);
             } catch (NumberFormatException e) {
-                throw new CloudException("ProtocolAddress needs to be formatted after scheme \"host:port\"!");
+                throw new HytoraCloudException("ProtocolAddress needs to be formatted after scheme \"host:port\"!");
             }
 
         } else {
-            throw new CloudException("ProtocolAddress needs to be formatted after scheme \"host:port\"!");
+            throw new HytoraCloudException("ProtocolAddress needs to be formatted after scheme \"host:port\"!");
         }
     }
 
+    @JsonExcludeField
     private static ProtocolAddress cachedPublicIpInstance;
-
-    public static ProtocolAddress currentPublicIp() {
-        if (cachedPublicIpInstance != null) {
-            return cachedPublicIpInstance;
-        }
-        try {
-            cachedPublicIpInstance = fromString(new BufferedReader(new InputStreamReader(new java.net.URL("https://checkip.amazonaws.com").openConnection().getInputStream())).readLine());
-            return cachedPublicIpInstance;
-        } catch (Exception e) {
-            return null;
-        }
-    }
 
     public String toString() {
         return host + ":" + port;

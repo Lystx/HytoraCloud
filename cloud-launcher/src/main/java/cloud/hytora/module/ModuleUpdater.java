@@ -3,35 +3,37 @@ package cloud.hytora.module;
 import cloud.hytora.Launcher;
 import cloud.hytora.common.DriverUtility;
 import cloud.hytora.common.VersionInfo;
+import cloud.hytora.common.collection.WrappedException;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.common.progressbar.HytoraProgressBar;
 import cloud.hytora.common.progressbar.ProgressBarStyle;
 import cloud.hytora.common.task.Task;
-import cloud.hytora.context.annotations.CacheContext;
-import cloud.hytora.context.annotations.ApplicationParticipant;
+
 import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.IEntry;
 import lombok.SneakyThrows;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 
-@ApplicationParticipant
+
 public class ModuleUpdater {
 
-    @CacheContext
     private Launcher launcher;
     private Collection<ModuleInfo> cachedModules;
+
+    public ModuleUpdater(Launcher launcher) {
+        this.launcher = launcher;
+    }
 
     @SneakyThrows
     public Collection<ModuleInfo> loadProvidedModules() {
@@ -40,11 +42,11 @@ public class ModuleUpdater {
         }
         Collection<ModuleInfo> modules = new ArrayList<>();
 
-        Document document = Document.newJsonDocumentByURL(Launcher.APPLICATION_FILE_URL);
+        Document document = Document.gsonByUrl("https://raw.githubusercontent.com/Lystx/HytoraCloud/master/hytoraCloud-updater/application.json");
         for (IEntry entry : document.getBundle("modules")) {
             Document doc = entry.toDocument();
-            if (!doc.has("name") || !doc.has("url") || !doc.has("version")) {
-                launcher.getLogger().error("Couldn't find attributes for ModuleInfo 'name' or 'url' or 'version' in following document:");
+            if (!doc.has("name") || !doc.has("version")) {
+                launcher.getLogger().error("Couldn't find attributes for ModuleInfo 'name' or 'version' in following document:");
                 launcher.getLogger().error(doc.asRawJsonString());
                 continue;
             }
@@ -59,73 +61,92 @@ public class ModuleUpdater {
     }
 
 
-    public Task<ModuleInfo> updateModule(ModuleInfo module) {
+    public Task<ModuleInfo> updateModule(ModuleInfo module, String msg) {
         Task<ModuleInfo> task = Task.empty();
-        Task.runAsync(() -> {
+        String url = module.getUrl();
+        String name = module.getName();
 
-            String url = module.getUrl();
-            String name = module.getName();
-            VersionInfo currentVersion = module.getVersion();
-
-            //replace url place holders
-            url = url.replace("{cloud.baseUrl}", launcher.getBaseUrl());
-            url = url.replace("{module.name}", name);
-            url = url.replace("{module.version}", currentVersion.toString());
-
-            ModuleInfo localModule = findCurrentModule(name);
-            if (localModule == null || module.getVersion().isNewerAs(localModule.getVersion())) {
-                Logger.constantInstance().info("'{}' is either not existing or needs to be updated to Version '{}' [Current-Version: {}]", module.getName(), module.getVersion(), (localModule == null ? "Not existing" : localModule.getVersion()));
-                downloadModule(module, url)
-                        .onTaskSucess(e -> task.setResult(module))
-                        .onTaskFailed(task::setFailure);
-            } else {
-                Logger.constantInstance().info("Module[name={}, ver={}] is up to date", module.getName(), module.getVersion());
-                task.setResult(module);
-            }
-        });
-        return task;
-    }
-
-
-    public Task<Integer> updateModules() {
-        Task<Integer> task = Task.empty();
-        Collection<ModuleInfo> modules = loadProvidedModules();
-
-        AtomicInteger updateCount = new AtomicInteger(0);
-        for (ModuleInfo module : modules) {
-            this.updateModule(module)
-                    .onTaskSucess(m -> {
-                        if (updateCount.incrementAndGet() >= modules.size()) {
-                            task.setResult(updateCount.get());
+        ModuleInfo localModule = findCurrentModule(name);
+        if (localModule == null || module.getVersion().isNewerAs(localModule.getVersion())) {
+            Logger.constantInstance().info("  §8=> §7Downloading §8'§e{}§8'... §8[§eCurrent§8: §e{} | §eNewest§8: §e{}§8]", module.getName(), (localModule == null ? "Not existing" : localModule.getVersion()), module.getVersion());
+            downloadModule(module, url, msg)
+                    .onTaskSucess(e -> task.setResult(module))
+                    .onTaskFailed(e -> {
+                        if (e instanceof FileNotFoundException) {
+                            launcher.getLogger().error("  §8=> §cCould not find updater-file §e{}'§c!", module.getVersion().formatModuleJarName(name));
+                        } else {
+                            WrappedException.throwWrapped(e);
                         }
-                    })
-                    .onTaskFailed(task::setFailure);
+                    });
+        } else {
+            Logger.constantInstance().info("  §8=> §7Module§8[§7name§8=§e{}§8, §7ver§8=§e{}§8] §7is §aup to date§8!", module.getName(), module.getVersion());
+            task.setResult(module);
         }
         return task;
     }
 
 
-    public Task<Path> downloadModule(ModuleInfo module, String url) {
+    public static final AtomicBoolean HAS_UPDATED = new AtomicBoolean(false);
+
+    public Task<Integer> updateModules() {
+        Task<Integer> task = Task.empty();
+        if (!HAS_UPDATED.get()) {
+            HAS_UPDATED.set(true);
+            Collection<ModuleInfo> modules = loadProvidedModules();
+
+            int maxSize = modules.size();
+
+            launcher.getLogger().info("  §8=> §7Found §e{} §7provided Modules§8!", maxSize);
+            if (!Launcher.FAST_START) {
+                Launcher.sleep(2000L);
+            }
+
+            int updateCount = 0;
+            for (ModuleInfo module : modules) {
+                if (updateCount >= maxSize) {
+                    continue;
+                }
+                ModuleInfo moduleInfo = this.updateModule(module, "  §8=> §7Updated §e" + module.getName() + " §8[§ever§8=§e" + module.getVersion() + "§8]").syncUninterruptedly().orElse(null);
+                if (moduleInfo != null) {
+                    updateCount++;
+                    if (!Launcher.FAST_START) {
+                        Launcher.sleep(2000L);
+                    }
+                    if (updateCount >= maxSize) {
+                        task.setResult(updateCount);
+                    }
+                }
+            }
+        } else {
+            task.setFailure(new BootstrapMethodError());
+        }
+        return task;
+    }
+
+
+    public Task<Path> downloadModule(ModuleInfo module, String url, String msg) {
         Task<Path> task = Task.empty();
         HytoraProgressBar pb = new HytoraProgressBar(ProgressBarStyle.COLORED_UNICODE_BLOCK);
 
         pb.setTaskName("Downloading " + module.getName() + "...");
 
+        for (File file : Arrays.stream(Objects.requireNonNull(Launcher.LAUNCHER_MODULES.toFile().listFiles()))
+                .filter(file -> file.getName().endsWith(".jar"))
+                .filter(file -> file.getName().contains(module.getName()))
+                .collect(Collectors.toList())) {
 
-        DriverUtility.downloadVersion(url, Launcher.LAUNCHER_MODULES.resolve(module.getName() + "-" + module.getVersion() + ".jar"), pb)
+            FileUtils.deleteFile(file.toPath());
+        }
+
+        DriverUtility.downloadVersion(url, Launcher.LAUNCHER_MODULES.resolve(module.getName() + "-" + module.getVersion() + ".jar"), pb, msg)
                 .onTaskSucess(v -> {
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                    if (!Launcher.FAST_START) {
+                        Launcher.sleep(500L);
                     }
-                    pb.close("=> Downloaded '{}-{}.jar'!", module.getName(), module.getVersion());
+                    pb.close( " ");
                     task.setResult(v);
                 })
-                .onTaskFailed(e -> {
-                    task.setFailure(e);
-                    Logger.constantInstance().error("Couldn't download Module[val={}, url={}] Error: {}", module.getName(), url, e);
-                });
+                .onTaskFailed(task::setFailure);
 
         return task;
     }
@@ -176,7 +197,7 @@ public class ModuleUpdater {
         if (jsonInput == null) {
             return null;
         }
-        return DocumentFactory.newJsonDocument(jsonInput);
+        return Document.gson(jsonInput);
     }
 
 }

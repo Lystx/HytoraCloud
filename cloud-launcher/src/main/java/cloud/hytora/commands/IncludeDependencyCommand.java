@@ -6,7 +6,6 @@ import cloud.hytora.script.api.IScriptCommand;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Consumer;
 

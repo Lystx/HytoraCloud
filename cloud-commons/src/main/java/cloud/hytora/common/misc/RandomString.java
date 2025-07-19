@@ -16,11 +16,23 @@ public class RandomString {
         return new String(buf);
     }
 
+    /**
+     * Generate a random int.
+     */
+    public int nextInt() {
+        int r = 0;
+        for (int idx = 0; idx < buf.length; ++idx)
+            r = r + integers[random.nextInt(integers.length)];
+        return r;
+    }
+
     public static final String upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     public static final String lower = upper.toLowerCase(Locale.ROOT);
 
     public static final String digits = "0123456789";
+
+    public static final int[] integers = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 0};
 
     public static final String alphanum = upper + lower + digits;
 

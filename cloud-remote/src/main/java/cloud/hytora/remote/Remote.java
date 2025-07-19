@@ -7,42 +7,46 @@ import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.common.misc.StringUtils;
 import cloud.hytora.common.task.Task;
-import cloud.hytora.context.ApplicationContext;
-import cloud.hytora.context.IApplicationContext;
-import cloud.hytora.document.DocumentFactory;
+import cloud.hytora.common.task.TaskResult;
+import cloud.hytora.document.Document;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.HytoraCloudConstants;
-import cloud.hytora.driver.PublishingType;
+import cloud.hytora.driver.common.PublishingType;
 import cloud.hytora.driver.command.CommandManager;
-import cloud.hytora.driver.command.DefaultConsoleCommandSender;
+import cloud.hytora.driver.command.sender.defaults.DefaultConsoleCommandSender;
 import cloud.hytora.driver.command.sender.CommandSender;
+import cloud.hytora.driver.common.message.base.def.DefaultChannelMessenger;
+import cloud.hytora.driver.config.ConfigManager;
 import cloud.hytora.driver.config.INetworkConfig;
-import cloud.hytora.driver.event.CloudEventListener;
-import cloud.hytora.driver.event.defaults.remote.RemoteConnectEvent;
-import cloud.hytora.driver.exception.IncompatibleDriverEnvironmentException;
-import cloud.hytora.driver.message.ChannelMessenger;
+import cloud.hytora.driver.entity.services.utils.SpecificDriverEnvironment;
+import cloud.hytora.driver.event.listener.CloudEventListener;
+import cloud.hytora.driver.event.defaults.remote.CloudEventRemoteConnectEvent;
+import cloud.hytora.driver.common.message.base.ChannelMessenger;
+import cloud.hytora.driver.language.LanguageManager;
+import cloud.hytora.driver.language.def.DriverLanguageManager;
 import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.networking.NetworkComponent;
-import cloud.hytora.driver.networking.packets.AuthenticationPacket;
-import cloud.hytora.driver.networking.packets.DriverLoggingPacket;
-import cloud.hytora.driver.networking.packets.DriverRequestCachePacket;
-import cloud.hytora.driver.networking.packets.DriverUpdatePacket;
+import cloud.hytora.driver.networking.packets.auth.PacketAuthentication;
+import cloud.hytora.driver.networking.packets.other.PacketDriverLogging;
+import cloud.hytora.driver.networking.packets.cache.PacketDriverCacheRequest;
+import cloud.hytora.driver.networking.packets.cache.PacketDriverCacheUpdate;
+import cloud.hytora.driver.networking.packets.response.BufferedResponse;
+import cloud.hytora.driver.networking.packets.response.NetworkResponseState;
 import cloud.hytora.driver.networking.protocol.packets.*;
-import cloud.hytora.driver.node.INode;
-import cloud.hytora.driver.node.NodeManager;
-import cloud.hytora.driver.player.CloudOfflinePlayer;
-import cloud.hytora.driver.player.ICloudPlayer;
-import cloud.hytora.driver.player.PlayerManager;
-import cloud.hytora.driver.services.ICloudService;
-import cloud.hytora.driver.services.IServiceCycleData;
-import cloud.hytora.driver.services.ServiceManager;
-import cloud.hytora.driver.services.task.IServiceTask;
-import cloud.hytora.driver.services.task.ServiceTaskManager;
-import cloud.hytora.driver.services.utils.RemoteIdentity;
-import cloud.hytora.driver.services.utils.version.ServiceVersion;
-import cloud.hytora.driver.storage.DriverStorage;
-import cloud.hytora.driver.storage.RemoteDriverStorage;
-import cloud.hytora.driver.networking.AdvancedNetworkExecutor;
+import cloud.hytora.driver.networking.query.Query;
+import cloud.hytora.driver.networking.query.def.CloudQuery;
+import cloud.hytora.driver.entity.node.INode;
+import cloud.hytora.driver.entity.node.NodeManager;
+import cloud.hytora.driver.entity.player.CloudOfflinePlayer;
+import cloud.hytora.driver.entity.player.CloudPlayer;
+import cloud.hytora.driver.entity.player.PlayerManager;
+import cloud.hytora.driver.entity.services.CloudService;
+import cloud.hytora.driver.entity.services.ServiceCycleData;
+import cloud.hytora.driver.entity.services.ServiceManager;
+import cloud.hytora.driver.entity.services.task.ServiceTask;
+import cloud.hytora.driver.entity.services.task.ServiceTaskManager;
+import cloud.hytora.driver.entity.services.utils.RemoteIdentity;
+import cloud.hytora.driver.entity.services.utils.version.ServiceVersion;
+import cloud.hytora.driver.networking.HandlingNetworkExecutor;
 
 import cloud.hytora.remote.adapter.RemoteAdapter;
 import cloud.hytora.remote.adapter.proxy.RemoteProxyAdapter;
@@ -69,7 +73,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.jar.*;
 
-import static cloud.hytora.driver.networking.protocol.packets.NetworkResponseState.OK;
+import static cloud.hytora.driver.networking.packets.response.NetworkResponseState.OK;
 
 @Getter
 public class Remote extends CloudDriver {
@@ -78,15 +82,20 @@ public class Remote extends CloudDriver {
     private final ServiceTaskManager serviceTaskManager;
     private final ServiceManager serviceManager;
 
-    private final IApplicationContext applicationContext;
     private final PlayerManager playerManager;
     private final CommandManager commandManager;
     private final CommandSender commandSender;
-    private final DriverStorage storage;
     private final ChannelMessenger channelMessenger;
+    private final ConfigManager configManager;
     private final NodeManager nodeManager;
     private final ModuleManager moduleManager;
     private final Instrumentation instrumentation;
+    /**
+     * The current {@link LanguageManager} instance
+     *
+     * @see LanguageManager
+     */
+    private LanguageManager languageManager;
 
     private ClassLoader applicationClassLoader;
     private final ClassLoader bootClassLoader = getClass().getClassLoader();
@@ -115,80 +124,99 @@ public class Remote extends CloudDriver {
         instance = this;
         this.instrumentation = instrumentation;
         this.arguments = arguments;
-        this.applicationContext = new ApplicationContext(this);
-        this.applicationContext.setInstance("driver", CloudDriver.getInstance());
+        this.languageManager = new DriverLanguageManager("english");
 
+        if (identity.getVersionType().getEnvironment() == SpecificDriverEnvironment.PROXY) {
+            DriverUtility.IS_BUNGEECORD = true;
+        }
 
         this.commandSender = new DefaultConsoleCommandSender("Remote", null).function(System.out::println);
         this.property = identity;
 
-        this.client = new RemoteNetworkClient(property.getAuthKey(), property.getName(), DocumentFactory.emptyDocument());
+        this.client = new RemoteNetworkClient(property.getAuthKey(), property.getName(), Document.empty());
 
         //registering handlers
         this.client.registerPacketHandler(new RemoteLoggingHandler());
-        this.client.registerPacketHandler(new RemoteCommandHandler());
+        this.client.registerPacketHandler(new RemoteServiceHandler());
         this.client.registerPacketHandler(new RemoteCacheUpdateHandler());
         this.client.registerPacketHandler(new RemoteNodeUpdateHandler());
 
+        this.client.registerPacketHandler(getTemplateManager());
 
         this.serviceTaskManager = new RemoteServiceTaskManager();
         this.serviceManager = new RemoteServiceManager();
         this.playerManager = new RemotePlayerManager(this.eventManager);
         this.commandManager = new RemoteCommandManager();
-        this.channelMessenger = new RemoteChannelMessenger(this.client);
+        this.channelMessenger = new DefaultChannelMessenger(this.client);
         this.nodeManager = new RemoteNodeManager();
         this.moduleManager = new RemoteModuleManager();
+        this.configManager = new RemoteConfigManager();
 
-        this.storage = new RemoteDriverStorage(this.client);
 
         //registering command argument parsers
         this.commandManager.registerParser(ServiceVersion.class, ServiceVersion::valueOf);
         this.commandManager.registerParser(LogLevel.class, LogLevel::valueOf);
-        this.commandManager.registerParser(ICloudService.class, this.serviceManager::getCachedCloudService);
-        this.commandManager.registerParser(IServiceTask.class, this.serviceTaskManager::getCachedServiceTask);
-        this.commandManager.registerParser(ICloudPlayer.class, this.playerManager::getCachedCloudPlayer);
+        this.commandManager.registerParser(CloudService.class, this.serviceManager::getCachedCloudService);
+        this.commandManager.registerParser(ServiceTask.class, this.serviceTaskManager::getCachedServiceTask);
+        this.commandManager.registerParser(CloudPlayer.class, this.playerManager::getCachedCloudPlayer);
         this.commandManager.registerParser(CloudOfflinePlayer.class, s -> this.playerManager.getOfflinePlayer(s).timeOut(TimeUnit.SECONDS, 5).syncUninterruptedly().get());
-        this.commandManager.registerParser(INode.class, this.nodeManager::getNodeByNameOrNull);
+        this.commandManager.registerParser(INode.class, this.nodeManager::getCachedNode);
 
+        this.setProvider(Query.class, new CloudQuery());
 
-        Channel channel = this.client.openConnection(property.getHostname(), property.getPort()).syncUninterruptedly().get();
-        logger.info("CloudRemote bound the NetworkClient to {}", channel);
+        System.out.println(" ");
+        System.out.println(" ");
+        System.out.println("-----------------------------------------------");
+        TaskResult<Channel> channel = this.client.openConnection(property.getHostname(), property.getPort()).syncUninterruptedly().get();
 
-        AuthenticationPacket authenticationPacket = new AuthenticationPacket(AuthenticationPacket.AuthenticationPayload.SERVICE, Remote.getInstance().getProperty());
+        DriverUtility.printColored("Remote", "Bound NetworkClient to %2" + channel.getResult());
 
-        BufferedResponse response = authenticationPacket.awaitResponse().syncUninterruptedly().get();
+        PacketAuthentication authenticationPacket = new PacketAuthentication(PacketAuthentication.AuthenticationPayload.SERVICE, Remote.getInstance().getProperty());
+
+        BufferedResponse response = authenticationPacket.sendQuery().execute().syncUninterruptedly().get();
         NetworkResponseState state = response.state();
-        logger.info("Authentication response returned '{}'", response.state());
+        DriverUtility.printColored("Remote", "%1Service§8-%1To§8-%1Node %2Status§8: §7" + response.state());
 
         if (state == OK) {
             Remote.getInstance().getScheduledExecutor().scheduleAtFixedRate(() -> {
                 Remote.getInstance().publishCycleData();
-            }, 0, HytoraCloudConstants.SERVER_PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
+            }, 0, Constants.SERVER_PUBLISH_INTERVAL, TimeUnit.MILLISECONDS);
         }
         switch (state) {
             case OK:
 
-                System.out.println("\n" +
-                        "   _____ _                 _ ____       _     _            \n" +
-                        "  / ____| |               | |  _ \\     (_)   | |           \n" +
-                        " | |    | | ___  _   _  __| | |_) |_ __ _  __| | __ _  ___ \n" +
-                        " | |    | |/ _ \\| | | |/ _` |  _ <| '__| |/ _` |/ _` |/ _ \\\n" +
-                        " | |____| | (_) | |_| | (_| | |_) | |  | | (_| | (_| |  __/\n" +
-                        "  \\_____|_|\\___/ \\__,_|\\__,_|____/|_|  |_|\\__,_|\\__, |\\___|\n" +
-                        "                                                 __/ |     \n" +
-                        "                                                |___/      ");
-                System.out.println("-------------------------");
-                System.out.println("[CloudRemote] Remote has connected to cloud-node");
-                System.out.println("[CloudRemote] This Remote is now registered and has Hands shaken with the CloudSystem");
+                CloudDriver.getInstance().getEventManager().callEvent(new CloudEventRemoteConnectEvent());
+                DriverUtility.printColored("Remote", "%1Service§8-%1To§8-%1Node %2Status§8: §aCOMPLETED");
 
-                CloudDriver.getInstance().getEventManager().callEvent(new RemoteConnectEvent());
-                System.out.println("[CloudRemote] Remote has been fully initialized.");
+                INetworkConfig networkConfig = this.configManager.readConfig();//connected now read config
+                DriverUtility.printColored("Remote", "%1Service§8-%1To§8-%1Node %2Status§8: §aCONFIG_RECEIVE");
+                DriverUtility.printColored("Remote", "Overview of §eimportant Settings§8:");
+                DriverUtility.printColored("Remote", "    => %1NetworkId§8: %2" + networkConfig.getUniqueNetworkId());
+                DriverUtility.printColored("Remote", "    => %1Logging§8: %2" + networkConfig.getLogLevel());
+                DriverUtility.printColored("Remote", "    => %1ServiceProcessing§8: %2" + networkConfig.getServiceProcessType());
+                DriverUtility.printColored("Remote", "    => %11st Color§8: %2" + networkConfig.getMessages().getMainColor().name());
+                DriverUtility.printColored("Remote", "    => %12nd Color§8: %2" + networkConfig.getMessages().getSecondColor().name());
+                System.out.println(" ");
+                DriverUtility.printColored("Remote", "If something here §cdoes not §7appear right, please contact a %1HytoraCloud§8-%2Developer§8!");
+
+                System.out.println(" ");
+                System.out.println(" ");
+                System.out.println("-----------------------------------------------");
+                System.out.println(" ");
+                System.out.println(" ");
                 break;
 
             case FAILED:
             case ERROR:
             case BAD_REQUEST:
-                System.out.println("Something went wrong whilst authenticating this service to the provided Node!");
+                String errorMessage = response.buffer().readString();
+                DriverUtility.printColored("Remote", "§cSomething went wrong whilst authenticating this service to the provided Node!");
+                DriverUtility.printColored("Remote", "§cError: §e" + errorMessage);
+                System.out.println(" ");
+                System.out.println(" ");
+                System.out.println("-----------------------------------------------");
+                System.out.println(" ");
+                System.out.println(" ");
                 break;
         }
 
@@ -312,10 +340,10 @@ public class Remote extends CloudDriver {
     }
 
 
-    public Task<DriverUpdatePacket> nexCacheUpdate() {
-        Task<DriverUpdatePacket> task = Task.empty();
+    public Task<PacketDriverCacheUpdate> nexCacheUpdate() {
+        Task<PacketDriverCacheUpdate> task = Task.empty();
         task.denyNull();
-        CloudDriver.getInstance().getExecutor().registerSelfDestructivePacketHandler((PacketHandler<DriverUpdatePacket>) (wrapper1, packet) -> task.setResult(packet));
+        CloudDriver.getInstance().getExecutor().registerSelfDestructivePacketHandler((PacketHandler<PacketDriverCacheUpdate>) (wrapper1, packet) -> task.setResult(packet));
         return task;
     }
 
@@ -324,14 +352,14 @@ public class Remote extends CloudDriver {
     }
 
     public RemoteProxyAdapter getProxyAdapter() {
-        return DriverUtility.perform(adapter instanceof RemoteProxyAdapter, () -> DriverUtility.cast(adapter), new IllegalStateException("Not a " + RemoteProxyAdapter.class.getSimpleName()));
+        return DriverUtility.perform(adapter instanceof RemoteProxyAdapter, () -> DriverUtility.cast(adapter), new IllegalStateException("Not a " + RemoteProxyAdapter.class.getSimpleName() + " but a " + adapter.getClass().getName()));
     }
 
     public RemoteProxyAdapter getProxyAdapterOrNull() {
         return DriverUtility.perform(adapter instanceof RemoteProxyAdapter, () -> DriverUtility.cast(adapter), (Supplier<RemoteProxyAdapter>) () -> null);
     }
 
-    public ICloudService thisService() {
+    public CloudService thisService() {
         return this.serviceManager == null ? null : this.serviceManager.getAllCachedServices().stream().filter(it -> it.getName().equalsIgnoreCase(this.property.getName())).findAny().orElse(null);
     }
 
@@ -339,31 +367,30 @@ public class Remote extends CloudDriver {
     @Override
     public void shutdown() {
         if (adapter != null) {
-            adapter.shutdown();
+            adapter.shutdown().onTaskSucess(e -> {
+
+                if (applicationThread != null) {
+                    //applicationThread.destroy();
+                }
+                System.exit(0);
+            });
             return;
+        } else {
+            System.exit(0);
         }
 
-        if (applicationThread != null) {
-            //applicationThread.destroy();
-        }
-        System.exit(0);
     }
 
     @Override
     public void logToExecutor(NetworkComponent component, String message, Object... args) {
         message = StringUtils.formatMessage(message, args);
-        DriverLoggingPacket packet = new DriverLoggingPacket(component, message);
+        PacketDriverLogging packet = new PacketDriverLogging(component, message);
         this.client.sendPacket(packet);
     }
 
-    @Override
-    public INetworkConfig getNetworkConfig() { // TODO: 10.04.2025 implement on remote side
-        throw new IncompatibleDriverEnvironmentException(Environment.NODE);
-    }
-
     public void publishCycleData() {
-        ICloudService server = Remote.getInstance().thisService();
-        IServiceCycleData cycleData = createCycleData();
+        CloudService server = Remote.getInstance().thisService();
+        ServiceCycleData cycleData = createCycleData();
         if (cycleData == null) {
             return;
         }
@@ -371,10 +398,11 @@ public class Remote extends CloudDriver {
         server.setLastCycleData(cycleData);
         server.update(PublishingType.GLOBAL);
     }
-    public IServiceCycleData createCycleData() {
+
+    public ServiceCycleData createCycleData() {
 
         RemoteAdapter remoteAdapter = Remote.getInstance().getAdapter();
-        ICloudService server = Remote.getInstance().thisService();
+        CloudService server = Remote.getInstance().thisService();
 
         if (remoteAdapter == null || server == null) {
             return null;
@@ -384,23 +412,30 @@ public class Remote extends CloudDriver {
 
     @NotNull
     @Override
-    public AdvancedNetworkExecutor getExecutor() {
+    public HandlingNetworkExecutor getExecutor() {
         return client;
     }
 
 
-    public static Remote init(RemoteIdentity identity) {
+    @SafeVarargs
+    public static Remote init(RemoteIdentity identity, Consumer<PacketDriverCacheUpdate>... onInit) {
         if (instance == null) { //processing is PLUGIN_BRIDGE
             Remote remote = new Remote(identity);
-            DriverRequestCachePacket packet = new DriverRequestCachePacket();
-            BufferedResponse bufferedResponse = packet.awaitResponse().syncUninterruptedly().get();
+            PacketDriverCacheRequest packet = new PacketDriverCacheRequest();
+            BufferedResponse bufferedResponse = packet.sendQuery().execute().syncUninterruptedly().get();
             try {
                 IPacket iPacket = bufferedResponse.buffer().readPacket();
+                for (Consumer<PacketDriverCacheUpdate> driverUpdatePacketConsumer : onInit) {
+                    driverUpdatePacketConsumer.accept((PacketDriverCacheUpdate) iPacket);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
             return remote;
         } else {
+            for (Consumer<PacketDriverCacheUpdate> driverUpdatePacketConsumer : onInit) {
+                driverUpdatePacketConsumer.accept(null);
+            }
             return instance;
         }
     }
@@ -411,10 +446,8 @@ public class Remote extends CloudDriver {
 
         Remote remote = new Remote(identity);
 
-        remote.getEventManager().registerListener(new CloudEventListener<>(RemoteConnectEvent.class, e -> {
+        remote.getEventManager().registerListener(new CloudEventListener<>(CloudEventRemoteConnectEvent.class, e -> {
             handler.accept(null);
         }));
     }
-
-
 }

@@ -8,12 +8,6 @@ import lombok.Getter;
 public class MessageConfiguration {
 
     /**
-     * The prefix that will be in front of every message
-     * of this module when using the placeholder %prefix%
-     */
-    private String prefix;
-
-    /**
      * The message when a service is starting
      */
     private final String startMessage;
@@ -32,9 +26,8 @@ public class MessageConfiguration {
      * Default config constructor
      */
     public MessageConfiguration() {
-        this.prefix = "§8× §bHytora§fCloud §8»";
-        this.startMessage = "%prefix% §8'§b{server.node}§8' §7queued §6{server.name} §8| §3Port §b{server.port} §8| §3MaxPlayer §b{server.capacity} §8| §3Version §b{task.version} §8| §3State {server.state} §8| §3ShutdownBehaviour §b{server.type}";
-        this.stopMessage = "%prefix% §8'§c{server.name}§8' §7has been stopped§8! §8| §bUptime§8: §f{server.uptime}";
+        this.startMessage = "%prefix% §8'%1{server.node}§8' §7queued %2{server.name} §8| %2Port %1{server.port} §8| %2MaxPlayer %1{server.capacity} §8| %2Version %1{task.version} §8| %2State {server.state} §8| %2ShutdownBehaviour %1{server.type}";
+        this.stopMessage = "%prefix% §8'§c{server.name}§8' §7has been stopped§8! §8| %1Uptime§8: §f{server.uptime}";
         this.readyMessage = "%prefix% §8'§a{server.name}§8' §7is now ready to use§8! §8| §aBootup§8: §f{server.uptimeDifFormat} min";
     }
 }

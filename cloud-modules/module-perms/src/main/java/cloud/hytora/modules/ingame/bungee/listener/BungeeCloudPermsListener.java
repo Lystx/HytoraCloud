@@ -1,13 +1,12 @@
 package cloud.hytora.modules.ingame.bungee.listener;
 
-import cloud.hytora.driver.permission.Permission;
-import cloud.hytora.driver.permission.PermissionPlayer;
+import cloud.hytora.driver.CloudDriver;
+import cloud.hytora.driver.module.permission.PermissionManager;
+import cloud.hytora.driver.module.permission.PermissionPlayer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PermissionCheckEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
-
-import java.lang.reflect.InvocationTargetException;
 
 public class BungeeCloudPermsListener implements Listener {
 
@@ -16,7 +15,7 @@ public class BungeeCloudPermsListener implements Listener {
 
         if (event.getSender() instanceof ProxiedPlayer) {
             ProxiedPlayer player = (ProxiedPlayer)event.getSender();
-            PermissionPlayer permissionPlayer = PermissionPlayer.byUniqueId(player.getUniqueId());
+            PermissionPlayer permissionPlayer = CloudDriver.getInstance().getProvider(PermissionManager.class).getPermissionPlayer(player.getUniqueId());
             if (permissionPlayer == null) {
                 System.out.println("ERROR");
                 return;

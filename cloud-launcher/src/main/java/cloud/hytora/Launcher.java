@@ -5,27 +5,19 @@ import cloud.hytora.commands.IncludeDependencyCommand;
 import cloud.hytora.commands.IncludeRepositoryCommand;
 import cloud.hytora.commands.LoggerCommand;
 import cloud.hytora.common.DriverUtility;
+import cloud.hytora.common.Snowflake;
 import cloud.hytora.common.VersionInfo;
 import cloud.hytora.common.collection.ThreadRunnable;
-import cloud.hytora.common.collection.WrappedException;
-import cloud.hytora.common.logging.ConsoleColor;
 import cloud.hytora.common.logging.LogLevel;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
 import cloud.hytora.common.logging.handler.HandledAsyncLogger;
 import cloud.hytora.common.logging.handler.HandledLogger;
-import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.misc.FileUtils;
-import cloud.hytora.common.progressbar.ProgressBar;
-import cloud.hytora.common.progressbar.ProgressBarStyle;
-import cloud.hytora.common.progressbar.ProgressPrinter;
-import cloud.hytora.context.ApplicationContext;
-import cloud.hytora.context.IApplicationContext;
 import cloud.hytora.dependency.Dependency;
 import cloud.hytora.dependency.DependencyLoader;
 import cloud.hytora.dependency.Repository;
 import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.module.ModuleUpdater;
 import cloud.hytora.script.api.IScriptLoader;
 import cloud.hytora.script.api.impl.DefaultScriptLoader;
@@ -40,7 +32,7 @@ import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.net.URLConnection;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -61,19 +53,19 @@ public class Launcher extends DriverUtility {
     public static final Path LAUNCHER_VERSIONS = LAUNCHER_DIR.resolve("versions/");
 
 
-    public static String APPLICATION_FILE_URL;
-    public static String DOWNLOAD_URL;
-    public static String BASE_URL;
     public static String CUSTOM_VERSION;
-    public static boolean USE_AUTO_UPDATER, USE_MODULE_AUTO_UPDATER;
+    public static boolean USE_AUTO_UPDATER, USE_MODULE_AUTO_UPDATER, FAST_START, DISABLE_SERVER_START;
 
     public static void main(String[] args) throws IOException {
         AnsiConsole.systemInstall();
         HandledLogger logger = new HandledAsyncLogger(LogLevel.fromName(System.getProperty("cloud.logging.level", "INFO")));
+        logger.setCacheEntires(true);
         Logger.setFactory(logger.addHandler(entry -> {
             String formatted = ColoredMessageFormatter.format(entry);
             System.out.println(formatted);
         }));
+        FAST_START = Arrays.stream(args).anyMatch(s -> s.equalsIgnoreCase("--fastStart"));
+        DISABLE_SERVER_START = Arrays.stream(args).anyMatch(s -> s.equalsIgnoreCase("--disableServerStart"));
         System.setErr(logger.asPrintStream(LogLevel.ERROR));
         new Launcher(logger, args);
     }
@@ -89,13 +81,18 @@ public class Launcher extends DriverUtility {
 
     AtomicBoolean run = new AtomicBoolean(false);
 
+
+    public boolean isFastStart() {
+        return Arrays.stream(this.args).anyMatch(s -> s.equalsIgnoreCase("--fastStart"));
+    }
+
     public Launcher(Logger logger, String[] args) throws IOException {
         this.args = args;
         this.logger = logger;
         this.dependencies = DriverUtility.newList();
         this.repositories = new HashMap<>();
 
-        Document document = DocumentFactory.newJsonDocument(new File(LAUNCHER_DIR.toFile(), "auto_updater.json"));
+        Document document = Document.gson(new File(LAUNCHER_DIR.toFile(), "auto_updater.json"));
 
         if (document.isEmpty()) {
             document.set("lastVersion", VersionInfo.getCurrentVersion().toString());
@@ -107,29 +104,30 @@ public class Launcher extends DriverUtility {
         VersionInfo.setCurrentVersion(version);
 
 
-        logger.log(LogLevel.NULL, "         ██▓    ▄▄▄       █    ██  ███▄    █  ▄████▄   ██░ ██ ▓█████  ██▀███  ");
-        logger.log(LogLevel.NULL, "        ▓██▒   ▒████▄     ██  ▓██▒ ██ ▀█   █ ▒██▀ ▀█  ▓██░ ██▒▓█   ▀ ▓██ ▒ ██▒");
-        logger.log(LogLevel.NULL, "        ▒██░   ▒██  ▀█▄  ▓██  ▒██░▓██  ▀█ ██▒▒▓█    ▄ ▒██▀▀██░▒███   ▓██ ░▄█ ▒");
-        logger.log(LogLevel.NULL, "        ▒██░   ░██▄▄▄▄██ ▓▓█  ░██░▓██▒  ▐▌██▒▒▓▓▄ ▄██▒░▓█ ░██ ▒▓█  ▄ ▒██▀▀█▄  ");
-        logger.log(LogLevel.NULL, "        ░██████▒▓█   ▓██▒▒▒█████▓ ▒██░   ▓██░▒ ▓███▀ ░░▓█▒░██▓░▒████▒░██▓ ▒██▒");
-        logger.log(LogLevel.NULL, "        ░ ▒░▓  ░▒▒   ▓▒█░░▒▓▒ ▒ ▒ ░ ▒░   ▒ ▒ ░ ░▒ ▒  ░ ▒ ░░▒░▒░░ ▒░ ░░ ▒▓ ░▒▓░");
-        logger.log(LogLevel.NULL, "        ░ ░ ▒  ░ ▒   ▒▒ ░░░▒░ ░ ░ ░ ░░   ░ ▒░  ░  ▒    ▒ ░▒░ ░ ░ ░  ░  ░▒ ░ ▒░");
-        logger.log(LogLevel.NULL, "          ░ ░    ░   ▒    ░░░ ░ ░    ░   ░ ░ ░         ░  ░░ ░   ░     ░░   ░ ");
-        logger.log(LogLevel.NULL, "            ░  ░     ░  ░   ░              ░ ░ ░       ░  ░  ░   ░  ░   ░     ");
-        logger.log(LogLevel.NULL, "                                             ░                                ");
+        logger.info("         ██▓    ▄▄▄       █    ██  ███▄    █  ▄████▄   ██░ ██ ▓█████  ██▀███  ");
+        logger.info("        ▓██▒   ▒████▄     ██  ▓██▒ ██ ▀█   █ ▒██▀ ▀█  ▓██░ ██▒▓█   ▀ ▓██ ▒ ██▒");
+        logger.info("        ▒██░   ▒██  ▀█▄  ▓██  ▒██░▓██  ▀█ ██▒▒▓█    ▄ ▒██▀▀██░▒███   ▓██ ░▄█ ▒");
+        logger.info("        ▒██░   ░██▄▄▄▄██ ▓▓█  ░██░▓██▒  ▐▌██▒▒▓▓▄ ▄██▒░▓█ ░██ ▒▓█  ▄ ▒██▀▀█▄  ");
+        logger.info("        ░██████▒▓█   ▓██▒▒▒█████▓ ▒██░   ▓██░▒ ▓███▀ ░░▓█▒░██▓░▒████▒░██▓ ▒██▒");
+        logger.info("        ░ ▒░▓  ░▒▒   ▓▒█░░▒▓▒ ▒ ▒ ░ ▒░   ▒ ▒ ░ ░▒ ▒  ░ ▒ ░░▒░▒░░ ▒░ ░░ ▒▓ ░▒▓░");
+        logger.info("        ░ ░ ▒  ░ ▒   ▒▒ ░░░▒░ ░ ░ ░ ░░   ░ ▒░  ░  ▒    ▒ ░▒░ ░ ░ ░  ░  ░▒ ░ ▒░");
+        logger.info("          ░ ░    ░   ▒    ░░░ ░ ░    ░   ░ ░ ░         ░  ░░ ░   ░     ░░   ░ ");
+        logger.info("            ░  ░     ░  ░   ░              ░ ░ ░       ░  ░  ░   ░  ░   ░     ");
+        logger.info("                                             ░                                ");
 
-        logger.log(LogLevel.NULL, "        Launching your CloudSystem and checking for Updates...");
-        logger.log(LogLevel.NULL, "            |=>    Your version: " + version + "   <=|        ");
-        logger.log(LogLevel.NULL, "");
+        logger.info("        §7Launching your CloudSystem §7and checking for §pdates§8...");
+        logger.info("            §8|=>    §7Your version: " + version + "   §8<=|        ");
+        logger.info(" ");
+        logger.info(" ");
 
-        logger.info("Loading ApplicationContext...");
-        IApplicationContext context = new ApplicationContext(this);
-        logger.info("Loaded ApplicationContext!");
 
-        this.dependencyLoader = context.getInstance(DependencyLoader.class);
-        this.moduleUpdater = context.getInstance(ModuleUpdater.class);
+        this.dependencyLoader = new DependencyLoader(this);
+        this.moduleUpdater = new ModuleUpdater(this);
 
-        logger.info("Loading 'launcher.cloud'...");
+        if (!this.isFastStart()) {
+            sleep(1000L);
+        }
+        logger.debug("Loading launcher.cloud§8...");
         IScriptLoader loader = new DefaultScriptLoader();
         loader.registerCommand(new DefaultRunCommand());
         loader.registerCommand(new DefaultPrintCommand());
@@ -155,46 +153,53 @@ public class Launcher extends DriverUtility {
         if (run.get()) {
             return;
         }
-        System.out.println("Loading script...");
+        if (!this.isFastStart()) {
+            sleep(2000L);
+        }
         loader.loadScript(launcherFile)
-                .runScript()
-                .onTaskSucess(n -> {
-                    if (run.get()) {
-                        return;
-                    }
-                    run.set(true);
-                    APPLICATION_FILE_URL = System.getProperty("cloud.hytora.launcher.application.file");
-                    USE_AUTO_UPDATER = System.getProperty("cloud.hytora.launcher.autoupdater").equalsIgnoreCase("true");
-                    USE_MODULE_AUTO_UPDATER = System.getProperty("cloud.hytora.launcher.module.autoupdater").equalsIgnoreCase("true");
-                    CUSTOM_VERSION = System.getProperty("cloud.hytora.launcher.customVersion");
-                    logger.info("Script-Task was successful!");
-                    logger.info("Setting up Files...");
-                    try {
-                        LAUNCHER_DIR.toFile().mkdirs();
-                        LAUNCHER_VERSIONS.toFile().mkdirs();
-                        LAUNCHER_LIBS.toFile().mkdirs();
-                        LAUNCHER_MODULES.toFile().mkdirs();
-                    } catch (Exception e) {
-                        //files already exists
-                    }
+                .runScript().syncUninterruptedly().get();
+        if (run.get()) {
+            return;
+        }
+        run.set(true);
+        if (DISABLE_SERVER_START) {
+            System.setProperty("cloud.hytora.launcher.disableServerStart", "true");
+        }
+        USE_AUTO_UPDATER = System.getProperty("cloud.hytora.launcher.autoupdater").equalsIgnoreCase("true");
+        USE_MODULE_AUTO_UPDATER = System.getProperty("cloud.hytora.launcher.module.autoupdater").equalsIgnoreCase("true");
+        CUSTOM_VERSION = System.getProperty("cloud.hytora.launcher.customVersion");
+        logger.debug("Setting up Files...");
+        try {
+            LAUNCHER_DIR.toFile().mkdirs();
+            LAUNCHER_VERSIONS.toFile().mkdirs();
+            LAUNCHER_LIBS.toFile().mkdirs();
+            LAUNCHER_MODULES.toFile().mkdirs();
+        } catch (Exception e) {
+            //files already exists
+        }
 
-                    logger.info("Initialization done!");
-                    logger.info("==> Now searching for updates...");
-                    this.checkForUpdates(version, args);
-                });
+        logger.info("§7Initialization §adone§7!");
+        logger.info("§7Now searching for §eupdates§8...");
+        this.checkForUpdates(version, true, args);
     }
 
 
-    private void checkForUpdates(VersionInfo version, String... args) {
+    private void checkForUpdates(VersionInfo version, boolean print, String... args) {
+        if (!this.isFastStart()) {
+            sleep(2000L);
+        }
+        if (print) {
+            logger.info("§7Checking §eAutoUpdater §7for HytoraCloud-Node§8...");
+        }
         if (USE_AUTO_UPDATER) {
-            logger.info("Checking for Updates...");
             VersionInfo newestVersion = VersionInfo.getNewestVersion("UNKNOWN");
-            logger.info("Input: " + version + " | Your version: " + VersionInfo.getCurrentVersion() + " | Newest Version: " + newestVersion);
             if (!version.isUpToDate() || Objects.requireNonNull(LAUNCHER_VERSIONS.toFile().listFiles()).length == 0) {
-                logger.info("Version (" + version + ") is outdated or your cloud.jar is not existing at all!");
-                logger.info("==> Downloading latest HytoraCloud version [ver={}]...", newestVersion.toString());
+                logger.info("  §8=> §7Version §8(§e" + version + "§8) §7is §coutdated §7or §cnot existing §7at all§8!");
+                logger.info("  §8=> §7Updating to latest HytoraCloud §7release §8[§ever§8=§e{}§8]...", newestVersion.toString());
 
-
+                if (!this.isFastStart()) {
+                    sleep(1000L);
+                }
 
                 String startBatURL = getNewestVersionDownloadUrl("start.bat");
                 File startBat = new File("start.bat");
@@ -206,36 +211,28 @@ public class Launcher extends DriverUtility {
                 File cloudFile = new File(LAUNCHER_VERSIONS.toFile(), newestVersion.formatCloudJarName());
 
                 if (!startBat.exists()) {
-                    LauncherUtils.downloadVersion(startBatURL, startBat.toPath()).onTaskSucess(e -> {
-                        logger.info("§8[§e1§8/§e3§8] Downloaded §8'§a{}§8'", "start.bat");
-                    });
+                    logger.info("  §8=> §7Downloading §8'§e{}§8'§8...", "start.bat");
+                    LauncherUtils.downloadVersion(startBatURL, startBat.toPath(), "  §8=> §7Downloaded §8'§astart.bat§8").syncUninterruptedly();
                 }
                 if (!startSH.exists()) {
-                    LauncherUtils.downloadVersion(startSHURL, startSH.toPath()).onTaskSucess(e -> {
-                        logger.info("§8[§e2§8/§e3§8] Downloaded §8'§a{}§8'", "start.sh");
-                    });
+                    logger.info("  §8=> §7Downloading §8'§e{}§8'§8...", "start.sh");
+                    LauncherUtils.downloadVersion(startSHURL, startSH.toPath(), "  §8=> §7Downloaded §8'§astart.sh§8'").syncUninterruptedly();
                 }
                 if (!cloudFile.exists()) {
-                    LauncherUtils.downloadVersion(cloudFileURL, cloudFile.toPath()).onTaskSucess(e -> {
-                        logger.info("§8[§e3§8/§e3§8] Downloaded §8'§a{}§8'", newestVersion.formatCloudJarName());
+                    logger.info("  §8=> §7Downloading §8'§e{}§8'§8...", newestVersion.formatCloudJarName());
+                    LauncherUtils.downloadVersion(cloudFileURL, cloudFile.toPath(), "  §8=> §7Downloaded §8'§a" + newestVersion.formatCloudJarName() + "§8'").onTaskSucess(e -> {
+                        logger.info("", newestVersion.formatCloudJarName());
                         try {
-                            Document document = DocumentFactory.newJsonDocument(new File(LAUNCHER_DIR.toFile(), "auto_updater.json"));
+                            Document document = Document.gson(new File(LAUNCHER_DIR.toFile(), "auto_updater.json"));
                             document.set("lastVersion", newestVersion.toString());
                             document.saveToFile(new File(LAUNCHER_DIR.toFile(), "auto_updater.json"));
                             VersionInfo.setCurrentVersion(newestVersion);
                         } catch (IOException ex) {
                             ex.printStackTrace();
                         }
-
-                        try {
-                            Thread.sleep(1500);
-                            this.checkForUpdates(newestVersion, args);
-                        } catch (InterruptedException e2) {
-                            throw new WrappedException(e2);
-                        }
-
+                        this.checkForUpdates(newestVersion, false, args);
                     }).onTaskFailed(e -> {
-                        logger.info("§cFailed to Download CloudFile");
+                        logger.info("  §8=> §cFailed to Download CloudFile");
                         try {
                             throw e;
                         } catch (Throwable ex) {
@@ -243,18 +240,25 @@ public class Launcher extends DriverUtility {
                         }
                     });
                 }
-
                 return;
             }
         }
 
         if (!USE_AUTO_UPDATER) {
-            logger.info("AutoUpdater has been disabled!");
-            logger.info("Directly starting CloudNode...");
+            if (print) {
+                logger.info("  §8=> §7AutoUpdater is §cdisabled§8! §7Directly starting §bCloudNode§8...");
+            }
         } else if (!CUSTOM_VERSION.equalsIgnoreCase("null")) {
-            logger.info("Custom version [val={}] has been selected! Skipping AutoUpdater", VersionInfo.fromString(CUSTOM_VERSION));
+            if (print) {
+                logger.info("  §8=> §7Custom version §8[§eval={}§8] §7has been selected§8! Skipping §eAutoUpdater§8...", VersionInfo.fromString(CUSTOM_VERSION));
+            }
         } else {
-            logger.info("Your CloudSystem is up to date with latest release! §8[§e{}§8]", VersionInfo.getCurrentVersion().toString());
+            if (print) {
+                logger.info("  §8=>§7Your §bCloudSystem §7is §aup to date §7with latest release! §8[§e{}§8]", VersionInfo.getCurrentVersion().toString());
+            }
+        }
+        if (!this.isFastStart()) {
+            sleep(2000L);
         }
 
         ThreadRunnable runnable = new ThreadRunnable(() -> {
@@ -270,7 +274,8 @@ public class Launcher extends DriverUtility {
                 logger.error("==> Error: If the error occurs again, please contact the Developer!");
                 return;
             }
-            logger.info("");
+            logger.info(" ");
+            logger.info(" ");
 
             try {
                 startApplication(args, dependencyResources);
@@ -279,76 +284,50 @@ public class Launcher extends DriverUtility {
             }
         });
 
+        logger.info("§7Checking for §eModule§8-§eUpdates§8!");
         if (USE_MODULE_AUTO_UPDATER) {
-            logger.info("Checking for Module-Updates!");
-            moduleUpdater.updateModules()
-                    .onTaskSucess(n -> {
-                        if (n > 0) {
-                            logger.info("Updated {} Modules!", n);
-                        } else {
-                            logger.info("All Modules are up to date!");
-                        }
-                        logger.info("Continuing to cloud process...");
-                        runnable.runAsync();
-                    })
-                    .onTaskFailed(e -> {
-                        logger.info("Something went wrong whilst trying to update Modules!");
-                        WrappedException.throwWrapped(e);
-                    });
+            moduleUpdater.updateModules().registerListener(task -> {
+                Integer n = task.get();
+
+                if (n > 0) {
+                    logger.info("  §8=> §eModule§8-§eUpdater §7updated a total of §e{} §7Modules§8!", n);
+                } else {
+                    logger.info("  §8=> §7All Modules are §aup to date§8!");
+                }
+                logger.info("§7Continuing to §3cloud process§8...");
+                if (!this.isFastStart()) {
+                    sleep(2000L);
+                }
+                runnable.runAsync();
+            }).syncUninterruptedly();
+
         } else {
-            logger.info("Module Updating is disabled! Skipping...");
+            logger.info("  §8=>§7Module Updating is §cdisabled§8! §7Skipping§8...");
+            if (!this.isFastStart()) {
+                sleep(2000L);
+            }
             runnable.runAsync();
         }
 
     }
 
+    public static void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 
-    public static String getNewestVersionDownloadUrl(String data) {
+
+    public String getNewestVersionDownloadUrl(String data) {
         VersionInfo newestVersion = VersionInfo.getNewestVersion(VersionInfo.getCurrentVersion().toString());
 
         return "https://raw.github.com/Lystx/HytoraCloud/master/hytoraCloud-updater/" + newestVersion.getVersion() + "/" + data;
     }
 
 
-    public String getBaseUrl() {
-        VersionInfo newestVersion = VersionInfo.getNewestVersion("1.5");
-
-        String urlString = BASE_URL;
-        urlString = urlString.replace("{version}", String.valueOf(newestVersion.getVersion()));
-        urlString = urlString.replace("{type}", String.valueOf(newestVersion.getType()));
-
-        return urlString;
-    }
-
     private void startApplication(String[] args, Collection<URL> dependencyResources) throws Throwable {
-        LauncherUtils.clearConsole();
-        System.out.println("\n");
-        System.out.println("  _                     _ _                     _                     _____                                                 \n" +
-                " | |                   | (_)                   | |                   |  __ \\                                                \n" +
-                " | |     ___   __ _  __| |_ _ __   __ _        | | __ ___   ____ _   | |__) |___ ___ ___  ___  _   _ _ __ ___ ___ ___       \n" +
-                " | |    / _ \\ / _` |/ _` | | '_ \\ / _` |   _   | |/ _` \\ \\ / / _` |  |  _  // _ / __/ __|/ _ \\| | | | '__/ __/ _ / __|      \n" +
-                " | |___| (_) | (_| | (_| | | | | | (_| |  | |__| | (_| |\\ V | (_| |  | | \\ |  __\\__ \\__ | (_) | |_| | | | (_|  __\\__ \\_ _ _ \n" +
-                " |______\\___/ \\__,_|\\__,_|_|_| |_|\\__, |   \\____/ \\__,_| \\_/ \\__,_|  |_|  \\_\\___|___|___/\\___/ \\__,_|_|  \\___\\___|___(_(_(_)\n" +
-                "                                   __/ |                                                                                    \n" +
-                "                                  |___/                                                                                     ");
-        System.out.println("\n");
-
-
-        ProgressBar pb = new ProgressBar(ProgressBarStyle.COLORED_UNICODE_BLOCK, 100);
-        pb.setAppendProgress(false);
-        pb.setBarLength(65);
-        pb.setPrintAutomatically(true);
-        pb.setExpandingAnimation(true);
-
-        for (int i = 0; i < 65; i++) {
-            if (pb.step()) {
-                Thread.sleep(100);
-            }
-        }
-
-        pb.setExtraMessage("Successfully downloaded! Cleaning up unused bytes...");
-        pb.close("");
-        System.out.println("\n");
 
         String jarName;
         if (!CUSTOM_VERSION.equalsIgnoreCase("null")) {
@@ -369,22 +348,34 @@ public class Launcher extends DriverUtility {
 
         dependencyResources.add(targetPath.toUri().toURL());
 
+
+
+        //Loading mainclass
+
         IdentifiableClassLoader classLoader = new IdentifiableClassLoader(dependencyResources.toArray(new URL[0]));
         Method method = classLoader.loadClass(mainClass).getMethod("main", String[].class);
+
+        URLClassLoader urlClassLoader = new URLClassLoader(((URLClassLoader) (Thread.currentThread().getContextClassLoader())).getURLs());
+        Thread.currentThread().setContextClassLoader(classLoader);
 
         Collection<String> arguments = DriverUtility.listOf(args);
         arguments.add("--moduleFolder=" + LAUNCHER_MODULES.toString());
 
+        logger.info("Starting HytoraCloud-InternalNodeComplex...");
+        logger.info(" => SessionId: " + UUID.randomUUID());
+        logger.info(" => Snowflake: " + Snowflake.getInstance().nextId());
+        logger.info("...");
         Thread thread = new Thread(() -> {
             try {
 
                 try {
+                    urlClassLoader.close();
                     method.invoke(null, (Object) arguments.toArray(new String[0]));
                 } catch (IllegalAccessException | InvocationTargetException exception) {
                     exception.printStackTrace();
                 }
             } catch (Exception e) {
-
+                e.printStackTrace();
             }
         }, "Application-Thread");
         thread.setPriority(Thread.MIN_PRIORITY);

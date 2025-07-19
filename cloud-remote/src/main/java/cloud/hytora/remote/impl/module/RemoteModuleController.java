@@ -1,19 +1,18 @@
 package cloud.hytora.remote.impl.module;
 
 import cloud.hytora.document.Document;
-import cloud.hytora.document.DocumentFactory;
 import cloud.hytora.document.wrapped.StorableDocument;
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.exception.IncompatibleDriverEnvironmentException;
-import cloud.hytora.driver.module.IModule;
+import cloud.hytora.driver.common.exception.IncompatibleDriverEnvironmentException;
+import cloud.hytora.driver.module.ModuleInfo;
 import cloud.hytora.driver.module.controller.ModuleClassLoader;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.ModuleManager;
 import cloud.hytora.driver.module.controller.base.ModuleConfig;
 import cloud.hytora.driver.module.controller.base.ModuleState;
-import cloud.hytora.driver.module.packet.RemoteModuleControllerPacket;
+import cloud.hytora.driver.networking.packets.module.PacketModuleController;
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
-import cloud.hytora.driver.networking.protocol.packets.BufferState;
+import cloud.hytora.driver.networking.protocol.types.BufferState;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,7 +32,7 @@ public class RemoteModuleController implements ModuleController {
     private Document config;
 
     public @NotNull StorableDocument getConfig() {
-        return DocumentFactory.newStorableDocument(config, getJarFile());
+        return Document.storable(config, getJarFile());
     }
 
     @Override
@@ -43,38 +42,38 @@ public class RemoteModuleController implements ModuleController {
 
     @Override
     public void loadModule() {
-        CloudDriver.getInstance().getExecutor().sendPacket(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.LOAD_MODULE));
+        CloudDriver.getInstance().getExecutor().sendPacket(new PacketModuleController(this.moduleConfig, PacketModuleController.PayLoad.LOAD_MODULE));
     }
 
     @Override
     public void enableModule() {
-        CloudDriver.getInstance().getExecutor().sendPacket(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.ENABLE_MODULE));
+        CloudDriver.getInstance().getExecutor().sendPacket(new PacketModuleController(this.moduleConfig, PacketModuleController.PayLoad.ENABLE_MODULE));
 
     }
 
     @Override
     public void reloadModule() {
-        CloudDriver.getInstance().getExecutor().sendPacket(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.RELOAD_MODULE));
+        CloudDriver.getInstance().getExecutor().sendPacket(new PacketModuleController(this.moduleConfig, PacketModuleController.PayLoad.RELOAD_MODULE));
 
     }
 
     @Override
     public void disableModule() {
-        CloudDriver.getInstance().getExecutor().sendPacket(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.DISABLE_MODULE));
+        CloudDriver.getInstance().getExecutor().sendPacket(new PacketModuleController(this.moduleConfig, PacketModuleController.PayLoad.DISABLE_MODULE));
     }
 
     @Override
     public void unregisterModule() {
-        CloudDriver.getInstance().getExecutor().sendPacket(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.UNREGISTER_MODULE));
+        CloudDriver.getInstance().getExecutor().sendPacket(new PacketModuleController(this.moduleConfig, PacketModuleController.PayLoad.UNREGISTER_MODULE));
     }
 
     @Override
     public void update() {
-        CloudDriver.getInstance().getExecutor().sendPacket(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.API_UPDATE));
+        CloudDriver.getInstance().getExecutor().sendPacket(new PacketModuleController(this.moduleConfig, PacketModuleController.PayLoad.API_UPDATE));
 
     }
 
-    public @NotNull IModule getModule() {
+    public @NotNull ModuleInfo getModule() {
         return () -> RemoteModuleController.this;
     }
 
@@ -90,7 +89,7 @@ public class RemoteModuleController implements ModuleController {
     @Override
     public Path getJarFile() {
         if (jarFile == null) {
-            jarFile = Paths.get(CloudDriver.getInstance().getExecutor().getPacketChannel().prepareSingleQuery().execute(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.GET_JAR_FILE)).syncUninterruptedly().get().buffer().readString());
+            jarFile = Paths.get(CloudDriver.getInstance().getExecutor().getPacketChannel().sendQuery().execute(new PacketModuleController(this.moduleConfig, PacketModuleController.PayLoad.GET_JAR_FILE)).syncUninterruptedly().get().buffer().readString());
         }
         return jarFile;
     }
@@ -101,7 +100,7 @@ public class RemoteModuleController implements ModuleController {
     @Override
     public Path getDataFolder() {
         if (dataFolder == null) {
-            dataFolder = Paths.get(CloudDriver.getInstance().getExecutor().getPacketChannel().prepareSingleQuery().execute(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.GET_DATA_FOLDER)).syncUninterruptedly().get().buffer().readString());
+            dataFolder = Paths.get(CloudDriver.getInstance().getExecutor().getPacketChannel().sendQuery().execute(new PacketModuleController(this.moduleConfig, PacketModuleController.PayLoad.GET_DATA_FOLDER)).syncUninterruptedly().get().buffer().readString());
         }
         return dataFolder;
     }
@@ -109,7 +108,7 @@ public class RemoteModuleController implements ModuleController {
     @NotNull
     @Override
     public StorableDocument reloadConfig() {
-        return DocumentFactory.newStorableDocument(CloudDriver.getInstance().getExecutor().getPacketChannel().prepareSingleQuery().execute(new RemoteModuleControllerPacket(this.moduleConfig, RemoteModuleControllerPacket.PayLoad.RELOAD_CONFIG)).syncUninterruptedly().get().buffer().readDocument(), getJarFile());
+        return Document.storable(CloudDriver.getInstance().getExecutor().getPacketChannel().sendQuery().execute(new PacketModuleController(this.moduleConfig, PacketModuleController.PayLoad.RELOAD_CONFIG)).syncUninterruptedly().get().buffer().readDocument(), getJarFile());
     }
 
     @NotNull

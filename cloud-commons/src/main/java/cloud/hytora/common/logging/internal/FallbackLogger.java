@@ -3,12 +3,14 @@ package cloud.hytora.common.logging.internal;
 import cloud.hytora.common.logging.ConsoleColor;
 import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.logging.LogLevel;
+import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.misc.StringUtils;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.PrintStream;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -27,11 +29,21 @@ public class FallbackLogger extends Logger {
 
 	@Override
 	public void log(@Nonnull LogLevel level, @Nullable String message, @Nonnull Object... args) {
-		if (!isLevelEnabled(level)) return;
+		Throwable exception = null;
+		for (Object arg : args) {
+			if (arg instanceof Throwable)
+				exception = (Throwable) arg;
+		}
 		if (translateColors && message != null) {
 			message = ConsoleColor.toColoredString('§', message);
 			message = ConsoleColor.toColoredString('&', message);
+			message = Logger.formatMessage(message);
 			translateColors = false;
+		}
+		LogEntry entry = new LogEntry(Instant.now(), Thread.currentThread().getName(), StringUtils.formatMessage(message, args), level, exception);
+		cacheEntry(entry);
+		if (!isLevelEnabled(level)) {
+			return;
 		}
 		stream.println(getLogMessage(level, StringUtils.formatMessage(message, args), name));
 		for (Object arg : args) {

@@ -5,28 +5,23 @@ import cloud.hytora.common.logging.Logger;
 import cloud.hytora.common.misc.FileUtils;
 import cloud.hytora.driver.CloudDriver;
 import cloud.hytora.IdentifiableClassLoader;
-import cloud.hytora.driver.exception.CloudException;
+import cloud.hytora.driver.common.exception.HytoraCloudException;
 import cloud.hytora.driver.module.ModuleController;
 import cloud.hytora.driver.module.ModuleManager;
-import cloud.hytora.driver.module.packet.RemoteModuleExecutionPacket;
-import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
-import cloud.hytora.node.NodeDriver;
 
 import javax.annotation.Nonnull;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 
 public class NodeModuleManager implements ModuleManager {
 
-    private List<DefaultModuleController> modules = new ArrayList<>();
+    private final List<DefaultModuleController> modules = new ArrayList<>();
     private Path directory;
 
     @Nonnull
@@ -53,7 +48,7 @@ public class NodeModuleManager implements ModuleManager {
     }
 
     @Override
-    public synchronized void unregisterModules() {
+    public void unregisterModules() {
         Logger.constantInstance().debug("Unregistering modules [{}]...", modules.size());
         for (DefaultModuleController module : modules) {
             try {
@@ -64,49 +59,33 @@ public class NodeModuleManager implements ModuleManager {
         }
         modules.clear();
 
-        if (NodeDriver.getInstance().getNode().getConfig().isRemote()) { //deleting so can be received
-            FileUtils.delete(NodeDriver.MODULE_FOLDER.toPath());
-        }
     }
 
+    public ModuleController resolveModule(Path file) {
+
+        try {
+            CloudDriver.getInstance().getLogger().debug("Resolving the module §8'%1{}§8'§f...", file.getFileName());
+            Path selfBasePath = new File(CloudDriver.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath();
+
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            if (!(classLoader instanceof IdentifiableClassLoader)) {
+                throw new HytoraCloudException("Wrong SystemClassLoader : " + classLoader.getClass().getName());
+            }
+
+            DefaultModuleController module = new DefaultModuleController(classLoader, this, file, moduleClassLoader -> CloudDriver.getInstance().getEventManager().unregisterListeners(moduleClassLoader));
+            module.initConfig();
+
+            return module;
+        } catch (Throwable ex) {
+            CloudDriver.getInstance().getLogger().error("Could not resolve module {}", FileUtils.getRealFileName(file), ex);
+        }
+        return null;
+    }
 
     @Override
-    public synchronized void resolveModules() {
+    public void resolveModules() {
         Logger.constantInstance().debug("Resolving Modules...");
         FileUtils.createDirectory(directory);
-
-        if (NodeDriver.getInstance().getNode().getConfig().isRemote()) {
-            //is remote
-            PacketBuffer buffer = NodeDriver.getInstance()
-                    .getExecutor()
-                    .getNodeAsClient()
-                    .getPacketChannel()
-                    .prepareSingleQuery()
-                    .execute(new RemoteModuleExecutionPacket(RemoteModuleExecutionPacket.PayLoad.TRANSFER_MODULES))
-                    .syncUninterruptedly()
-                    .get()
-                    .buffer();
-
-            int moduleAmount = buffer.readInt();
-            CloudDriver.getInstance().getLogger().info("Downloading {} Modules from HeadNode...", moduleAmount);
-
-            for (int i = 0; i < moduleAmount; i++) {
-                try {
-                    String jarName = buffer.readString();
-                    String folderName = buffer.readString();
-
-                    File destination = new File(NodeDriver.MODULE_FOLDER, jarName);
-                    File folder = new File(NodeDriver.MODULE_FOLDER, folderName + "/");
-                    folder.mkdirs();
-
-                    File jarFile = buffer.readFile(destination);
-                    File dataFolder = buffer.readFile(folder);
-                    CloudDriver.getInstance().getLogger().info("Downloaded Module " + jarName + " from HeadNode!");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
 
         List<DefaultModuleController> modules = new ArrayList<>();
 
@@ -115,22 +94,7 @@ public class NodeModuleManager implements ModuleManager {
             if (getModules().stream().anyMatch(m -> m.getJarFile().equals(file))) {
                 continue;
             }
-            try {
-                CloudDriver.getInstance().getLogger().debug("Resolving the module §8'§b{}§8'§f...", file.getFileName());
-                Path selfBasePath = new File(CloudDriver.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath();
-
-                ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-                if (!(classLoader instanceof IdentifiableClassLoader)) {
-                    throw new CloudException("Wrong SystemClassLoader : " + classLoader.getClass().getName());
-                }
-
-                DefaultModuleController module = new DefaultModuleController(classLoader, this, file, moduleClassLoader -> CloudDriver.getInstance().getEventManager().unregisterListeners(moduleClassLoader));
-                module.initConfig();
-
-                modules.add(module);
-            } catch (Throwable ex) {
-                CloudDriver.getInstance().getLogger().error("Could not resolve module {}", FileUtils.getRealFileName(file), ex);
-            }
+            modules.add((DefaultModuleController) resolveModule(file));
         }
 
         // check if the depends are existing
@@ -155,7 +119,7 @@ public class NodeModuleManager implements ModuleManager {
         }
 
         // order the modules by depends
-        // TODO handle: a requires b, b requires c, c requires a -> invalid
+        // TODO check if this is right => : a requires b, b requires c, c requires a -> invalid
         modules.sort((module1, module2) -> {
 
             // if this module requires the other module, load this after the other
@@ -171,6 +135,7 @@ public class NodeModuleManager implements ModuleManager {
 
         // init modules
         for (DefaultModuleController module : modules) {
+            Logger.constantInstance().debug("Initializing Module {}", module.getModuleConfig().getFullName());
             try {
                 if (!module.getModuleConfig().getEnvironment().applies(CloudDriver.getInstance().getEnvironment())) {
                     CloudDriver.getInstance().getLogger().info("Skipping initialization of {} (ModuleEnvironment.{}, DriverEnvironment.{})",
@@ -207,7 +172,7 @@ public class NodeModuleManager implements ModuleManager {
     }
 
     @Override
-    public synchronized void loadModules() {
+    public void loadModules() {
         Logger.constantInstance().debug("Loading Modules [{}]...", modules.size());
         for (ModuleController module : modules) {
             module.loadModule();
@@ -215,7 +180,7 @@ public class NodeModuleManager implements ModuleManager {
     }
 
     @Override
-    public synchronized void enableModules() {
+    public  void enableModules() {
         Logger.constantInstance().debug("Enabling Modules [{}]...", modules.size());
         for (ModuleController module : modules) {
             module.enableModule();
@@ -223,7 +188,7 @@ public class NodeModuleManager implements ModuleManager {
     }
 
     @Override
-    public synchronized void disableModules() {
+    public void disableModules() {
         Logger.constantInstance().debug("Disabling Modules [{}]...", modules.size());
         for (ModuleController module : modules) {
             module.disableModule();

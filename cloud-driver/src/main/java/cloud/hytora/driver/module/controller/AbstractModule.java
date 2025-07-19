@@ -1,14 +1,14 @@
 package cloud.hytora.driver.module.controller;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.http.api.HttpServer;
-import cloud.hytora.driver.module.IModule;
+import cloud.hytora.driver.common.http.api.HttpServer;
+import cloud.hytora.driver.module.ModuleInfo;
 import cloud.hytora.driver.module.ModuleController;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-public class AbstractModule implements IModule {
+public class AbstractModule implements ModuleInfo {
 
 	/**
 	 * The controller for this module (is being set when being loaded)

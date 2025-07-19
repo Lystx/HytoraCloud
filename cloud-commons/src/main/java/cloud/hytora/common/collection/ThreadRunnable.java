@@ -1,6 +1,7 @@
 package cloud.hytora.common.collection;
 
 
+import cloud.hytora.common.Holder;
 import cloud.hytora.common.function.ExceptionallyRunnable;
 
 import java.io.Closeable;
@@ -78,6 +79,13 @@ public class ThreadRunnable implements Runnable, Closeable {
     }
 
 
+    public void run(boolean async) {
+        if (async) {
+            runAsync();
+        } else {
+            run();
+        }
+    }
 
     /**
      * It is semi-multi-threaded with a blocking function,
@@ -86,6 +94,11 @@ public class ThreadRunnable implements Runnable, Closeable {
      */
     public void run() {
         if (this.executor.isShutdown()) {
+            return;
+        }
+
+        if (Holder.SINGLE_THREAD) {
+            this.runInSameThread();
             return;
         }
 
@@ -112,6 +125,10 @@ public class ThreadRunnable implements Runnable, Closeable {
      */
     public ThreadRunnable run(Runnable then, Runnable catcher) {
         if (this.executor.isShutdown()) {
+            return this;
+        }
+        if (Holder.SINGLE_THREAD) {
+            this.runInSameThread();
             return this;
         }
         CompletableFuture<?> future = new CompletableFuture<>();
@@ -142,6 +159,10 @@ public class ThreadRunnable implements Runnable, Closeable {
         if (this.executor.isShutdown()) {
             return null;
         }
+        if (Holder.SINGLE_THREAD) {
+            this.runInSameThread();
+            return null;
+        }
         return this.executor.submit((Runnable) this::runInSameThread);
     }
 
@@ -158,6 +179,10 @@ public class ThreadRunnable implements Runnable, Closeable {
      */
     public Future<?> runAsync(Runnable then, Runnable catcher) {
         if (this.executor.isShutdown()) {
+            return null;
+        }
+        if (Holder.SINGLE_THREAD) {
+            this.runInSameThread();
             return null;
         }
         return this.executor.submit(() -> {
@@ -178,6 +203,10 @@ public class ThreadRunnable implements Runnable, Closeable {
         if (this.executor.isShutdown()) {
             return null;
         }
+        if (Holder.SINGLE_THREAD) {
+            this.runInSameThread();
+            return null;
+        }
         return runRepeated(0, ms);
     }
 
@@ -193,6 +222,10 @@ public class ThreadRunnable implements Runnable, Closeable {
      */
     public ScheduledFuture<?> runRepeated(int wait, int ms) {
         if (this.executor.isShutdown()) {
+            return null;
+        }
+        if (Holder.SINGLE_THREAD) {
+            this.runInSameThread();
             return null;
         }
         return this.executor.scheduleAtFixedRate(this::runInSameThread, wait, ms, TimeUnit.MILLISECONDS);

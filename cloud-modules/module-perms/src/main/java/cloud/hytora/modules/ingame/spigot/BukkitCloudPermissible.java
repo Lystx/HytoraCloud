@@ -1,9 +1,9 @@
 package cloud.hytora.modules.ingame.spigot;
 
 import cloud.hytora.driver.CloudDriver;
-import cloud.hytora.driver.permission.PermissionGroup;
-import cloud.hytora.driver.permission.PermissionManager;
-import cloud.hytora.driver.permission.PermissionPlayer;
+import cloud.hytora.driver.module.permission.PermissionGroup;
+import cloud.hytora.driver.module.permission.PermissionManager;
+import cloud.hytora.driver.module.permission.PermissionPlayer;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -88,7 +88,7 @@ public class BukkitCloudPermissible extends PermissibleBase {
                 return;
             }
 
-            for (cloud.hytora.driver.permission.Permission permission : permissionPlayer.getPermissions()) {
+            for (cloud.hytora.driver.module.permission.Permission permission : permissionPlayer.getPermissions()) {
                 perms.put(permission.getPermission(), new PermissionAttachmentInfo(this, permission.getPermission(), null, true));
             }
 
@@ -102,7 +102,7 @@ public class BukkitCloudPermissible extends PermissibleBase {
             }
 
             for (PermissionGroup group : permissionPlayer.getPermissionGroups()) {
-                for (cloud.hytora.driver.permission.Permission permission : group.getPermissions()) {
+                for (cloud.hytora.driver.module.permission.Permission permission : group.getPermissions()) {
                     perms.put(permission.getPermission(), new PermissionAttachmentInfo(this, permission.getPermission(), null, true));
                 }
 
@@ -124,7 +124,7 @@ public class BukkitCloudPermissible extends PermissibleBase {
 
     public PermissionPlayer getPermissionPlayer() {
         if (permissionPlayer == null)
-            permissionPlayer = CloudDriver.getInstance().getProvider(PermissionManager.class).getPlayerByUniqueIdOrNull(player.getUniqueId());
+            permissionPlayer = CloudDriver.getInstance().getProvider(PermissionManager.class).getPermissionPlayer(player.getUniqueId());
 
         return permissionPlayer;
     }

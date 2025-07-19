@@ -1,8 +1,8 @@
 package cloud.hytora.modules.global.impl;
 
 import cloud.hytora.driver.networking.protocol.codec.buf.PacketBuffer;
-import cloud.hytora.driver.networking.protocol.packets.BufferState;
-import cloud.hytora.driver.permission.Permission;
+import cloud.hytora.driver.networking.protocol.types.BufferState;
+import cloud.hytora.driver.module.permission.Permission;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

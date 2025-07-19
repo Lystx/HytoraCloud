@@ -1,10 +1,8 @@
 package cloud.hytora.remote.impl;
 
-import cloud.hytora.driver.node.base.DefaultNodeManager;
-import cloud.hytora.driver.node.INode;
+import cloud.hytora.driver.entity.node.base.DefaultNodeManager;
+import cloud.hytora.driver.entity.node.INode;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Collection;
 
 public class RemoteNodeManager extends DefaultNodeManager {
 

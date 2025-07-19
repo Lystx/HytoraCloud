@@ -23,8 +23,7 @@ public class LauncherUtils {
 
 
 
-    public static Task<Void> downloadVersion(String urlStr, Path location) {
-        System.out.println("\n");
+    public static Task<Void> downloadVersion(String urlStr, Path location, String message) {
         System.out.println("\n");
         Task<Void> task = Task.empty();
         try {
@@ -62,13 +61,10 @@ public class LauncherUtils {
                 long step = (long) ((downloaded * 100L) / (contentLength * 1.0));
                 pb.stepTo(step);
             }
-            pb.setExtraMessage("Successfully downloaded! Cleaning up unused bytes...");
             outputStream.close();
             inputStream.close();
-            pb.close("");
+            pb.close(message);
             task.setResult(null);
-            System.out.println("\n");
-            System.out.println("\n");
         } catch (Exception e) {
             task.setFailure(e);
         }

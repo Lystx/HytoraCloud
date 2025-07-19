@@ -9,6 +9,11 @@ import lombok.Getter;
 public class SignConfiguration {
 
     /**
+     * If service bootUp should be displayed on sign
+     */
+    private final boolean showLoadingAnimation;
+
+    /**
      * The knockback config
      */
     private final SignKnockbackConfig knockBackConfig;
@@ -42,6 +47,7 @@ public class SignConfiguration {
     public SignConfiguration() {
 
         //The default layouts
+        this.showLoadingAnimation = true;
         SignLayout full = new SignLayout(new String[]{"&8│ &b{server.name} &8│", "&6VIP", "{server.motd}", "&8× &7{server.online}}&8/&7{server.max} &8×"}, "STAINED_CLAY", 1);
         SignLayout maintenance = new SignLayout(new String[]{"", "&8│ &b{task.name} &8│", "&8× &cMaintenance &8×", ""}, "STAINED_CLAY", 3);
 
@@ -79,7 +85,10 @@ public class SignConfiguration {
     public SignAnimation getAnimationByState(SignState state) {
         switch (state) {
             case STARTING:
-                return startingLayOut;
+                if (showLoadingAnimation) {
+                    return startingLayOut;
+                }
+                return loadingLayout;
             case ONLINE:
                 return onlineLayout;
             case FULL:

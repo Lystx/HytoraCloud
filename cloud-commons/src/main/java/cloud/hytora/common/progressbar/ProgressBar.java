@@ -1,10 +1,14 @@
 package cloud.hytora.common.progressbar;
 
 import cloud.hytora.common.logging.ConsoleColor;
+import cloud.hytora.common.logging.LogLevel;
+import cloud.hytora.common.logging.formatter.ColoredMessageFormatter;
+import cloud.hytora.common.logging.handler.LogEntry;
 import cloud.hytora.common.misc.StringUtils;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
@@ -136,13 +140,17 @@ public class ProgressBar {
 
         this.startTime = System.currentTimeMillis();
         this.startDateTime = LocalDateTime.now();
-        this.extraMessage = "";
         this.expandingAnimation = true;
         this.printer = new ProgressPrinter() {
             @Override
             public void print(String progress) {
 
                 System.out.print(ConsoleColor.toColoredString('§', progress));
+            }
+
+            @Override
+            public void newLine() {
+                System.out.println();
             }
 
             @Override
@@ -242,7 +250,7 @@ public class ProgressBar {
 
         //cursor
 
-        for (int i = 0; i <  percent; i++) {
+        for (int i = 0; i < percent; i++) {
             cursorProcess.append(cursor);
         }
 
@@ -256,7 +264,7 @@ public class ProgressBar {
             x = 0;
         }
 
-        String string = (this.appendProgress ? "" : "\r")  +
+        String string = (this.appendProgress ? "" : "\r") +
                 "§8» §7" +
                 String.join("", Collections.nCopies(percent == 0 ? 2 : 2 - (int) (Math.log10(percent)), " ")) +
                 String.format(" %d%% " + leftBracket, ((percent))) +
@@ -267,18 +275,35 @@ public class ProgressBar {
                 String.join("", Collections.nCopies(borderSpaces, " ")) +
                 " §8[" + (taskName != null ? ("§8=> §7" + taskName + " §8| ") : "") + "§eETA§8: §e" + etaHms + "§8]";
 
+        if (extraMessage != null) {
 
+            String builder = extraMessage;
+
+            LogEntry entry = new LogEntry(Instant.now(), "main", builder, LogLevel.INFO, null);
+
+            this.printer.print("\r" + ColoredMessageFormatter.format(entry));
+            return;
+        }
         this.printer.print(string);
     }
+
 
     /**
      * Closes the current bar
      */
     public void close(String message, Object... args) {
+        StringBuilder builder = new StringBuilder();
+
+        for (int i = 0; i < 200; i++) {
+            builder.append(" ");
+        }
+        this.printer.print("\r" + builder);
+
+        this.extraMessage = StringUtils.formatMessage(message, args);
         System.setProperty("progressbar.active", "false"); //used for api-purposes
 
-        this.printer.print(StringUtils.formatMessage(message, args));
-        this.printer.print("\n");
-        this.printer.flush("");
+        this.print();
+
+        this.printer.newLine();
     }
 }
